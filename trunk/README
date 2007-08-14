@@ -1,0 +1,18 @@
+
+iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
+by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
+
+Thanks to the authors of NES.app and Mobile Terminal.app for providing example code, bits
+of which have made their way into this project (Keyboard show/hide anim and FileBrowser).
+
+The iPhone version supports Z-Machine versions 3 - 8, excluding version 6 (graphics support
+ala Zork Zero).  Timed input is also not yet supported.
+
+Build using 'make iphone'.
+Copy Frotz.app to your iPhone's /Applications directory and reboot your iPhone.
+Copy Z-machine data files (.z3, .z5, .dat, etc.) to /var/root/Library/Frotz/Games.
+
+Please see the README and AUTHORS files in the doc directory for more information
+about this source, and the history of interactive fiction and Infocom.
+
+

@@ -1,0 +1,111 @@
+
+CC=arm-apple-darwin-cc
+CFLAGS=-F/System/Library/Frameworks/Foundation -IUIKit
+IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics
+
+OPTS = -O2 
+#OPTS = -g
+
+# Define where you want Frotz to look for frotz.conf.
+#
+CONFIG_DIR = /var/root/Library/Frotz
+#
+#COLOR_DEFS = -DCOLOR_SUPPORT
+
+SRCDIR = src
+
+VERSION = 2.43
+ 
+NAME = Frotz
+
+COMMON_DIR = $(SRCDIR)/common
+COMMON_TARGET = $(SRCDIR)/frotz_common.a
+COMMON_OBJECT = $(COMMON_DIR)/buffer.o \
+		$(COMMON_DIR)/err.o \
+		$(COMMON_DIR)/fastmem.o \
+		$(COMMON_DIR)/files.o \
+		$(COMMON_DIR)/hotkey.o \
+		$(COMMON_DIR)/input.o \
+		$(COMMON_DIR)/main.o \
+		$(COMMON_DIR)/math.o \
+		$(COMMON_DIR)/object.o \
+		$(COMMON_DIR)/process.o \
+		$(COMMON_DIR)/quetzal.o \
+		$(COMMON_DIR)/random.o \
+		$(COMMON_DIR)/redirect.o \
+		$(COMMON_DIR)/screen.o \
+		$(COMMON_DIR)/sound.o \
+		$(COMMON_DIR)/stream.o \
+		$(COMMON_DIR)/table.o \
+		$(COMMON_DIR)/text.o \
+		$(COMMON_DIR)/variable.o
+
+IPHONE_DIR = $(SRCDIR)/iphone
+IPHONE_TARGET = $(SRCDIR)/frotz_iphone.a
+IPHONE_OBJECT =	$(IPHONE_DIR)/ui_audio_none.o $(IPHONE_DIR)/ui_init.o \
+	$(IPHONE_DIR)/ui_input.o $(IPHONE_DIR)/ui_pic.o $(IPHONE_DIR)/ui_text.o \
+	$(IPHONE_DIR)/MainView.o $(IPHONE_DIR)/StoryMainView.o $(IPHONE_DIR)/StoryBrowser.o \
+	$(IPHONE_DIR)/FileBrowser.o \
+	$(IPHONE_DIR)/FrotzApplication.o $(IPHONE_DIR)/FrotzKeyboard.o $(IPHONE_DIR)/main.o \
+	#$(IPHONE_DIR)/iphone_debug.o \
+
+#TARGETS = $(COMMON_TARGET) $(IPHONE_TARGET) #$(CURSES_TARGET)
+
+OPT_DEFS = -DCONFIG_DIR="\"$(CONFIG_DIR)\"" -DVERSION="\"$(VERSION)\"" 
+
+COMP_DEFS = $(OPT_DEFS) $(COLOR_DEFS)
+
+FLAGS = $(OPTS) $(COMP_DEFS) $(INCL)
+
+iphone:	Frotz package
+	rm -rf Frotz.app
+	mkdir -p Frotz.app
+	mkdir -p Frotz.app/Story
+	cp -r src/iphone/Frotz.app/* Frotz.app
+	cp Frotz Frotz.app
+	@echo
+	@echo "===="
+	@echo " Copy Frotz.app directory to /Applications on your iPhone."
+	@echo " Copy Z-Machine/Infocom data files into /var/root/Library/Frotz/Games."
+	@echo " Reboot your iPhone and Frotz should show up on your Springbaord menu."
+	@echo 
+
+Frotz:		$(COMMON_TARGET) $(IPHONE_TARGET)
+	$(CC) -o $(NAME) $(COMMON_TARGET) \
+		$(IPHONE_TARGET) $(LIB) $(IPHONE_LDFLAGS)
+
+package:
+
+.SUFFIXES:
+.SUFFIXES: .c .o .h
+
+.c.o:
+	$(CC) $(FLAGS) $(CFLAGS) -o $@ -c $<
+%.o:    %.m
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+
+
+# If you're going to make this target manually, you'd better know which 
+# config target to make first.
+#
+common_lib:	$(COMMON_TARGET)
+$(COMMON_TARGET): $(COMMON_OBJECT)
+	@echo
+	@echo "Archiving common code..."
+	ar rc $(COMMON_TARGET) $(COMMON_OBJECT)
+	ranlib $(COMMON_TARGET)
+	@echo
+
+iphone_lib:	$(IPHONE_TARGET)
+$(IPHONE_TARGET): $(IPHONE_OBJECT)
+	@echo
+	@echo "Archiving iphone interface code..."
+	ar rc $(IPHONE_TARGET) $(IPHONE_OBJECT)
+	ranlib $(IPHONE_TARGET)
+	@echo
+
+clean:
+	rm -f $(SRCDIR)/*.h $(SRCDIR)/*.a
+	rm -f $(COMMON_DIR)/*.o $(CURSES_DIR)/*.o $(DUMB_DIR)/*.o $(IPHONE_DIR)/*.o
+
