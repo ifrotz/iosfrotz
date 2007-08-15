@@ -23,6 +23,14 @@
 - (id)initWithFrame:(struct CGRect)rect {
     const float kNavBarSize = 40.0f;
     if ((self == [super initWithFrame: rect]) != nil) {
+
+    	id fileMgr = [NSFileManager defaultManager];	
+	if ([fileMgr fileExistsAtPath: @kFrotzOldDir] &&
+	    ![fileMgr fileExistsAtPath: @kFrotzDir]) {
+	    rename(kFrotzOldDir, kFrotzDir);
+	    sync();
+	}
+    
 	_navBar = [[UINavigationBar alloc] initWithFrame:
 	    CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, kNavBarSize)];
 	[_navBar setBarStyle: 1];

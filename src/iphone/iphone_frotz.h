@@ -137,4 +137,10 @@ extern int do_autosave, autosave_done;
 
 extern int iphone_textview_width, iphone_textview_height;
 
+#define kFrotzOldDir "/var/root/Library/Frotz"
+#define kFrotzDir "/var/root/Media/Frotz"
+#define kFrotzGameDir "/Games/"
+#define kFrotzSaveDir "/Saves/"
+
+#define IPHONE_FROTZ_VERS "0.2"
 

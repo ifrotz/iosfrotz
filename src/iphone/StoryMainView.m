@@ -28,10 +28,6 @@ char iphone_filename[256];
 const int kFixedFontSize = 9;
 const int kFixedFontPixelHeight = 11;
 
-#define kFrotzDir "/var/root/Library/Frotz/"
-#define kFrotzGameDir "Games/"
-#define kFrotzSaveDir "Saves/"
-
 NSString *storyGamePath   = @kFrotzDir @kFrotzGameDir;
 NSString *storySavePath   = @kFrotzDir @kFrotzSaveDir;
 NSString *storySIPPath    = @kFrotzDir @kFrotzSaveDir @"FrotzSIP.plist";
@@ -202,12 +198,16 @@ void *interp_cover_autorestore(void *arg) {
 
  	//printf ("storymainview rect: %f %f %f %f\n", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
-	chdir(kFrotzDir kFrotzSaveDir);
-
 	id fileMgr = [NSFileManager defaultManager];
+	
 	if (![fileMgr fileExistsAtPath: @kFrotzDir]) {
 	    [fileMgr createDirectoryAtPath: @kFrotzDir attributes: nil];
 	}
+	if (![fileMgr fileExistsAtPath: @kFrotzDir @kFrotzSaveDir]) {
+	    [fileMgr createDirectoryAtPath: @kFrotzDir @kFrotzSaveDir attributes: nil];
+	}
+
+	chdir(kFrotzDir kFrotzSaveDir);
 				
 	m_statusLine = [[UIStatusLine alloc] initWithFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
 	//struct CGColor *origFg = [m_statusLine textColor], *origBg = [m_statusLine backgroundColor];

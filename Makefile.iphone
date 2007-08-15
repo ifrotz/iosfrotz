@@ -60,7 +60,6 @@ FLAGS = $(OPTS) $(COMP_DEFS) $(INCL)
 iphone:	Frotz package
 	rm -rf Frotz.app
 	mkdir -p Frotz.app
-	mkdir -p Frotz.app/Story
 	cp -r src/iphone/Frotz.app/* Frotz.app
 	cp Frotz Frotz.app
 	@echo
