@@ -17,6 +17,7 @@
  */
 
 #import "FileBrowser.h"
+#include "iphone_frotz.h"
 
 @implementation FileBrowser 
 - (id)initWithFrame:(struct CGRect)frame{
@@ -86,7 +87,7 @@
     NSDirectoryEnumerator *dirEnum = [[NSFileManager defaultManager] enumeratorAtPath: _path];
     while (file = [dirEnum nextObject]) {
 	const char *fn = [file cStringUsingEncoding: NSASCIIStringEncoding];
-	//if (!strcasecmp(fn + (strlen(fn)-4), ".sav")) 
+	if (strcasecmp(fn, kFrotzAutoSaveFile) != 0) 
 	    [_files addObject: file];
     }
     
@@ -113,7 +114,7 @@
     float whiteComponents[4] = {1, 1, 1, 1};
     float transparentComponents[4] = {0, 0, 0, 0};
     
-    [ descriptionLabel setText:[[_files objectAtIndex: row] stringByDeletingPathExtension ]];
+    [ descriptionLabel setText:[_files objectAtIndex: row] ];   // stringByDeletingPathExtension
     [ descriptionLabel setWrapsText: YES ];
     [ descriptionLabel setBackgroundColor:CGColorCreate(colorSpace, transparentComponents) ];
     

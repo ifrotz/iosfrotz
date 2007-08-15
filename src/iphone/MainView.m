@@ -35,7 +35,6 @@
 	    CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, kNavBarSize)];
 	[_navBar setBarStyle: 1];
 	[_navBar setDelegate: self];
-	[_navBar showButtonsWithLeftTitle:nil rightTitle:@"Refresh" leftBack: YES];
 	[_navBar enableAnimation];
 	
 	_transitionView = [[UITransitionView alloc] initWithFrame: 
@@ -49,24 +48,45 @@
 	
 	[_storyBrowser setDelegate: self];
 	
+	_mode = kModeSelectStory;
+        [self updateNavBarButtons];
 	[self addSubview: _navBar];
 	[self addSubview: _transitionView];
 
 	if (![_storyMainView autoRestoreSession]) {
-	    _browsing = YES;
 	    [_transitionView transition:1 toView:_storyBrowser];
 	} else {
-	    _browsing = NO;
-	    [_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
+	    _mode = kModePlayStory;
+	    [self updateNavBarButtons];
 	    [_transitionView transition:1 toView:_storyMainView];
 	}
     }
     return self;
 }
 
+-(void)updateNavBarButtons {
+    switch (_mode) {
+	case kModeSelectStory:
+	    [_navBar showButtonsWithLeftTitle:nil rightTitle:@"Refresh" leftBack: YES];
+	    break;
+	case kModeSelectFont:
+	    [_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:@"Select Font" leftBack: YES];
+	    break;
+	case kModePlayStory:
+	    [_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
+	    break;
+	case kModeSelectFile:
+	    [_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:nil leftBack: YES];
+	    break;
+	default:
+	    [_navBar showButtonsWithLeftTitle:nil rightTitle:nil leftBack: YES];
+	    break;
+    }
+}
+
 -(void)storyBrowser:browser storySelected:storyPath {
-    _browsing = NO;
-    [_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
+    _mode = kModePlayStory;
+    [self updateNavBarButtons];
     [_transitionView transition:1 toView:_storyMainView];
     [_storyMainView setCurrentStory: storyPath];
     [_storyMainView launchStory];
@@ -108,56 +128,69 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 
 -(void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
     // right button=0, left=1
-    
-    if (_browsing) { // browsing stories
-	if (button == 0)
-	    [_storyBrowser reloadData];
-    }
-    else if (!m_fontc) { // playing story
-	if (button == 0) {
-	    NSError *err;
-	    m_fontc = [[UIFontChooser alloc] initWithFrame: CGRectMake(0.0f, 40.0f, 320.0f, 480.0f - 40 - 24)];
-	    [_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:@"Select Font" leftBack: YES];
-	    //	[m_fontc selectFamilyName: [[self textView] fontName];
-	    //	[m_fontc setectSize: [[self textView] fontSize];
-	    [[navbar superview] addSubview: m_fontc];
-	    [m_fontc setDelegate: self];
-	    [m_fontc becomeFirstResponder];
-	} else {   
-	    UIAlertSheet *sheet = [[UIAlertSheet alloc] initWithFrame: CGRectMake(0, 240, 320, 240)];
-	    [sheet setTitle:@"Abandon Story"];
-	    [sheet setBodyText:[NSString stringWithFormat:@"Do you want to quit the current story and select a new one?\n"]];
-	    [sheet addButtonWithTitle:@"OK"];
-	    [sheet addButtonWithTitle:@"Cancel"];
-	    [sheet setDelegate: self];
-	    [sheet presentSheetFromAboveView: self];
-	}
-    } else { // browsing fonts
-	if (button == 0) {
-	    //float size = [m_fontc selectedSize];
-	    float size = objc_msgSend_fpret(m_fontc, @selector(selectedSize));
-	    NSString *fontName = [m_fontc selectedFamilyName];
-	    printf("Chose font: %s %f\n", [fontName UTF8String], size);
-	    if (fontName && [fontName compare: @""]!=NSOrderedSame)
-		[[_storyMainView storyView] setTextFont: [m_fontc selectedFamilyName]];
-	    if (size)
-		[[_storyMainView storyView] setTextSize: size];
-	    [[[_storyMainView storyView] _webView] insertText: @" "];
-	    [[[_storyMainView storyView] _webView] deleteBackward];
-	    [[_storyMainView storyView] scrollToMakeCaretVisible: YES];
-	}
-	[m_fontc removeFromSuperview];
-	[m_fontc release];
-	[_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
-	m_fontc = NULL;
+ 
+    switch (_mode) {
+	case kModeSelectStory:
+	    if (button == 0) // refresh
+		[_storyBrowser reloadData];
+	    break;
+	case kModeSelectFont:
+	    if (button == 0) {
+		//float size = [m_fontc selectedSize];
+		float size = objc_msgSend_fpret(m_fontc, @selector(selectedSize));
+		NSString *fontName = [m_fontc selectedFamilyName];
+		printf("Chose font: %s %f\n", [fontName UTF8String], size);
+		if (fontName && [fontName compare: @""]!=NSOrderedSame)
+		    [[_storyMainView storyView] setTextFont: [m_fontc selectedFamilyName]];
+		if (size)
+		    [[_storyMainView storyView] setTextSize: size];
+		[[[_storyMainView storyView] _webView] insertText: @" "];
+		[[[_storyMainView storyView] _webView] deleteBackward];
+		[[_storyMainView storyView] scrollToMakeCaretVisible: YES];
+	    }
+	    [m_fontc removeFromSuperview];
+	    [m_fontc release];
+	    _mode = kModePlayStory;
+	    [self updateNavBarButtons];
+	    m_fontc = NULL;
+	    break;
+	case kModePlayStory:
+	    if (button == 0) {
+		NSError *err;
+		m_fontc = [[UIFontChooser alloc] initWithFrame: CGRectMake(0.0f, 40.0f, 320.0f, 480.0f - 40 - 24)];
+		_mode = kModeSelectFont;
+		[self updateNavBarButtons];
+
+		//	[m_fontc selectFamilyName: [[self textView] fontName];
+		//	[m_fontc setectSize: [[self textView] fontSize];
+		[[navbar superview] addSubview: m_fontc];
+		[m_fontc setDelegate: self];
+		[m_fontc becomeFirstResponder];
+	    } else {   
+		UIAlertSheet *sheet = [[UIAlertSheet alloc] initWithFrame: CGRectMake(0, 240, 320, 240)];
+		[sheet setTitle:@"Abandon Story"];
+		[sheet setBodyText:[NSString stringWithFormat:@"Do you want to quit the current story and select a new one?\n"]];
+		[sheet addButtonWithTitle:@"OK"];
+		[sheet addButtonWithTitle:@"Cancel"];
+		[sheet setDelegate: self];
+		[sheet presentSheetFromAboveView: self];
+	    }
+	    break;
+	case kModeSelectFile:
+	    if (button == 1)
+		[self fileBrowser: m_fileBrowser fileSelected: nil];
+	    break;
+	default:
+	    [navbar removeFromSuperview];
+	    break;
     }
 }
 
 - (void)abortToBrowser {
     [_storyMainView abandonStory];
-    [_navBar showButtonsWithLeftTitle:nil rightTitle:@"Refresh" leftBack: YES];
+    _mode = kModeSelectStory;
+    [self updateNavBarButtons];
     [_transitionView transition:2 toView:_storyBrowser];
-    _browsing = YES;
 }
 
 - (void)alertSheet:(UIAlertSheet *)sheet buttonClicked:(int)button {
@@ -177,17 +210,23 @@ extern char iphone_filename[];
     [m_fileBrowser setPath: storySavePath];
     [m_fileBrowser setDelegate: self];    
     [m_fileBrowser reloadData];
-    [_navBar showButtonsWithLeftTitle:nil rightTitle:nil leftBack: YES];
+
+    _mode = kModeSelectFile;
+    [self updateNavBarButtons];
     
     [self addSubview: m_fileBrowser];
 }
 
 - (void)fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
     [m_fileBrowser removeFromSuperview];
-    strcpy(iphone_filename, [file UTF8String]);
+    if (file)
+	strcpy(iphone_filename, [file UTF8String]);
+    else
+	*iphone_filename = '\0';
     [m_fileBrowser release];
     m_fileBrowser = NULL;
-    [_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
+    _mode = kModePlayStory;
+    [self updateNavBarButtons];
     do_filebrowser = 0;
 }
 

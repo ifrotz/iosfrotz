@@ -142,5 +142,7 @@ extern int iphone_textview_width, iphone_textview_height;
 #define kFrotzGameDir "/Games/"
 #define kFrotzSaveDir "/Saves/"
 
-#define IPHONE_FROTZ_VERS "0.2"
+#define kFrotzAutoSaveFile "FrotzSIP.sav"
+
+#define IPHONE_FROTZ_VERS "0.3"
 
