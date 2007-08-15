@@ -761,20 +761,34 @@ int os_read_file_name (char *file_name, const char *default_name, int flag)
 {
   char buf[INPUT_BUFFER_SIZE], prompt[INPUT_BUFFER_SIZE];
   FILE *fp;
+  char *dflt;
 
-  sprintf(prompt, "Please enter a filename\n(Enter '!' to browse existing files)\n[%s]:", default_name);
-  dumb_read_misc_line(buf, prompt);
-  if (buf[0] == '!') {
-     buf[0] = '\0';
-     if (!iphone_read_file_name (buf, default_name, flag))
-       return FALSE;
+  if ((dflt = strrchr(default_name, '/'))) // only use filename conpoment in default_name prompt
+    dflt++;
+  else
+    dflt = default_name;
+
+  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD) {
+    sprintf(prompt, "Please enter a filename (or '!' to browse existing files)\n[%s]:", dflt);
+    dumb_read_misc_line(buf, prompt);
+    if (buf[0] == '!') {
+      buf[0] = '\0';
+      if (!iphone_read_file_name (buf, dflt, flag))
+	return FALSE;
+    }
+  } else {
+      //sprintf(prompt, "Please enter a filename: ");
+      buf[0] = '\0';
+      if (!iphone_read_file_name (buf, dflt, flag))
+         return FALSE;
   }
+
   if (strlen(buf) > MAX_FILE_NAME) {
-    printf("Filename too long\n");
+    iphone_puts("Filename too long!\n");
     return FALSE;
   }
 
-  strcpy (file_name, buf[0] ? buf : default_name);
+  strcpy (file_name, buf[0] ? buf : dflt);
 
   /* Warn if overwriting a file.  */
   if ((flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)

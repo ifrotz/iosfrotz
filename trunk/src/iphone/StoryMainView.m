@@ -22,6 +22,7 @@
 int iphone_textview_width = 54, iphone_textview_height = 18;
 int do_autosave = 0, autosave_done = 1;
 int do_filebrowser = 0;
+static int filebrowser_allow_new = 0;
 
 char iphone_filename[256];
 
@@ -31,7 +32,8 @@ const int kFixedFontPixelHeight = 11;
 NSString *storyGamePath   = @kFrotzDir @kFrotzGameDir;
 NSString *storySavePath   = @kFrotzDir @kFrotzSaveDir;
 NSString *storySIPPath    = @kFrotzDir @kFrotzSaveDir @"FrotzSIP.plist";
-const char *AUTOSAVE_FILE =  kFrotzDir  kFrotzSaveDir "FrotzSIP.sav"; // used by interpreter from z_save
+NSString *storySIPSavePath= @kFrotzDir @kFrotzSaveDir kFrotzAutoSaveFile;
+const char *AUTOSAVE_FILE =  kFrotzDir  kFrotzSaveDir kFrotzAutoSaveFile;  // used by interpreter from z_save
 
 NSMutableString *ipzBufferStr = NULL, *ipzStatusStr = NULL, *ipzInputBufferStr = NULL;
 int ipzDeleteCharCount = 0;
@@ -133,7 +135,9 @@ int iphone_read_file_name(char *file_name, const char *default_name, int flag) {
     while (do_filebrowser) {
 	usleep(100000);
     }
-    
+    if (!*iphone_filename)
+	return FALSE;
+
     strcpy(file_name, iphone_filename);
     
     if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
@@ -163,8 +167,12 @@ void run_interp(const char *story, bool autorestore) {
     iphone_ioinit();
     z_restart ();
     if (autorestore) {
+	id fileMgr = [NSFileManager defaultManager];
+
 	z_restore ();
 	do_autosave = 0;
+	
+	[fileMgr removeFileAtPath: storySIPSavePath handler:nil];
     }
     interpret ();
     reset_memory ();
@@ -430,6 +438,7 @@ extern int finished; // set by z_quit
     z_quit();
     pthread_join(m_storyTID, NULL);
     [ipzInputBufferStr setString: @""];
+    [m_currentStory setString: @""];
     [m_statusLine setText: @""];
     [m_storyView setText: @""];
     top_win_height = 0;
@@ -467,7 +476,7 @@ extern int finished; // set by z_quit
 
 @implementation UIStoryView
 
--(BOOL)canBecomeFirstResponder { return NO; } // xxxxxx
+-(BOOL)canBecomeFirstResponder { return NO; }
 - (void)insertText:(NSString*)text
 {
 #ifdef IPHONE_MORE_PROMPT_ENABLED

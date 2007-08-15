@@ -24,6 +24,16 @@ int iphone_getchar() {
   return getchar();
 }
 
+int iphone_textview_height, iphone_textview_width;
+void iphone_enable_single_key_input() {
+}
+
+int iphone_read_file_name(char *file_name, const char *default_name, int flag) {
+}
+
+void iphone_more_prompt() {
+}
+
 extern int autorestore;
 
 int iphone_main(int argc, char *argv) {

@@ -27,6 +27,8 @@
 #import "FileBrowser.h"
 #import "StoryMainView.h"
 
+enum { kModeSelectStory, kModePlayStory, kModeSelectFont, kModeSelectFile };
+
 @interface MainView : UIView  <StorySelected> {
     UINavigationBar *_navBar;
     UITransitionView *_transitionView;
@@ -36,10 +38,11 @@
     UIKeyboard *m_keyb;
     FileBrowser *m_fileBrowser;
 
-    BOOL _browsing;
+    int _mode;
 }
 
 -(id) initWithFrame:(CGRect)frame;
+-(void) updateNavBarButtons;
 -(void) storyBrowser:browser storySelected:storyPath;
 -(void) abortToBrowser;
 -(void) suspendStory;

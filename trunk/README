@@ -31,3 +31,8 @@ Tue Aug 14 20:50:30 CDT 2007
  - Auto-create the Saves directory so the autosave feature works correctly if the user
    hasn't manually made the directory.
 
+Wed Aug 15 01:04:41 CDT 2007
+0.3
+ - Clean up nav bar management
+ - Improve save/restore.  Restore automatically uses the file dialog.
+
