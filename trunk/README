@@ -1,4 +1,6 @@
 
+iPhoneFrotz version 0.2
+
 iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
 by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
 
@@ -15,4 +17,17 @@ Copy Z-machine data files (.z3, .z5, .dat, etc.) to /var/root/Library/Frotz/Game
 Please see the README and AUTHORS files in the doc directory for more information
 about this source, and the history of interactive fiction and Infocom.
 
+-- Changes --
+Tue Aug 14 01:23:10 CDT 2007
+0.1
+ - Initial release to svn
+
+Tue Aug 14 20:50:30 CDT 2007
+0.2
+ - Move story and save file location to /var/root/Media/Frotz instead of Library/Frotz
+   for easier access by iPhuc, etc.
+ - Detects if the old Library location exists but the Media location doesn't at startup
+   and moves the files automatically.
+ - Auto-create the Saves directory so the autosave feature works correctly if the user
+   hasn't manually made the directory.
 
