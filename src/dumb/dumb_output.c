@@ -413,6 +413,9 @@ void os_reset_screen(void)
 void os_split_win(int h) {
 }
 
+void os_new_line() {
+}
+
 void os_beep (int volume)
 {
   if (visual_bell)

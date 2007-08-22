@@ -128,6 +128,8 @@ void os_scroll_area (int top, int left, int bottom, int right, int units)
 }/* os_scroll_area */
 
 void os_split_win(int h) {
+}
 
+void os_new_line() {
 }
 

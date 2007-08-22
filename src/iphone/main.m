@@ -13,5 +13,9 @@ int iphone_main(int argc, char **argv)
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
     UIApplicationMain(argc, argv, [FrotzApplication class]);
+
+    fflush(stdout);
+    fflush(stderr);
+
     return 1;
 }

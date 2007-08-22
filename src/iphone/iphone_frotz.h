@@ -144,5 +144,5 @@ extern int iphone_textview_width, iphone_textview_height;
 
 #define kFrotzAutoSaveFile "FrotzSIP.sav"
 
-#define IPHONE_FROTZ_VERS "0.3"
+#define IPHONE_FROTZ_VERS "0.4"
 

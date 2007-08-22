@@ -15,12 +15,21 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
-#import "StoryMainView.h"
+#import <Foundation/Foundation.h>
+#include <objc-fixup.h>
+#import <UIKit/UIView-Geometry.h>
+
 #import "MainView.h"
+#import "FrotzKeyboard.h"
+#import "StoryMainView.h"
+
+#import <UIKit/UIKeyboardLayoutQWERTY.h>
+#import <UIKit/UIKeyboardLayoutQWERTYLandscape.h>
+
 #include <pthread.h>
 
-int iphone_textview_width = 54, iphone_textview_height = 18;
-int do_autosave = 0, autosave_done = 1;
+int iphone_textview_width = 55, iphone_textview_height = 18;
+int do_autosave = 0, autosave_done = 0;
 int do_filebrowser = 0;
 static int filebrowser_allow_new = 0;
 
@@ -190,21 +199,35 @@ void *interp_cover_autorestore(void *arg) {
     return NULL;
 }
 
+const kStatusLineYPos = 0.0f;
+const kStatusLineHeight = 24.0f;
+
+
+@interface UITextLoupe : UIView
+- (void)drawRect:(struct CGRect)rect;
+@end
+
+@implementation UITextLoupe (Black)
+- (void)drawRect:(struct CGRect)rect {
+}
+@end
+
 @implementation StoryMainView 
 - (id)initWithFrame:(struct CGRect)rect {
-    const kStatusLineYPos = 0.0f;
-    const kStatusLineHeight = 24.0f;
     if ((self == [super initWithFrame: rect]) != nil) {
-	UIView *background = [[UIView alloc] initWithFrame: rect];
+    
+	m_landscape = NO;
+	
+	UIView *background = [[UIView alloc] initWithFrame: CGRectMake(0.0f, 0.0f, 480.0f, 480.0f)];
 	float fgRGB[4] = {0.0, 0.0, 0.1, 1.0};
 	float bgRGB[4] = {1.0, 1.0, 0.9, 1.0};
+	float altRGB[4] = {0.5, 0.5, 0.6, 1.0};
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	struct CGColor *bgColor = CGColorCreate(colorSpace, bgRGB);
 	struct CGColor *fgColor = CGColorCreate(colorSpace, fgRGB);
+	struct CGColor *altColor = CGColorCreate(colorSpace, altRGB);
 	[background setBackgroundColor: bgColor];
 	[self addSubview: background];
-
- 	//printf ("storymainview rect: %f %f %f %f\n", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
 
 	id fileMgr = [NSFileManager defaultManager];
 	
@@ -226,25 +249,28 @@ void *interp_cover_autorestore(void *arg) {
 	[m_statusLine setEditable: NO];
 	
 	m_storyView = [[UIStoryView alloc] initWithFrame:
-	    CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, 500.0f, rect.size.height - kStatusLineYPos /* - kStatusLineHeight */)];
+	    CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, rect.size.width, rect.size.height - kStatusLineYPos /* - kStatusLineHeight */)];
 	[m_storyView setBackgroundColor: bgColor];
 	[m_storyView setTextColor: fgColor];
 	[m_storyView setAllowsRubberBanding:YES];
+	[m_storyView setMarginTop: 0];
+	[m_storyView setBottomBufferHeight: 20.0f];
 	[m_storyView displayScrollerIndicators];
+	// [m_storyView setEnabledGestures: 3]; // I pinch!
 
-	[m_storyView setTextFont: @"helvetica"];
-	[m_storyView setTextSize: 12];
+	[self setFont: @"helvetica"];
+	[self setFontSize: 12];
 	
 	[self addSubview: m_storyView];
 	[self addSubview: m_statusLine];
 	
-	m_keyb = [[FrotzKeyboard alloc] initWithFrame: CGRectMake(0.0f, rect.size.height, 320.0f, 236.0)];
+	m_keyb = [[FrotzKeyboard alloc] initWithFrame: CGRectMake(0.0f, rect.size.height, 320.0f, 236.0f)];
+	[m_keyb show: m_storyView];
 	[self addSubview: m_keyb];
-	[m_keyb setReturnKeyEnabled: YES];
+
 	[m_storyView setKeyboard: m_keyb];
 	[m_keyb setTapDelegate: m_storyView];
 	
-	[m_keyb activate];
 	m_currentStory = [[NSMutableString stringWithString: @""] retain];
 	
 	[m_storyView becomeFirstResponder];
@@ -255,12 +281,100 @@ void *interp_cover_autorestore(void *arg) {
     return self;
 }
 
+
+-(BOOL) landscape {
+    return m_landscape;
+}
+
+-(void) setLandscape: (BOOL)landscape {
+    if (landscape != m_landscape) {
+    	[m_keyb removeFromSuperview];
+	[m_storyView removeFromSuperview];
+	[m_statusLine removeFromSuperview];
+
+	m_landscape = landscape;
+	if (landscape) {
+	    [self setFrame: CGRectMake(0.0f, 0.0f, 460.0f, 320.0f)];
+
+	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, 460.0, 320.0f - 180.0f - kStatusLineHeight)];
+	    
+	    [m_storyView setMarginTop: 0];
+	    [m_storyView setBottomBufferHeight: 20.0f];
+	    [m_storyView setNeedsLayout];
+	    [m_storyView setNeedsDisplay];
+	    [self addSubview: m_storyView];
+	    [self addSubview: m_statusLine];
+
+	    BOOL isVisible = [m_keyb isVisible];
+	    [m_keyb setTransform: CGAffineTransformMakeTranslation(0.0f, 0.0f)];
+	    if (isVisible)
+		[m_keyb setFrame: CGRectMake(0.0f, 140.0f, 480.0f, 180.0f)];
+	    else
+		[m_keyb setFrame: CGRectMake(0.0f, 320.0f, 480.0f, 180.0f)];
+	    [m_keyb setLandscape: landscape];
+	    [m_keyb showLayout:[UIKeyboardLayoutQWERTYLandscape class]];
+	    [m_keyb setTransform: CGAffineTransformMakeTranslation(-10.0f, 0.0f)];
+	} else {
+	    [self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f - 40.0f /* - kStatusLineHeight */)];
+	    
+	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, 320.0f, 440.0f - 236.0f - kStatusLineHeight)];
+
+	    [m_storyView setMarginTop: 1];
+	    [m_storyView setBottomBufferHeight: 20.0f];
+	    [m_storyView setNeedsLayout];
+	    [m_storyView setNeedsDisplay];
+	    [self addSubview: m_storyView];
+	    [self addSubview: m_statusLine];
+
+	    BOOL isVisible = [m_keyb isVisible];
+	    [m_keyb setTransform: CGAffineTransformMakeTranslation(0.0f, 0.0f)];
+	    if (isVisible)
+		[m_keyb setFrame: CGRectMake(0.0f, 440.0f - 236.0f, 320.0f, 236.0f)];
+	    else
+		[m_keyb setFrame: CGRectMake(0.0f, 440.0f, 320.0f, 236.0f)];
+	    [m_keyb setLandscape: landscape];
+	    [m_keyb showLayout:[UIKeyboardLayoutQWERTY class]];
+	}
+
+	[self addSubview: m_keyb];
+	[m_storyView setKeyboard: m_keyb];
+	[m_keyb setTapDelegate: m_storyView];
+
+	[m_storyView becomeFirstResponder];
+	[[[m_storyView _webView] webView] moveToEndOfDocument:self];
+
+    }
+}
+
+
 -(void) setMainView: (MainView*)mainView {
     m_topView = mainView;
 }
 
 -(MainView*) mainView {
     return m_topView;
+}
+
+-(NSMutableString*) font {
+    return m_fontname;
+}
+
+-(void) setFont: (NSString*) font {
+    m_fontname = [[font copy] retain];
+    [[self storyView] setTextFont: font];
+}
+
+-(int) fontSize {
+    return m_fontSize;
+}
+
+-(void) setFontSize: (int)size {
+    if (size) {
+	m_fontSize = size;
+	[[self storyView] setTextSize: size];
+    }
 }
 
 -(UIStoryView*) storyView {
@@ -306,10 +420,11 @@ extern int finished; // set by z_quit
 	float topWinSize = 8 + top_win_height * kFixedFontPixelHeight;
 	if (topWinSize > 204) topWinSize = 204;
 	[m_statusLine setFrame: CGRectMake(0.0f, 0.0f, 500.0f,  topWinSize)];
-	[m_storyView setFrame: CGRectMake(0.0f, topWinSize, 500.0f, 480.0f - 40.0f - (topWinSize) - 236)];
+	[m_storyView setFrame: CGRectMake(0.0f, topWinSize, 320.0f, 480.0f - 40.0f - (topWinSize) - 236)];
 	iphone_top_win_height = top_win_height;
 	prevTopWinHeight = top_win_height;
     }
+
 
     pthread_mutex_lock(&winSizeMutex);
     if (winSizeChanged) {
@@ -368,6 +483,8 @@ extern int finished; // set by z_quit
     }
     else
 	[self performSelector:@selector(printText:) withObject:nil afterDelay:0.01];
+    fflush(stdout);
+    fflush(stderr);
 }
 
 
@@ -375,7 +492,7 @@ extern int finished; // set by z_quit
     static char storyNameBuf[256];
     
     id fileMgr = [NSFileManager defaultManager];
-    if ([fileMgr fileExistsAtPath: storySIPPath]) {
+    if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
     	NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: storySIPPath] retain];
 	NSString *statusStr = NULL;
 	if (dict) {
@@ -426,7 +543,7 @@ extern int finished; // set by z_quit
     static char storyNameBuf[256];
     strcpy(storyNameBuf, [m_currentStory UTF8String]);
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
-    printf ("launched tid %d\n", m_storyTID);
+//    NSLog (@"launched tid %d\n", m_storyTID);
     [m_keyb show:m_storyView];
     [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
 
@@ -447,7 +564,6 @@ extern int finished; // set by z_quit
 -(void) suspendStory {
     [ipzInputBufferStr setString: @""];   
     [ipzInputBufferStr appendFormat: @"%c", ZC_AUTOSAVE];
-
     if (m_currentStory && ([m_currentStory length] > 0)) {
 	NSError *err = NULL;
 	char *topWinString = tempScreenBuf();
@@ -468,6 +584,7 @@ extern int finished; // set by z_quit
 	    usleep(100000);
 	    --count;
 	}
+	sync();
     }
     autosave_done = 0;
 }
@@ -510,10 +627,9 @@ extern int finished; // set by z_quit
     m_keyb = keyboard;
 }
 
-
 -(void)mouseUp:(struct __GSEvent *)event
 {
-    if (![self isScrolling]) 
+   if (![self isScrolling]) 
 	[m_keyb toggle: self];
     [super mouseUp:event];
 }

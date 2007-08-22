@@ -1,5 +1,5 @@
 
-iPhoneFrotz version 0.2
+iPhoneFrotz version 0.4
 
 iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
 by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
@@ -35,4 +35,14 @@ Wed Aug 15 01:04:41 CDT 2007
 0.3
  - Clean up nav bar management
  - Improve save/restore.  Restore automatically uses the file dialog.
+
+Wed Aug 22 01:39:53 CDT 2007
+0.4
+ - Landscape mode!
+ - Reflow text in main story window when font is changed or phone is rotated
+ - Remember current font in font selection dialog
+ - Fix race condition in autosave that sometimes resulted in corrupt text
+ - Text completion of 'x' to 'examine', 'l' to look, etc.
+
+ * Special thanks to allen.porter for helping with landscape keyboard support.
 

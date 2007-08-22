@@ -227,7 +227,7 @@ static void countdown (void)
  *
  */
 
-void screen_new_line (void)
+void screen_new_line (bool wrapping)
 {
 
     if (discarding) return;
@@ -266,6 +266,7 @@ void screen_new_line (void)
     else cwp->y_cursor += font_height;
 
     update_cursor ();
+    os_new_line(wrapping);
 
     /* See if we need to print a more prompt (unless the game has set
        the line counter to -999 in order to suppress more prompts). */
@@ -316,7 +317,7 @@ void screen_char (zchar c)
 	if (!enable_wrapping)
 	    { cwp->x_cursor = cwp->x_size - cwp->right; return; }
 
-	screen_new_line ();
+	screen_new_line (TRUE);
 
     }
 
@@ -372,7 +373,7 @@ void screen_word (const zchar *s)
 	if (cwin == 0) Justifiable ();
 #endif
 
-	screen_new_line ();
+	screen_new_line (TRUE);
 
     }
 
@@ -392,12 +393,12 @@ void screen_write_input (const zchar *buf, zchar key)
     int width;
 
     if (units_left () < (width = os_string_width (buf)))
-	screen_new_line ();
+	screen_new_line (TRUE);
 
     os_display_string (buf); cwp->x_cursor += width;
 
     if (key == ZC_RETURN)
-	screen_new_line ();
+	screen_new_line (FALSE);
 
 }/* screen_write_input */
 
@@ -447,7 +448,7 @@ zchar console_read_input (int max, zchar *buf, zword timeout, bool continued)
     /* Make sure there is some space for input */
 
     if (cwin == 0 && units_left () + os_string_width (buf) < 10 * font_width)
-	screen_new_line ();
+	screen_new_line (TRUE);
 
     /* Make sure the input line is visible */
 
@@ -472,7 +473,7 @@ zchar console_read_input (int max, zchar *buf, zword timeout, bool continued)
     /* Add a newline if the input was terminated normally */
 
     if (key == ZC_RETURN)
-	screen_new_line ();
+	screen_new_line (FALSE);
 
     return key;
 
@@ -795,9 +796,9 @@ void restart_screen (void)
 /*
  * validate_click
  *
- * Return false if the last mouse click occured outside the current
+ * Return FALSE if the last mouse click occured outside the current
  * mouse window; otherwise write the mouse arrow coordinates to the
- * memory of the header extension table and return true.
+ * memory of the header extension table and return TRUE.
  *
  */
 
@@ -855,7 +856,7 @@ void screen_mssg_on (void)
 	os_set_text_style (0);
 
 	if (cwp->x_cursor != cwp->left + 1)
-	    screen_new_line ();
+	    screen_new_line (FALSE);
 
 	screen_char (ZC_INDENT);
 
@@ -875,7 +876,7 @@ void screen_mssg_off (void)
 
     if (cwin == 0) {		/* messages in window 0 only */
 
-	screen_new_line ();
+	screen_new_line (FALSE);
 
 	refresh_text_style ();
 
