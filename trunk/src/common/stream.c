@@ -46,7 +46,7 @@ extern void script_mssg_on (void);
 extern void script_mssg_off (void);
 extern void screen_char (zchar);
 extern void screen_word (const zchar *);
-extern void screen_new_line (void);
+extern void screen_new_line (bool);
 extern void screen_write_input (const zchar *, zchar);
 extern void screen_erase_input (const zchar *);
 extern void screen_mssg_on (void);
@@ -197,7 +197,7 @@ void stream_new_line (void)
     else {
 
 	if (ostream_screen)
-	    screen_new_line ();
+	    screen_new_line (FALSE);
 	if (ostream_script && enable_scripting)
 	    script_new_line ();
 

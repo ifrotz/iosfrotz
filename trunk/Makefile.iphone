@@ -1,9 +1,9 @@
 
 CC=arm-apple-darwin-cc
 CFLAGS=-F/System/Library/Frameworks/Foundation -IUIKit
-IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics
+IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework GraphicsServices
 
-OPTS = -O2 
+OPTS = -O7
 #OPTS = -g
 
 # Define where you want Frotz to look for frotz.conf.

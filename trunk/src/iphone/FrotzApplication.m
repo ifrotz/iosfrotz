@@ -19,30 +19,57 @@
 #import "FrotzApplication.h"
 #import "MainView.h"
 
+struct GSEvent;
+typedef struct GSEvent GSEvent;
+int GSEventDeviceOrientation(GSEvent *);
+
 @implementation FrotzApplication
+
+
+- (void)deviceOrientationChanged:(GSEvent *)event {
+    int screenOrientation = GSEventDeviceOrientation(event);    
+    [self setUIOrientation: screenOrientation]; // ??? does this do anything?
+    [_mainView updateOrientation: screenOrientation];
+}
 
 - (void) applicationDidFinishLaunching: (id) unused
 {
     UIWindow *window;
-    
-    window = [[UIWindow alloc] initWithContentRect: [UIHardware fullScreenApplicationContentRect]];
-    struct CGRect rect = [UIHardware fullScreenApplicationContentRect];
-    rect.origin.x = rect.origin.y = 0.0f;
-    _mainView = [[MainView alloc] initWithFrame: rect];
+    struct CGRect winRect = [UIHardware fullScreenApplicationContentRect];
+    window = [[UIWindow alloc] initWithContentRect: winRect];
+    winRect.origin.x = winRect.origin.y = 0.0f;
+    _mainView = [[MainView alloc] initWithFrame: winRect];
 
-    [window setContentView: _mainView]; 
-    
+    [self setStatusBarMode: 1 duration: 0];
+
     [window orderFront: self];
     [window makeKey: self];
     [window _setHidden: NO];
-    
+
+    [window setContentView: _mainView];     
 }
 
+#if 0
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+  NSLog(@"Request for selector: %@\n", NSStringFromSelector(aSelector));
+  return [super respondsToSelector:aSelector];
+}
 
-- (void)applicationWillSuspend {
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+  NSLog(@"Callapp %@\n", NSStringFromSelector([anInvocation selector]));
+  [super forwardInvocation:anInvocation];
+  return;
+}
+#endif
+
+- (void)applicationWillTerminate {
     [_mainView suspendStory];
-    [super applicationWillSuspend];
+    [super applicationWillTerminate];
 }
+
+
 
 @end // FrotzApplication
 

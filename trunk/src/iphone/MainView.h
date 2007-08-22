@@ -27,6 +27,11 @@
 #import "FileBrowser.h"
 #import "StoryMainView.h"
 
+@interface UIView (Fixup) 
+-(CGRect) frame;
+-(void) setFrame: (CGRect)frame;
+@end
+
 enum { kModeSelectStory, kModePlayStory, kModeSelectFont, kModeSelectFile };
 
 @interface MainView : UIView  <StorySelected> {
@@ -37,6 +42,7 @@ enum { kModeSelectStory, kModePlayStory, kModeSelectFont, kModeSelectFile };
     UIFontChooser *m_fontc;
     UIKeyboard *m_keyb;
     FileBrowser *m_fileBrowser;
+    int m_orient;
 
     int _mode;
 }
@@ -49,4 +55,6 @@ enum { kModeSelectStory, kModePlayStory, kModeSelectFont, kModeSelectFile };
 -(void) dealloc;
 -(void) openFileBrowser;
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file;
+-(int) orientation;
+-(void) updateOrientation: (int)orient;
 @end

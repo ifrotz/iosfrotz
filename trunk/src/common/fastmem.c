@@ -949,9 +949,9 @@ void z_save (void)
 
 	/* Get the file name */
 
-	if (do_autosave)
+	if (do_autosave) {
             strcpy(new_name, AUTOSAVE_FILE);
-        else if (os_read_file_name (new_name, save_name, FILE_SAVE) == 0)
+        } else if (os_read_file_name (new_name, save_name, FILE_SAVE) == 0)
 	    goto finished;
 
 	strcpy (save_name, new_name);

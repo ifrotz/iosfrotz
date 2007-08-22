@@ -374,9 +374,11 @@ int os_string_width (const zchar *s)
 
 void os_set_cursor (int row, int col)
 {
+#if 0
     if ((row < h_screen_rows && cursor_row+1 == row
         || cursor_row+2 == row || cursor_row == row) && col == 1)
 	iphone_putchar('\n');
+#endif
     cursor_row = row - 1; cursor_col = col - 1;
     if (cursor_row >= h_screen_rows)
 	cursor_row = h_screen_rows - 1;
@@ -442,6 +444,13 @@ void os_split_win(int height) {
     pthread_mutex_unlock(&winSizeMutex);
 }
 
+void os_new_line(bool wrapping) { // only called by word wrap
+    if (wrapping)
+      iphone_putchar(' ');
+    else
+      iphone_putchar('\n');
+}
+
 /*
  * os_scroll_area
  *
@@ -466,8 +475,8 @@ void os_scroll_area (int top, int left, int bottom, int right, int units)
          scr_copy_cell(row, col, row + units, col);
     os_erase_area(top + 1, left + 1, top - units, right + 1);
   }
-  if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
-    iphone_putchar('\n');
+  //if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
+    //iphone_putchar('\n');
   
 }/* os_scroll_area */
 

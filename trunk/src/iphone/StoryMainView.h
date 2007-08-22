@@ -22,12 +22,12 @@
 #import <UIKit/UIFontChooser.h>
 #import <UIKit/UITextView.h>
 #import "Cleanup.h" // header fixups borrowed from MobileTerminal
-#import "FrotzKeyboard.h"
 
 #include "iphone_frotz.h"
 
 @class MainView;
 @class FrotzTextSuggestionDelegate;
+@class FrotzKeyboard;
 
 @interface UIFrotzWinView : UITextView {
     FrotzKeyboard *m_keyb;
@@ -52,8 +52,12 @@
     FrotzKeyboard *m_keyb;
    
     NSMutableString *m_currentStory;
-    pthread_t m_storyTID;
+    
+    NSMutableString *m_fontname;
+    int m_fontSize;
 
+    pthread_t m_storyTID;
+    BOOL m_landscape;
 }
 
 -(UIStoryView*) storyView;
@@ -65,6 +69,13 @@
 -(void) abandonStory;
 -(BOOL) autoRestoreSession;
 -(void) suspendStory;
+-(BOOL) landscape;
+-(void) setLandscape: (BOOL)landscape;
+-(NSMutableString*) font;
+-(void) setFont: (NSString*)font;
+-(int) fontSize;
+-(void) setFontSize: (int)size;
+    
 @end
 
 extern const int kFixedFontSize;

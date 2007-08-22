@@ -18,10 +18,14 @@
 
 #import "MainView.h"
 #import <UIKit/UIWebView.h>
+#import <UIKit/UIAnimator.h>
+#import <UIKit/UITransformAnimation.h>
+#import <UIKit/UIView-Geometry.h>
+
+const float kNavBarSize = 40.0f;
 
 @implementation MainView 
 - (id)initWithFrame:(struct CGRect)rect {
-    const float kNavBarSize = 40.0f;
     if ((self == [super initWithFrame: rect]) != nil) {
 
     	id fileMgr = [NSFileManager defaultManager];	
@@ -37,8 +41,10 @@
 	[_navBar setDelegate: self];
 	[_navBar enableAnimation];
 	
+	CGRect r2 = rect;
+	r2.size.width = r2.size.height;
 	_transitionView = [[UITransitionView alloc] initWithFrame: 
-	    CGRectMake(rect.origin.x, kNavBarSize, rect.size.width, rect.size.height - kNavBarSize)];
+	    CGRectMake(rect.origin.x, kNavBarSize, r2.size.width, rect.size.height - kNavBarSize)];
 
 	_storyBrowser = [[StoryBrowser alloc] initWithFrame:
 	    CGRectMake(0, 0, rect.size.width, rect.size.height - kNavBarSize) withPath: storyGamePath];
@@ -62,6 +68,70 @@
 	}
     }
     return self;
+}
+
+-(int) orientation {
+    return m_orient;
+}
+
+-(void) updateOrientation: (int)orient {
+    if (_mode != kModePlayStory)
+	return;
+    switch (orient)
+    {
+	    case 1:
+		    orient = 0;
+		    break;
+	    case 3:
+		    orient = 90;
+		    break;
+	    case 4:
+		    orient = -90;
+		    break;
+	    case 2:
+		    //orient = 180;
+		    //break;
+	    default: 
+		    return;
+    }
+    if (orient != m_orient) {
+	printf ("device orientation changed %d\n", orient);
+	fflush(stdout);
+	if (orient != m_orient) {
+	    BOOL landscape = (orient == 90 || orient == -90);
+	#if 0
+	    UITransformAnimation *translate = [[UITransformAnimation alloc] initWithTarget: self];
+	    [translate setStartTransform: CGAffineTransformMakeRotation(m_orient * M_PI / 180.0)];
+	    [translate setEndTransform: CGAffineTransformMakeRotation(orient * M_PI / 180.0)];
+	    [translate setDelegate: self];
+	    UIAnimator *anim = [[UIAnimator alloc] init];
+	    [anim addAnimation:translate withDuration:0.25 start:YES];
+	#else
+	    float screenHeight = 480.0f;
+	    if (!landscape || orient == -m_orient) {
+		[self setTransform: CGAffineTransformMakeRotation(0.0f)];
+		[self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f)];
+		[self setTransform: CGAffineTransformMakeRotation(0.0f)];
+		if (!landscape)
+		    [self addSubview: _navBar];
+	    }
+	    if (landscape) {
+		float landScreenHeight = 320.0f + kNavBarSize;
+		float shift = (screenHeight - landScreenHeight)/2.0f;
+		[self setFrame: CGRectMake(0.0f, 0.0f, screenHeight, landScreenHeight)];
+		if (orient == 90)
+		    [self setTransform: CGAffineTransformRotate(CGAffineTransformMakeTranslation(-shift, shift), orient * M_PI / 180.0f)];
+		else {
+		    shift = 40.0f;
+		    [self setTransform: CGAffineTransformRotate(CGAffineTransformMakeTranslation(-100.0f, 40.0f), orient * M_PI / 180.0f)];
+		}
+		[_navBar removeFromSuperview];
+	    } 
+	#endif
+	    m_orient = orient;
+	    [_storyMainView setLandscape: (m_orient == 90 || m_orient == -90)];
+	}
+    }
 }
 
 -(void)updateNavBarButtons {
@@ -140,10 +210,12 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 		float size = objc_msgSend_fpret(m_fontc, @selector(selectedSize));
 		NSString *fontName = [m_fontc selectedFamilyName];
 		printf("Chose font: %s %f\n", [fontName UTF8String], size);
+		
 		if (fontName && [fontName compare: @""]!=NSOrderedSame)
-		    [[_storyMainView storyView] setTextFont: [m_fontc selectedFamilyName]];
+		    [_storyMainView setFont: [m_fontc selectedFamilyName]];
 		if (size)
-		    [[_storyMainView storyView] setTextSize: size];
+		    [_storyMainView setFontSize: size];
+		    
 		[[[_storyMainView storyView] _webView] insertText: @" "];
 		[[[_storyMainView storyView] _webView] deleteBackward];
 		[[_storyMainView storyView] scrollToMakeCaretVisible: YES];
@@ -161,8 +233,8 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 		_mode = kModeSelectFont;
 		[self updateNavBarButtons];
 
-		//	[m_fontc selectFamilyName: [[self textView] fontName];
-		//	[m_fontc setectSize: [[self textView] fontSize];
+		[m_fontc selectFamilyName: [_storyMainView font]];
+		[m_fontc selectSize: [_storyMainView fontSize]];
 		[[navbar superview] addSubview: m_fontc];
 		[m_fontc setDelegate: self];
 		[m_fontc becomeFirstResponder];
