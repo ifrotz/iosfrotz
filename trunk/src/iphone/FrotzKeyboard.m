@@ -36,32 +36,54 @@ const float kAnimDuration = 0.40f;
   return NO;
 }
 
-// We want to prevent common single letter inputs (i,w,e,s,q) from correcting to the wrong thing ('a') using the
-// default word correction, without turning it off altogether. 
--(void)setAutocorrection:(id)str {
-    // This works only partially because it's only called if there is already an autocorrection
-    // suggested; we merely replace it.  So 'z' aand 'i' don't work.
-    // To-do: Investigate pre-populating the m_autocorrectionHistory instead.
-    if (str && [str length] > 2)
-	[super setAutocorrection: str];
-    else if (str && [str isEqualToString: @"x"])
-	m_autocorrection = @"examine";
-    else if (str && [str isEqualToString: @"l"])
-	m_autocorrection = @"look";
-    else if (str && [str isEqualToString: @"i"])
-	m_autocorrection = @"inventory";
-    else if (str && [str isEqualToString: @"g"])
-	m_autocorrection = @"again.";
-    else if (str && [str isEqualToString: @"z"])
-	m_autocorrection = @"wait.";
-    else if (str && [str isEqualToString: @"ta"])
-	m_autocorrection = @"take";
-    else if (str && [str isEqualToString: @"ge"])
-	m_autocorrection = @"get";
-    else
-	m_autocorrection = @"";
+static int matchWord(NSString *str, NSString *wordArray[]) {
+    int i;
+    for (i=0; wordArray[i]; ++i) {
+	if ([wordArray[i] hasPrefix: str]) {
+	    return i;
+	}
+    }
+    return -1;
 }
 
+-(void)updateSuggestionsForCurrentInput {
+    NSString *str = [m_inputManager inputString];
+    static NSString *wordArray[] = { @"inventory", @"look", @"read", @"restore", @"take", @"get",
+	@"pick", @"quit", @"but", @"throw", @"tell", @"open", @"close", @"put",
+	@"up", @"down", @"it", nil };
+    static NSString *rareWordArray[] = { @"examine", @"diagnose", @"say", @"save", @"to", @"no", @"yes", @"all", @"but", @"from", @"with", @"about",
+	@"north", @"east", @"south", @"west", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"push", @"pull", @"show", @"stand", @"switch",
+	@"turn", @"sit", @"kill", @"jump",  @"go", @"give", @"disrobe", nil };
+    static NSString *veryRareWordArray[] = { @"diagnose", @"verbose", @"brief", @"superbrief", @"score", @"restart", @"script", @"unscript",
+	@"listen", @"touch", @"smell", @"taste", @"feel", @"light", @"lanterm", nil };
+    int len = [str length], match;
+    int i;
+    
+    if (len == 0)
+    	[super updateSuggestionsForCurrentInput];
+    else  if ([str isEqualToString: @"x"])  // 1-letter shortcuts
+	[self setAutocorrection: @"examine"];
+    else  if ([str isEqualToString: @"z"])
+	[self setAutocorrection: @"wait."];
+    else  if ([str isEqualToString: @"g"])
+	[self setAutocorrection: @"again."];
+    else {
+	if ((match = matchWord(str, wordArray)) >= 0) {
+	    [self setAutocorrection: wordArray[match]];
+	    return;
+	}
+	if (len > 1 && (match = matchWord(str, rareWordArray)) >= 0) {
+	    [self setAutocorrection: rareWordArray[match]];
+	    return;
+	}
+	if (len > 2 && (match = matchWord(str, veryRareWordArray)) >= 0) {
+	    [self setAutocorrection: veryRareWordArray[match]];
+	    return;
+	}
+    }
+    if (len > 2) // don't correct 1/2 letter words, or cardinal dirs will be messed up
+	[super updateSuggestionsForCurrentInput];
+}
 
 -(int) keyboardHeight {
     return m_landscape ? 180 : 236;

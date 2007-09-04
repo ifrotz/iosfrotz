@@ -20,6 +20,7 @@
 #import <UIKit/UIAnimator.h>
 #import <UIKit/UITransformAnimation.h>
 #import <UIKit/UIView-Geometry.h>
+#import <UIKit/UINavigationItem.h>
 #import "UIWebView.h"
 
 const float kNavBarSize = 40.0f;
@@ -34,38 +35,45 @@ const float kNavBarSize = 40.0f;
 	    rename(kFrotzOldDir, kFrotzDir);
 	    sync();
 	}
-    
-	_navBar = [[UINavigationBar alloc] initWithFrame:
+     	m_background = [[UIView alloc] initWithFrame: CGRectMake(0.0f, 0.0f, 480.0f, 480.0f)];
+	float bgRGB[4] = {0.0, 0.0, 0.0, 1.0};
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	struct CGColor *bgColor = CGColorCreate(colorSpace, bgRGB);
+	[m_background setBackgroundColor: bgColor];
+	[self addSubview: m_background];
+   
+	m_navBar = [[UINavigationBar alloc] initWithFrame:
 	    CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, kNavBarSize)];
-	[_navBar setBarStyle: 1];
-	[_navBar setDelegate: self];
-	[_navBar enableAnimation];
+	[m_navBar setBarStyle: 1];
+	[m_navBar setDelegate: self];
+	[m_navBar enableAnimation];
 	
 	CGRect r2 = rect;
-	r2.size.width = r2.size.height;
-	_transitionView = [[UITransitionView alloc] initWithFrame: 
+//	r2.size.width = r2.size.height;
+	m_transitionView = [[UITransitionView alloc] initWithFrame: 
 	    CGRectMake(rect.origin.x, kNavBarSize, r2.size.width, rect.size.height - kNavBarSize)];
 
-	_storyBrowser = [[StoryBrowser alloc] initWithFrame:
+	m_storyBrowser = [[StoryBrowser alloc] initWithFrame:
 	    CGRectMake(0, 0, rect.size.width, rect.size.height - kNavBarSize) withPath: storyGamePath];
-	_storyMainView = [[StoryMainView alloc] initWithFrame:
+	m_storyMainView = [[StoryMainView alloc] initWithFrame:
 	    CGRectMake(0, 0, rect.size.width, rect.size.height - kNavBarSize)];
-	[_storyMainView setMainView: self];
+	[m_storyMainView setMainView: self];
 	
-	[_storyBrowser setDelegate: self];
+	[m_storyBrowser setDelegate: self];
 	
-	_mode = kModeSelectStory;
-        [self updateNavBarButtons];
-	[self addSubview: _navBar];
-	[self addSubview: _transitionView];
+	m_mode = kModeUninit;
+	[self addSubview: m_navBar];
+	[self addSubview: m_transitionView];
+        [self updateNavBarButtons: kModeSelectStory];
 
-	if (![_storyMainView autoRestoreSession]) {
-	    [_transitionView transition:1 toView:_storyBrowser];
+	if (![m_storyMainView autoRestoreSession]) {
+	    [m_transitionView transition:1 toView:m_storyBrowser];
 	} else {
-	    _mode = kModePlayStory;
-	    [self updateNavBarButtons];
-	    [_transitionView transition:1 toView:_storyMainView];
+	    [self updateNavBarButtons: kModePlayStory];
+	    [m_transitionView transition:1 toView:m_storyMainView];
 	}
+	CGColorRelease(bgColor);
+	CGColorSpaceRelease(colorSpace);
     }
     return self;
 }
@@ -75,7 +83,7 @@ const float kNavBarSize = 40.0f;
 }
 
 -(void) updateOrientation: (int)orient {
-    if (_mode != kModePlayStory)
+    if (m_mode != kModePlayStory)
 	return;
     switch (orient)
     {
@@ -113,7 +121,7 @@ const float kNavBarSize = 40.0f;
 		[self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f)];
 		[self setTransform: CGAffineTransformMakeRotation(0.0f)];
 		if (!landscape)
-		    [self addSubview: _navBar];
+		    [self addSubview: m_navBar];
 	    }
 	    if (landscape) {
 		float landScreenHeight = 320.0f + kNavBarSize;
@@ -125,54 +133,93 @@ const float kNavBarSize = 40.0f;
 		    shift = 40.0f;
 		    [self setTransform: CGAffineTransformRotate(CGAffineTransformMakeTranslation(-100.0f, 40.0f), orient * M_PI / 180.0f)];
 		}
-		[_navBar removeFromSuperview];
+		[m_navBar removeFromSuperview];
 	    } 
 	#endif
 	    m_orient = orient;
-	    [_storyMainView setLandscape: (m_orient == 90 || m_orient == -90)];
+	    if (landscape)
+		[m_transitionView setFrame: CGRectMake(0,40,480,480)];
+	    else
+		[m_transitionView setFrame: CGRectMake(0,40,320,480)];
+
+	    [m_transitionView transition:6 toView:m_storyMainView];
+	    [m_storyMainView setLandscape: (m_orient == 90 || m_orient == -90)];
 	}
     }
 }
 
--(void)updateNavBarButtons {
-    switch (_mode) {
+-(void)updateNavBarButtons: (int)newMode {
+
+    switch (newMode) {
 	case kModeSelectStory:
-	    [_navBar showButtonsWithLeftTitle:nil rightTitle:@"Refresh" leftBack: YES];
+	    if (m_mode == kModeUninit)
+		[m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle: @"Story List"]];
+	    else if (newMode != m_mode)
+		[m_navBar popNavigationItem];
+	    [m_navBar showButtonsWithLeftTitle:nil rightTitle:@"Refresh" leftBack: NO];
+	    break;
+	case kModeSelectColor:
+	    if (newMode != m_mode)
+		[m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle:
+		    m_whichColor ? @"Background " : @"Text Color"]];
+	    [m_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:@"Select" leftBack: YES];
 	    break;
 	case kModeSelectFont:
-	    [_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:@"Select Font" leftBack: YES];
+	    if (newMode != m_mode)
+		[m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle: @"Choose Font"]];
+	    [m_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:@"Select" leftBack: YES];
 	    break;
+	case kModePrefs:
+	    if (m_mode == kModePlayStory)
+		[m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle: @"Settings"]];
+	    else if (newMode != m_mode)
+		[m_navBar popNavigationItem];
+	    [m_navBar showButtonsWithLeftTitle:@"Back" rightTitle:nil leftBack: YES];
+	    break;
+	case kModeResumeStory:
 	case kModePlayStory:
-	    [_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Set Font" leftBack: YES];
+	    if (m_mode != kModePlayStory) {
+		if (newMode == kModeResumeStory) {
+		    [m_navBar popNavigationItem];
+		    newMode = kModePlayStory;
+		} else
+		    [m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle: @"Frotz"]];
+	    }
+	    [m_navBar showButtonsWithLeftTitle:@"Story List" rightTitle:@"Settings" leftBack: YES];
 	    break;
 	case kModeSelectFile:
-	    [_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:nil leftBack: YES];
+	    if (newMode != m_mode)
+		[m_navBar pushNavigationItem: [[UINavigationItem alloc] initWithTitle: @"Saved Games"]];
+	    [m_navBar showButtonsWithLeftTitle:@"Cancel" rightTitle:nil leftBack: YES];
 	    break;
 	default:
-	    [_navBar showButtonsWithLeftTitle:nil rightTitle:nil leftBack: YES];
+	    [m_navBar showButtonsWithLeftTitle:nil rightTitle:nil leftBack: YES];
 	    break;
     }
+    m_mode = newMode;
 }
 
 -(void)storyBrowser:browser storySelected:storyPath {
-    _mode = kModePlayStory;
-    [self updateNavBarButtons];
-    [_transitionView transition:1 toView:_storyMainView];
-    [_storyMainView setCurrentStory: storyPath];
-    [_storyMainView launchStory];
+    [self updateNavBarButtons: kModePlayStory];
+    [m_transitionView transition:1 toView:m_storyMainView];
+    [m_storyMainView setCurrentStory: storyPath];
+    [m_storyMainView launchStory];
 }
 
 -(void) suspendStory {
-    [_storyMainView suspendStory];
+    [m_storyMainView suspendStory];
 }
 
 - (void)dealloc {
-    [_storyBrowser release];
-    [_storyMainView release];
-    [_navBar release];
+    [m_storyBrowser release];
+    [m_storyMainView release];
+    [m_navBar release];
     [m_fontc release];
     [m_keyb release];
     [m_fileBrowser release];
+    [m_colorPicker release];
+    [m_prefTable release];
+    [m_background release];
     [super dealloc];
 }
 
@@ -199,10 +246,22 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 -(void)navigationBar:(UINavigationBar *)navbar buttonClicked:(int)button {
     // right button=0, left=1
  
-    switch (_mode) {
+    switch (m_mode) {
 	case kModeSelectStory:
 	    if (button == 0) // refresh
-		[_storyBrowser reloadData];
+		[m_storyBrowser reloadData];
+	    break;
+	case kModeSelectColor:
+	    if (button == 0 && m_selectedColor) {
+	        CGColorRef color = CGColorCreateCopy(m_selectedColor);
+		if (m_whichColor)
+		    [m_storyMainView setBackgroundColor: color];
+		else
+		    [m_storyMainView setTextColor: color];
+	    }
+	    [m_transitionView transition:2 toView :m_prefTable];
+
+	    [self updateNavBarButtons: kModePrefs];
 	    break;
 	case kModeSelectFont:
 	    if (button == 0) {
@@ -212,32 +271,41 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 		printf("Chose font: %s %f\n", [fontName UTF8String], size);
 		
 		if (fontName && [fontName compare: @""]!=NSOrderedSame)
-		    [_storyMainView setFont: [m_fontc selectedFamilyName]];
+		    [m_storyMainView setFont: [m_fontc selectedFamilyName]];
 		if (size)
-		    [_storyMainView setFontSize: size];
+		    [m_storyMainView setFontSize: size];
 		    
-		[[[_storyMainView storyView] _webView] insertText: @" "];
-		[[[_storyMainView storyView] _webView] deleteBackward];
-		[[_storyMainView storyView] scrollToMakeCaretVisible: YES];
+		[[[m_storyMainView storyView] _webView] insertText: @" "];
+		[[[m_storyMainView storyView] _webView] deleteBackward];
+		[[m_storyMainView storyView] scrollToMakeCaretVisible: YES];
 	    }
-	    [m_fontc removeFromSuperview];
-	    [m_fontc release];
-	    _mode = kModePlayStory;
-	    [self updateNavBarButtons];
-	    m_fontc = NULL;
+	    [m_transitionView transition:2 toView: m_prefTable];
+	    [self updateNavBarButtons: kModePrefs];
+	    break;
+	case kModePrefs:
+	    [m_storyMainView savePrefs];
+	    [m_transitionView transition:2 toView:m_storyMainView];
+	    [m_storyMainView scrollToEnd];
+	    [self updateNavBarButtons: kModeResumeStory];
 	    break;
 	case kModePlayStory:
 	    if (button == 0) {
-		NSError *err;
-		m_fontc = [[UIFontChooser alloc] initWithFrame: CGRectMake(0.0f, 40.0f, 320.0f, 480.0f - 40 - 24)];
-		_mode = kModeSelectFont;
-		[self updateNavBarButtons];
+		if (!m_prefTable) {
+		    m_prefTable = [[UIPreferencesTable alloc] initWithFrame: CGRectMake(0.0f, 20.0f, 320.0f, 480.0f)];
+		    m_prefButton[0] = [[[UIPreferencesTableCell alloc] init] retain];
+		    [m_prefButton[0] setTitle: @"Font"];
+		    [m_prefButton[0] setTarget: self];
+		    m_prefButton[1] = [[[UIPreferencesTableCell alloc] init] retain];
+		    [m_prefButton[1] setTitle: @"Text Color"]; 
+		    m_prefButton[2] = [[[UIPreferencesTableCell alloc] init] retain];
+		    [m_prefButton[2] setTitle: @"Background Color"]; 
 
-		[m_fontc selectFamilyName: [_storyMainView font]];
-		[m_fontc selectSize: [_storyMainView fontSize]];
-		[[navbar superview] addSubview: m_fontc];
-		[m_fontc setDelegate: self];
-		[m_fontc becomeFirstResponder];
+		    [m_prefTable setDelegate: self];
+		    [m_prefTable setDataSource: self];
+		    [m_prefTable reloadData];
+		}
+		[m_transitionView transition:1 toView:m_prefTable];
+		[self updateNavBarButtons: kModePrefs];
 	    } else {   
 		UIAlertSheet *sheet = [[UIAlertSheet alloc] initWithFrame: CGRectMake(0, 240, 320, 240)];
 		[sheet setTitle:@"Abandon Story"];
@@ -259,10 +327,15 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 }
 
 - (void)abortToBrowser {
-    [_storyMainView abandonStory];
-    _mode = kModeSelectStory;
-    [self updateNavBarButtons];
-    [_transitionView transition:2 toView:_storyBrowser];
+    [m_storyMainView abandonStory];
+
+    [self updateNavBarButtons: kModeSelectStory];
+
+    [m_transitionView transition:2 toView:m_storyBrowser];
+}
+
+- (void)abortToBrowser : (id)unused {
+    [self abortToBrowser];
 }
 
 - (void)alertSheet:(UIAlertSheet *)sheet buttonClicked:(int)button {
@@ -283,11 +356,17 @@ extern char iphone_filename[];
     [m_fileBrowser setDelegate: self];    
     [m_fileBrowser reloadData];
 
-    _mode = kModeSelectFile;
-    [self updateNavBarButtons];
+    [self updateNavBarButtons: kModeSelectFile];
     
     [self addSubview: m_fileBrowser];
 }
+
+#if 0
+- (BOOL)respondsToSelector:(SEL)aSelector {
+    NSLog(@"Request for selector: %@\n", NSStringFromSelector(aSelector)); fflush(stdout);
+    return [super respondsToSelector:aSelector];
+}
+#endif
 
 - (void)fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
     [m_fileBrowser removeFromSuperview];
@@ -297,9 +376,70 @@ extern char iphone_filename[];
 	*iphone_filename = '\0';
     [m_fileBrowser release];
     m_fileBrowser = NULL;
-    _mode = kModePlayStory;
-    [self updateNavBarButtons];
+    [self updateNavBarButtons: kModeResumeStory];
     do_filebrowser = 0;
+}
+
+- (BOOL) table:(id)sender showDisclosureForRow:(int)row {
+    return (row > 0);
+}
+- (BOOL) table:(id)sender disclosureClickableForRow:(int)row {
+    return (row > 0);
+}
+
+- (void)tableRowSelected: (NSNotification*)notif {
+    int row = [m_prefTable selectedRow];
+    if (row && m_prefButton[row])
+	[m_prefButton[row] setSelected: NO withFade: NO];
+    switch (row) {
+	case 1: {
+	    if (!m_fontc)
+		m_fontc = [[UIFontChooser alloc] initWithFrame: CGRectMake(0.0f, 40.0f, 320.0f, 480.0f - 40 - 24)];
+	    [self updateNavBarButtons: kModeSelectFont];
+
+	    [m_fontc selectFamilyName: [m_storyMainView font]];
+	    [m_fontc selectSize: [m_storyMainView fontSize]];
+	    [m_transitionView transition:1 toView:m_fontc];
+	    [m_fontc setDelegate: self];
+	    [m_fontc becomeFirstResponder];
+	} break;
+	case 2:
+	case 3: {
+	    if (!m_colorPicker)
+		m_colorPicker = [[ColorPicker alloc] initWithFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f)];
+	    [m_colorPicker setDelegate: self];
+	    struct CGColor *color;
+
+	    m_whichColor = row-2;
+	    if (m_whichColor)
+		color = [m_storyMainView backgroundColor];
+	    else
+		color = [m_storyMainView textColor];
+	    [m_colorPicker setColor: color];
+	    [m_transitionView transition:1 toView:m_colorPicker];
+
+	    [self updateNavBarButtons: kModeSelectColor];
+	} break;
+    }
+}
+
+- (int) numberOfGroupsInPreferencesTable: (id)sender {
+    return 1;
+}
+- (NSString*)preferencesTable:(id)sender titleForGroup:(int)group {
+    return @"Frotz Settings (Version " @IPHONE_FROTZ_VERS @")";
+}
+- (int)preferencesTable:(id)sender numberOfRowsInGroup:(int)group {
+    return 3;
+}
+- (id)preferencesTable:(id)sender cellForRow:(int)row inGroup:(int)group {
+    return m_prefButton[row];
+}
+
+- (void)colorPicker:(id)sender selectedColor:(CGColorRef)color {
+    if (m_selectedColor)
+	CGColorRelease(m_selectedColor);
+    m_selectedColor = CGColorCreateCopy(color);
 }
 
 @end

@@ -4,7 +4,7 @@
 #import "MainView.h"
 
 @interface FrotzApplication : UIApplication {
-    MainView *_mainView;
+    MainView *m_mainView;
 }
 
 @end

@@ -1,7 +1,7 @@
 
 CC=arm-apple-darwin-cc
 CFLAGS=-F/System/Library/Frameworks/Foundation -IUIKit
-IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework GraphicsServices
+IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework CoreSurface -framework GraphicsServices
 
 OPTS = -O7
 #OPTS = -g
@@ -45,7 +45,7 @@ IPHONE_TARGET = $(SRCDIR)/frotz_iphone.a
 IPHONE_OBJECT =	$(IPHONE_DIR)/ui_audio_none.o $(IPHONE_DIR)/ui_init.o \
 	$(IPHONE_DIR)/ui_input.o $(IPHONE_DIR)/ui_pic.o $(IPHONE_DIR)/ui_text.o \
 	$(IPHONE_DIR)/MainView.o $(IPHONE_DIR)/StoryMainView.o $(IPHONE_DIR)/StoryBrowser.o \
-	$(IPHONE_DIR)/FileBrowser.o \
+	$(IPHONE_DIR)/ColorPicker.o $(IPHONE_DIR)/FileBrowser.o \
 	$(IPHONE_DIR)/FrotzApplication.o $(IPHONE_DIR)/FrotzKeyboard.o $(IPHONE_DIR)/main.o \
 	#$(IPHONE_DIR)/iphone_debug.o \
 

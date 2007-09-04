@@ -761,20 +761,43 @@ int os_read_file_name (char *file_name, const char *default_name, int flag)
 {
   char buf[INPUT_BUFFER_SIZE], prompt[INPUT_BUFFER_SIZE];
   FILE *fp;
-  char *dflt;
+  char *dflt, *ext = NULL;
 
   if ((dflt = strrchr(default_name, '/'))) // only use filename conpoment in default_name prompt
     dflt++;
   else
-    dflt = default_name;
+    dflt = (char*)default_name;
 
-  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD) {
+  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_SCRIPT) {
     sprintf(prompt, "Please enter a filename (or '!' to browse existing files)\n[%s]:", dflt);
     dumb_read_misc_line(buf, prompt);
     if (buf[0] == '!') {
       buf[0] = '\0';
       if (!iphone_read_file_name (buf, dflt, flag))
 	return FALSE;
+    } else {
+
+        if (!buf[0])
+            strcpy(buf, dflt);
+	if (strchr(buf, '.') == NULL) {
+	    switch(flag) {
+		case FILE_SAVE:
+		    ext = ".sav";
+		    break;
+		case FILE_SAVE_AUX:
+		    ext = ".aux";
+		    break;
+		case FILE_RECORD:
+		    ext = ".rec";
+		    break;
+		case FILE_SCRIPT:
+		    ext = ".scr";
+		    break;
+		default:
+		    break;
+	    }
+	    strcat(buf, ext);
+	}
     }
   } else {
       //sprintf(prompt, "Please enter a filename: ");

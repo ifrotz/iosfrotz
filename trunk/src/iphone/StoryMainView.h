@@ -49,6 +49,7 @@
 
     UIStoryView *m_storyView;
     UIStatusLine *m_statusLine;
+    UIView *m_background;
     FrotzKeyboard *m_keyb;
    
     NSMutableString *m_currentStory;
@@ -69,13 +70,19 @@
 -(void) abandonStory;
 -(BOOL) autoRestoreSession;
 -(void) suspendStory;
+-(void) savePrefs;
+-(void) loadPrefs;
 -(BOOL) landscape;
 -(void) setLandscape: (BOOL)landscape;
 -(NSMutableString*) font;
 -(void) setFont: (NSString*)font;
 -(int) fontSize;
 -(void) setFontSize: (int)size;
-    
+-(void) setBackgroundColor: (CGColorRef)color;
+-(void) setTextColor: (CGColorRef)color;
+-(CGColorRef) backgroundColor;
+-(CGColorRef) textColor;
+-(void) scrollToEnd;
 @end
 
 extern const int kFixedFontSize;

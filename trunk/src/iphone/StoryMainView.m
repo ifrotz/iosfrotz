@@ -16,8 +16,10 @@
 
 */
 #import <Foundation/Foundation.h>
-#include <objc-fixup.h>
+//#include <objc-fixup.h>
 #import <UIKit/UIView-Geometry.h>
+#import <GraphicsServices/GraphicsServices.h>
+extern int GSEventGetTimestamp(GSEvent *);
 
 #import "MainView.h"
 #import "FrotzKeyboard.h"
@@ -38,6 +40,9 @@ char iphone_filename[256];
 const int kFixedFontSize = 9;
 const int kFixedFontPixelHeight = 11;
 
+// The prefs should really be in /var/root/Library/References/<NSBundlerIdentifier>.plist,
+// but it makes me nervous to write anything there.
+NSString *frotzPrefsPath  = @kFrotzDir @"/FrotzPrefs.plist";
 NSString *storyGamePath   = @kFrotzDir @kFrotzGameDir;
 NSString *storySavePath   = @kFrotzDir @kFrotzSaveDir;
 NSString *storySIPPath    = @kFrotzDir @kFrotzSaveDir @"FrotzSIP.plist";
@@ -46,6 +51,11 @@ const char *AUTOSAVE_FILE =  kFrotzDir  kFrotzSaveDir kFrotzAutoSaveFile;  // us
 
 NSMutableString *ipzBufferStr = NULL, *ipzStatusStr = NULL, *ipzInputBufferStr = NULL;
 int ipzDeleteCharCount = 0;
+
+#define kStatusLineYPos		0.0f
+#define kStatusLineHeight	19.0f   // for early V3 games
+
+float topWinSize = kStatusLineHeight;
 
 enum { kIPZDisableInput = 0, kIPZRequestInput = 1, kIPZNoEcho = 2, kIPZAllowInput = 4 };
 static int ipzAllowInput = kIPZDisableInput;
@@ -155,15 +165,18 @@ int iphone_read_file_name(char *file_name, const char *default_name, int flag) {
     return TRUE;
 }
 
+extern int finished; // set by z_quit
 
 void run_interp(const char *story, bool autorestore) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     char *argv[] = {"iFrotz", NULL };
 
+    winSizeChanged = FALSE;
+    finished = 0;
+
     NSMutableString *str = [NSMutableString stringWithUTF8String: story];
     story_name  = (char*)[str UTF8String];
     os_set_default_file_names(story_name);
-
     if (autorestore)
 	do_autosave = 1;
     init_buffer ();
@@ -184,6 +197,7 @@ void run_interp(const char *story, bool autorestore) {
 	[fileMgr removeFileAtPath: storySIPSavePath handler:nil];
     }
     interpret ();
+    finished = 1;
     reset_memory ();
 }
 
@@ -198,9 +212,6 @@ void *interp_cover_autorestore(void *arg) {
     run_interp(story, true);
     return NULL;
 }
-
-const kStatusLineYPos = 0.0f;
-const kStatusLineHeight = 24.0f;
 
 
 @interface UITextLoupe : UIView
@@ -218,7 +229,7 @@ const kStatusLineHeight = 24.0f;
     
 	m_landscape = NO;
 	
-	UIView *background = [[UIView alloc] initWithFrame: CGRectMake(0.0f, 0.0f, 480.0f, 480.0f)];
+	m_background = [[UIView alloc] initWithFrame: CGRectMake(0.0f, 0.0f, 480.0f, 480.0f)];
 	float fgRGB[4] = {0.0, 0.0, 0.1, 1.0};
 	float bgRGB[4] = {1.0, 1.0, 0.9, 1.0};
 	float altRGB[4] = {0.5, 0.5, 0.6, 1.0};
@@ -226,8 +237,8 @@ const kStatusLineHeight = 24.0f;
 	struct CGColor *bgColor = CGColorCreate(colorSpace, bgRGB);
 	struct CGColor *fgColor = CGColorCreate(colorSpace, fgRGB);
 	struct CGColor *altColor = CGColorCreate(colorSpace, altRGB);
-	[background setBackgroundColor: bgColor];
-	[self addSubview: background];
+	[m_background setBackgroundColor: bgColor];
+	[self addSubview: m_background];
 
 	id fileMgr = [NSFileManager defaultManager];
 	
@@ -240,7 +251,7 @@ const kStatusLineHeight = 24.0f;
 
 	chdir(kFrotzDir kFrotzSaveDir);
 				
-	m_statusLine = [[UIStatusLine alloc] initWithFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
+	m_statusLine = [[UIStatusLine alloc] initWithFrame: CGRectMake(0.0f, kStatusLineYPos, 320.0f /*500.0f*/, kStatusLineHeight)];
 	//struct CGColor *origFg = [m_statusLine textColor], *origBg = [m_statusLine backgroundColor];
 	[m_statusLine setBackgroundColor: fgColor];
 	[m_statusLine setTextColor: bgColor];
@@ -263,6 +274,8 @@ const kStatusLineHeight = 24.0f;
 	
 	[self addSubview: m_storyView];
 	[self addSubview: m_statusLine];
+
+	[self loadPrefs];
 	
 	m_keyb = [[FrotzKeyboard alloc] initWithFrame: CGRectMake(0.0f, rect.size.height, 320.0f, 236.0f)];
 	[m_keyb show: m_storyView];
@@ -273,14 +286,36 @@ const kStatusLineHeight = 24.0f;
 	
 	m_currentStory = [[NSMutableString stringWithString: @""] retain];
 	
-	[m_storyView becomeFirstResponder];
+	[m_storyView becomeFirstResponder];	
 	
-	[self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
-	
+	CGColorRelease(fgColor);
+	CGColorRelease(bgColor);
+	CGColorRelease(altColor);
+	CGColorSpaceRelease(colorSpace);
     }
     return self;
 }
 
+-(void) scrollToEnd {
+    [m_storyView becomeFirstResponder];
+    [[[m_storyView _webView] webView] moveToEndOfDocument:self];
+}
+
+-(void) setBackgroundColor: (CGColorRef)color {
+    [m_storyView setBackgroundColor: color];
+    [m_background setBackgroundColor: color]; 
+    [m_statusLine setTextColor: color];
+}
+-(void) setTextColor: (CGColorRef)color {
+    [m_storyView setTextColor: color];
+    [m_statusLine setBackgroundColor: color];
+}
+-(CGColorRef) backgroundColor {
+    return [m_storyView backgroundColor];
+}
+-(CGColorRef) textColor {
+    return [m_storyView textColor];
+}
 
 -(BOOL) landscape {
     return m_landscape;
@@ -296,8 +331,8 @@ const kStatusLineHeight = 24.0f;
 	if (landscape) {
 	    [self setFrame: CGRectMake(0.0f, 0.0f, 460.0f, 320.0f)];
 
-	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
-	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, 460.0, 320.0f - 180.0f - kStatusLineHeight)];
+	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 480.0f, topWinSize)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize, 460.0, 320.0f - 180.0f - topWinSize)];
 	    
 	    [m_storyView setMarginTop: 0];
 	    [m_storyView setBottomBufferHeight: 20.0f];
@@ -318,8 +353,8 @@ const kStatusLineHeight = 24.0f;
 	} else {
 	    [self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f - 40.0f /* - kStatusLineHeight */)];
 	    
-	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 500.0f, kStatusLineHeight)];
-	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, 320.0f, 440.0f - 236.0f - kStatusLineHeight)];
+	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 320.0f, topWinSize)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize, 320.0f, 440.0f - 236.0f - topWinSize)];
 
 	    [m_storyView setMarginTop: 1];
 	    [m_storyView setBottomBufferHeight: 20.0f];
@@ -409,22 +444,19 @@ char *tempScreenBuf() {
     return buf;
 }
 
-extern int finished; // set by z_quit
-
 -(void)printText: (id)unused {
     static int prevTopWinHeight = 1;
     static int continuousPrintCount = 0;
     int textLen = [ipzBufferStr length];
     int statusLen = [ipzStatusStr length];
     if ((textLen > 0 || top_win_height > prevTopWinHeight) && prevTopWinHeight != top_win_height) {
-	float topWinSize = 8 + top_win_height * kFixedFontPixelHeight;
+	topWinSize = 8 + top_win_height * kFixedFontPixelHeight;
 	if (topWinSize > 204) topWinSize = 204;
 	[m_statusLine setFrame: CGRectMake(0.0f, 0.0f, 500.0f,  topWinSize)];
 	[m_storyView setFrame: CGRectMake(0.0f, topWinSize, 320.0f, 480.0f - 40.0f - (topWinSize) - 236)];
 	iphone_top_win_height = top_win_height;
 	prevTopWinHeight = top_win_height;
     }
-
 
     pthread_mutex_lock(&winSizeMutex);
     if (winSizeChanged) {
@@ -478,13 +510,72 @@ extern int finished; // set by z_quit
 	do_filebrowser = 2;
 	[[self mainView] openFileBrowser];
     }
-    if (finished) {
-	[[self mainView] abortToBrowser];
-    }
+    if (finished)
+	[[self mainView] performSelector:@selector(abortToBrowser:) withObject:nil afterDelay:0.25];
     else
 	[self performSelector:@selector(printText:) withObject:nil afterDelay:0.01];
     fflush(stdout);
     fflush(stderr);
+}
+
+
+-(void) savePrefs {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity: 10];
+    [dict setObject: m_fontname forKey: @"fontFamily"];
+    [dict setObject: [NSNumber numberWithInt: m_fontSize] forKey: @"fontSize"];
+
+    const float *textColorRGB = CGColorGetComponents([self textColor]);
+    const float *bgColorRGB = CGColorGetComponents([self backgroundColor]);
+    NSString *textColorStr = [NSString stringWithFormat: @"#%02X%02X%02X",
+	    (int)(textColorRGB[0]*255), (int)(textColorRGB[1]*255),(int)(textColorRGB[2]*255)];
+    NSString *bgColorStr = [NSString stringWithFormat: @"#%02X%02X%02X",
+	    (int)(bgColorRGB[0]*255), (int)(bgColorRGB[1]*255),(int)(bgColorRGB[2]*255)];
+
+    [dict setObject: textColorStr forKey: @"textColor"];
+    [dict setObject: bgColorStr forKey: @"backgroundColor"];
+    [dict writeToFile: frotzPrefsPath atomically: NO];
+}
+
+static struct CGColor *scanColor(NSString *colorStr) {
+    unsigned int intRGB;
+    float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+    struct CGColor *color = NULL;
+    if ([colorStr characterAtIndex: 0] == '#') {
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	NSScanner *scanner = [NSScanner scannerWithString: colorStr];
+	[scanner setScanLocation: 1];
+	[scanner scanHexInt: &intRGB];
+	floatRGB[0] = (float)((intRGB & 0xff0000) >> 16) / 255.0f;
+	floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
+	floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
+	color = CGColorCreate(colorSpace, floatRGB);
+	CGColorSpaceRelease(colorSpace);
+    }
+    return color;
+}
+
+-(void) loadPrefs {
+    NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: frotzPrefsPath] retain];
+    if (dict) {
+	NSString *fontname =  [dict objectForKey: @"fontFamily"];
+	int fontSize= [[dict objectForKey: @"fontSize"] longValue];
+	[self setFont: fontname];
+	[self setFontSize: fontSize];
+	NSString *textColorStr = [dict objectForKey: @"textColor"];
+	NSString *bgColorStr = [dict objectForKey: @"backgroundColor"];
+	struct CGColor *textColor = scanColor(textColorStr);
+	if (textColor) {
+	    [self setTextColor: textColor];
+	    CGColorRelease(textColor);
+	}
+	struct CGColor *bgColor = scanColor(bgColorStr);
+	if (textColor) {
+	    [self setBackgroundColor: bgColor];
+	    CGColorRelease(bgColor);
+	}
+	[dict release];
+    }
 }
 
 
@@ -531,6 +622,7 @@ extern int finished; // set by z_quit
 		pthread_create(&m_storyTID, NULL, interp_cover_autorestore, (void*)storyNameBuf);
 		[m_keyb show:m_storyView];
 		[m_storyView becomeFirstResponder];
+		[self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
 		return YES;
 	    }
 	}
@@ -565,7 +657,6 @@ extern int finished; // set by z_quit
     [ipzInputBufferStr setString: @""];   
     [ipzInputBufferStr appendFormat: @"%c", ZC_AUTOSAVE];
     if (m_currentStory && ([m_currentStory length] > 0)) {
-	NSError *err = NULL;
 	char *topWinString = tempScreenBuf();
 	NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity: 10];
 	[dict setObject: m_currentStory forKey: @"storyPath"];
@@ -627,11 +718,52 @@ extern int finished; // set by z_quit
     m_keyb = keyboard;
 }
 
--(void)mouseUp:(struct __GSEvent *)event
+static unsigned int MyGSEventGetTimestamp(GSEvent *event) {
+    unsigned int *p = (unsigned int*)((char*)event + 0x20);
+    // there appears to be an 8 byte little endian nanosecond counter 32 bytes into the event; convert to approx. ms
+    unsigned int timeStamp = p[1] * 4295 + p[0] / 1000000; 
+    return timeStamp;
+}
+
+static int lastTimestamp;
+
+int GSEventAccelerometerAxisX(GSEvent *event);
+int GSEventAccelerometerAxisY(GSEvent *event);
+int GSEventAccelerometerAxisZ(GSEvent *event);
+
+
+-(void)mouseDown:(GSEvent *)event {
+    lastTimestamp = MyGSEventGetTimestamp(event);
+    // Prevent textView from seeing the mouseDown to disallow moving the cursor
+    // while still allowing typing at the end of the document.
+    // Fortunately, the mouseDrag still goes through to the UIScroller parent, so
+    // scrolling still works.  Allow the event through if scrolling so the
+    // scrolling hysteresis can be halted.
+#if 0
+    int x = GSEventAccelerometerAxisX(event);
+    int y = GSEventAccelerometerAxisY(event);
+    int z = GSEventAccelerometerAxisZ(event);
+    printf ("Accel %d %d %d\n", x, y, z);
+#endif
+  //  if ([self isScrolling]) {
+	[super mouseDown:event];
+   //  }
+}
+
+-(void)mouseUp:(GSEvent *)event
 {
-   if (![self isScrolling]) 
+//  int ts = GSEventGetTimestamp(event); // return value was undeciperable as float, double, or int
+#if 0
+    int x = GSEventAccelerometerAxisX(event);
+    int y = GSEventAccelerometerAxisY(event);
+    int z = GSEventAccelerometerAxisZ(event);
+    printf ("Accel %d %d %d\n", x, y, z);
+#endif
+    int timestamp = MyGSEventGetTimestamp(event);
+    if (timestamp - lastTimestamp < 150 && ![self isScrolling])
 	[m_keyb toggle: self];
-    [super mouseUp:event];
+    else
+	[super mouseUp:event];
 }
 
 -(BOOL)webView:(id)sender shouldInsertText:(id)text replacingDOMRange:(id)range givenAction:(int)action {

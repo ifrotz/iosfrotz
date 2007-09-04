@@ -21,13 +21,13 @@
 
 @implementation StoryBrowser 
 - (id)initWithFrame:(struct CGRect)frame withPath: path {
-    _path = [[path copy] retain];
+    m_path = [[path copy] retain];
     if ((self == [super initWithFrame: frame]) != nil) {
-	_storyTable = [[UIPreferencesTable alloc] initWithFrame: CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
+	m_storyTable = [[UIPreferencesTable alloc] initWithFrame: CGRectMake(0.0f, 0.0f, frame.size.width, frame.size.height)];
 	
 	m_buttons = [NSArray array];
 	m_storyNames = [NSArray array];
-	NSString *storyDir = _path;
+	NSString *storyDir = m_path;
 	NSDirectoryEnumerator *enumerator  = [[NSFileManager defaultManager] enumeratorAtPath:  storyDir];
 	id curFile;
 	
@@ -42,37 +42,45 @@
 	[m_buttons retain];
 	[m_storyNames retain];
 	
-	[_storyTable setDataSource: self];
-	[_storyTable setDelegate: self];
-	[_storyTable reloadData];
+	[m_storyTable setDataSource: self];
+	[m_storyTable setDelegate: self];
+	[m_storyTable reloadData];
 	
-	[self addSubview: _storyTable];
+	[self addSubview: m_storyTable];
     }
     return self;
 }
+- (void) dealloc {
+    [m_path release];
+    [m_buttons release];
+    [m_storyNames release];
+    [m_storyTable release];
+
+    [super dealloc];
+}
 
 - (NSString *)path {
-    return [[_path retain] autorelease];
+    return [[m_path retain] autorelease];
 }
 
 - (void)setPath: (NSString *)path {
-    [_path release];
-    _path = [path copy];
+    [m_path release];
+    m_path = [path copy];
 
     [self reloadData];
 }
 
 - (void)reloadData {
-    [_storyTable reloadData];
+    [m_storyTable reloadData];
 }
 
 - (void)setDelegate:(id)delegate {
-    _delegate = delegate;
+    m_delegate = delegate;
 }
 
 - (void)tableRowSelected: (NSNotification*)notif {
-    if([_delegate respondsToSelector:@selector(storyBrowser:storySelected:)])
-	[_delegate storyBrowser:self storySelected:[self selectedStory]];
+    if([m_delegate respondsToSelector:@selector(storyBrowser:storySelected:)])
+	[m_delegate storyBrowser:self storySelected:[self selectedStory]];
 }
 
 - (int) numberOfGroupsInPreferencesTable: (id)sender {
@@ -92,12 +100,17 @@
 	row = 0;
     return [m_buttons objectAtIndex: row];
 }
-
+- (BOOL) table:(id)sender showDisclosureForRow:(int)row {
+    return (row > 0);
+}
+- (BOOL) table:(id)sender disclosureClickableForRow:(int)row {
+    return (row > 0);
+}
 - (NSString *)selectedStory {
-    if ([_storyTable selectedRow] == -1)
+    if ([m_storyTable selectedRow] == -1)
 	return nil;
 	
-    return [_path stringByAppendingPathComponent: [m_storyNames objectAtIndex: [_storyTable selectedRow]-1]];
+    return [m_path stringByAppendingPathComponent: [m_storyNames objectAtIndex: [m_storyTable selectedRow]-1]];
 }
 @end
 

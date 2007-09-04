@@ -28,10 +28,10 @@
 @end
 
 @interface StoryBrowser : UIView {
-    UITable *_storyTable;
+    UITable *m_storyTable;
 
-    NSString *_path;
-    id _delegate;
+    NSString *m_path;
+    id m_delegate;
 
     int m_numStories;
     NSArray *m_buttons;
