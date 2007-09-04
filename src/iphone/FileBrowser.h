@@ -27,12 +27,12 @@
 
 @interface FileBrowser : UIView 
 {
-	NSMutableArray *_extensions;
-	NSMutableArray *_files;
-	UITable *_table;
-	NSString *_path;
-	int _rowCount;
-	id _delegate;
+	NSMutableArray *m_extensions;
+	NSMutableArray *m_files;
+	UITable *m_table;
+	NSString *m_path;
+	int m_rowCount;
+	id m_delegate;
 }
 
 - (id)initWithFrame:(CGRect)rect;

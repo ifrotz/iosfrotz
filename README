@@ -1,5 +1,5 @@
 
-iPhoneFrotz version 0.4
+iPhoneFrotz version 0.5
 
 iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
 by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
@@ -45,4 +45,12 @@ Wed Aug 22 01:39:53 CDT 2007
  - Text completion of 'x' to 'examine', 'l' to look, etc.
 
  * Special thanks to allen.porter for helping with landscape keyboard support.
+
+Tue Sep  4 00:49:08 CDT 2007
+0.5
+ - Navigation bar, keyboard, and other cosmetic improvements
+ - Color Selection dialog mimicks Mac OS X HSV color picker
+ - Preferences dialog to set default font, text, and background colors
+ - Better input completion
+ - Misc. Bug fixes
 

@@ -28,80 +28,80 @@
 				width: frame.size.width
 	    ];
 	
-	_table = [[UITable alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, frame.size.height)];
-	[ _table addTableColumn: col ];
-	[ _table setSeparatorStyle: 1 ];
-	[ _table setDelegate: self ];
-	[ _table setDataSource: self ];
+	m_table = [[UITable alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, frame.size.height)];
+	[ m_table addTableColumn: col ];
+	[ m_table setSeparatorStyle: 1 ];
+	[ m_table setDelegate: self ];
+	[ m_table setDataSource: self ];
 	
-	_extensions = [[NSMutableArray alloc] init];
-	_files = [[NSMutableArray alloc] init];
-	_rowCount = 0;
+	m_extensions = [[NSMutableArray alloc] init];
+	m_files = [[NSMutableArray alloc] init];
+	m_rowCount = 0;
 	
-	_delegate = nil;
+	m_delegate = nil;
 	
-	[self addSubview: _table];
+	[self addSubview: m_table];
     }
     return self;
 }
 
 - (void)dealloc {
-    [_path release];
-    [_files release];
-    [_extensions release];
-    [_table release];
-    _delegate = nil;
+    [m_path release];
+    [m_files release];
+    [m_extensions release];
+    [m_table release];
+    m_delegate = nil;
     [super dealloc];
 }
 
 - (NSString *)path {
-    return [[_path retain] autorelease];
+    return [[m_path retain] autorelease];
 }
 
 - (void)setPath: (NSString *)path {
-    [_path release];
-    _path = [path copy];
+    [m_path release];
+    m_path = [path copy];
     
     [self reloadData];
 }
 
 - (void)addExtension: (NSString *)extension {
-    if (![_extensions containsObject:[extension lowercaseString]]) {
-	[_extensions addObject: [extension lowercaseString]];
+    if (![m_extensions containsObject:[extension lowercaseString]]) {
+	[m_extensions addObject: [extension lowercaseString]];
     }
 }
 
 - (void)setExtensions: (NSArray *)extensions {
-    [_extensions setArray: extensions];
+    [m_extensions setArray: extensions];
 }
 
 - (void)reloadData {
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath: _path] == NO) {
+    if ([fileManager fileExistsAtPath: m_path] == NO) {
 	return;
     }
     
-    [_files removeAllObjects];
+    [m_files removeAllObjects];
     
     NSString *file;
-    NSDirectoryEnumerator *dirEnum = [[NSFileManager defaultManager] enumeratorAtPath: _path];
+    NSDirectoryEnumerator *dirEnum = [[NSFileManager defaultManager] enumeratorAtPath: m_path];
     while (file = [dirEnum nextObject]) {
 	const char *fn = [file cStringUsingEncoding: NSASCIIStringEncoding];
 	if (strcasecmp(fn, kFrotzAutoSaveFile) != 0) 
-	    [_files addObject: file];
+	    [m_files addObject: file];
     }
     
     //[_files sortUsingSelector:@selector(caseInsensitiveCompare:)];
-    _rowCount = [_files count];
-    [_table reloadData];
+    m_rowCount = [m_files count];
+    [m_table reloadData];
 }
 
 - (void)setDelegate:(id)delegate {
-    _delegate = delegate;
+    m_delegate = delegate;
 }
 
 - (int)numberOfRowsInTable:(UITable *)table {
-    return _rowCount;
+    return m_rowCount;
 }
 
 - (UITableCell *)table:(UITable *)table cellForRow:(int)row column:(UITableColumn *)col {
@@ -114,7 +114,7 @@
     float whiteComponents[4] = {1, 1, 1, 1};
     float transparentComponents[4] = {0, 0, 0, 0};
     
-    [ descriptionLabel setText:[_files objectAtIndex: row] ];   // stringByDeletingPathExtension
+    [ descriptionLabel setText:[m_files objectAtIndex: row] ];   // stringByDeletingPathExtension
     [ descriptionLabel setWrapsText: YES ];
     [ descriptionLabel setBackgroundColor:CGColorCreate(colorSpace, transparentComponents) ];
     
@@ -124,15 +124,15 @@
 }
 
 - (void)tableRowSelected:(NSNotification *)notification {
-    if( [_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] )
-	[_delegate fileBrowser:self fileSelected:[self selectedFile]];
+    if( [m_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] )
+	[m_delegate fileBrowser:self fileSelected:[self selectedFile]];
 }
 
 - (NSString *)selectedFile {
-    if ([_table selectedRow] == -1)
+    if ([m_table selectedRow] == -1)
 	return nil;
     
-    return [_path stringByAppendingPathComponent: [_files objectAtIndex: [_table selectedRow]]];
+    return [m_path stringByAppendingPathComponent: [m_files objectAtIndex: [m_table selectedRow]]];
 }
 
 @end

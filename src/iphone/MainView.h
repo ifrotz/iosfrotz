@@ -24,6 +24,7 @@
 #import <UIKit/UIKeyboard.h>
 
 #import "StoryBrowser.h"
+#import "ColorPicker.h"
 #import "FileBrowser.h"
 #import "StoryMainView.h"
 
@@ -32,29 +33,41 @@
 -(void) setFrame: (CGRect)frame;
 @end
 
-enum { kModeSelectStory, kModePlayStory, kModeSelectFont, kModeSelectFile };
+enum { kModeUninit, kModeSelectStory, kModePlayStory, kModeResumeStory, kModePrefs, kModeSelectColor, kModeSelectFont, kModeSelectFile };
 
 @interface MainView : UIView  <StorySelected> {
-    UINavigationBar *_navBar;
-    UITransitionView *_transitionView;
-    StoryBrowser *_storyBrowser;
-    StoryMainView *_storyMainView;
+    UINavigationBar *m_navBar;
+    UIView *m_background;
+    UITransitionView *m_transitionView;
+    StoryBrowser *m_storyBrowser;
+    StoryMainView *m_storyMainView;
     UIFontChooser *m_fontc;
+    ColorPicker *m_colorPicker;
     UIKeyboard *m_keyb;
     FileBrowser *m_fileBrowser;
+    int m_mode;
     int m_orient;
-
-    int _mode;
+    UITable *m_prefTable;
+    UIPreferencesTableCell *m_prefButton[4];
+    
+    CGColorRef m_selectedColor;
+    int m_whichColor;
 }
 
--(id) initWithFrame:(CGRect)frame;
--(void) updateNavBarButtons;
--(void) storyBrowser:browser storySelected:storyPath;
--(void) abortToBrowser;
--(void) suspendStory;
--(void) dealloc;
--(void) openFileBrowser;
--(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file;
--(int) orientation;
--(void) updateOrientation: (int)orient;
+- (id) initWithFrame:(CGRect)frame;
+- (void) updateNavBarButtons:(int)mode;
+- (void) storyBrowser:browser storySelected:storyPath;
+- (void) abortToBrowser;
+- (void) suspendStory;
+- (void) dealloc;
+- (void) openFileBrowser;
+- (void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file;
+- (int) orientation;
+- (void) updateOrientation: (int)orient;
+- (NSString*) preferencesTable:(id)sender titleForGroup:(int)group;
+- (void) tableRowSelected: (NSNotification*)notif;
+- (int) numberOfGroupsInPreferencesTable: (id)sender;
+- (int) preferencesTable:(id)sender numberOfRowsInGroup:(int)group;
+- (id) preferencesTable:(id)sender cellForRow:(int)row inGroup:(int)group;
+
 @end

@@ -22,15 +22,24 @@
 struct GSEvent;
 typedef struct GSEvent GSEvent;
 int GSEventDeviceOrientation(GSEvent *);
+void SBSetAccelerometerRawEventsEnabled(BOOL);
+void SBSetAccelerometerDeviceOrientationChangedEventsEnabled(BOOL);
 
 @implementation FrotzApplication
-
 
 - (void)deviceOrientationChanged:(GSEvent *)event {
     int screenOrientation = GSEventDeviceOrientation(event);    
     [self setUIOrientation: screenOrientation]; // ??? does this do anything?
-    [_mainView updateOrientation: screenOrientation];
+    [m_mainView updateOrientation: screenOrientation];
 }
+
+#if 0
+-(void)acceleratedInX:(float)x Y:(float)y Z:(float)z {
+ //   FILE *f = fopen("/tmp/accel.txt", "a+");
+    fprintf (stderr, "Accel %f %f %f\n", x, y, z);
+   // fclose(f);
+}
+#endif
 
 - (void) applicationDidFinishLaunching: (id) unused
 {
@@ -38,7 +47,7 @@ int GSEventDeviceOrientation(GSEvent *);
     struct CGRect winRect = [UIHardware fullScreenApplicationContentRect];
     window = [[UIWindow alloc] initWithContentRect: winRect];
     winRect.origin.x = winRect.origin.y = 0.0f;
-    _mainView = [[MainView alloc] initWithFrame: winRect];
+    m_mainView = [[MainView alloc] initWithFrame: winRect];
 
     [self setStatusBarMode: 1 duration: 0];
 
@@ -46,7 +55,14 @@ int GSEventDeviceOrientation(GSEvent *);
     [window makeKey: self];
     [window _setHidden: NO];
 
-    [window setContentView: _mainView];     
+    [window setContentView: m_mainView];     
+
+// SB probably means SpringBoard.  Accelerometer events seem to only be
+// availale if the app is launched from SpringBoard; if you run via a
+// shell, you get no accel or orientation events.
+// These calls do not help enable the events in that case.
+//    SBSetAccelerometerRawEventsEnabled(YES);
+//    SBSetAccelerometerDeviceOrientationChangedEventsEnabled(YES);
 }
 
 #if 0
@@ -65,7 +81,7 @@ int GSEventDeviceOrientation(GSEvent *);
 #endif
 
 - (void)applicationWillTerminate {
-    [_mainView suspendStory];
+    [m_mainView suspendStory];
     [super applicationWillTerminate];
 }
 

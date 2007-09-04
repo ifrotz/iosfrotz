@@ -573,7 +573,6 @@ static void set_window (zword win)
 
     flush_buffer ();
 
-    //printf ("set_window %d\n", win);
     cwin = win; cwp = wp + win;
 
     update_attributes ();
@@ -788,8 +787,9 @@ void restart_screen (void)
 
     /* Clear the screen, unsplit it and select window 0 */
 
-    if (!do_autosave)
+    if (!do_autosave) {
       erase_screen ((zword) (-1));
+    }
 
 }/* restart_screen */
 
