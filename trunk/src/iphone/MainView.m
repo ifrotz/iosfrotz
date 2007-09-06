@@ -17,6 +17,7 @@
  */
 
 #import "MainView.h"
+#import "FrotzApplication.h"
 #import <UIKit/UIAnimator.h>
 #import <UIKit/UITransformAnimation.h>
 #import <UIKit/UIView-Geometry.h>
@@ -28,7 +29,6 @@ const float kNavBarSize = 40.0f;
 @implementation MainView 
 - (id)initWithFrame:(struct CGRect)rect {
     if ((self == [super initWithFrame: rect]) != nil) {
-
     	id fileMgr = [NSFileManager defaultManager];	
 	if ([fileMgr fileExistsAtPath: @kFrotzOldDir] &&
 	    ![fileMgr fileExistsAtPath: @kFrotzDir]) {
@@ -42,6 +42,7 @@ const float kNavBarSize = 40.0f;
 	[m_background setBackgroundColor: bgColor];
 	[self addSubview: m_background];
    
+	rect.origin.y = 0.0f; // UI Status bar
 	m_navBar = [[UINavigationBar alloc] initWithFrame:
 	    CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, kNavBarSize)];
 	[m_navBar setBarStyle: 1];
@@ -115,24 +116,30 @@ const float kNavBarSize = 40.0f;
 	    UIAnimator *anim = [[UIAnimator alloc] init];
 	    [anim addAnimation:translate withDuration:0.25 start:YES];
 	#else
-	    float screenHeight = 480.0f;
+	    float statusBarShownAdjust = gShowStatusBarInLandscapeMode ? kUIStatusBarHeight : 0.0f;
+	    float screenHeight = 480.0f - statusBarShownAdjust;
+	    // show/hide the status bar
+	    if (!gShowStatusBarInLandscapeMode)
+		[theApp setStatusBarMode:landscape ? 2 : 1 duration:0.0f];
 	    if (!landscape || orient == -m_orient) {
 		[self setTransform: CGAffineTransformMakeRotation(0.0f)];
-		[self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f)];
+		[self setFrame: CGRectMake(0.0f, kUIStatusBarHeight, 320.0f, 480.0f)];
 		[self setTransform: CGAffineTransformMakeRotation(0.0f)];
 		if (!landscape)
 		    [self addSubview: m_navBar];
 	    }
 	    if (landscape) {
 		float landScreenHeight = 320.0f + kNavBarSize;
-		float shift = (screenHeight - landScreenHeight)/2.0f;
-		[self setFrame: CGRectMake(0.0f, 0.0f, screenHeight, landScreenHeight)];
+		[self setFrame: CGRectMake(gShowStatusBarInLandscapeMode ? kUIStatusBarHeight : 0.0f, 0.0f,
+					   screenHeight, landScreenHeight)];
 		if (orient == 90)
-		    [self setTransform: CGAffineTransformRotate(CGAffineTransformMakeTranslation(-shift, shift), orient * M_PI / 180.0f)];
+		    [self setTransform: CGAffineTransformRotate(
+			CGAffineTransformMakeTranslation(-60.0 - statusBarShownAdjust/2, 60.0 + statusBarShownAdjust/2), orient * M_PI / 180.0f)];
 		else {
-		    shift = 40.0f;
-		    [self setTransform: CGAffineTransformRotate(CGAffineTransformMakeTranslation(-100.0f, 40.0f), orient * M_PI / 180.0f)];
+		    [self setTransform: CGAffineTransformRotate(
+			CGAffineTransformMakeTranslation(-100.0f - statusBarShownAdjust/2, 60.0f + statusBarShownAdjust/2), orient * M_PI / 180.0f)];
 		}
+
 		[m_navBar removeFromSuperview];
 	    } 
 	#endif

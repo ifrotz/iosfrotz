@@ -16,11 +16,11 @@
 
 */
 #import <Foundation/Foundation.h>
-//#include <objc-fixup.h>
 #import <UIKit/UIView-Geometry.h>
 #import <GraphicsServices/GraphicsServices.h>
 extern int GSEventGetTimestamp(GSEvent *);
 
+#import "FrotzApplication.h"
 #import "MainView.h"
 #import "FrotzKeyboard.h"
 #import "StoryMainView.h"
@@ -260,7 +260,8 @@ void *interp_cover_autorestore(void *arg) {
 	[m_statusLine setEditable: NO];
 	
 	m_storyView = [[UIStoryView alloc] initWithFrame:
-	    CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight, rect.size.width, rect.size.height - kStatusLineYPos /* - kStatusLineHeight */)];
+	    CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight,
+	    rect.size.width, rect.size.height - kStatusLineYPos - kUIStatusBarHeight)];
 	[m_storyView setBackgroundColor: bgColor];
 	[m_storyView setTextColor: fgColor];
 	[m_storyView setAllowsRubberBanding:YES];
@@ -328,11 +329,16 @@ void *interp_cover_autorestore(void *arg) {
 	[m_statusLine removeFromSuperview];
 
 	m_landscape = landscape;
+	[m_keyb setLandscape: landscape];
+	float kbdHeight = [m_keyb isVisible] ? [m_keyb keyboardHeight] : 0.0f;
+
 	if (landscape) {
-	    [self setFrame: CGRectMake(0.0f, 0.0f, 460.0f, 320.0f)];
+	    [self setFrame: CGRectMake(0.0f, 0.0f, 480.0f, 320.0f)];
 
 	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 480.0f, topWinSize)];
-	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize, 460.0, 320.0f - 180.0f - topWinSize)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize,
+						460.0f + (gShowStatusBarInLandscapeMode ? 0.0f: kUIStatusBarHeight),
+						320.0f - kbdHeight - topWinSize)];
 	    
 	    [m_storyView setMarginTop: 0];
 	    [m_storyView setBottomBufferHeight: 20.0f];
@@ -347,14 +353,15 @@ void *interp_cover_autorestore(void *arg) {
 		[m_keyb setFrame: CGRectMake(0.0f, 140.0f, 480.0f, 180.0f)];
 	    else
 		[m_keyb setFrame: CGRectMake(0.0f, 320.0f, 480.0f, 180.0f)];
-	    [m_keyb setLandscape: landscape];
 	    [m_keyb showLayout:[UIKeyboardLayoutQWERTYLandscape class]];
-	    [m_keyb setTransform: CGAffineTransformMakeTranslation(-10.0f, 0.0f)];
+	    if (gShowStatusBarInLandscapeMode)
+		[m_keyb setTransform: CGAffineTransformMakeTranslation(-10.0f, 0.0f)];
 	} else {
+
 	    [self setFrame: CGRectMake(0.0f, 0.0f, 320.0f, 480.0f - 40.0f /* - kStatusLineHeight */)];
 	    
 	    [m_statusLine setFrame: CGRectMake(0.0f, kStatusLineYPos, 320.0f, topWinSize)];
-	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize, 320.0f, 440.0f - 236.0f - topWinSize)];
+	    [m_storyView setFrame: CGRectMake(0.0f, kStatusLineYPos + topWinSize, 320.0f, 440.0f - kbdHeight - topWinSize)];
 
 	    [m_storyView setMarginTop: 1];
 	    [m_storyView setBottomBufferHeight: 20.0f];
@@ -369,7 +376,6 @@ void *interp_cover_autorestore(void *arg) {
 		[m_keyb setFrame: CGRectMake(0.0f, 440.0f - 236.0f, 320.0f, 236.0f)];
 	    else
 		[m_keyb setFrame: CGRectMake(0.0f, 440.0f, 320.0f, 236.0f)];
-	    [m_keyb setLandscape: landscape];
 	    [m_keyb showLayout:[UIKeyboardLayoutQWERTY class]];
 	}
 
@@ -642,12 +648,14 @@ static struct CGColor *scanColor(NSString *colorStr) {
 }
 
 -(void) abandonStory {
-    [ipzInputBufferStr setString: @"\n\n"];   
-    do_autosave = 0;
-    z_quit();
-    pthread_join(m_storyTID, NULL);
+    if ([m_currentStory length] > 0) {
+	[ipzInputBufferStr setString: @"\n\n"];   
+	do_autosave = 0;
+	z_quit();
+	[m_currentStory setString: @""];
+	pthread_join(m_storyTID, NULL);
+    }
     [ipzInputBufferStr setString: @""];
-    [m_currentStory setString: @""];
     [m_statusLine setText: @""];
     [m_storyView setText: @""];
     top_win_height = 0;
