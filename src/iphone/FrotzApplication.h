@@ -6,5 +6,9 @@
 @interface FrotzApplication : UIApplication {
     MainView *m_mainView;
 }
-
 @end
+
+extern FrotzApplication *theApp;
+extern float kUIStatusBarHeight;
+
+extern BOOL gShowStatusBarInLandscapeMode;

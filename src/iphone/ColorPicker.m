@@ -41,9 +41,13 @@ float __floatunsisf(unsigned int n) {
 
 @interface HSVValuePicker : ScreenLayerView {
     ColorPicker *m_colorPicker;
+    int m_leftMargin;
+    int m_barWidth;
 }
 - (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
 - (void)drawRect:(CGRect)rect;
+- (void)setLeftMargin: (int)margin;
+- (void)setBarWidth : (int)width;
 - (void)mousePositionToValue:(GSEvent *)event;
 - (void)mouseDown:(GSEvent *)event;
 - (void)mouseDragged:(GSEvent *)event;
@@ -212,6 +216,14 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     return self;
 }
 
+- (void)setLeftMargin: (int)margin {
+    m_leftMargin = margin;
+}
+
+- (void)setBarWidth : (int)width {
+    m_barWidth = width;
+}
+
 -(void)mousePositionToValue:(GSEvent *)event {
     CGRect rect = GSEventGetLocationInWindow(event);
     id superview = self;
@@ -249,7 +261,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 - (void)drawRect:(CGRect)rect {
     unsigned int *c;
-    int x, y, i = 0;
+    int x, y, i = 0, j;
     float r, g, b;
     float h, s, v;
     c = CoreSurfaceBufferGetBaseAddress(m_screenSurface);
@@ -259,12 +271,15 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     s = *[m_colorPicker saturation];
     for (y=0; y < m_height; y++)
     {
+	for (x=0; x < m_leftMargin; x++)
+	    c[i++] = 0xffffffUL;
 	v = 1.0f - (float)y / (float)m_height;
 	HSVtoRGB(&r, &g, &b, h, s, v);
 	wColor = (0xff<<24) | (((int)(r * 255.0f) & 0xff) << 16) | (((int)(g * 255.0f) & 0xff) << 8) | ((int)(b * 255.0f) & 0xff);
-	for (x=0; x < m_width; x++) {
+	for (j=0; j < m_barWidth; j++, x++)
 	    c[i++] = wColor;
-	}
+	for (; x < m_width; x++)
+	    c[i++] = 0xffffffUL;
     }
     
 }
@@ -346,7 +361,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     for (y=0; y < m_height; y++)
     {
 	for (x=0; x < m_width; x++) {
-		hsv = hsvData[i];
+	    hsv = hsvData[i];
 	    
 	    if ((hsv & 0xff000000UL)) {
 		h = (float)((hsv & 0xff0000) >> 16) / 255.0f;
@@ -430,7 +445,9 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 	[m_tileBorder setBackgroundColor: borderColor];
       
 	m_hsvPicker = [[HSVPicker alloc] initWithFrame: CGRectMake(8.0f, 128.0f, 256.0f, 256.0f) withColorPicker: self];
-	m_valuePicker = [[HSVValuePicker alloc] initWithFrame: CGRectMake(280.0f, 128.0f, 32.0f, 256.0f) withColorPicker: self];
+	m_valuePicker = [[HSVValuePicker alloc] initWithFrame: CGRectMake(264.0f, 128.0f, 56.0f, 256.0f) withColorPicker: self];
+	[m_valuePicker setLeftMargin: 16];
+	[m_valuePicker setBarWidth: 32];
 
 	UIImage *hsvCursorImage = [[UIImage alloc]
 	    initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"hsv-crosshair" ofType:@"png" inDirectory: @"/"]];
@@ -452,6 +469,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     }
     return self;
 }
+
 - (void)dealloc {
     [m_hsvPicker release];
     [m_valuePicker release];

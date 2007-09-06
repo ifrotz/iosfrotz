@@ -41,12 +41,20 @@ void SBSetAccelerometerDeviceOrientationChangedEventsEnabled(BOOL);
 }
 #endif
 
+FrotzApplication *theApp;
+float kUIStatusBarHeight;
+
+BOOL gShowStatusBarInLandscapeMode = NO; // make this a preference...
+
 - (void) applicationDidFinishLaunching: (id) unused
 {
     UIWindow *window;
+    theApp = self;
+    kUIStatusBarHeight = 20.0f; //[UIHardware statusBarHeight];
+    [UIHardware _setStatusBarHeight:0.0f]; // we'll reserve space ourselves, so we can optionally hide it in landscape mode
     struct CGRect winRect = [UIHardware fullScreenApplicationContentRect];
     window = [[UIWindow alloc] initWithContentRect: winRect];
-    winRect.origin.x = winRect.origin.y = 0.0f;
+    winRect.origin.x = 0.0f; winRect.origin.y = 20.0f;
     m_mainView = [[MainView alloc] initWithFrame: winRect];
 
     [self setStatusBarMode: 1 duration: 0];

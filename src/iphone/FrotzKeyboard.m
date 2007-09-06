@@ -24,6 +24,7 @@
 #import <UIKit/UITransformAnimation.h>
 #import <UIKit/UIView-Geometry.h>
 #import "Cleanup.h"
+#import "FrotzApplication.h"
 #import "StoryMainView.h"
 #import "FrotzKeyboard.h"
 
@@ -128,7 +129,7 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 	    [self setFrame: CGRectMake(0.0f, 140.0f, kbdWidth, kbdHeight)];
 	else
 	    [self setFrame: CGRectMake(0.0f, 440.0 - kbdHeight, kbdWidth, kbdHeight)];
-	if ([self isLandscape])
+	if (gShowStatusBarInLandscapeMode && [self isLandscape])
 	    identity = CGAffineTransformTranslate(identity, -10.0f, 0.0f);
 	struct CGAffineTransform trans = CGAffineTransformTranslate(identity, 0.0f, kbdHeight);
 	
@@ -163,7 +164,7 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 	    [self setFrame: CGRectMake(0.0f, 320.0f, kbdWidth, kbdHeight)];
 	else
 	    [self setFrame: CGRectMake(0.0f, 480.0f, kbdWidth, kbdHeight)];
-	if ([self isLandscape])
+	if (gShowStatusBarInLandscapeMode && [self isLandscape])
 	    identity = CGAffineTransformTranslate(identity, -10.0f, 0.0f);
 	struct CGAffineTransform trans = CGAffineTransformTranslate(identity, 0.0f, -kbdHeight);
 	

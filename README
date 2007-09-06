@@ -54,3 +54,8 @@ Tue Sep  4 00:49:08 CDT 2007
  - Better input completion
  - Misc. Bug fixes
 
+0.5.1
+ - Fix sizing bug when rotating phone with keyboard hidden
+ - Improve responsiveness of value control in HSV color picker
+ - Hide phone status bar in landscape mode
+
