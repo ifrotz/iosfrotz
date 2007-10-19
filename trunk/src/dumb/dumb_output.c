@@ -413,7 +413,7 @@ void os_reset_screen(void)
 void os_split_win(int h) {
 }
 
-void os_new_line() {
+void os_new_line(bool wrapping) {
 }
 
 void os_beep (int volume)

@@ -121,7 +121,6 @@ static zword winarg2 (void)
 
 static void update_cursor (void)
 {
-
     os_set_cursor (
 	cwp->y_pos + cwp->y_cursor - 1,
 	cwp->x_pos + cwp->x_cursor - 1);
@@ -139,7 +138,7 @@ static void reset_cursor (zword win)
 {
     int lines = 0;
 
-    if (h_version <= V4 && win == 0)
+    if ((h_version <= V4 || do_autosave) && win == 0)
 	lines = wp[0].y_size / hi (wp[0].font_size) - 1;
 
     wp[win].y_cursor = hi (wp[0].font_size) * lines + 1;
@@ -264,7 +263,6 @@ void screen_new_line (bool wrapping)
 	} else cwp->y_cursor = 1;
 
     else cwp->y_cursor += font_height;
-
     update_cursor ();
     os_new_line(wrapping);
 
@@ -671,8 +669,11 @@ void split_window (zword height)
 
     /* Erase the upper window in V3 only */
 
-    if (h_version == V3 && height != 0)
+    if (h_version == V3 && height != 0 && !do_autosave)
 	erase_window (1);
+    if (do_autosave)
+	wp[0].y_cursor = wp[0].y_size;
+
 
 }/* split_window */
 
@@ -750,7 +751,6 @@ void restart_screen (void)
     /* Initialise window properties */
 
     mwin = 1;
-
     for (cwp = wp; cwp < wp + 8; cwp++) {
 	cwp->y_pos = 1;
 	cwp->x_pos = 1;

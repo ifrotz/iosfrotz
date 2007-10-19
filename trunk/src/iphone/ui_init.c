@@ -366,7 +366,7 @@ void os_init_screen (void)
      * xterm-color which some supposedly current Unicies still don't
      * understand.
      */ 
-    if (u_setup.force_color)
+    //if (u_setup.force_color)
 	u_setup.color_enabled = TRUE;
 
     if (u_setup.color_enabled) {
@@ -382,8 +382,8 @@ void os_init_screen (void)
 #endif
     {
 	/* Set these per spec 8.3.2. */
-	h_default_foreground = WHITE_COLOUR;
-	h_default_background = BLACK_COLOUR;
+	h_default_foreground = BLACK_COLOUR;
+	h_default_background = WHITE_COLOUR;
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     

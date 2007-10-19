@@ -542,7 +542,8 @@ void z_restart (void)
     } else first_restart = FALSE;
 
     restart_header ();
-    restart_screen ();
+    if (!do_autosave)
+       restart_screen ();
 
     sp = fp = stack + STACK_SIZE;
     frame_count = 0;

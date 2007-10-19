@@ -1,11 +1,13 @@
 // FrotzKeyboard.h
 #import "UITextTraitsClientProtocol.h"
 #import "UIKeyboardInputProtocol.h"
-#import <UIKit/UIKeyboardImpl.h>
+#import "../UIKit/UIKeyboardImplX.h"
+//#import <UIKit/UIKeyboardImpl.h>
+#import <UIKit/UIKeyboard.h>
 
 @class UIFrotzWinView;
 
-@interface FrotzKeyboard : UIKeyboardImpl
+@interface FrotzKeyboard : UIKeyboard
 {
     BOOL m_visible;
     BOOL m_landscape;
@@ -21,3 +23,7 @@
 -(void) toggle:(UIFrotzWinView*)view;
 
 @end
+
+@interface FrotzKeyboardImpl : UIKeyboardImpl
+@end
+

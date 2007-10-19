@@ -1,5 +1,5 @@
 
-iPhoneFrotz version 0.5
+iPhoneFrotz version 0.6
 
 iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
 by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
@@ -58,4 +58,10 @@ Tue Sep  4 00:49:08 CDT 2007
  - Fix sizing bug when rotating phone with keyboard hidden
  - Improve responsiveness of value control in HSV color picker
  - Hide phone status bar in landscape mode
+
+Fri Oct 19 01:38:24 CDT 2007
+0.6
+ - Add game-controlled font style and color control by using HTML instead of text in UIText ctl
+ - Fixes for 1.1.1.  Avoid accessing m_inputStriing directly in autocompletion code since
+   it may change in version bumps.
 
