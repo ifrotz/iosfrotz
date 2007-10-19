@@ -27,8 +27,6 @@
 
 #include "iphone_frotz.h"
 
-#undef COLOR_SUPPORT
-
 /* When color_enabled is FALSE, we still minimally keep track of colors by
  * setting current_color to A_REVERSE if the game reads the default
  * foreground and background colors and swaps them.  If we don't do this,
@@ -147,22 +145,9 @@ void os_set_colour (int new_foreground, int new_background)
 {
     if (new_foreground == 1) new_foreground = h_default_foreground;
     if (new_background == 1) new_background = h_default_background;
-    if (u_setup.color_enabled) {
-#ifdef COLOR_SUPPORT
-	static int colorspace[10][10];
-	static int n_colors = 0;
 
-	if (!colorspace[new_foreground][new_background]) {
-//	  init_pair(++n_colors, unix_convert(new_foreground), unix_convert(new_background));
-	  colorspace[new_foreground][new_background] = n_colors;
-	}
-	u_setup.current_color = COLOR_PAIR(colorspace[new_foreground][new_background]);
-#endif
-    } else
-      u_setup.current_color = (((new_foreground == h_default_background)
-			&& (new_background == h_default_foreground))
-			? REVERSE_STYLE : 0);
-    os_set_text_style(u_setup.current_text_style);
+    int new_color = u_setup.current_color = (new_foreground << 4) | new_background;
+    iphone_set_text_attribs(u_setup.current_text_style, new_color);
 }/* os_set_colour */
 
 /*
@@ -179,8 +164,9 @@ void os_set_colour (int new_foreground, int new_background)
 
 void os_set_text_style (int new_style)
 {
-    int temp = 0;
-
+    current_style = new_style;
+    u_setup.current_text_style = new_style;
+    iphone_set_text_attribs(new_style, u_setup.current_color);
 } /* os_set_text_style */
 
 /*
@@ -374,6 +360,7 @@ int os_string_width (const zchar *s)
 
 void os_set_cursor (int row, int col)
 {
+//printf ("os_set_cursor %d %d\n", row, col);
 #if 0
     if ((row < h_screen_rows && cursor_row+1 == row
         || cursor_row+2 == row || cursor_row == row) && col == 1)

@@ -65,6 +65,10 @@ BOOL gShowStatusBarInLandscapeMode = NO; // make this a preference...
 
     [window setContentView: m_mainView];     
 
+//    NSString* m = [self graphvizRepresentation];
+//    [m writeToFile:@"/tmp/foo.dot" atomically:TRUE];
+
+
 // SB probably means SpringBoard.  Accelerometer events seem to only be
 // availale if the app is launched from SpringBoard; if you run via a
 // shell, you get no accel or orientation events.

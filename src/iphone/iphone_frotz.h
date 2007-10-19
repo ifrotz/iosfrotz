@@ -39,8 +39,8 @@ bool is_terminator (zchar);
 #define TANDY_DEF		0
 #define OBJ_MOVE_DEF		0
 #define OBJ_LOC_DEF		0
-#define BACKGROUND_DEF		BLUE_COLOUR
-#define FOREGROUND_DEF		WHITE_COLOUR
+#define BACKGROUND_DEF		WHITE_COLOUR
+#define FOREGROUND_DEF		BLACK_COLOUR
 #define HEIGHT_DEF		-1	/* let curses figure it out */
 #define CONTEXTLINES_DEF	0
 #define WIDTH_DEF		80
@@ -131,6 +131,7 @@ extern void iphone_disable_input();
 extern void iphone_putchar(char c);
 extern void iphone_init_screen();
 extern void iphone_more_prompt();
+extern void iphone_set_text_attribs(int, int);
 extern int iphone_read_file_name(char *file_name, const char *default_name, int flag);
 
 extern int do_autosave, autosave_done;
@@ -144,5 +145,5 @@ extern int iphone_textview_width, iphone_textview_height;
 
 #define kFrotzAutoSaveFile "FrotzSIP.sav"
 
-#define IPHONE_FROTZ_VERS "0.5"
+#define IPHONE_FROTZ_VERS "0.6"
 

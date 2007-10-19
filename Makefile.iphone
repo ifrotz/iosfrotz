@@ -1,7 +1,15 @@
 
-CC=arm-apple-darwin-cc
-CFLAGS=-F/System/Library/Frameworks/Foundation -IUIKit
-IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework CoreSurface -framework GraphicsServices
+#Old toolchain:
+#CC=arm-apple-darwin-cc
+#CFLAGS=-F/System/Library/Frameworks/Foundation -IUIKit
+#IPHONE_LDFLAGS=-lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework CoreSurface -framework GraphicsServices
+
+CC=/usr/local/arm-apple-darwin/bin/gcc
+CXX=/usr/local/arm-apple-darwin/bin/g++
+CFLAGS=-fsigned-char -IUIKit
+IPHONE_LDFLAGS=-Wl,-syslibroot,/usr/local/arm-apple-darwin/heavenly -lobjc -ObjC -framework CoreFoundation -framework Foundation -framework UIKit -framework LayerKit -framework CoreGraphics -framework CoreSurface -framework GraphicsServices 
+#-framework Celestial -framework MusicLibrary
+LD=$(CC)
 
 OPTS = -O7
 #OPTS = -g
@@ -10,7 +18,7 @@ OPTS = -O7
 #
 CONFIG_DIR = /var/root/Library/Frotz
 #
-#COLOR_DEFS = -DCOLOR_SUPPORT
+COLOR_DEFS = -DCOLOR_SUPPORT
 
 SRCDIR = src
 
@@ -47,6 +55,7 @@ IPHONE_OBJECT =	$(IPHONE_DIR)/ui_audio_none.o $(IPHONE_DIR)/ui_init.o \
 	$(IPHONE_DIR)/MainView.o $(IPHONE_DIR)/StoryMainView.o $(IPHONE_DIR)/StoryBrowser.o \
 	$(IPHONE_DIR)/ColorPicker.o $(IPHONE_DIR)/FileBrowser.o \
 	$(IPHONE_DIR)/FrotzApplication.o $(IPHONE_DIR)/FrotzKeyboard.o $(IPHONE_DIR)/main.o \
+	$(IPHONE_DIR)/OCVContext.o $(IPHONE_DIR)/OCVDotRepresentations.o $(IPHONE_DIR)/OCVField.o \
 	#$(IPHONE_DIR)/iphone_debug.o \
 
 #TARGETS = $(COMMON_TARGET) $(IPHONE_TARGET) #$(CURSES_TARGET)

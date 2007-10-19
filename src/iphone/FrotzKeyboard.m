@@ -28,15 +28,6 @@
 #import "StoryMainView.h"
 #import "FrotzKeyboard.h"
 
-@implementation FrotzKeyboard
-
-const float kKeyboardSize = 236.0f;
-const float kAnimDuration = 0.40f;
-
-- (BOOL)autoCapitalizationPreference {
-  return NO;
-}
-
 static int matchWord(NSString *str, NSString *wordArray[]) {
     int i;
     for (i=0; wordArray[i]; ++i) {
@@ -47,22 +38,36 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
     return -1;
 }
 
+@implementation FrotzKeyboardImpl
+
+- (BOOL)autoCapitalizationPreference {
+  return NO;
+}
+
 -(void)updateSuggestionsForCurrentInput {
-    NSString *str = [m_inputManager inputString];
-    static NSString *wordArray[] = { @"inventory", @"look", @"read", @"restore", @"take", @"get",
+    
+    UIKBInputManager *inputManager = [UIKBInputManager activeInstance];
+    if (!inputManager) {
+    	[super updateSuggestionsForCurrentInput];
+	return;
+    }
+    
+    NSString *str = [inputManager inputString];
+    static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get",
 	@"pick", @"quit", @"but", @"throw", @"tell", @"open", @"close", @"put",
-	@"up", @"down", @"it", nil };
+	@"up", @"down", @"i", @"it", @"in", @"out", nil };
+	// removed 'inventory' because some games choke on the full spelling (HHGTTG)
     static NSString *rareWordArray[] = { @"examine", @"diagnose", @"say", @"save", @"to", @"no", @"yes", @"all", @"but", @"from", @"with", @"about",
 	@"north", @"east", @"south", @"west", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"push", @"pull", @"show", @"stand", @"switch",
 	@"turn", @"sit", @"kill", @"jump",  @"go", @"give", @"disrobe", nil };
     static NSString *veryRareWordArray[] = { @"diagnose", @"verbose", @"brief", @"superbrief", @"score", @"restart", @"script", @"unscript",
-	@"listen", @"touch", @"smell", @"taste", @"feel", @"light", @"lanterm", nil };
+	@"listen", @"touch", @"smell", @"taste", @"feel", @"light", @"lantern", nil };
     int len = [str length], match;
     int i;
-    
-    if (len == 0)
-    	[super updateSuggestionsForCurrentInput];
-    else  if ([str isEqualToString: @"x"])  // 1-letter shortcuts
+    if (len == 0)//
+    	[super updateSuggestionsForCurrentInput];//
+    else //
+    if ([str isEqualToString: @"x"])  // 1-letter shortcuts
 	[self setAutocorrection: @"examine"];
     else  if ([str isEqualToString: @"z"])
 	[self setAutocorrection: @"wait."];
@@ -86,6 +91,17 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 	[super updateSuggestionsForCurrentInput];
 }
 
+@end
+
+@implementation FrotzKeyboard
+
+const float kKeyboardSize = 236.0f;
+const float kAnimDuration = 0.40f;
+
++(void) initImplementationNow {
+    [FrotzKeyboardImpl sharedInstance];
+}
+ 
 -(int) keyboardHeight {
     return m_landscape ? 180 : 236;
 }
