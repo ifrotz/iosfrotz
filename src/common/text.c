@@ -167,6 +167,7 @@ zbyte translate_to_zscii (zchar c)
 
 static zchar alphabet (int set, int index)
 {
+zchar z;
 
     if (h_alphabet != 0) {	/* game uses its own alphabet */
 
@@ -178,15 +179,16 @@ static zchar alphabet (int set, int index)
 	return translate_from_zscii (c);
 
     } else			/* game uses default alphabet */
-
 	if (set == 0)
-	    return 'a' + index;
+	    z= 'a' + index;
 	else if (set == 1)
-	    return 'A' + index;
+	    z= 'A' + index;
 	else if (h_version == V1)
-	    return " 0123456789.,!?_#'\"/\\<-:()"[index];
+	    z= " 0123456789.,!?_#'\"/\\<-:()"[index];
 	else
-	    return " ^0123456789.,!?_#'\"/\\-:()"[index];
+	    z= " ^0123456789.,!?_#'\"/\\-:()"[index];
+//	printf ("[%c]", z); fflush(stdout);
+	return z;
 
 }/* alphabet */
 
@@ -214,7 +216,6 @@ static void load_string (zword addr, zword length)
 	    decoded[i++] = translate_from_zscii (c);
 
 	} else decoded[i++] = 0;
-
 }/* load_string */
 
 /*

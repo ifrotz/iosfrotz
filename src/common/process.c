@@ -261,9 +261,10 @@ void interpret (void)
     
     do {
 	zbyte *save_pcp = pcp;
-	zword *save_sp = sp,  *save_fp = fp;;
+	zword *save_sp = sp,  *save_fp = fp;
+        int save_frame_count = frame_count;
 	zword save_zargs[5] = { zargs[0], zargs[1], zargs[2], zargs[3], zargs[4] };
-	int save_zargc = zargc, j;
+	int j, save_zargc = 0; //zargc;
 	zbyte opcode;
 
 	CODE_BYTE (opcode)
@@ -312,6 +313,7 @@ void interpret (void)
 	    sp = save_sp;
 	    fp = save_fp;
 	    zargc = save_zargc;
+	    frame_count = save_frame_count;
 	    for (j=0; j<5; ++j)
 		zargs[j] = save_zargs[j];
 	    z_save();

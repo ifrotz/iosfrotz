@@ -334,11 +334,15 @@ OBJC_EXPORT double objc_msgSend_fpret(id self, SEL op, ...);
 }
 
 - (void)abortToBrowser {
-    [m_storyMainView abandonStory];
+    if (m_mode == kModePlayStory) {
+	[m_storyMainView abandonStory];
+	[[NSRunLoop currentRunLoop] cancelPerformSelectorsWithTarget: self];
 
-    [self updateNavBarButtons: kModeSelectStory];
+	[self updateNavBarButtons: kModeSelectStory];
 
-    [m_transitionView transition:2 toView:m_storyBrowser];
+	[m_transitionView transition:2 toView:m_storyBrowser];
+    } else
+	NSLog(@"Ignore abortTobrowser async call\n");
 }
 
 - (void)abortToBrowser : (id)unused {

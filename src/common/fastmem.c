@@ -542,8 +542,7 @@ void z_restart (void)
     } else first_restart = FALSE;
 
     restart_header ();
-    if (!do_autosave)
-       restart_screen ();
+    restart_screen ();
 
     sp = fp = stack + STACK_SIZE;
     frame_count = 0;
@@ -661,8 +660,10 @@ void z_restore (void)
 
 	/* Open game file */
 
-	if ((gfp = fopen (new_name, "rb")) == NULL)
+	if ((gfp = fopen (new_name, "rb")) == NULL) {
+	    printf ("can't open %s\n", new_name);
 	    goto finished;
+	}
 
 	if (f_setup.save_quetzal) {
 	    success = restore_quetzal (gfp, story_fp);

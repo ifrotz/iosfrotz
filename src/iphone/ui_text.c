@@ -147,7 +147,7 @@ void os_set_colour (int new_foreground, int new_background)
     if (new_background == 1) new_background = h_default_background;
 
     int new_color = u_setup.current_color = (new_foreground << 4) | new_background;
-    iphone_set_text_attribs(u_setup.current_text_style, new_color);
+    iphone_set_text_attribs(u_setup.current_text_style, new_color, TRUE);
 }/* os_set_colour */
 
 /*
@@ -166,7 +166,7 @@ void os_set_text_style (int new_style)
 {
     current_style = new_style;
     u_setup.current_text_style = new_style;
-    iphone_set_text_attribs(new_style, u_setup.current_color);
+    iphone_set_text_attribs(new_style, u_setup.current_color, TRUE);
 } /* os_set_text_style */
 
 /*
@@ -396,16 +396,10 @@ void os_more_prompt (void)
 void os_erase_area (int top, int left, int bottom, int right)
 {
   int row, col;
-#if 0
   if ((top == 1) && (bottom == h_screen_rows) &&
         (left == 1) && (right == h_screen_cols)) {
-	int save_cwin = cwin;
-	cwin = 0;
-	for (row=top; row <= bottom; ++row)
-	    iphone_putchar('\n');
-	cwin = save_cwin;
+	iphone_erase_screen();
   }
-#endif
   top--; left--; bottom--; right--;
   for (row = top; row <= bottom; row++)
     for (col = left; col <= right; col++)

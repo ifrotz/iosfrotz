@@ -275,6 +275,7 @@ void screen_new_line (bool wrapping)
 	zword below = (cwp->y_size - cwp->y_cursor + 1) / font_height;
 
 	cwp->line_count++;
+//printf("cwp lc %d %d %d\n", cwp->line_count, cwp->y_cursor, cwp->y_size);
 
 	if ((short) cwp->line_count >= (short) above + below - 1) {
 
@@ -778,6 +779,7 @@ void restart_screen (void)
     wp[0].right = f_setup.right_margin;
 
     wp[0].x_size = h_screen_width;
+    wp[0].y_size = h_screen_height;
     wp[1].x_size = h_screen_width;
 
     if (h_version <= V3)
@@ -790,6 +792,7 @@ void restart_screen (void)
     if (!do_autosave) {
       erase_screen ((zword) (-1));
     }
+    update_attributes ();
 
 }/* restart_screen */
 
@@ -1434,7 +1437,6 @@ void z_set_cursor (void)
 
     zword y = zargs[0];
     zword x = zargs[1];
-
     flush_buffer ();
 
     /* Supply default arguments */
