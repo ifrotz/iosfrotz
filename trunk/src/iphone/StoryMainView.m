@@ -30,6 +30,8 @@ extern int GSEventGetTimestamp(GSEvent *);
 
 #include <pthread.h>
 
+typedef id DOMRange;
+
 BOOL gUseHTML = YES;
 
 NSString *htmlPreamble = @"<html><body>\n";
@@ -52,9 +54,16 @@ NSString *htmlColorTable[] = {
   @"#333333"  // dark grey
 };
 
-int iphone_textview_width = 61, iphone_textview_height = 24;
-int do_autosave = 0, autosave_done = 0;
+#define kDefaultTextViewWidth 61
+#define kDefaultTextViewHeight 24
+
+int iphone_textview_width = kDefaultTextViewWidth;
+int iphone_textview_height = kDefaultTextViewHeight;
+int do_autosave = 0, autosave_done = 0, restore_frame_count;
 int do_filebrowser = 0;
+
+int lastVisibleYPos = 0;
+
 static int filebrowser_allow_new = 0;
 
 char iphone_filename[256];
@@ -76,7 +85,7 @@ NSMutableString *ipzBufferStr = NULL, *ipzStatusStr = NULL, *ipzInputBufferStr =
 int ipzDeleteCharCount = 0;
 
 #define kStatusLineYPos		0.0f
-#define kStatusLineHeight	19.0f   // for early V3 games
+#define kStatusLineHeight	10.0f   // for early V3 games
 
 float topWinSize = kStatusLineHeight;
 
@@ -100,11 +109,12 @@ void iphone_ioinit() {
 
 int currColor = 0, currTextStyle = 0;
 
-void iphone_set_text_attribs(int style, int color) {
+void iphone_set_text_attribs(int style, int color, bool lock) {
     if (!gUseHTML)
 	return;
     
-    pthread_mutex_lock(&outputMutex);
+    if (lock)
+	pthread_mutex_lock(&outputMutex);
 
     if (style != currTextStyle || color != currColor) {
 	NSString *fontWtStr = @"", *fontStyleStr = @"", *fontFixedStr = @"", *fgStr= @"", *bgStr = @"";
@@ -132,7 +142,8 @@ void iphone_set_text_attribs(int style, int color) {
 	currTextStyle = style;
 	currColor = color;
     }
-    pthread_mutex_unlock(&outputMutex);
+    if (lock)
+	pthread_mutex_unlock(&outputMutex);
 }
 
 
@@ -143,7 +154,9 @@ void iphone_putchar(char c) {
     NSMutableString *bufferStr = isStatus ? ipzStatusStr : ipzBufferStr;
 
     if (isStatus) {
-	if (!gUseHTML) {
+	if (c == '\012')
+	    [bufferStr setString: @""];
+	if (!gUseHTML || c == '\012') {
 	    [bufferStr appendFormat:@"%c", c];
 	    pthread_mutex_unlock(&outputMutex);
 	    return;
@@ -159,8 +172,6 @@ void iphone_putchar(char c) {
 		break;
 	    case '\n':
 		s = "<br>"; // breaks end the current span as well
-		currColor = 0;
-		currTextStyle = 0;
 		break;
 	    case '<':
 		s = "&lt;";
@@ -179,6 +190,11 @@ void iphone_putchar(char c) {
 	[bufferStr appendFormat:@"%s", s];
     else
 	[bufferStr appendFormat:@"%c", c];
+    if (gUseHTML && c=='\n' && (currTextStyle || ((currColor >> 4) != h_default_foreground) || ((currColor & 0xF) != h_default_background))) {
+	int style = currTextStyle, color = currColor;
+	currTextStyle = 0; currColor = 0;
+	iphone_set_text_attribs(style, color, FALSE);
+    }
     pthread_mutex_unlock(&outputMutex);
 }
 
@@ -200,6 +216,17 @@ int iphone_getchar() {
 	}
 	usleep(1000000);
     }
+}
+
+void iphone_erase_screen() {
+    int saved_cwin = cwin;
+    pthread_mutex_lock(&winSizeMutex);
+    cwin = 1;
+    iphone_putchar('\012');
+    cwin = saved_cwin;
+    winSizeChanged = TRUE;
+    pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
+    pthread_mutex_unlock(&winSizeMutex);
 }
 
 void iphone_enable_input() {
@@ -283,6 +310,10 @@ void run_interp(const char *story, bool autorestore) {
     iphone_ioinit();
     z_restart ();
     if (autorestore) {
+	frame_count = restore_frame_count;
+	split_window(h_version > 3 ? top_win_height : top_win_height-1);
+	os_set_colour (1, 1); // defaults
+
 	id fileMgr = [NSFileManager defaultManager];
 
 	z_restore ();
@@ -397,7 +428,7 @@ NSLog(@"ssss");
 	
 	m_storyView = [[UIStoryView alloc] initWithFrame:
 	    CGRectMake(0.0f, kStatusLineYPos + kStatusLineHeight,
-	    rect.size.width, rect.size.height - kStatusLineYPos - kUIStatusBarHeight)];
+	    rect.size.width, rect.size.height - kStatusLineYPos)];
 	[m_storyView setBackgroundColor: bgColor];
 	[m_storyView setTextColor: fgColor];
 	[m_storyView setAllowsRubberBanding:YES];
@@ -500,7 +531,6 @@ NSLog(@"ssss");
 		[m_keyb setFrame: CGRectMake(0.0f, 140.0f, 480.0f, 180.0f)];
 	    else
 		[m_keyb setFrame: CGRectMake(0.0f, 320.0f, 480.0f, 180.0f)];
-	    //[[m_keyb sharedInstance] showLayout:[UIKeyboardLayoutQWERTYLandscape class]];
 	    if (gShowStatusBarInLandscapeMode)
 		[m_keyb setTransform: CGAffineTransformMakeTranslation(-10.0f, 0.0f)];
 	} else {
@@ -523,7 +553,6 @@ NSLog(@"ssss");
 		[m_keyb setFrame: CGRectMake(0.0f, 440.0f - 236.0f, 320.0f, 236.0f)];
 	    else
 		[m_keyb setFrame: CGRectMake(0.0f, 440.0f, 320.0f, 236.0f)];
-	    //[[m_keyb sharedInstance] showLayout:[UIKeyboardLayoutQWERTY class]];
 	}
 
 	[self addSubview: m_keyb];
@@ -587,8 +616,8 @@ char *tempStatusLineScreenBuf() {
     for (i=0; i < iphone_top_win_height; ++i) {
 	for (j=0; j < h_screen_cols; ++j) {
 	    char c = (char)screen_data[i * MAX_COLS + j];
-	    if (i == cursor_row && j == cursor_col && c == ' ')
-		c = '#';
+//	    if (i == cursor_row && j == cursor_col && c == ' ')
+//		c = '#';
 	    buf[i * (h_screen_cols+1) + j] = c;
 	}
 	buf[i*(h_screen_cols+1) + j] = '\n';
@@ -598,16 +627,18 @@ char *tempStatusLineScreenBuf() {
     return buf;
 }
 
-NSMutableString *tempStatusLineHTMLScreenBuf() {
+NSMutableString *tempStatusLineHTMLScreenBuf(int *cursOffset) {
     NSMutableString *buf = [[NSMutableString alloc] init];
     [buf setString: @""];
     int i, j=0, prevStyle=(screen_data[0] >> 8) & REVERSE_STYLE, style=0;
+    int off = 0;
     char *elem;
     elem = "span";
     for (i=0; i < iphone_top_win_height; ++i) {
 	if (prevStyle & REVERSE_STYLE) {
 	    [buf appendFormat: @"<%s style=\"color:%@; background-color:%@; position:absolute; left:%dpx; top:%dpx; \">", elem,
 		htmlColorTable[(currColor & 0xF)], htmlColorTable[(currColor >> 4)], 0, i*kFixedFontPixelHeight];
+		++off;
 	}
 	for (j=0; j < h_screen_cols; ++j) {
 	    char c = (char)screen_data[i * MAX_COLS + j];
@@ -625,15 +656,19 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
 		    [buf appendFormat: @"</%s>", elem];
 		}
 		prevStyle = style;
+		++off;
 	    } else if (c==' ') {
 		// first space after non-space when in reverse mode, reset pos
 		if ((style & REVERSE_STYLE) && j > 1 && (char)screen_data[i * MAX_COLS + j-1]!=' ') {
-		    [buf appendFormat: @"&nbsp;&nbsp;</%s><%s style=\"color:%@; background-color:%@; position:absolute;left:%dpx; top:%dpx;\">", elem, elem,
+		    [buf appendFormat: @"&nbsp;</%s><%s style=\"color:%@; background-color:%@; position:absolute;left:%dpx; top:%dpx;\">", elem, elem,
 		     htmlColorTable[(currColor & 0xF)], htmlColorTable[(currColor >> 4)], (j) * kFixedFontWidth, i*kFixedFontPixelHeight];
+		    off += 2;
 		}
 	    }
-	    if (i == cursor_row && j == cursor_col && c == ' ')
-		c = '#';
+	    if (i == cursor_row && j == cursor_col && c == ' ') {
+		if (cursOffset)
+		    *cursOffset = off;
+	    }
 	    if (c==' ')
 		[buf appendString: @"&nbsp;"];
 	    else if (c=='>')
@@ -642,13 +677,21 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
 		[buf appendString: @"&lt;"];
 	    else if (c=='&')
 		[buf appendString: @"&amp;"];
+	    else if (c=='\012') {
+		[buf setString: @""];
+		return buf;
+		}		
 	    else
 		[buf appendFormat: @"%c", c];
+	    ++off;
 	}
 	[buf appendString: @"&nbsp;&nbsp;&nbsp;&nbsp;"];
 	[buf appendString: @"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"];
-	if (i < iphone_top_win_height-1)
+	off += 35;
+	if (i < iphone_top_win_height-1) {
 	    [buf appendString: @"<br>"];
+	    ++off;
+	    }
 	putchar('\n');
 	if (style & REVERSE_STYLE)
 	    [buf appendFormat: @"</%s>", elem];
@@ -660,6 +703,7 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
     static int prevTopWinHeight = 1;
     static int continuousPrintCount = 0;
     static int grewStatus = 0;
+    static int statusLineInput = 0;
     int textLen = [ipzBufferStr length];
     int statusLen = [ipzStatusStr length];
 
@@ -702,14 +746,36 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
     if (textLen > 0) {
 	[m_storyView insertText: ipzBufferStr];
 	[ipzBufferStr setString: @""];
+	
 	continuousPrintCount++;
     } else
 	continuousPrintCount = 0;
 
     if (statusLen > 0) {
-	if (gUseHTML) {
+	if (statusLen == 1 && [ipzStatusStr isEqualToString: @"\012"]) {
+	    //NSLog(@"COLOR %x\n", currColor);
 	    [m_statusLine setMarginTop: 0];
-	    [m_statusLine setHTML: tempStatusLineHTMLScreenBuf()];
+	    [m_statusLine setHTML: @""];
+	    [m_storyView setHTML: @""];
+	    [htmlBuf setString: @""];
+	    [m_statusLine setEditable: NO];	    
+	    [m_storyView becomeFirstResponder];	
+	    statusLineInput = 0;
+	    lastVisibleYPos = 0;
+	}	
+	else if (gUseHTML) {
+	    int cursOffset;
+	    [m_statusLine setMarginTop: 0];
+	    [m_statusLine setHTML: tempStatusLineHTMLScreenBuf(&cursOffset)];
+	    if (cursor_row < iphone_top_win_height && (cwin == 1)) {
+		[m_statusLine setEditable: YES];
+		[m_statusLine setSelectionRange:NSMakeRange(cursOffset, 0)];
+		statusLineInput = 1;
+	    } else if (statusLineInput) {
+		[m_statusLine setEditable: NO];	    
+	    	[m_storyView becomeFirstResponder];
+		statusLineInput = 0;	
+		}
 	}
 	else {
 	    char * s = tempStatusLineScreenBuf();
@@ -722,6 +788,22 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
     if (ipzAllowInput & kIPZRequestInput) {
 	grewStatus = 0;
 	ipzAllowInput |= kIPZAllowInput;
+	
+	if (textLen > 0) {
+	    CGSize sz = [m_storyView contentSize];
+	    lastVisibleYPos -= 38 - topWinSize;
+	    if (lastVisibleYPos < 0)
+		lastVisibleYPos = 0;
+	    if (m_landscape) {
+		if (sz.height - lastVisibleYPos < 320.0f - topWinSize - 180 + 8)
+		    lastVisibleYPos = sz.height - (320.0f - topWinSize - 180 + 8);
+	    } else {
+		if (sz.height - lastVisibleYPos < 480.0f - 32 - topWinSize - 236) 
+		    lastVisibleYPos = sz.height - (480.0f - 32 - topWinSize - 236);
+	    }
+	    CGPoint pt = CGPointMake(0, lastVisibleYPos);
+	    [m_storyView scrollPointVisibleAtTopLeft: pt animated:YES];
+	}
     }
     pthread_mutex_unlock(&outputMutex);
 #ifdef IPHONE_MORE_PROMPT_ENABLED
@@ -733,7 +815,8 @@ NSMutableString *tempStatusLineHTMLScreenBuf() {
 	[[self mainView] openFileBrowser];
     }
     if (finished) {
-	[[self mainView] performSelector:@selector(abortToBrowser:) withObject:nil afterDelay:0.25];
+	if ([m_currentStory length] > 0)
+	    [[self mainView] performSelector:@selector(abortToBrowser:) withObject:nil afterDelay:0.25];
 	}
     else
 	[self performSelector:@selector(printText:) withObject:nil afterDelay:0.05];
@@ -813,12 +896,24 @@ static struct CGColor *scanColor(NSString *colorStr) {
 	    [m_currentStory release];
 	    m_currentStory = [[NSMutableString stringWithString: [dict objectForKey: @"storyPath"]] retain];
 	    if (m_currentStory && [m_currentStory length] > 0) {
+		int hvers = 0;
 		int i, j;
+
+		strcpy(storyNameBuf, [m_currentStory UTF8String]);
+		FILE *sf = fopen(storyNameBuf, "r");
+		if (sf) hvers = fgetc(sf);
+		fclose(sf);
+		if (hvers < 3 || hvers > 8) {
+		    NSLog([NSString stringWithFormat: @"autoRestoreFailed"]);
+		    return NO;
+		}
+		h_version = hvers;
 		iphone_top_win_height = -1;
 		top_win_height = [[dict objectForKey: @"statusWinHeight"] longValue];
 		cwin = [[dict objectForKey: @"currentWindow"] longValue];
 		cursor_row = [[dict objectForKey: @"cursorRow"] longValue];
 		cursor_col = [[dict objectForKey: @"cursorCol"] longValue];
+		restore_frame_count = [[dict objectForKey: @"frameCount"] longValue];
 		statusStr = [dict objectForKey: @"statusWinContents"];		
 		if (gUseHTML)  {
 		    [m_storyView setHTML: @""];
@@ -842,8 +937,6 @@ static struct CGColor *scanColor(NSString *colorStr) {
 		iphone_init_screen();
 		do_autosave = 1;
 		resize_screen();
-		restart_screen();
-		split_window(top_win_height-1);
 
 		int l = [statusStr length], off;
 		int style = (top_win_height <= 2) ? (REVERSE_STYLE << 8) : 0;
@@ -866,21 +959,22 @@ static struct CGColor *scanColor(NSString *colorStr) {
 			screen_data[i * MAX_COLS + j] = ' ';
 		}
 		iphone_ioinit();
+
 		[ipzStatusStr setString: @" \b"];
 
 		[fileMgr removeFileAtPath: storySIPPath handler:nil];
-		strcpy(storyNameBuf, [m_currentStory UTF8String]);
 		pthread_create(&m_storyTID, NULL, interp_cover_autorestore, (void*)storyNameBuf);
 		[m_keyb show:m_storyView];
 		[m_storyView becomeFirstResponder];
 		CGSize sz = [m_storyView contentSize];
 		CGRect rect = CGRectMake(0, sz.height, 1, 1);
+		lastVisibleYPos = sz.height;
 		[m_storyView scrollRectToVisible: rect animated:YES];
 		[self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
 		return YES;
 	    }
 	}
-	NSLog([NSString stringWithFormat: @"autoRestoreFailed\n"]);
+	NSLog([NSString stringWithFormat: @"autoRestoreFailed"]);
     }
     return NO;
 }
@@ -888,8 +982,26 @@ static struct CGColor *scanColor(NSString *colorStr) {
 -(void) launchStory {
     static char storyNameBuf[256];
     strcpy(storyNameBuf, [m_currentStory UTF8String]);
+    
+    // Make sure pending performSelector calls are cancelled
+    [[NSRunLoop currentRunLoop] cancelPerformSelector:@selector(printText:) target:self argument:nil];
+
+    finished = 0;
+    char *s = strrchr(storyNameBuf, '/');
+    if (s)
+	s++;
+    else
+	s = storyNameBuf;
+	
+    // Hack alert - pretend ot be 80 cols for these games because they fail or display poorly with less
+    // Should detect this in a cleaner way (at least)
+    if (strncasecmp(s, "trinity", 7) == 0 || strncasecmp(s, "amfv", 4) == 0)
+	iphone_textview_width = 80;
+    else
+	iphone_textview_width = kDefaultTextViewWidth;
+
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
-//    NSLog (@"launched tid %d\n", m_storyTID);
+    NSLog (@"launched tid %d\n", m_storyTID);
     [m_keyb show:m_storyView];
     [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
 
@@ -897,10 +1009,18 @@ static struct CGColor *scanColor(NSString *colorStr) {
 
 -(void) abandonStory {
     if ([m_currentStory length] > 0) {
+	NSLog(@"abandon story\n");
 	[ipzInputBufferStr setString: @"\n\n"];   
+	[m_currentStory setString: @""];
 	do_autosave = 0;
 	z_quit();
-	[m_currentStory setString: @""];
+	
+	// if story thread is blocked waiting on window size change, wake it up
+	pthread_mutex_lock(&winSizeMutex);
+	winSizeChanged = FALSE;
+	pthread_cond_signal(&winSizeChangedCond);
+	pthread_mutex_unlock(&winSizeMutex);
+	lastVisibleYPos = 0;
 	pthread_join(m_storyTID, NULL);
     }
     [ipzInputBufferStr setString: @""];
@@ -927,6 +1047,7 @@ static struct CGColor *scanColor(NSString *colorStr) {
 	[dict setObject: [NSNumber numberWithInt: cwin] forKey: @"currentWindow"];
 	[dict setObject: [NSNumber numberWithInt: cursor_row] forKey: @"cursorRow"];
 	[dict setObject: [NSNumber numberWithInt: cursor_col] forKey: @"cursorCol"];
+	[dict setObject: [NSNumber numberWithInt: frame_count] forKey: @"frameCount"];
 	char *statusBuf = tempStatusLineScreenBuf();
 	[dict setObject: [NSString stringWithUTF8String: statusBuf]  forKey: @"statusWinContents"];
 	[dict setObject: [m_storyView text] forKey: @"storyWinContents"];
@@ -950,7 +1071,6 @@ static struct CGColor *scanColor(NSString *colorStr) {
 
 -(BOOL)canBecomeFirstResponder { return NO; }
 
-
 - (void)insertText:(NSString*)text
 {
 #ifdef IPHONE_MORE_PROMPT_ENABLED
@@ -968,7 +1088,6 @@ static struct CGColor *scanColor(NSString *colorStr) {
 	[m_bridge updateLayout];
 	[self webViewDidChange: nil];
 	//NSLog(@"%@", text);
-	typedef id DOMRange;
 	DOMRange *range = [[[[[self _webView] webView] selectedFrame] DOMDocument] createRange];
 	[range setStartAfter: [[[[[self _webView] webView] selectedFrame] DOMDocument] body]];
 	[range setEndAfter: [[[[[self _webView] webView] selectedFrame] DOMDocument] body]];
@@ -976,6 +1095,8 @@ static struct CGColor *scanColor(NSString *colorStr) {
 	[self setEditable: YES];
 	[m_bridge setCaretVisible: YES];
 	[[[self _webView] webView] moveToEndOfDocument:self];
+	
+
     } else {
 	[[[self _webView] webView] moveToEndOfDocument:self];
 	[[self _webView] insertText:text];
@@ -1016,11 +1137,6 @@ static unsigned int MyGSEventGetTimestamp(GSEvent *event) {
 
 static int lastTimestamp;
 
-int GSEventAccelerometerAxisX(GSEvent *event);
-int GSEventAccelerometerAxisY(GSEvent *event);
-int GSEventAccelerometerAxisZ(GSEvent *event);
-
-
 -(void)mouseDown:(GSEvent *)event {
     lastTimestamp = MyGSEventGetTimestamp(event);
     // Prevent textView from seeing the mouseDown to disallow moving the cursor
@@ -1028,26 +1144,14 @@ int GSEventAccelerometerAxisZ(GSEvent *event);
     // Fortunately, the mouseDrag still goes through to the UIScroller parent, so
     // scrolling still works.  Allow the event through if scrolling so the
     // scrolling hysteresis can be halted.
-#if 0
-    int x = GSEventAccelerometerAxisX(event);
-    int y = GSEventAccelerometerAxisY(event);
-    int z = GSEventAccelerometerAxisZ(event);
-    printf ("Accel %d %d %d\n", x, y, z);
-#endif
-  //  if ([self isScrolling]) {
+//  if ([self isScrolling]) {
 	[super mouseDown:event];
-   //  }
+//  }
 }
 
 -(void)mouseUp:(GSEvent *)event
 {
 //  int ts = GSEventGetTimestamp(event); // return value was undeciperable as float, double, or int
-#if 0
-    int x = GSEventAccelerometerAxisX(event);
-    int y = GSEventAccelerometerAxisY(event);
-    int z = GSEventAccelerometerAxisZ(event);
-    printf ("Accel %d %d %d\n", x, y, z);
-#endif
     int timestamp = MyGSEventGetTimestamp(event);
     if (timestamp - lastTimestamp < 150 && ![self isScrolling])
 	[m_keyb toggle: self];
@@ -1061,10 +1165,13 @@ int GSEventAccelerometerAxisZ(GSEvent *event);
 	    [ipzInputBufferStr appendFormat: @"%c", ZC_ESCAPE];
 	}
 	[ipzInputBufferStr appendString: text];
+	CGSize sz = [self contentSize];
+	lastVisibleYPos = sz.height;
 	if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
 	    return NO;
-	if ([text isEqualToString: @"\n"])
+	if ([text isEqualToString: @"\n"]) {
 	    [htmlBuf setString: [self HTML]];
+	    }
     }
     return [super webView:sender shouldInsertText:text replacingDOMRange:range givenAction:action];
 }
@@ -1072,8 +1179,6 @@ int GSEventAccelerometerAxisZ(GSEvent *event);
 -(BOOL)webView:(id)sender shouldDeleteDOMRange:(id)range {
     if ((ipzAllowInput & kIPZAllowInput) && ipzInputBufferStr) {
 	[ipzInputBufferStr appendFormat: @"%c", ZC_BACKSPACE];
-//	if (cwin = 1)
-//	    return NO;
     }
     else
 	return NO;

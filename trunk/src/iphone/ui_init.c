@@ -291,6 +291,7 @@ void os_set_default_file_names(char *basename) {
 
 void os_init_screen (void)
 {
+    static int didInit = 0;
 
     if (h_version == V3 && u_setup.tandy_bit != 0)
         h_config |= CONFIG_TANDY;
@@ -387,16 +388,20 @@ void os_init_screen (void)
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     
-    pthread_mutex_init(&winSizeMutex, NULL);
-    pthread_mutex_init(&outputMutex, NULL);
-    pthread_cond_init(&winSizeChangedCond, NULL);
+    if (!didInit) {
+	pthread_mutex_init(&winSizeMutex, NULL);
+	pthread_mutex_init(&outputMutex, NULL);
+	pthread_cond_init(&winSizeChangedCond, NULL);
+    }
 
     iphone_init_screen();    
 
     os_set_colour(h_default_foreground, h_default_background);
+    //NSLog (@"uiinit f %d b %d\n", h_default_foreground, h_default_background);
     if (!do_autosave)
        os_erase_area(1, 1, h_screen_rows, h_screen_cols);
 
+    didInit = 1;
 }/* os_init_screen */
 
 /*

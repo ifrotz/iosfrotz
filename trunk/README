@@ -1,5 +1,5 @@
 
-iPhoneFrotz version 0.6
+iPhoneFrotz version 0.7
 
 iPhone port of Frotz by Craig Smith <csmith@austin.rr.com>, based on Frotz v2.43
 by David Griffith, Jim Dunleavy, Galen Hazelwood, and Stefan Jokisch .
@@ -64,4 +64,16 @@ Fri Oct 19 01:38:24 CDT 2007
  - Add game-controlled font style and color control by using HTML instead of text in UIText ctl
  - Fixes for 1.1.1.  Avoid accessing m_inputStriing directly in autocompletion code since
    it may change in version bumps.
+
+Sun Nov  4 21:16:43 CST 2007
+0.7
+  - Smarter Auto-scrolling.
+  - Allow cursor in upper window (Bureaucracy).
+  - Allow games to erase screen.
+  - Bug fixes (fix periodic hang when selecting a new game after aborting, fix garbled text
+    printing right after game auto-restore, misc. status line bugs).
+  - Support Trinity and AMFV by pretending screen width is 80 columns when these games
+    are detected.
+
+
 

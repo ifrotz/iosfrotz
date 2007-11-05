@@ -130,8 +130,9 @@ extern void iphone_enable_single_key_input();
 extern void iphone_disable_input();
 extern void iphone_putchar(char c);
 extern void iphone_init_screen();
+extern void iphone_erase_screen();
 extern void iphone_more_prompt();
-extern void iphone_set_text_attribs(int, int);
+extern void iphone_set_text_attribs(int, int, bool);
 extern int iphone_read_file_name(char *file_name, const char *default_name, int flag);
 
 extern int do_autosave, autosave_done;
@@ -145,5 +146,5 @@ extern int iphone_textview_width, iphone_textview_height;
 
 #define kFrotzAutoSaveFile "FrotzSIP.sav"
 
-#define IPHONE_FROTZ_VERS "0.6"
+#define IPHONE_FROTZ_VERS "0.7"
 

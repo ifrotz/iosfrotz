@@ -47,6 +47,8 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 -(void)updateSuggestionsForCurrentInput {
     
     UIKBInputManager *inputManager = [UIKBInputManager activeInstance];
+    if (cwin != 0)  // don't complete if top win is active (invisiclues, bureacracy form, etc.)
+	return; 
     if (!inputManager) {
     	[super updateSuggestionsForCurrentInput];
 	return;
@@ -55,7 +57,7 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
     NSString *str = [inputManager inputString];
     static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get",
 	@"pick", @"quit", @"but", @"throw", @"tell", @"open", @"close", @"put",
-	@"up", @"down", @"i", @"it", @"in", @"out", nil };
+	@"up", @"down", @"i", @"it", @"in", @"on", @"out", nil };
 	// removed 'inventory' because some games choke on the full spelling (HHGTTG)
     static NSString *rareWordArray[] = { @"examine", @"diagnose", @"say", @"save", @"to", @"no", @"yes", @"all", @"but", @"from", @"with", @"about",
 	@"north", @"east", @"south", @"west", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"push", @"pull", @"show", @"stand", @"switch",
