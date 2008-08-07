@@ -1,5 +1,13 @@
 #summary Frotz for iPhone and iPod Touch
 
+http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
+
+Bored of all those new-fangled graphics and dazzling eye candy on your shiny new iPhone?
+
+Nostalgic for a simpler time?
+
+Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction archive.
+
 = Interactive Fiction at Your Fingertips =
 
 Frotz lets you play hundreds of free works of Interactive Fiction (a.k.a. text adventure games) on your iPhone or iPod Touch.  
