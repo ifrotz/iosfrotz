@@ -2,7 +2,7 @@
 
 http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
 
-Bored of all those new-fangled graphics and dazzling eye candy on your shiny new iPhone?
+Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?
 
 Nostalgic for a simpler time?
 
