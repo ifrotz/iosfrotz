@@ -1,13 +1,11 @@
 #summary Frotz for iPhone and iPod Touch
 
-= Introduction =
+= Interactive Fiction at Your Fingertips =
 
-Add your content here.
+Frotz lets you play hundreds of free works of Interactive Fiction (a.k.a. text adventure games) on your iPhone or iPod Touch.  
 
+Frotz plays games written in the Z-Machine format.  This format was invented by Infocom and was used to produce great text adventures from the 80s such as the Zork Trilogy, Hitchhiker's Guide to the Galaxy, and Trinity.
 
-= Details =
+In the past decade, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Frotz includes several built-in games, and includes a web portal for downloading new ones from the Internet.
