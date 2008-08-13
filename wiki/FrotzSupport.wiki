@@ -14,12 +14,11 @@ This page will contain frequently asked questions and miscellaneous help about u
 
   Type "save" at the game's prompt to save your game, and "restore" to load a previously saved game.  This is mentioned on the _(i)_nfo page, but perhaps needs to be made more salient for people without experience playing the old school text adventures.
 
-  * *Transferring your own story files (e.g. Infocom files)
+  * *Transferring your own story files (e.g. Infocom files)*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
-  * If you have File Magnet (currently Mac only), just use it to transfer your story file to your device.  Frotz will automatically see it in the File Magnet file store.
-  * Otherwise, you can access your files using the built-in web interface:
-    * You will need access to a web server, or set up your own temporary web server
-    * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
-    * From will download and install if you click on any link ending in .z3, .z4, .z5, .z8, .dat, or .zblorb.
-
+    * If you have File Magnet (currently Mac only), just use it to transfer your story file to your device.  Frotz will automatically see it in the File Magnet file store.
+    * Otherwise, you can access your files using the built-in web interface:
+      * You will need access to a web server, or set up your own temporary web server
+      * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
+      * From will download and install if you click on any link ending in .z3, .z4, .z5, .z8, .dat, or .zblorb.
