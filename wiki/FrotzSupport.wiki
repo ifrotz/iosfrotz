@@ -4,7 +4,7 @@ This page will contain frequently asked questions and miscellaneous help about u
 
 ----
 
-To report a bug or usability issue with Frotz on iPhone or iPod Touch, please go to the Issues tab, click "New Issue", ad describe your problem.
+*To report a bug or usability issue with Frotz on iPhone or iPod Touch, please go to the Issues tab, click "New Issue", and describe your problem.*
 
 ----
 
