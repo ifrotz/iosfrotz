@@ -12,7 +12,7 @@ This page will contain frequently asked questions and miscellaneous help about u
   A recent review of Frotz on iTunes incorrectly states that there is no way to save state in games. 
   If you press the Home button or answer a call, Frotz will automatically save your game state, but to save your game in progress and start a new one, you actually do it the old-fashioned way.
 
-  Type "save" at the game's prompt to save your game, and "restore" to load a previously saved game.  This is mentioned on the _(i)_nfo page, but perhaps needs to be made more salient for people without experience playing the old school text adventures.
+  Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  This is mentioned on the _(i)_nfo page, but perhaps needs to be made more salient for people without experience playing the old school text adventures.
 
   * *Transferring your own story files (e.g. Infocom files)*
 
