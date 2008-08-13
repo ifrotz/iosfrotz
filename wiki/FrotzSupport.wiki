@@ -8,6 +8,10 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ----
 
+  * *Why is Frotz free?*
+
+  Frotz would be worth nothing without the great games created by the  wealth of talented writers in the Internet Interactive Fiction (IF) community, and I have no way of giving them their cut.   Since I had to pay Apple $99 to publish applications, though,  I'm not above accepting donations.  If you'd like to donate, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 Pay Pal].
+
   * *Saving Games*
   A recent review of Frotz on iTunes incorrectly states that there is no way to save state in games. 
   If you press the Home button or answer a call, Frotz will automatically save your game state, but to save your game in progress and start a new one, you actually do it the old-fashioned way.
