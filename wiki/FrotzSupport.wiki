@@ -1,3 +1,7 @@
 #summary Frotz Support
 
 This page will contain frequently asked questions and user-driven help about using Frotz for the iPhone/iPod Touch.
+
+==
+
+To report a problem or issue with Frotz on iPhone or iPod Touch, please go to the Issues tab and describe your problem.
