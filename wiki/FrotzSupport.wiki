@@ -8,7 +8,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ----
 
-  * "I can't believe this is free" -- a review on iTunes
+  * *"I can't believe this is free"* -- a review on iTunes
 
   I briefly thought about charging 99 cents, but Frotz would be worth nothing without the great games created by the  wealth of talented writers in the IF community, and I have no way of giving them their cut.   However, since it did cost me $99 to get the license to publish the app, if you want to donate to offset that cost, I wouldn't mind.   You can do so [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 here].
 
