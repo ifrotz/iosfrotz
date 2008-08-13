@@ -17,7 +17,7 @@ This page will contain frequently asked questions and miscellaneous help about u
   * *Transferring your own story files (e.g. Infocom files)*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
-    * If you have File Magnet (currently Mac only), just use it to transfer your story file to your device.  Frotz will automatically see it in the File Magnet file store.
+    * If you have File Magnet (currently Mac only), just use it to transfer your story file to your device.  Frotz will automatically display it in the list of Story Files.
     * Otherwise, you can access your files using the built-in web interface:
       * You will need access to a web server, or set up your own temporary web server
       * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
