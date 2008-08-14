@@ -18,6 +18,9 @@ This page contains frequently asked questions and miscellaneous help about using
 
   Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  This is mentioned on the _(i)_nfo page, but perhaps needs to be made more salient for people without experience playing the old school text adventures.
 
+  * *Deleting games*
+  When you're not playing a story, the standard Edit button in the top left can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.  You can currently only delete stories you downloaded yourself; the bundled stories are impervious to deletion because iTunes installs them read-only, but a way to hide them will be added in an update.
+
   * *Transferring your own story files (e.g. Infocom files)*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
@@ -32,4 +35,3 @@ This page contains frequently asked questions and miscellaneous help about using
   Frotz can start to slow down the longer you play a game.  This is primarily because the iPhone has trouble keeping up when the length of the text in the story view area becomes too big.   I'll be working on improving this for the next version, but in the mean time, you can speed things up just by getting the game to clear the screen.
     # Try using "help", supported by most games, then 'Q' to quit help and return to the game.  Going into the help system will clear the story area, and improve performance.
     # If the game you're playing doesn't have help, then do "save" to save your game, then "quit", restart your game, and "restore".   Restarting will clear the screen, and restoring via the command prompt will not redisplay text from the previous session.
-
