@@ -2,6 +2,17 @@
 
 http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
 
+*News* 8/22/2008
+
+A new version has been submitted for approval and should be available soon.
+ * Performance improvements:  Frotz no longer slows down during long sessions, and uses less memory. 
+ * Miscellaneous bug fixes and interface improvements.
+ * Added help for users new to Interactive Fiction. 
+ * Support for deleting bundled games from Story List.
+ * Support for transferring games with MobileFinder.
+
+----
+
 Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?
 
 Nostalgic for a simpler time?
