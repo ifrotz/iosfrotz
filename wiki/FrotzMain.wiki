@@ -11,6 +11,8 @@ A new version has been submitted for approval and should be available soon.
  * Support for deleting bundled games from Story List.
  * Support for transferring games with MobileFinder.
 
+Color/font settings did not make it into this version, but will be available shortly.
+
 ----
 
 Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?
