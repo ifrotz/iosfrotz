@@ -1,5 +1,7 @@
 #summary Frotz Support
 
+A new version of Frotz has been submitted and should be available soon.   [http://code.google.com/p/iphonefrotz/wiki/FrotzMain Click here] for details.
+
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
 ----
