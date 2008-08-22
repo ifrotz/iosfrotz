@@ -2,7 +2,9 @@
 
 http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
 
-*New Version 1.0.1 Available Soon* 8/22/2008
+*New Version 1.0.1 Available Soon* 
+
+8/22/2008
 
 A new version has been submitted for approval and should be available soon.
  * Performance improvements:  Frotz no longer slows down during long sessions, and uses less memory. 
