@@ -6,7 +6,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ----
 
-*To report a bug or usability issue with Frotz on iPhone or iPod Touch, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem.*   (Note that this requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug by emailing ifrotz@gee mail dot com.)
+*To report a bug or usability issue with Frotz on iPhone or iPod Touch, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem.*   (Note that this requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug by emailing ifrotz at gee mail dot com.)
 
 ----
 
