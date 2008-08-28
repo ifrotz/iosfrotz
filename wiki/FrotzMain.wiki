@@ -2,18 +2,18 @@
 
 http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
 
-*New Version 1.0.1 Available Soon* 
+*New Version 1.0.1 Available* 
 
-8/22/2008
+8/27/2008
 
-A new version has been submitted for approval and should be available soon.
+A new version of Frotz is now available on the App Store
  * Performance improvements:  Frotz no longer slows down during long sessions, and uses less memory. 
  * Miscellaneous bug fixes and interface improvements.
  * Added help for users new to Interactive Fiction. 
  * Support for deleting bundled games from Story List.
  * Support for transferring games with MobileFinder.
 
-Color/font settings did not make it into this version, but will be available shortly.
+Color/font settings did not make it into this version, but will be available shortly.  Well, as shortly as possible given Apple's week long turn around for approval.
 
 ----
 
