@@ -1,6 +1,7 @@
 #summary Frotz Support
 
-A new version of Frotz has been submitted and should be available soon.   [http://code.google.com/p/iphonefrotz/wiki/FrotzMain Click here] for details.
+A new version of Frotz (1.0.1) is now available on the App Store. 
+[http://code.google.com/p/iphonefrotz/wiki/FrotzMain Click here] for details.
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
@@ -9,6 +10,10 @@ This page contains frequently asked questions and miscellaneous help about using
 *To report a bug or usability issue with Frotz on iPhone or iPod Touch, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem.*   (Note that this requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug by emailing ifrotz at gee mail dot com.)
 
 ----
+
+  * *What happened to the title bar in 1.0.1?*
+
+  This is a cosmetic bug which showed up at the last minute only in the optimized release build.  Once submitted for approval, an app can't be modified, and it takes Apple almost a week to approve the app, so I just had to let it go.  The whole process is very frustrating for developers.
 
   * *Why is Frotz free?*
 
