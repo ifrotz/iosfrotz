@@ -6,7 +6,8 @@ http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
 
 8/27/2008
 
-A new version of Frotz is now available on the App Store
+A new version of Frotz is now available on the App Store.  Changes include:
+
  * Performance improvements:  Frotz no longer slows down during long sessions, and uses less memory. 
  * Miscellaneous bug fixes and interface improvements.
  * Added help for users new to Interactive Fiction. 
