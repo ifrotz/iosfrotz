@@ -11,7 +11,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ----
 
-  * *What happened to the title bar in 1.0.1?*
+  * *What happened to title "Frotz" in the navigation bar in 1.0.1?*
 
   This is a cosmetic bug which showed up at the last minute only in the optimized release build.  Once submitted for approval, an app can't be modified, and it takes Apple almost a week to approve the app, so I just had to let it go.  The whole process is very frustrating for developers.
 
