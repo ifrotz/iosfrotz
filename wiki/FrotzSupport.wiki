@@ -39,4 +39,6 @@ This page contains frequently asked questions and miscellaneous help about using
     * Support for DataCase has been abandoned because it requires help from its developers and they haven't responded to queries.
 
   * *Performance*
-  The performance problems in Frotz 1.0 have been fixed in 1.0.1.  If you notice very poor performance, please file a new bug report.
+  The performance problems in Frotz 1.0 have been fixed in 1.0.1.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.    ('DixieLandings', I'm talking to you...  I don't see the problem you mentioned and no one else has reported it.)
+
+
