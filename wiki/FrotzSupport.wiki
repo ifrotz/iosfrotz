@@ -10,6 +10,9 @@ This page contains frequently asked questions and miscellaneous help about using
 *To report a bug or usability issue with Frotz on iPhone or iPod Touch, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem.*   (Note that this requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug by emailing ifrotz at gee mail dot com.)
 
 ----
+  * What OS versions is Frotz compatible with?
+   
+   Frotz works on iPod or iPod Touch versions 2.0 and later.   One user has reported performance issues running Frotz using firmware 2.0.1 on an iPod Touch.  The problem has not been reported on the iPhone, and I have not seen it myself, but it's probably a good idea to update to the latest OS version (currently 2.0.2).
 
   * *What happened to title "Frotz" in the navigation bar in 1.0.1?*
 
@@ -39,6 +42,4 @@ This page contains frequently asked questions and miscellaneous help about using
     * Support for DataCase has been abandoned because it requires help from its developers and they haven't responded to queries.
 
   * *Performance*
-  The performance problems in Frotz 1.0 have been fixed in 1.0.1.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.    ('DixieLandings', I'm talking to you...  I don't see the problem you mentioned and no one else has reported it.)
-
-
+  The performance problems in Frotz 1.0 have been fixed in 1.0.1.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
