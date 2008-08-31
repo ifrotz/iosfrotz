@@ -24,7 +24,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
   * *Can I make a donation?*
 
-  See above for my motivation in making Frotz.   But if you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   You should also consider sending thank you emails to the authors of the games you like.
+  See above for my motivation in making Frotz.   But if you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   (Also consider sending thank you emails to the authors of the games you like!)
 
   * *How do I save my game?*
   A review of Frotz on iTunes incorrectly states that there is no way to save state in games. 
