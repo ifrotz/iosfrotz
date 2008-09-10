@@ -12,7 +12,7 @@ This page contains frequently asked questions and miscellaneous help about using
 ----
   * *I just upgraded to OS 2.1.  Why don't my Infocom/personal story files show up anymore?*
 
-  Because Apple broke the ability of apps to read other app's files, on purpose, without providing developers any other means of interoperability between apps.  Feel free to write them and complain.
+  Because Apple broke the ability of apps to read other app's files, on purpose, without providing developers any other means of interoperability between apps.  Feel free to write them and complain.  I haven't figured out any way to work around this short of reimplementing the functionality of one of the file transfer programs myself.
 
   * *What device/OS versions is Frotz compatible with?*
    
