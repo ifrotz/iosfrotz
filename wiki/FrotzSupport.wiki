@@ -39,7 +39,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
     *  If you have [http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=286746714&mt=8 MobileFinder] (Mac or PC) or [http://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=284797161&mt=8 File Magnet] (currently Mac only), just use it to transfer your story files to your device.   (You may put them in a subfolder if you want.)  Frotz will automatically display such files in the list of playable stories. Frotz does not copy the files, so you need to keep them in MobileFinder or File Magnet to continue to play them.
-*Warning - Apple has deliberately broken this in OS 2.1.  This only works if you are still running 2.0.x.)*
+        *Warning - Apple has deliberately broken this in OS 2.1.  This only works if you are still running 2.0.x.)*
     * Otherwise, you can access your files using the built-in web interface:
       * You will need access to a public web server, or set up your own temporary local web server.  You can also use a free file hosting site such as zshare.net.
       * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
