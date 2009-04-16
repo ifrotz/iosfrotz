@@ -18,14 +18,14 @@ This page contains frequently asked questions and miscellaneous help about using
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
 
-     *  Frotz 1.2 now includes a built-in FTP (file transfer protocol) server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the FTP server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over Edge or 3G.
+     * Frotz 1.2 now includes a built-in FTP (file transfer protocol) server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the FTP server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over Edge or 3G.
      * Note that Frotz will not look for stories in ZIP files if you transfer them with FTP; you should transfer the files individually and make sure they end in a standard suffix such as .z5 or .zblorb.
 
      * If you have your files on a web server, you can access them using the built-in web interface:
-      * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
-      * Frotz will download and install if you click on any link ending in .z3, .z4, .z5, .z8, .dat, or .zblorb.
-      * You cannot download saved games this way; use the FTP server instead.
-      * Frotz can also handle ZIP downloads.  If you click on a ZIP file, Frotz will download it, extract files with the playable extensions and add them to the story list, and then delete the ZIP file.  Again, this doesn't work with FTP, but I plan to add that in a future version.
+       * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
+       * Frotz will download and install if you click on any link ending in .z3, .z4, .z5, .z8, .dat, or .zblorb.
+       * You cannot download saved games this way; use the FTP server instead.
+       * Frotz can also handle ZIP downloads.  If you click on a ZIP file, Frotz will download it, extract files with the playable extensions and add them to the story list, and then delete the ZIP file.  Again, this doesn't work with FTP, but I plan to add that in a future version.
 
   * *What device/OS versions is Frotz compatible with?*
    
