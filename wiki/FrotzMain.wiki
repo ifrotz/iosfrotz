@@ -19,7 +19,7 @@ My apologies for the long hiatus in development.  A new version of Frotz is now 
  * Support for transferring both story files and saved games using a built-in FTP server
  * Preferences allowing you to select custom text and background colors and change the story font
  * Ability to disable automatic word completion, useful for playing games in languages than English
- * Fix bugs handling fixed-width text in story output
+ * Fixed bugs handling fixed-width text in story output
 
 ----
 
