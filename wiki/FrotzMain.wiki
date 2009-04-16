@@ -21,7 +21,7 @@ My apologies for the long hiatus in development.  A new version of Frotz is now 
  * Ability to disable automatic word completion, useful for playing games in languages than English
  * Fix bugs handling fixed-width text in story output
 
----
+----
 
 *New Version 1.0.1 Available* 
 
