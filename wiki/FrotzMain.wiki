@@ -1,10 +1,7 @@
 #summary Frotz for iPhone and iPod Touch
 
-http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png
-
-Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?
-
-Nostalgic for a simpler time?
+||http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?
+|| ||Nostalgic for a simpler time?
 
 Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.
 
