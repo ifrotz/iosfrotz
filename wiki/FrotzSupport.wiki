@@ -1,6 +1,6 @@
 #summary Frotz Support
 
-Frotz (1.2) is currently available on the App Store. 
+Frotz Version 1.2  for iPhone / iPod Touch is currently available on the App Store. 
 Version 1.3, with font size options and command line history, was submitted to the App Store on June 18 but has still not been approved.  
 [http://code.google.com/p/iphonefrotz/wiki/FrotzMain Click here] for details.
 
@@ -8,7 +8,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ----
 
-If you have feedback about Frotz, feel free to send it to *ifrotz at gmail dot com*.   To report a *bug or usability issue* with Frotz on iPhone or iPod Touch, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
+If you have feedback about Frotz, feel free to send it to *ifrotz at gmail dot com*.   To report a *bug or usability issue* with Frotz, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
 (Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
 
 ----
