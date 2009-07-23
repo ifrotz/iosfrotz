@@ -1,6 +1,7 @@
 #summary Frotz Support
 
-A new version of Frotz (1.2) is now available on the App Store. 
+Frotz (1.2) is currently available on the App Store. 
+Version 1.3, with font size options and command line history, was submitted to the App Store on June 18 but has still not been approved.  
 [http://code.google.com/p/iphonefrotz/wiki/FrotzMain Click here] for details.
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
