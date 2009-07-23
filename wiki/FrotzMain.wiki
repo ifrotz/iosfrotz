@@ -10,10 +10,10 @@ I submitted a new version of Frotz to the App Store for approval on June 19.  It
 
 Assuming it's eventually approved by Apple, 1.3 will include:
 
- * Font Size option to set the story font size from 8 to 16 point font
+ * New Story Font Size option: change the main story font size from 8 to 16 point font
  * Status Line magnification:  tap anywhere on the status line to magnify it for readability.   (Because many games expect a minimum number of screen columns, supporting larger status line fonts requires scrolling left and right, which is awkward and cumbersome, but magnification seems to solve the problem.)
- * Double tap on the command line to bring up a menu of recently enter command
- * Triple tap on the command line to bring up a menu of common words.  (This is an initial implementation and I plan to add a compass and improve the UI in the future.)
+ * Command Line History: double tap on the command line to bring up a menu of recently enter command
+ * Common Words Menu: Triple tap on the command line to bring up a menu of common words.  (This is an initial implementation and I plan to add a compass rose and improve the UI in the future.)
  * Bug fixes for iPhone OS 3.0, restoring the ability to tap to scroll and show/hide the keyboard
 
 ----
