@@ -15,7 +15,7 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 
   * *Why isn't Frotz free anymore?*
 
-   When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it's not.  And Apple has been so frustrating to deal with that I really feel like giving up on it.    I've decided to charge $0.99 (or local 'tier 1' equivalent) for a little bit so I can earn back the money I've given Apple to be able to put up Frotz in the App Store.  After that, I'll make it free again, or possibly have two versions, one  free and one not, with identical features so people can choose if they'd like to contribute.   
+   When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it's not; it's an annual fee.  And Apple and its approval process has been so frustrating to deal with that I really feel like giving up on the whole thing.    I've decided to charge $0.99 (or local 'tier 1' equivalent) for a little bit so I can earn back the money I've given Apple to be able to put up Frotz in the App Store.  After that, I'll make it free again, or possibly have two versions, one  free and one not, with identical features so people can choose if they'd like to contribute towards further development.
 
   * *I just upgraded my device from OS 2.0 to to OS 2.1 or later.  Why don't my Infocom/personal story files show up anymore?*
 
