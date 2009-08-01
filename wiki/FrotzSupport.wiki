@@ -17,10 +17,6 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 
    When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it's not; it's an annual fee.  And Apple and its approval process has been so frustrating to deal with that I really feel like giving up on the whole thing.    I've decided to charge $0.99 (or local 'tier 1' equivalent) for a little bit so I can earn back the money I've given Apple to be able to put up Frotz in the App Store.  After that, I'll make it free again.
 
-  * *I just upgraded my device from OS 2.0 to to OS 2.1 or later.  Why don't my Infocom/personal story files show up anymore?*
-
-  Because Apple broke the ability of apps to read other app's files, on purpose, without providing developers any other means of interoperability between apps.  But see the next question.
-
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
@@ -51,7 +47,6 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 
   * *How do I delete games?*
   When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.  
-
 
   * *Performance*
   The performance problems in Frotz 1.0 have been fixed in 1.0.1, and further improved in 1.2.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
