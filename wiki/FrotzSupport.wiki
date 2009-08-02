@@ -30,7 +30,7 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 
   * *What device/OS versions is Frotz compatible with?*
    
-   Frotz works on iPod or iPod Touch with OS versions 2.0 and later. 
+   Frotz works on iPhone or iPod Touch with OS versions 2.0 and later. 
 
 <wiki:comment>
   Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I've gotten a lot of enjoyment playing these games over the years, and since I'm not a very good writer, this is my way of giving back.
@@ -49,4 +49,4 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.  
 
   * *Performance*
-  The performance problems in Frotz 1.0 have been fixed in 1.0.1, and further improved in 1.2.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
+  The performance problems in Frotz 1.0 were fixed in 1.0.1, and further improved in 1.2.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
