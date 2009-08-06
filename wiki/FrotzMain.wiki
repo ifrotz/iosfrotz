@@ -6,7 +6,7 @@
 
 07/21/2009
 
-I submitted a new version of Frotz to the App Store for approval on June 18.  It's been over 5 weeks in limbo now and I haven't heard anything back from Apple.   It's extremely frustrating, so much so I am considering abandoning the App Store and moving Frotz to jailbroken iPhones.
+I submitted a new version of Frotz to the App Store for approval on June 18.  It's been over 7 weeks in limbo now and I haven't heard anything back from Apple.   It's extremely frustrating, so much so I am considering abandoning the App Store and moving Frotz to jailbroken iPhones.   If you have opinions on this, feel free to post to the Frotz Discussion board.
 
 Assuming it's eventually approved by Apple, 1.3 will include:
 
