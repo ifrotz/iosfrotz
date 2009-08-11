@@ -4,7 +4,8 @@
 
 08/10/2009
 
-Apple has rejected my update to Frotz on the grounds that it violates the clause of the SDK agreement dealing with interpreters.  They did not, however, take down the previous version of Frotz. 
+Apple has rejected my update to Frotz on the grounds that it violates the clause of the SDK agreement dealing with interpreters.  They did not, however, take down the previous version of Frotz.  I'm investigating what my options are.
+
 <wiki:comment> The Apple guy who called me was very nice but completely non-technical and unable to discuss the exact meaning of interpreter held by Apple.  He suggested I try to modify the program to bring it in compliance, but could offer no help as to how to do so.   Since the clause in question actually says "no interpreted code may be downloaded", I am going to try to remove the IFDB browsing component which downloads new games and see if that is accepted.   Obviously this entails a loss of functionality and usability, and I'm not happy about it.  I may rename the app as well so that existing users who would rather retain download ability in lieu of any new features can continue using 1.2 without having to explicitly skip future Frotz updates.
 </wiki:comment>
 
