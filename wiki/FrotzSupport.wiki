@@ -18,8 +18,7 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   * *Why isn't Frotz free anymore?   Will it be again?*
 
    When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it's not; it's an annual fee.  And Apple and its approval process has been so frustrating to deal with that I really feel like giving up on the whole thing.    I just can't help resenting having to pay Apple a hundred bucks a year just to maintain a free app that adds value to the App Store when they treat the developers so badly.  For now, I've decided to charge $0.99 (or local 'tier 1' equivalent) for a little bit so I can earn back the money I've given Apple to be able to put up Frotz in the App Store.  After that, I'll make it free again.  If you just want to try it out and would rather not pay, just wait a couple weeks and it'll be free again.  On the other hand, if you already downloaded Frotz while it was free and want to contribute something, you can *[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 donate via PayPal]*.
-
-  *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
+    *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
 
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
