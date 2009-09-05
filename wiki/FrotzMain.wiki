@@ -1,11 +1,12 @@
 #summary Frotz for iPhone and iPod Touch
 
 *Update - Version 1.3 resubmitted*
+
 09/04/2009
 
 Version 1.3, with font size options and command line history, has been resubmitted to the App Store as of Sept. 4, 2009 after being previously rejected.  The point of contention was Frotz's ability to download new games from the Internet, as downloading interpreted content is disallowed by the App Store rules.
 
-To obtain compliance, the newly submitted version no longer has download capability.  Instead, it now has all Z-machine games rated 3 stars or more from the IFDB pre-bundled with Frotz; the user experience of browsing IFDB to select and add games is still the same unless you try to pick an unbundled game.  Not included with Frotz are games which are low-rated, in a language other than English, newer than the IFDB snapshot taken on 9/1/2009, or games not in IFDB at all.
+To obtain compliance, the newly submitted version no longer has Internet download capability.  Instead, it now has all Z-code games rated 3 stars or more from the Interactive Fiction Database  pre-bundled with Frotz; the user experience of browsing IFDB to select and add games is still the same unless you try to pick an unbundled game.  Not included with Frotz are games which are low-rated, in a language other than English, newer than the IFDB snapshot taken on 9/1/2009, or games not in IFDB at all.
 
 
 *Version 1.3 Rejected by Apple*
