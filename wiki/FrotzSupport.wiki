@@ -2,11 +2,20 @@
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
-Frotz Version 1.2  for iPhone / iPod Touch is currently available on the App Store. 
+Frotz Version 1.3  for iPhone / iPod Touch is finally available (!) on the App Store as of 2009-09-19, three months and 1 day after being originally submitted for approval.
 
-Version 1.3, with font size options and command line history, has been resubmitted to the App Store as of Sept. 4, 2009 after being previously rejected.  The point of contention was Frotz's ability to download new games from the Internet, as downloading interpreted content is disallowed by the App Store rules.
+New features in Frotz 1.3:
+ * Story Font Size preference: allows you to vary the main story font size from 8 to 16 point.
+ * Status Line magnification: tap anywhere on the status line to magnify it for readability. (This is in lieu of allowing larger status line fonts, because many games require a minimum number of screen columns, which would force you to scroll left and right to see the entire line.)
+ * Command Helper Menu: tap on the command prompt to bring up a helper menu of common words.
+ * Command Line History: double-tap on the command line to bring up a menu of recently entered commands.
+ * Accessibility Improvements: improved accessibility hints for VoiceOver users. Selecting the story window will recite only the story output since the most recent command.
+ * Bug fixes (OS 3.0): restored the ability to tap on the story output to scroll one page, or show the keyboard if at the end.
+ * Bundled stories: includes a large subset of well-rated stories from the IFDB bundled with Frotz; the IFDB story browser uses these bundled files instead of downloading them from the Internet.
 
-To obtain compliance, the newly submitted version no longer has Internet download capability. Instead, it now has all Z-code games rated 3 stars or more from the Interactive Fiction Database pre-bundled with Frotz; the user experience of browsing IFDB to select and add games is still the same unless you try to pick an unbundled game. Not included with Frotz are games which are low-rated, in a language other than English, newer than the IFDB snapshot taken on 9/1/2009, or games not in IFDB at all.
+To obtain compliance with App Store policy, the newly submitted version no longer has Internet download capability. Instead, it now has all Z-code games rated 3 stars or more from the Interactive Fiction Database pre-bundled with Frotz; the user experience of browsing IFDB to select and add games is still the same unless you try to pick an unbundled game. Not included with Frotz are games which are low-rated, in a language other than English, newer than the IFDB snapshot taken on 9/1/2009, or games not in IFDB at all.
+
+Note that the Frotz FTP server is still available; only the ability to download from the Internet directly from within Frotz has been disabled.  Local LAN transfer is still okay, and any previously installed games will still be there after you upgrade.
 
 ----
 
@@ -16,9 +25,13 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 ----
 
   * *Why isn't Frotz free anymore?   Will it be again?*
+    * *Update 9/19/09* As promised, since 1.3 has finally been approved, I just set the price to be free; it will take effect overnight.  
+<wiki:comment>
+  * *Why isn't Frotz free anymore?   Will it be again?*
 
    When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it's not; it's an annual fee.  And Apple and its approval process has been so frustrating to deal with that I really feel like giving up on the whole thing.    I just can't help resenting having to pay Apple a hundred bucks a year just to maintain a free app that adds value to the App Store when they treat the developers so badly.  For now, I've decided to charge $0.99 (or local 'tier 1' equivalent) for a little bit so I can earn back the money I've given Apple to be able to put up Frotz in the App Store.  After that, I'll make it free again.  If you just want to try it out and would rather not pay, just wait a couple weeks and it'll be free again.  On the other hand, if you already downloaded Frotz while it was free and want to contribute something, you can *[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 donate via PayPal]*.
     * *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
+</wiki:comment>
 
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
