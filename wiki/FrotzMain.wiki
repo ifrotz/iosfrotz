@@ -13,7 +13,7 @@ New features in Frotz 1.3:
  * Command Line History: double-tap on the command line to bring up a menu of recently entered commands.
  * Accessibility Improvements: improved accessibility hints for VoiceOver users. Selecting the story window will recite only the story output since the most recent command.
  * Bug fixes (OS 3.0): restored the ability to tap on the story output to scroll one page, or show the keyboard if at the end.
-* Bundled stories: includes a large subset of well-rated stories from the IFDB bundled with Frotz; the IFDB story browser uses these bundled files instead of downloading them from the Internet.
+ * Bundled stories: includes a large subset of well-rated stories from the IFDB bundled with Frotz; the IFDB story browser uses these bundled files instead of downloading them from the Internet.
 
 
 *Update - Version 1.3 resubmitted*
