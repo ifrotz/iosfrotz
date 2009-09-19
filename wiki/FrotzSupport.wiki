@@ -25,7 +25,7 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 ----
 
   * *Why isn't Frotz free anymore?   Will it be again?*
-    * *Update 9/19/09* - As promised, since 1.3 has finally been approved, I just set the price to be free; it will take effect overnight.   My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make money.  (I have a day job that does me just fine for that.)  The temporary $0.99 price for the past few weeks was to make back iTunes Dev Program fees and provide an incentive for me to put up with Apple's painful and arbitrary review process.
+    * *Update 9/19/09* - As promised, since 1.3 has finally been approved, I just set the price to be free; it will take effect overnight.   My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price for the past few weeks was to make back the annual iTunes Dev Program fees and provide an incentive for me to persevere through Apple's painful and arbitrary review process.
 
 <wiki:comment>
   * *Why isn't Frotz free anymore?   Will it be again?*
