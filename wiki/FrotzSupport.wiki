@@ -59,10 +59,9 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   See above for my motivation in making Frotz.   But if you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   (Also consider sending thank you emails to the authors of the games you like!) 
 </wiki:comment>
   * *How do I save my game?*
-  A review of Frotz on iTunes incorrectly states that there is no way to save state in games. 
-  If you press the Home button or answer a call, Frotz will automatically save your game state, but to save your game in progress and start a new one, you actually do it the old-fashioned way.
+  If you press the Home button or answer a call, Frotz will automatically save your game state, but if you want to play through more than one story at once, you can manually save your game in progress and start a new one.  You actually do this the old-fashioned way, at the command prompt.
 
-  Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  This is mentioned on the _(i)_nfo page, but perhaps needs to be made more salient for people without old-school experience playing text adventures.
+  Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  These commands are available in the shortcut menu that appears when you double tap the command prompt as well.
 
   * *How do I delete games?*
   When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.  
