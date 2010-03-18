@@ -8,6 +8,7 @@ New features in Frotz 1.4:
  * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
  * Word selection: You can now double-tap on a word in the story output to copy it to the command line.
  * Web-based File Transfer: You can now transfer game files with an easy-to-use web interface as well as FTP.
+ * Improved Auto-save:  Frotz now maintains separate auto-save files for every story, and saves your progress automatically during play to avoid accidental loss of progress.
  * Bug fixes - various and sundry.
 
 The code is also iPad ready, and I'll submit an update with support for running full-screen on iPad as soon as Apple allows submissions.
