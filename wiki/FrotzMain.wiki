@@ -1,5 +1,17 @@
 #summary Frotz for iPhone and iPod Touch
 
+*Update - Version 1.4 available!!*
+
+05/18/2010
+
+New features in Frotz 1.4:
+ * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
+ * Word selection: You can now double-tap on a word in the story output to copy it to the command line.
+ * Web-based File Transfer: You can now transfer game files with an easy-to-use web interface as well as FTP.
+ * Bug fixes - various and sundry.
+
+The code is also iPad ready, and I'll submit an update with support for running full-screen on iPad as soon as Apple allows submissions.
+
 *Update - Version 1.3 available!!*
 
 09/19/2009
