@@ -5,6 +5,13 @@ This page contains frequently asked questions and miscellaneous help about using
 Frotz Version 1.4  for iPhone / iPod Touch is now available on the App Store as of 2010-05-18.
 
 New features in Frotz 1.4:
+ * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
+ * Word selection: You can now double-tap on a word in the story output to copy it to the command line.
+ * Web-based File Transfer: You can now transfer game files with an easy-to-use web interface as well as FTP.
+ * Bug fixes - various and sundry.
+
+The code is also iPad ready, and I'll submit an update with support for running full-screen on iPad as soon as Apple allows submissions.
+
 ----
 
 If you have general comments or feedback about Frotz, you can post it on the [http://groups.google.com/group/ifrotz-discuss Frotz Discussion group], or feel free to send email to *ifrotz at gmail dot com*.   To report a *bug or usability issue* with Frotz, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
