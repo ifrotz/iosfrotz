@@ -33,8 +33,8 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
-     * Frotz includes a built-in FTP (file transfer protocol) server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the FTP server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over Edge or 3G.
-     * Note that Frotz will not look for stories in ZIP files if you transfer them with FTP; you should transfer the files individually and make sure they end in a standard suffix such as .z5 or .zblorb.
+     * Frotz includes a built-in File Transfer server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over Edge or 3G.  You can then connect to Frotz using either a web browser or ftp client over the local network.  The web interface is much easier to use and is recommended.
+     * Note that Frotz will not look for stories in ZIP files if you transfer them; you should transfer the files individually and make sure they end in a standard suffix such as .z5 or .zblorb.
 <wiki:comment>
      * If you have your files on a web server, you can access them using the built-in web interface:
        * In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
@@ -45,7 +45,7 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
 
   * *What device/OS versions is Frotz compatible with?*
    
-   Frotz 1.3 works on iPhone or iPod Touch with OS versions 2.2.1 and later. 
+   Frotz 1.4 works on iPhone or iPod Touch with OS versions 2.2.1 and later. 
 
 <wiki:comment>
   Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I've gotten a lot of enjoyment playing these games over the years, and since I'm not a very good writer, this is my way of giving back.
@@ -60,7 +60,8 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  These commands are available in the shortcut menu that appears when you double tap the command prompt as well.
 
   * *How do I delete games?*
-  When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.  
+  When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.
+You can also delete games via the web file transfer interface.  
 
   * *Performance*
-  The performance problems in Frotz 1.0 were fixed in 1.0.1, and further improved in 1.2.  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
+  The performance problems in Frotz 1.0 were fixed in 1.0.1, and further improved in 1.2 and 1.4  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
