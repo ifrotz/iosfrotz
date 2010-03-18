@@ -14,6 +14,9 @@ The code is also iPad ready, and I'll submit an update with support for running 
 
 ----
 
+||http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?<br><br><br>Nostalgic for a simpler time?<br><br><br>Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.||
+
+
 *Update - Version 1.3 available!!*
 
 09/19/2009
@@ -47,9 +50,6 @@ Apple has rejected my update to Frotz on the grounds that it violates the clause
 
 <wiki:comment> The Apple guy who called me was very nice but completely non-technical and unable to discuss the exact meaning of interpreter held by Apple.  He suggested I try to modify the program to bring it in compliance, but could offer no help as to how to do so.   Since the clause in question actually says "no interpreted code may be downloaded", I am going to try to remove the IFDB browsing component which downloads new games and see if that is accepted.   Obviously this entails a loss of functionality and usability, and I'm not happy about it.  I may rename the app as well so that existing users who would rather retain download ability in lieu of any new features can continue using 1.2 without having to explicitly skip future Frotz updates.
 </wiki:comment>
-
-||http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?<br><br><br>Nostalgic for a simpler time?<br><br><br>Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.||
-
 *Version 1.3 Pending* 
 
 07/21/2009
