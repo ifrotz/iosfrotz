@@ -1,5 +1,13 @@
 #summary Frotz Support
 
+* Update 3/26/2010 *
+Frotz 1.4.1, containing only a couple of bug fixes for 1.4, was rejected by Apple because of the interpreter issue AGAIN, even though that issue was supposedly completely resolved, plus they objected to my pointing out that it was there fault that you can't download games anymore on the About Frotz page.  I explained that it does not download interpreted content  at alland does not violate the SDK agreement, removed the offending text, and resubmitted, and it's been in limbo for several days.
+
+I'm charging a $0.99 for Frotz until this is resolved, or I give up.  I'm not waiting 3 months again.
+If they don't get their act together, there will be no iPad version, I'm certainly not buying an iPad, and I may pull the iPhone version.
+I'm sick of this shit.
+
+
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
 Frotz Version 1.4  for iPhone / iPod Touch is now available on the App Store as of 2010-05-18.
