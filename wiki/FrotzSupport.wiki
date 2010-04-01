@@ -2,10 +2,10 @@
 
 * Update 3/26/2010 *
 
-Frotz 1.4.1, containing only a couple of bug fixes for 1.4, was rejected by Apple because of the interpreter issue AGAIN, even though that issue was already supposedly completely resolved, plus they objected to my pointing out that it was Apple's policy that you can't download games anymore on the About Frotz page.  I explained that it does not download interpreted content  at all and does not violate the SDK agreement, removed the offending text, and resubmitted, and it's been in limbo for several days.
+Frotz 1.4.1, containing only a couple of bug fixes for 1.4, was rejected by Apple because of the interpreter issue AGAIN, even though that issue was already supposedly completely resolved.  I explained that it does not download interpreted content  anymore and does not violate the SDK agreement,  and resubmitted, and it's been in limbo for several days.
 
 I'm charging a $0.99 for Frotz to preserve my sanity until this is resolved, or I give up.  I'm not waiting 3 months again.
-If they don't get their act together, there will be no iPad version.
+If this isn't resolved pretty quickly, there will be no iPad version
 
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
@@ -64,13 +64,13 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
   See above for my motivation in making Frotz.   But if you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   (Also consider sending thank you emails to the authors of the games you like!) 
 </wiki:comment>
   * *How do I save my game?*
-  If you press the Home button or answer a call, Frotz will automatically save your game state, but if you want to play through more than one story at once, you can manually save your game in progress and start a new one.  You actually do this the old-fashioned way, at the command prompt.
+  If you press the Home button or answer a call, Frotz will automatically save your game state.  Starting with Frotz 1.4, a separate autosave is kept per game, and the game is autosaved when you switch stories or after a period of inactivity.   You can also manually save your game in progress the old-fashioned way by typing "*`save`*" at the command prompt; this is recommended for some of the harder/more complex games, so you have the ability to backtrack and try alternate solutions.
 
-  Just type "*`save`*" at the game's prompt to save your game, and "*`restore`*" to load a previously saved game.  These commands are available in the shortcut menu that appears when you double tap the command prompt as well.
+  Type "*`restore`*" to load a previously saved game.  These commands are available in the shortcut menu that appears when you double tap the command prompt as well.
 
   * *How do I delete games?*
   When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.
-You can also delete games via the web file transfer interface.  
+  You can also delete games via the web file transfer interface.  
 
   * *Performance*
   The performance problems in Frotz 1.0 were fixed in 1.0.1, and further improved in 1.2 and 1.4  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
