@@ -11,7 +11,7 @@ If this isn't resolved pretty quickly, there will be no iPad version
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
-Frotz Version 1.4  for iPhone / iPod Touch is now available on the App Store as of 2010-05-18.
+Frotz Version 1.4  for iPhone / iPod Touch is now available on the App Store as of 2010-03-18.
 
 New features in Frotz 1.4:
  * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
