@@ -1,17 +1,14 @@
 #summary Frotz Support
 
-* Update 3/26/2010 *
-
-Frotz 1.4.1, containing only a couple of bug fixes for 1.4, was rejected by Apple because of the interpreter issue AGAIN, even though that issue was already supposedly completely resolved.  I explained that it does not download interpreted content  anymore and does not violate the SDK agreement,  and resubmitted, and it's been in limbo for several days.
-
-I'm charging a $0.99 for Frotz to preserve my sanity until this is resolved, or I give up.  I'm not waiting 3 months again.
-If this isn't resolved pretty quickly, there will be no iPad version
-
-----
-
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch.
 
-Frotz Version 1.4  for iPhone / iPod Touch is now available on the App Store as of 2010-03-18.
+* Update 4/06/2010 *
+
+Frotz 1.4.1 has been approved, now with native support for iPad, and a couple of other minor bug fixes, and should be available in the app store any moment.  With the latest review ordeal over, I've set the price to free again and it should take effect tomorrow.  
+
+New features in Frotz 1.4.1:
+ * Native iPad support.
+ * Fixed bug where custom text color settings were not being honored, causing text to be unreadable on dark backgrounds.
 
 New features in Frotz 1.4:
  * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
