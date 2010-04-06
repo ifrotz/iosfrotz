@@ -10,7 +10,7 @@ New features in Frotz 1.4.1:
  * Native iPad support.
  * Fixed bug where custom text color settings were not being honored, causing text to be unreadable on dark backgrounds.
 
-New features in Frotz 1.4:
+New features in Frotz 1.4 (released 2010-03-18):
  * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
  * Word selection: You can now double-tap on a word in the story output to copy it to the command line.
  * Web-based File Transfer: You can now transfer game files with an easy-to-use web interface as well as FTP.
