@@ -37,6 +37,9 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
     * *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
 </wiki:comment>
 
+  * *I'm having problems transferring files in 1.4.1*
+  There seems to be an issue in the latest update that is causing FTP to hang when finishing a transfer, even a directory listing, in the latest issue.  I will fix this in the next update.  In any case, I highly recommend using the http Web URL when using File Transfer, as it is easier to use and more tolerant of local network issues.
+
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
