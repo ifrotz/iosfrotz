@@ -1,5 +1,8 @@
 #summary Frotz for iPhone and iPod Touch
 
+Please visit the [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport Frotz Support] page for frequently asked questions and other updates.  (This page is updated less often.)
+
+
 *Update - Version 1.4.1 available!!*
 
 04/06/2010
