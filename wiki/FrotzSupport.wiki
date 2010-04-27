@@ -4,11 +4,12 @@ This page contains frequently asked questions and miscellaneous help about using
 
 * Update 4/06/2010 *
 
-Frotz 1.4.1 has been approved, now with native support for iPad, and a couple of other minor bug fixes, and should be available in the app store any moment.  With the latest review ordeal over, I've set the price to free again and it should take effect tomorrow.  
+Frotz 1.4.1 is now available in the App Store, with native support for iPad.
 
 New features in Frotz 1.4.1:
  * Native iPad support.
  * Fixed bug where custom text color settings were not being honored, causing text to be unreadable on dark backgrounds.
+ * Other minor bug fixes.
 
 New features in Frotz 1.4 (released 2010-03-18):
  * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
