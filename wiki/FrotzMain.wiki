@@ -2,6 +2,11 @@
 
 Please visit the [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport Frotz Support] page for frequently asked questions and other updates.  (This page is updated less often.)
 
+*Update*
+
+10/27/2010
+
+Version 1.5 has been submitted for approval by Apple.  New features include an improved UI for the iPad and preliminary Glulx game support.
 
 *Update - Version 1.4.1 available!!*
 
