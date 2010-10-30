@@ -2,6 +2,12 @@
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch/iPad.
 
+* Update 10/27/2010 *
+
+Frotz 1.5 has been submitted to the App Store for approval and will be available ... sometime.
+
+New features include an improved UI (especially on the iPad), the ability to save and edit story metadata (such as title, authors, and artwork), note taking, synching of saved games using Dropbox, and preliminary support for Glulx games.
+
 * Update 4/06/2010 *
 
 Frotz 1.4.1 is now available in the App Store, with native support for iPad.
