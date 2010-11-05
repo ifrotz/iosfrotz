@@ -12,6 +12,8 @@ Frotz includes several built-in games, and includes a web portal for downloading
 
 Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support and FAQ.
 
+----
+
 *Update - Version 1.5 available!*
 
 11/05/2010
