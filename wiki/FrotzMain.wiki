@@ -1,6 +1,16 @@
 #summary Frotz for iPhone and iPod Touch
 
-Please visit the [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport Frotz Support] page for frequently asked questions and other updates.  (This page is updated less often.)
+= Interactive Fiction at Your Fingertips =
+
+Frotz lets you play hundreds of free works of Interactive Fiction (a.k.a. text adventure games) on your iPhone or iPod Touch.  
+
+Frotz plays games written in the Z-Machine format.  This format was invented by Infocom and was used to produce great text adventures from the 80s such as the Zork Trilogy, Hitchhiker's Guide to the Galaxy, and Trinity.
+
+In the past decade, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.
+
+Frotz includes several built-in games, and includes a web portal for downloading new ones from the Internet.
+
+Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support and FAQ.
 
 *Update - Version 1.5 available!*
 
@@ -116,16 +126,3 @@ A new version of Frotz is now available on the App Store.  Changes include:
  * Support for transferring games with MobileFinder.
 
 Color/font settings did not make it into this version, but will be available shortly.  Well, as shortly as possible given Apple's week long turn around for approval.
-
-
-= Interactive Fiction at Your Fingertips =
-
-Frotz lets you play hundreds of free works of Interactive Fiction (a.k.a. text adventure games) on your iPhone or iPod Touch.  
-
-Frotz plays games written in the Z-Machine format.  This format was invented by Infocom and was used to produce great text adventures from the 80s such as the Zork Trilogy, Hitchhiker's Guide to the Galaxy, and Trinity.
-
-In the past decade, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.
-
-Frotz includes several built-in games, and includes a web portal for downloading new ones from the Internet.
-
-Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support and FAQ.
