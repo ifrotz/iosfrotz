@@ -17,7 +17,7 @@ New features in 1.5:
  * Miscellaneous bug fixes: Fixed Bluetooth keyboard support, status line/text resizing bugs, and various other minor bugs.
  * Support launching Frotz as "Open in..." handler for game files as e-mail attachments, Safari downloads, and general file management apps such as Good Reader/Dropbox, etc.
 
-(Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.)
+Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
 
 *Update - Version 1.4.1 available*
 
