@@ -1,4 +1,4 @@
-#summary Frotz for iPhone and iPod Touch
+#summary Frotz for iPhone, iPad, and iPod Touch
 
 = Interactive Fiction at Your Fingertips =
 
