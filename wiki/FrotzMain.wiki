@@ -2,7 +2,7 @@
 
 Please visit the [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport Frotz Support] page for frequently asked questions and other updates.  (This page is updated less often.)
 
-*Update - Version 1.5 available*
+*Update - Version 1.5 available!*
 
 11/05/2010
 
@@ -19,7 +19,7 @@ New features in 1.5:
 
 (Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.)
 
-*Update - Version 1.4.1 available!!*
+*Update - Version 1.4.1 available*
 
 04/06/2010
 
@@ -41,7 +41,7 @@ The code is also iPad ready, and I'll submit an update with support for running 
 ||http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?<br><br><br>Nostalgic for a simpler time?<br><br><br>Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.||
 
 
-*Update - Version 1.3 available!!*
+*Update - Version 1.3 available*
 
 09/19/2009
 
