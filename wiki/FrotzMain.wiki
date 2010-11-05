@@ -16,7 +16,7 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 *Update - Version 1.5 available!*
 
-11/05/2010
+*11/05/2010*
 
 New features in 1.5:
  * Improved UI: The interface has been improved and refined, particularly on the iPad.
