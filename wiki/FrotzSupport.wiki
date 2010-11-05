@@ -2,29 +2,21 @@
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone/iPod Touch/iPad.
 
-* Update 10/27/2010 *
+* Update 11/05/2010 *
 
-Frotz 1.5 has been submitted to the App Store for approval and will be available ... sometime.
+Frotz 1.5 is now available in the App Store with the following new features:
 
-New features include an improved UI (especially on the iPad), the ability to save and edit story metadata (such as title, authors, and artwork), note taking, synching of saved games using Dropbox, and preliminary support for Glulx games.
+ * Improved UI: The interface has been improved and refined, particularly on the iPad.
+ * Recently Played Stories: Frotz now keeps track of your most recently played stories at the top of the Story List.
+ * Note taking: Swipe left while playing any story to view a note-taking area for that story.
+ * View/Edit Story Details: Frotz now has authors, descriptions, and artwork for all built-in stories and can link back to the full IFDB entry for each.
+ * Dropbox support: Frotz now supports synchronizing saved games with Dropbox, so you can seamlessly play on multiple devices.
+ * Bookmarks in Story Browser: You can now bookmark individual pages in the IFDB browser.
+ * More bundled games added from IFDB: Includes an updated IFDB snapshot with more recent well-rated works.
+ * Miscellaneous bug fixes: Fixed Bluetooth keyboard support, status line/text resizing bugs, and various other minor bugs.
+ * Support launching Frotz as "Open in..." handler for game files as e-mail attachments, Safari downloads, and general file management apps such as Good Reader/Dropbox, etc.
 
-* Update 4/06/2010 *
-
-Frotz 1.4.1 is now available in the App Store, with native support for iPad.
-
-New features in Frotz 1.4.1:
- * Native iPad support.
- * Fixed bug where custom text color settings were not being honored, causing text to be unreadable on dark backgrounds.
- * Other minor bug fixes.
-
-New features in Frotz 1.4 (released 2010-03-18):
- * Better text performance: Frotz' text output support has been rewritten and is now faster and has a larger scroll-back buffer.
- * Word selection: You can now double-tap on a word in the story output to copy it to the command line.
- * Web-based File Transfer: You can now transfer game files with an easy-to-use web interface as well as FTP.
- * Improved Auto-save:  Frotz now maintains separate auto-save files for every story, and saves your progress automatically during play to avoid accidental loss of progress.
- * Bug fixes - various and sundry.
-
-The code is also iPad ready, and I'll submit an update with support for running full-screen on iPad as soon as Apple allows submissions.
+Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
 
 ----
 
