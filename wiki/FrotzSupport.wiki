@@ -1,4 +1,3 @@
-
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
 * Update 11/05/2010 *
@@ -66,7 +65,7 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
        * Frotz can also handle ZIP downloads.  If you click on a ZIP file, Frotz will download it, extract files with the playable extensions and add them to the story list, and then delete the ZIP file.  Again, this doesn't work with FTP, but I plan to add that in a future version.
 </wiki:comment>
 
-  * *I'm having problems transferring files with FTP in 1.4.1*
+  * *I'm having problems transferring files with FTP in 1.5*
   There seems to be an issue in the latest update that is causing FTP to hang when finishing a transfer, even a directory listing, in the latest release.  I will fix this in the next update.  In any case, I highly recommend using the new web interface for File Transfer instead of FTP, as it is easier to use and more tolerant of local network issues.
 
   * *What device/OS versions is Frotz compatible with?*
