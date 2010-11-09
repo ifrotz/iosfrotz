@@ -70,7 +70,7 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
 
   * *What device/OS versions is Frotz compatible with?*
    
-   Frotz 1.4.1 works on iPhone or iPod Touch with OS versions 3.0 and later.  (Apologies to any remaining 2.x users out there; it was necessary to drop support for 2.x in order to be able to support iPad with a universal binary.)
+   Frotz 1.5 works on iPhone or iPod Touch with OS versions 3.0 and later. 
 
 <wiki:comment>
   Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I've gotten a lot of enjoyment playing these games over the years, and since I'm not a very good writer, this is my way of giving back.
