@@ -41,6 +41,10 @@ If you have general comments or feedback about Frotz, you can post it on the [ht
     * *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
 </wiki:comment>
 
+  * *Why can't you transfer files to Frotz using the iTunes file sharing feature?*
+
+   Unfortunately, iTunes FIle Sharing doesn't support folders well, and Frotz uses folders internally to keep saved games separate for each story.  I'm not willing to make Frotz put all files at the top level in order for the files to show up in iTunes File Sharing.  If Apple adds better folder support, I will enable the ability in Frotz.
+
   * *How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?*
 
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
