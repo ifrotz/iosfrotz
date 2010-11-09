@@ -1,10 +1,9 @@
-#summary Frotz Support
 
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
 * Update 11/05/2010 *
 
-Frotz 1.5 is now available in the App Store with the following new features:
+*Frotz 1.5* is now available in the App Store with the following new features:
 
  * Improved UI: The interface has been improved and refined, particularly on the iPad.
  * Recently Played Stories: Frotz now keeps track of your most recently played stories at the top of the Story List.
