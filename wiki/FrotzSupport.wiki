@@ -23,9 +23,11 @@ Apparently iOS 4.1 and later is incompatible with Frotz's FTP support; the same 
 
 ----
 
-* *Reporting Bugs* *
+* Reporting Bugs *
 
-If you have general comments or feedback about Frotz, you can post it on the [http://groups.google.com/group/ifrotz-discuss Frotz Discussion group], or feel free to send email to *ifrotz at gmail dot com*.   To report a *bug or usability issue* with Frotz, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
+If you have general comments or feedback about Frotz, you can post it on the [http://groups.google.com/group/ifrotz-discuss Frotz Discussion group], or feel free to send email to *ifrotz at gmail dot com*.  
+
+To report a *bug or usability issue* with Frotz, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
 (Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
 
 ----
