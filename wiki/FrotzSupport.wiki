@@ -18,6 +18,9 @@ Frotz 1.5 is now available in the App Store with the following new features:
 
 Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
 
+*KNOWN ISSUE*
+Apparently iOS 4.1 and later is incompatible with Frotz's FTP support; the same code which worked earlier now sometimes hangs at the end of the first file transfer or directory listing.  I'll try to get a patch released soon; in the mean time, use the Web interface instead.
+
 ----
 
 If you have general comments or feedback about Frotz, you can post it on the [http://groups.google.com/group/ifrotz-discuss Frotz Discussion group], or feel free to send email to *ifrotz at gmail dot com*.   To report a *bug or usability issue* with Frotz, please click [http://code.google.com/p/iphonefrotz/issues/entry here], or go to the Issues tab, click "New Issue", and describe your problem. 
