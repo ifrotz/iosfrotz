@@ -5,13 +5,14 @@
  *
  */
 
-#define __IPHONE 1
+#define FROTZ_IOS_FILE 1
 
 #include <stdbool.h>
 #define FALSE 0
 #define TRUE 1
 
 #include "../common/frotz.h"
+
 #include "ui_setup.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,131 +21,114 @@
 #include <ctype.h>
 #include <time.h>
 #include <pthread.h>
+#include <CoreGraphics/CGGeometry.h>
 
-extern f_setup_t f_setup;
+#include "glk.h"
+#include "glkios.h"
 
-bool is_terminator (zchar);
-
-
-#define MASTER_CONFIG		"frotz.conf"
-#define USER_CONFIG		".frotzrc"
-
-#define ASCII_DEF		1
-#define ATTRIB_ASSIG_DEF	0
-#define ATTRIB_TEST_DEF		0
-#define COLOR_DEF		1
-#define ERROR_HALT_DEF		0
-#define EXPAND_DEF		0
-#define PIRACY_DEF		0
-#define TANDY_DEF		0
-#define OBJ_MOVE_DEF		0
-#define OBJ_LOC_DEF		0
-#define BACKGROUND_DEF		WHITE_COLOUR
-#define FOREGROUND_DEF		BLACK_COLOUR
-#define HEIGHT_DEF		-1	/* let curses figure it out */
-#define CONTEXTLINES_DEF	0
-#define WIDTH_DEF		80
-#define TWIDTH_DEF		80
-#define SEED_DEF		-1
-#define SLOTS_DEF		MAX_UNDO_SLOTS
-#define LMARGIN_DEF		0
-#define RMARGIN_DEF		0
-#define ERR_REPORT_DEF		ERR_REPORT_ONCE
-#define	QUETZAL_DEF		1
-#define SAVEDIR_DEF		"if-saves"
-#define ZCODEPATH_DEF		"/usr/games/zcode:/usr/local/games/zcode"
-
-
-#define LINELEN		256	/* for getconfig()	*/
-#define COMMENT		'#'	/* for config files	*/
-#define PATHSEP		':'	/* for pathopen()	*/
-#define DIRSEP		'/'	/* for pathopen()	*/
-
-#define EDITMODE_EMACS	0
-#define EDITMODE_VI	1
-
-#define PIC_NUMBER	0
-#define PIC_WIDTH	2
-#define PIC_HEIGHT	4
-#define PIC_FLAGS	6
-#define PIC_DATA	8
-#define PIC_COLOUR	11
-
-
-/* Paths where z-files may be found */
-#define	PATH1		"ZCODE_PATH"
-#define PATH2		"INFOCOM_PATH"
-
-#define NO_SOUND
-
-/* Some regular curses (not ncurses) libraries don't do this correctly. */
-#ifndef getmaxyx
-#define getmaxyx(w, y, x)	(y) = getmaxy(w), (x) = getmaxx(w)
-#endif
+#define	QUETZAL_DEF 1
+#define NO_SOUND 1
 
 extern bool color_enabled;		/* ui_text */
 
 extern char stripped_story_name[FILENAME_MAX+1];
 extern char semi_stripped_story_name[FILENAME_MAX+1];
-extern char *progname;
-extern char *gamepath;	/* use to find sound files */
+extern char iphone_filename[MAX_FILE_NAME];
 
 extern f_setup_t f_setup;
 extern u_setup_t u_setup;
 
-#define MAX_ROWS 25
+#define MAX_ROWS 100
 #define MAX_COLS 100
 
 extern int top_win_height;
-typedef unsigned short cell;
-extern cell *screen_data;
+typedef unsigned short cell, cellcolor;
+extern cell *screen_data, *screen_colors;
 extern int cursor_row, cursor_col;
 
+extern int finished; // set by z_quit
 
-/*** Functions specific to the Unix port of Frotz ***/
-
-bool 	unix_init_pictures(void);       /* ui_pic */
-int     getconfig(char *);
-int     geterrmode(char *);
-int     getcolor(char *);
-int     getbool(char *);
-FILE	*pathopen(const char *, const char *, const char *, char *);
-void	sig_winch_handler(int);
-void	redraw(void);
-
-
-#ifdef NO_MEMMOVE
-void *memmove(void *, void *);
-#endif
-
+FILE *pathopen(const char *name, const char *p, const char *mode, char *fullname);
 void os_set_default_file_names(char *basename);
+bool is_terminator (zchar);
 
-extern pthread_mutex_t outputMutex, winSizeMutex;
-extern pthread_cond_t winSizeChangedCond;
-extern bool winSizeChanged;
+int iphone_getchar(int timeout);
+void iphone_puts(char *s);
+void iphone_win_puts(int winNum, char *s);
+void iphone_enable_input();
+void iphone_enable_single_key_input();
+void iphone_disable_input();
+void iphone_putchar(char c);
+void iphone_win_putchar(int winNum, char c);
+void iphone_backspace();
+void iphone_disable_autocompletion();
+void iphone_enable_autocompletion();
+void iphone_init_screen();
+void iphone_erase_screen();
+void iphone_erase_mainwin();
+void iphone_erase_win(int winnum);
+void iphone_set_top_win_height(int height);
+void iphone_mark_recent_save();
+void iphone_more_prompt();
+void iphone_set_text_attribs(int viewNum, int style, int color, bool lock);
+int iphone_prompt_file_name (char *file_name, const char *default_name, int flag);
+int iphone_read_file_name(char *file_name, const char *default_name, int flag);
+void iphone_start_script(char *scriptName);
+void iphone_stop_script();
+void iphone_set_glk_default_colors(int winNum);
+glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height);
+glui32 iphone_glk_image_get_info(glui32 image, glui32 *width, glui32 *height);
+void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height);
+void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height);
+void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned int bgColor);
+void iphone_set_background_color(int viewNum, glui32 color);
 
-extern int iphone_getchar();
-extern void iphone_puts();
-extern void iphone_enable_input();
-extern void iphone_enable_single_key_input();
-extern void iphone_disable_input();
-extern void iphone_putchar(char c);
-extern void iphone_init_screen();
-extern void iphone_erase_screen();
-extern void iphone_more_prompt();
-extern void iphone_set_text_attribs(int, int, bool);
-extern int iphone_read_file_name(char *file_name, const char *default_name, int flag);
+#define kMaxGlkViews 64
 
-extern int do_autosave, autosave_done;
+typedef struct {
+    int nRows, nCols;
+    unsigned int bgColor;
+    window_t *win;
+    wchar_t *gridArray;
+    bool pendingClose;
+} IPGlkGridArray;
 
-extern int iphone_textview_width, iphone_textview_height;
+void iphone_glk_wininit();
+int iphone_new_glk_view(window_t *win);
+void iphone_glk_view_rearrange(int viewNum, window_t *win);
+void iphone_destroy_glk_view(int viewNum);
+IPGlkGridArray *iphone_glk_getGridArray(int viewNum);
 
-#define kFrotzOldDir "/var/root/Library/Frotz"
-#define kFrotzDir "/var/root/Media/Frotz"
-#define kFrotzGameDir "/Games/"
-#define kFrotzSaveDir "/Saves/"
+int iphone_main(int argc, char **argv);
+#define XYZZY()
+extern int do_autosave, autosave_done, refresh_savedir;
+extern char AUTOSAVE_FILE[];
 
-#define kFrotzAutoSaveFile "FrotzSIP.sav"
+typedef enum { kFSNormal=0, kFSBold=1, kFSItalic=2, kFSFixedWidth=4, kFSReverse=8, kFSNoWrap=16,  } FrotzTextStyle;
 
-#define IPHONE_FROTZ_VERS "0.7"
+extern int iphone_textview_width, iphone_textview_height; // in characters
+extern int iphone_screenwidth, iphone_screenheight; // in pixels
+extern int iphone_fixed_font_width, iphone_fixed_font_height;
+void iphone_recompute_screensize();
+
+extern int iphone_ifrotz_verbose_debug;
+
+extern bool gLargeScreenDevice;
+extern bool gUseSplitVC;
+
+#define kFrotzGameDir "Games"
+#define kFrotzSaveDir "Saves"
+
+#define kFrotzOldAutoSaveFile "FrotzSIP.sav"
+#define kFrotzAutoSaveFile "autosave.sav"
+#define kFrotzAutoSavePListFile "FrotzSIP.plist"
+#define kFrotzAutoSaveActiveFile "Current.plist"
+
+#define IPHONE_FROTZ_VERS "1.5"
+#define FROTZ_BETA 0
+
+#define APPLE_FASCISM (!FROTZ_BETA)
+
+#include "ifrotzdefs.h"
+
 

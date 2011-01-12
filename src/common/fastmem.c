@@ -57,8 +57,6 @@ extern void split_window (zword);
 extern void script_open (void);
 extern void script_close (void);
 
-extern FILE *os_path_open (const char *, const char *);
-
 extern zword save_quetzal (FILE *, FILE *);
 extern zword restore_quetzal (FILE *, FILE *);
 
@@ -207,9 +205,14 @@ void restart_header (void)
  * Allocate memory and load the story file.
  *
  */
+bool isZBlorb = FALSE;
+int fileZCodeOffset = 0;
+static bool first_restart = TRUE;
 
-void init_memory (void)
+
+int init_memory (void)
 {
+    int err = 0;
     long size;
     zword addr;
     unsigned n;
@@ -251,28 +254,75 @@ void init_memory (void)
 
     if ((story_fp = os_path_open(story_name, "rb")) == NULL)
 	printf ("%s\n", story_name), os_fatal ("Cannot open story file");
+    
+    isZBlorb = FALSE;
+    fileZCodeOffset = 0;
+    first_restart = TRUE;
+    
+    unsigned char zblorbbuf[16];
+    unsigned char *z;
+    unsigned int fileSize=0, chunkSize=0, pos;
+    while (1) {
+	if (fread(zblorbbuf, 1, 12, story_fp)!=12)
+	    break;
+	z = zblorbbuf;
+	if (*z++ != 'F') break;
+	if (*z++ != 'O') break;
+	if (*z++ != 'R') break;
+	if (*z++ != 'M') break;
+	fileSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+	z += 4;
+	if (*z++ != 'I') break;
+	if (*z++ != 'F') break;
+	if (*z++ != 'R') break;
+	if (*z   != 'S') break;
+	pos = 12;
+	while (pos < fileSize) {
+	    if (fread(zblorbbuf, 1, 8, story_fp) != 8)
+		break;
+	    pos += 8;
+	    z = zblorbbuf+4;
+	    chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+	    if (chunkSize % 1 == 1)
+		chunkSize++;
+	    z = zblorbbuf;
+	    if (z[0]=='Z' && z[1]=='C' && z[2]=='O' && z[3]=='D') {
+		printf("Found ZCOD chunk of size %d at pos %d\n", chunkSize, pos);
+		isZBlorb = TRUE;
+		fileZCodeOffset = pos;
+		break;
+	    } else
+		printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
+	    pos += chunkSize;
+	    fseek (story_fp, pos, SEEK_SET);
+	}
+	break;
+    }
 
+    if (!isZBlorb)
+	rewind(story_fp);
     /* Allocate memory for story header */
 
-    if ((zmp = (zbyte far *) malloc (64)) == NULL)
-	os_fatal ("Out of memory");
+    if ((zmp = (zbyte far *) malloc (64)) == NULL) {
+	return -1;  /*os_fatal ("Out of memory");*/
+    }
 
     /* Load header into memory */
 
     if (fread (zmp, 1, 64, story_fp) != 64)
-	os_fatal ("Story file read error");
+	err = -1; /*os_fatal ("Story file read error");*/
 
     /* Copy header fields to global variables */
 
     LOW_BYTE (H_VERSION, h_version)
 
     if (h_version < V1 || h_version > V8)
-	os_fatal ("Unknown Z-code version");
+	err = -1; /*os_fatal ("Unknown Z-code version");*/
 
     LOW_BYTE (H_CONFIG, h_config)
 
     if (h_version == V3 && (h_config & CONFIG_BYTE_SWAPPED))
-	os_fatal ("Byte swapped story file");
+	err = -1; /*os_fatal ("Byte swapped story file");*/
 
     LOW_WORD (H_RELEASE, h_release)
     LOW_WORD (H_RESIDENT_SIZE, h_resident_size)
@@ -311,7 +361,9 @@ void init_memory (void)
 
     /* Calculate story file size in bytes */
 
-    if (h_file_size != 0) {
+    if (isZBlorb && chunkSize)
+	story_size = chunkSize;
+    else if (h_file_size != 0) {
 
 	story_size = (long) 2 * h_file_size;
 
@@ -352,29 +404,33 @@ void init_memory (void)
 
     /* Allocate memory for story data */
 
-    if ((zmp = (zbyte far *) realloc (zmp, story_size)) == NULL)
-	os_fatal ("Out of memory");
+    if (!err) {
+	if ((zmp = (zbyte far *) realloc (zmp, story_size)) == NULL)
+	    err = -1; /*os_fatal ("Out of memory");*/
 
-    /* Load story file in chunks of 32KB */
+	/* Load story file in chunks of 32KB */
 
-    n = 0x8000;
+	n = 0x8000;
 
-    for (size = 64; size < story_size; size += n) {
+	for (size = 64; size < story_size; size += n) {
 
-	if (story_size - size < 0x8000)
-	    n = (unsigned) (story_size - size);
+	    if (story_size - size < 0x8000)
+		n = (unsigned) (story_size - size);
 
-	SET_PC (size)
+	    SET_PC (size)
 
-	if (fread (pcp, 1, n, story_fp) != n)
-	    os_fatal ("Story file read error");
+	    if (fread (pcp, 1, n, story_fp) != n)
+		err = -1; /*os_fatal ("Story file read error");*/
 
+	}
     }
-
     /* Read header extension table */
 
-    hx_table_size = get_header_extension (HX_TABLE_SIZE);
-    hx_unicode_table = get_header_extension (HX_UNICODE_TABLE);
+    if (!err) {
+	hx_table_size = get_header_extension (HX_TABLE_SIZE);
+	hx_unicode_table = get_header_extension (HX_UNICODE_TABLE);
+    }
+    return err;
 
 }/* init_memory */
 
@@ -524,7 +580,6 @@ void storew (zword addr, zword value)
 
 void z_restart (void)
 {
-    static bool first_restart = TRUE;
 
     flush_buffer ();
 
@@ -534,7 +589,7 @@ void z_restart (void)
 
     if (!first_restart) {
 
-	fseek (story_fp, 0, SEEK_SET);
+	fseek (story_fp, fileZCodeOffset, SEEK_SET);
 
 	if (fread (zmp, 1, h_dynamic_size, story_fp) != h_dynamic_size)
 	    os_fatal ("Story file read error");
@@ -600,8 +655,6 @@ static void get_default_name (char *default_name, zword addr)
 
 }/* get_default_name */
 
-extern const char *AUTOSAVE_FILE;
-
 /*
  * z_restore, restore [a part of] a Z-machine state from disk
  *
@@ -619,7 +672,11 @@ void z_restore (void)
 
     zword success = 0;
 
-    if (!do_autosave && zargc != 0) {
+    if (
+#if FROTZ_IOS_PORT
+	!do_autosave && 
+#endif
+	zargc != 0) {
 
 	/* Get the file name */
 
@@ -651,9 +708,12 @@ void z_restore (void)
 	int i;
 
 	/* Get the file name */
+#if FROTZ_IOS_PORT
         if (do_autosave)
 	    strcpy(new_name, AUTOSAVE_FILE);
-        else if (os_read_file_name (new_name, save_name, FILE_RESTORE) == 0)
+        else 
+#endif
+	if (os_read_file_name (new_name, save_name, FILE_RESTORE) == 0)
 	    goto finished;
 
 	strcpy (save_name, new_name);
@@ -667,8 +727,10 @@ void z_restore (void)
 
 	if (f_setup.save_quetzal) {
 	    success = restore_quetzal (gfp, story_fp);
-
-	} else {
+	    if (!success)
+		fseek (gfp, 0, SEEK_SET);
+	} 
+	if (success == 0) {
 	    /* Load game file */
 
 	    release = (unsigned) fgetc (gfp) << 8;
@@ -697,7 +759,7 @@ void z_restore (void)
 		    stack[i] |= fgetc (gfp);
 		}
 
-		fseek (story_fp, 0, SEEK_SET);
+		fseek (story_fp, fileZCodeOffset, SEEK_SET);
 
 		for (addr = 0; addr < h_dynamic_size; addr++) {
 		    int skip = fgetc (gfp);
@@ -731,7 +793,11 @@ void z_restore (void)
 		zbyte old_screen_cols;
 
 		/* In V3, reset the upper window. */
-		if ((!do_autosave || cwin == 0) && h_version == V3)
+		if ((
+#if FROTZ_IOS_PORT
+		    !do_autosave || 
+#endif
+		    cwin == 0) && h_version == V3)
 		    split_window (0);
 
 		LOW_BYTE (H_SCREEN_ROWS, old_screen_rows);
@@ -745,7 +811,7 @@ void z_restore (void)
 		 * the screen sizes may vary a lot. Erasing the status window
 		 * seems to cover up most of the resulting badness.
 		 */
-		if (h_version > V3 && h_version != V6
+		if (!do_autosave && h_version > V3 && h_version != V6
 		    && (h_screen_rows != old_screen_rows
 		    || h_screen_cols != old_screen_cols))
 		    erase_window (1);
@@ -755,11 +821,21 @@ void z_restore (void)
     }
 
 finished:
+#if FROTZ_IOS_PORT
+    if (!do_autosave && success > 0)
+	os_mark_recent_save();
     if (do_autosave) {
 	do_autosave = 0;
 	strcpy(save_name, "");
 	return;
     }
+
+    if (*pcp == 228) { // z_read; normally would never be right after a z_restore/z_save instruction, but if the
+	    // user tried to restore an autosave file directly, this would likely be the next instruction.  Detect & recover.
+	print_string("[Restored autosave file]\n> ");
+	return;
+    }
+#endif
 
     if (h_version <= V3)
 	branch (success);
@@ -917,7 +993,12 @@ void z_save (void)
 
     zword success = 0;
 
-    if (!do_autosave && zargc != 0) {
+    if (
+#if FROTZ_IOS_PORT
+	!do_autosave && 
+#endif
+	zargc != 0
+	) {
 
 	/* Get the file name */
 
@@ -950,10 +1031,12 @@ void z_save (void)
 	int i;
 
 	/* Get the file name */
-
+#if FROTZ_IOS_PORT
 	if (do_autosave) {
             strcpy(new_name, AUTOSAVE_FILE);
-        } else if (os_read_file_name (new_name, save_name, FILE_SAVE) == 0)
+        } else
+#endif
+	if (os_read_file_name (new_name, save_name, FILE_SAVE) == 0)
 	    goto finished;
 
 	strcpy (save_name, new_name);
@@ -992,7 +1075,7 @@ void z_save (void)
 		fputc ((int) lo (stack[i]), gfp);
 	    }
 
-	    fseek (story_fp, 0, SEEK_SET);
+	    fseek (story_fp, fileZCodeOffset, SEEK_SET);
 
 	    for (addr = 0, skip = 0; addr < h_dynamic_size; addr++)
 		if (zmp[addr] != fgetc (story_fp) || skip == 255 || addr + 1 == h_dynamic_size) {
@@ -1016,11 +1099,16 @@ void z_save (void)
     }
 
 finished:
+#if FROTZ_IOS_PORT
+    if (success > 0)
+	os_mark_recent_save();
+
      if (do_autosave) {
          do_autosave = 0; 
          autosave_done = 1;
          return;
      }  
+#endif
 
     if (h_version <= V3)
 	branch (success);
@@ -1120,7 +1208,7 @@ void z_verify (void)
 
     /* Sum all bytes in story file except header bytes */
 
-    fseek (story_fp, 64, SEEK_SET);
+    fseek (story_fp, fileZCodeOffset+64, SEEK_SET);
 
     for (i = 64; i < story_size; i++)
 	checksum += fgetc (story_fp);

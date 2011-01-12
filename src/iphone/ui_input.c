@@ -18,9 +18,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-
-#define __UNIX_PORT_FILE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,7 +60,8 @@ extern int completion (const zchar *, zchar *);
 
 static void unix_set_global_timeout(int timeout)
 {
-    if (!timeout) global_timeout.tv_sec = 0;
+    if (!timeout)
+	global_timeout.tv_sec = 0;
     else {
         gettimeofday(&global_timeout, NULL);
         global_timeout.tv_sec += (timeout/10);
@@ -83,7 +81,8 @@ static int timeout_to_ms()
 {
     struct timeval now, diff;
 
-    if (global_timeout.tv_sec == 0) return -1;
+    if (global_timeout.tv_sec == 0)
+	return -1;
     gettimeofday( &now, NULL);
     diff.tv_usec = global_timeout.tv_usec - now.tv_usec;
     if (diff.tv_usec < 0) {
@@ -113,10 +112,9 @@ static int timeout_to_ms()
 static int unix_read_char(int extkeys)
 {
     int c;
-
     while(1) {
-	//timeout( timeout_to_ms());
-	c = iphone_getchar();
+	int tmo = timeout_to_ms();
+	c = iphone_getchar(tmo);
 	if (c == ZC_AUTOSAVE) {
 	    do_autosave = 1;
 	    return c;
@@ -134,29 +132,11 @@ static int unix_read_char(int extkeys)
 	switch(c) {
 	/* Normally ERR means timeout.  I suppose we might also get
 	   ERR if a signal hits getch. */
-#if 0
-	case ERR:
+	case -1:
 	    if (timeout_to_ms() == 0)
 		return ZC_TIME_OUT;
 	    else
 		continue;
-#endif
-
-/*
- * Under ncurses, getch() will return OK (defined to 0) when Ctrl-@ or
- * Ctrl-Space is pressed.  0 is also the ZSCII character code for
- * ZC_TIME_OUT.  This causes a fatal error "Call to non-routine", after
- * which Frotz aborts.  This doesn't happen with all games nor is the
- * crashing consistent.  Sometimes repeated tests on a single game will
- * yield some crashes and some non-crashes.  When linked with ncurses,
- * we must make sure that unix_read_char() does not return a bogus
- * ZC_TIME_OUT.
- *
- */
-#ifdef USE_NCURSES_H
-	case 0:
-		continue;
-#endif /* USE_NCURSES_H */
 
 	/* Screen decluttering. */
 	case MOD_CTRL ^ 'L': case MOD_CTRL ^ 'R':
@@ -169,10 +149,10 @@ static int unix_read_char(int extkeys)
 	   "Alt-Foo" may be returned as an escape followed by the ASCII
 	   value of the letter.  We have to decide here whether to
 	   return a single escape or a frotz hot key. */
-	case ZC_ESCAPE:
-	    c = iphone_getchar();
+	case -30:
+	    c = iphone_getchar(timeout_to_ms());
 	    switch(c) {
-	    //case ERR: return ZC_ESCAPE;
+	    case -1: return ZC_ESCAPE;
 	    case 'p': return ZC_HKEY_PLAYBACK;
 	    case 'r': return ZC_HKEY_RECORD;
 	    case 's': return ZC_HKEY_SEED;
@@ -312,244 +292,6 @@ static int unix_history_forward(zchar *str, int searchlen, int maxlen)
 }
 
 
-#if 0
-
-/*
- * scrnmove
- *
- * In the row of the cursor, move n characters starting at src to dest.
- *
- */
-
-static void scrnmove(int dest, int src, int n)
-{
-    int col, x, y;
-
-    getyx(stdscr, y, x);
-    if (src > dest) {
-      for (col = src; col < src + n; col++) {
-	chtype ch = mvinch(y, col);
-	mvaddch(y, col - src + dest, ch);
-      }
-    } else if (src < dest) {
-      for (col = src + n - 1; col >= src; col--) {
-	chtype ch = mvinch(y, col);
-	mvaddch(y, col - src + dest, ch);
-      }
-    }
-    move(y, x);
-}
-
-/*
- * scrnset
- *
- * In the row of the cursor, set n characters starting at start to c.
- *
- */
-
-static void scrnset(int start, int c, int n)
-{
-    int y, x;
-    getyx(stdscr, y, x);
-    while (n--)
-	mvaddch(y, start + n, c);
-    move(y, x);
-}
-#endif
-#if 0
-/*
- * os_read_line
- *
- * Read a line of input from the keyboard into a buffer. The buffer
- * may already be primed with some text. In this case, the "initial"
- * text is already displayed on the screen. After the input action
- * is complete, the function returns with the terminating key value.
- * The length of the input should not exceed "max" characters plus
- * an extra 0 terminator.
- *
- * Terminating keys are the return key (13) and all function keys
- * (see the Specification of the Z-machine) which are accepted by
- * the is_terminator function. Mouse clicks behave like function
- * keys except that the mouse position is stored in global variables
- * "mouse_x" and "mouse_y" (top left coordinates are (1,1)).
- *
- * Furthermore, Frotz introduces some special terminating keys:
- *
- *     ZC_HKEY_KEY_PLAYBACK (Alt-P)
- *     ZC_HKEY_RECORD (Alt-R)
- *     ZC_HKEY_SEED (Alt-S)
- *     ZC_HKEY_UNDO (Alt-U)
- *     ZC_HKEY_RESTART (Alt-N, "new game")
- *     ZC_HKEY_QUIT (Alt-X, "exit game")
- *     ZC_HKEY_DEBUGGING (Alt-D)
- *     ZC_HKEY_HELP (Alt-H)
- *
- * If the timeout argument is not zero, the input gets interrupted
- * after timeout/10 seconds (and the return value is ZC_TIME_OUT).
- *
- * The complete input line including the cursor must fit in "width"
- * screen units.
- *
- * The function may be called once again to continue after timeouts,
- * misplaced mouse clicks or hot keys. In this case the "continued"
- * flag will be set. This information can be useful if the interface
- * implements input line history.
- *
- * The screen is not scrolled after the return key was pressed. The
- * cursor is at the end of the input line when the function returns.
- *
- * Since Inform 2.2 the helper function "completion" can be called
- * to implement word completion (similar to tcsh under Unix).
- *
- */
-
-
-zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
-{
-    int ch, y, x, len = strlen( (char *)buf);
-    /* These are static to allow input continuation to work smoothly. */
-    static int scrpos = 0, searchpos = -1, insert_flag = 1;
-
-    /* Set x and y to be at the start of the input area.  */
-    getyx(stdscr, y, x);
-    x -= len;
-    
-    if (width < max) max = width;
-    /* Better be careful here or it might segv.  I wonder if we should just
-       ignore 'continued' and check for len > 0 instead?  Might work better
-       with Beyond Zork. */
-    if (!(continued && scrpos <= len && searchpos <= len)) {
-	scrpos = len;
-	history_view = history_next; /* Reset user's history view. */
-	searchpos = -1;		/* -1 means initialize from len. */
-	insert_flag = 1;	/* Insert mode is now default. */
-    }
-
-    unix_set_global_timeout(timeout);
-    for (;;) {
-	move(y, x + scrpos);
-	/* Maybe there's a cleaner way to do this, but refresh() is */
-	/* still needed here to print spaces.  --DG */
-	refresh();
-        switch (ch = unix_read_char(1)) {
-	case ZC_BACKSPACE:	/* Delete preceeding character */
-	    if (scrpos != 0) {
-		len--; scrpos--; searchpos = -1;
-		scrnmove(x + scrpos, x + scrpos + 1, len - scrpos);
-		mvaddch(y, x + len, ' ');
-		memmove(buf + scrpos, buf + scrpos + 1, len - scrpos);
-	    }
-	    break;
-	case CHR_DEL:
-	case KEY_DC:		/* Delete following character */
-	    if (scrpos < len) {
-		len--; searchpos = -1;
-		scrnmove(x + scrpos, x + scrpos + 1, len - scrpos);
-		mvaddch(y, x + len, ' ');
-		memmove(buf + scrpos, buf + scrpos + 1, len - scrpos);
-	    }
-	    continue;		/* Don't feed is_terminator bad zchars. */
-
-	case KEY_EOL:		/* Delete from cursor to end of line.  */
-	    scrnset(x + scrpos, ' ', len - scrpos);
-	    len = scrpos;
-	    continue;
-	case ZC_ESCAPE:		/* Delete whole line */
-	    scrnset(x, ' ', len);
-	    len = scrpos = 0;
-	    searchpos = -1;
-	    history_view = history_next;
-	    continue;
-
-	/* Cursor motion */
-	case ZC_ARROW_LEFT: if (scrpos) scrpos--; continue;
-	case ZC_ARROW_RIGHT: if (scrpos < len) scrpos++; continue;
-	case KEY_HOME: scrpos = 0; continue;
-	case KEY_END: scrpos = len; continue;
-
-	case KEY_IC:		/* Insert Character */
-	    insert_flag = !insert_flag;
-	    continue;
-
-	case ZC_ARROW_UP: case ZC_ARROW_DOWN:
-	    if (searchpos < 0)
-		searchpos = len;
-	    if ((ch == ZC_ARROW_UP ? unix_history_back : unix_history_forward)
-		(buf, searchpos, max)) {
-		scrnset(x, ' ', len);
-		mvaddstr(y, x, (char *) buf);
-		scrpos = len = strlen((char *) buf);
-            }
-	    continue;
-
-	/* Passthrough as up/down arrows for Beyond Zork. */
-	case KEY_PPAGE: ch = ZC_ARROW_UP; break;
-	case KEY_NPAGE: ch = ZC_ARROW_DOWN; break;
-	case '\t':
-	    /* This really should be fixed to work also in the middle of a
-	       sentence. */
-	    {
-		int status;
-		zchar extension[10], saved_char;
-
-		saved_char = buf[scrpos];
-		buf[scrpos] = '\0';
-		status = completion( buf, extension);
-		buf[scrpos] = saved_char;
-
-		if (status != 2) {
-		    int ext_len = strlen((char *) extension);
-		    if (ext_len > max - len) {
-			ext_len = max - len;
-			status = 1;
-		    }
-		    memmove(buf + scrpos + ext_len, buf + scrpos,
-			len - scrpos);
-		    memmove(buf + scrpos, extension, ext_len);
-		    scrnmove(x + scrpos + ext_len, x + scrpos, len - scrpos);
-		    mvaddnstr(y, x + scrpos, (char *) extension, ext_len);
-		    scrpos += ext_len;
-		    len += ext_len;
-		    searchpos = -1;
-		}
-		if (status) os_beep(BEEP_HIGH);
-	    }
-	    continue;		/* TAB is invalid as an input character. */
-	default:
-	    /* ASCII or ISO-Latin-1 */
-	    if ((ch >= ZC_ASCII_MIN && ch <= ZC_ASCII_MAX)
-		|| (!u_setup.plain_ascii
-		    && ch >= ZC_LATIN1_MIN && ch <= ZC_LATIN1_MAX)) {
-		searchpos = -1;
-		if ((scrpos == max) || (insert_flag && (len == max))) {
-		    os_beep(BEEP_HIGH);
-		    continue;
-		}
-		if (insert_flag && (scrpos < len)) {
-		    /* move what's there to the right */
-		    scrnmove(x + scrpos + 1, x + scrpos, len - scrpos);
-		    memmove(buf + scrpos + 1, buf + scrpos, len - scrpos);
-		}
-		if (insert_flag || scrpos == len)
-		    len++;
-		mvaddch(y, x + scrpos, ch);
-		buf[scrpos++] = ch;
-		continue;
-	    }
-        }
-	if (is_terminator(ch)) {
-	    buf[len] = '\0';
-	    if (ch == ZC_RETURN)
-		unix_add_to_history(buf);
-	    /* Games don't know about line editing and might get
-	       confused if the cursor is not at the end of the input
-	       line. */
-	    move(y, x + len);
-	    return ch;
-	}
-    }
-}/* os_read_line */
-#endif
 
 /*
  * os_read_key
@@ -567,6 +309,10 @@ zchar os_read_key (int timeout, int cursor)
     iphone_enable_single_key_input();
     unix_set_global_timeout(timeout);
     c = (zchar) unix_read_char(0);
+    if (cwin == 1 && c == ZC_BACKSPACE) {
+	iphone_backspace();
+	iphone_putchar(c);
+    }
     iphone_disable_input();
 
 //    if (!cursor) curs_set(1); //xxx
@@ -624,11 +370,17 @@ static void translate_special_chars(char *s)
  * other places where I'm not so careful).  */
 static void getline(char *s)
 {
-    int c;
+    int c = 0;
     char *p = s;
     iphone_enable_input();
     while (p < s + INPUT_BUFFER_SIZE - 1)
-	if ((c = iphone_getchar()) != '\n') {
+//	if ((c = iphone_getchar(timeout_to_ms())) != '\n')
+	if ((c = unix_read_char(0)) != '\n' && c != ZC_RETURN)
+	{
+	    if (c == -1) {
+		c = ZC_TIME_OUT;
+		break;
+	    }
 	    if (c == ZC_AUTOSAVE) {
 		do_autosave = 1;
                 break;
@@ -637,22 +389,29 @@ static void getline(char *s)
                 p--;
 	    else if (c == ZC_ESCAPE) {
                 *p = 0;
-		while (p > s && *p != ' ')
+		if (p > s) {
+		    if (*--p == ' ' || ispunct(*p))
+			*p = 0;
+		}
+		while (p > s && *p != ' ' && !ispunct(*p))
 		    p--;
-                if (*p == ' ') p++;
+                if (p != s) p++;
 	    }
 	    else
 		*p++ = c;
 	} else
 	    break;
-    *p++ = c;
+    if (c == ZC_AUTOSAVE)
+	*p++ = c;
+    else
+	*p++ = '\n';
     *p++ = '\0';
     iphone_disable_input();
   
-    if (p < s + INPUT_BUFFER_SIZE - 1)
+    if (c == ZC_TIME_OUT || p < s + INPUT_BUFFER_SIZE - 1)
         return;
    
-    while ((c = iphone_getchar()) != '\n')
+    while (iphone_getchar(-1) != '\n')
       ;
     printf("Line too long, truncated to %s\n", s - INPUT_BUFFER_SIZE);
 }
@@ -661,37 +420,27 @@ static void getline(char *s)
  * (that isn't the start of a special character)), and write the
  * first non-command to s.
  * Return true if timed-out.  */
-static bool dumb_read_line(char *s, char *prompt, bool show_cursor,
+static bool ui_read_line(char *s, char *prompt, bool show_cursor,
                            int timeout, enum input_type type,
                            zchar *continued_line_chars)
 {
-  unix_set_global_timeout(timeout);
-  for (;;) {
-    char *command;
+    unix_set_global_timeout(timeout);
     if (prompt)
-      iphone_puts(prompt);
-//    else
-//      dumb_show_prompt(show_cursor, (timeout ? "tTD" : ")>}")[type]);
+	iphone_puts(prompt);
     getline(s);
     translate_special_chars(s);
     if (*s == ZC_AUTOSAVE)
-      return FALSE;
-    if (timeout) {
-        int elapsed = 0; // xxx (time(0) - start_time) * 10 * speed;
-        if (elapsed > timeout) {
-          //time_ahead = elapsed - timeout;
-          return TRUE;
-        }
-      }
-      return FALSE;
-    }
+	return FALSE;
+    if (*s == ZC_TIME_OUT)
+	return TRUE;
+    return FALSE;
 }
 
 /* Read a line that is not part of z-machine input (more prompts and
  * filename requests).  */
-static void dumb_read_misc_line(char *s, char *prompt)
+static void ui_read_misc_line(char *s, char *prompt)
 {
-  dumb_read_line(s, prompt, 0, 0, 0, 0);
+  ui_read_line(s, prompt, 0, 0, 0, 0);
   /* Remove terminating newline */
   s[strlen(s) - 1] = '\0';
 }
@@ -719,7 +468,7 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
     read_line_buffer[0] = '\0';
 
   if (read_line_buffer[0] == '\0')
-    timed_out = dumb_read_line(read_line_buffer, NULL, TRUE, timeout,
+    timed_out = ui_read_line(read_line_buffer, NULL, TRUE, timeout,
                                buf[0] ? INPUT_LINE_CONTINUED : INPUT_LINE,
                                buf);
   else
@@ -734,7 +483,7 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
   for (p = read_line_buffer;; p++) {
     if (is_terminator(*p)) {
       terminator = *p;
-      *p++ = '\0';
+      *p = '\0';
       break;
     }
   }
@@ -757,124 +506,89 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
   return terminator;
 }
 
-int os_read_file_name (char *file_name, const char *default_name, int flag)
+extern char SAVE_PATH[];
+
+void	os_mark_recent_save() {
+    iphone_mark_recent_save();
+}
+
+int os_read_file_name (char *file_name, const char *default_name, int flag) {
+    return iphone_prompt_file_name(file_name, default_name, flag);
+}
+
+int iphone_prompt_file_name (char *file_name, const char *default_name, int flag)
 {
-  char buf[INPUT_BUFFER_SIZE], prompt[INPUT_BUFFER_SIZE];
-  FILE *fp;
-  char *dflt, *ext = NULL;
+  char buffer[INPUT_BUFFER_SIZE*2], *buf; // prompt[INPUT_BUFFER_SIZE]
+  char *dflt, *ext = NULL, *altext = NULL, *pext;
 
   if ((dflt = strrchr(default_name, '/'))) // only use filename conpoment in default_name prompt
     dflt++;
   else
     dflt = (char*)default_name;
 
+  strcpy(buffer, SAVE_PATH);
+  strcat(buffer, "/");
+  buf = buffer + strlen(buffer);
   if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_SCRIPT) {
-    sprintf(prompt, "Please enter a filename (or '!' to browse existing files)\n[%s]:", dflt);
-    dumb_read_misc_line(buf, prompt);
-    if (buf[0] == '!') {
-      buf[0] = '\0';
-      if (!iphone_read_file_name (buf, dflt, flag))
+    buf[0] = '\0';
+    if (!iphone_read_file_name (buf, dflt, flag))
 	return FALSE;
-    } else {
-
-        if (!buf[0])
-            strcpy(buf, dflt);
-	if (strchr(buf, '.') == NULL) {
-	    switch(flag) {
-		case FILE_SAVE:
-		    ext = ".sav";
-		    break;
-		case FILE_SAVE_AUX:
-		    ext = ".aux";
-		    break;
-		case FILE_RECORD:
-		    ext = ".rec";
-		    break;
-		case FILE_SCRIPT:
-		    ext = ".scr";
-		    break;
-		default:
-		    break;
-	    }
-	    strcat(buf, ext);
-	}
+    if (!buf[0])
+	strcpy(buf, dflt);
+    if (!buf[0])
+	return FALSE;
+    pext = strrchr(buf, '.');
+    switch(flag) {
+	case FILE_SAVE:
+	    ext = ".sav"; altext = ".qut";
+	    break;
+	case FILE_SAVE_AUX:
+	    ext = ".aux";
+	    break;
+	case FILE_RECORD:
+	    ext = ".rec";
+	    break;
+	case FILE_SCRIPT:
+	    ext = ".txt";
+	    break;
+	default:
+	    break;
     }
+    if (pext == NULL || (strcmp(pext, ext)!=0 && (!altext || strcmp(pext, altext)!=0)))
+	strcat(buf, ext);
   } else {
-      //sprintf(prompt, "Please enter a filename: ");
       buf[0] = '\0';
       if (!iphone_read_file_name (buf, dflt, flag))
          return FALSE;
   }
 
   if (strlen(buf) > MAX_FILE_NAME) {
-    iphone_puts("Filename too long!\n");
+    iphone_puts("\nFilename too long!\n");
     return FALSE;
   }
-
-  strcpy (file_name, buf[0] ? buf : dflt);
+  // restore filenames are abs, save are rel
+  strcpy (file_name, buf[0]=='/' ? buf : buffer);
 
   /* Warn if overwriting a file.  */
+#if !FROTZ_IOS_PORT
+  FILE *fp;
   if ((flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
       && ((fp = fopen(file_name, "rb")) != NULL)) {
     fclose (fp);
-    dumb_read_misc_line(buf, "Overwrite existing file? ");
+    char overwritePrompt[MAX_FILE_NAME + 40];
+    char *fn = strrchr(file_name, '/');
+    if (fn)
+	fn++;
+    else
+	fn = file_name;
+    sprintf(overwritePrompt, "Overwrite existing file \"%s\"? ", fn);
+    ui_read_misc_line(buf, overwritePrompt);
+    iphone_putchar('\n');
     return(tolower(buf[0]) == 'y');
   }
+#endif
   return TRUE;
 }
-
-#if 0
-/*
- * os_read_file_name
- *
- * Return the name of a file. Flag can be one of:
- *
- *    FILE_SAVE     - Save game file
- *    FILE_RESTORE  - Restore game file
- *    FILE_SCRIPT   - Transscript file
- *    FILE_RECORD   - Command file for recording
- *    FILE_PLAYBACK - Command file for playback
- *    FILE_SAVE_AUX - Save auxilary ("preferred settings") file
- *    FILE_LOAD_AUX - Load auxilary ("preferred settings") file
- *
- * The length of the file name is limited by MAX_FILE_NAME. Ideally
- * an interpreter should open a file requester to ask for the file
- * name. If it is unable to do that then this function should call
- * print_string and read_string to ask for a file name.
- *
- */
-
-int os_read_file_name (char *file_name, const char *default_name, int flag)
-{
-
-    int saved_replay = istream_replay;
-    int saved_record = ostream_record;
-
-    /* Turn off playback and recording temporarily */
-
-    istream_replay = 0;
-    ostream_record = 0;
-
-    print_string ("Enter a file name.\nDefault is \"");
-    print_string (default_name);
-    print_string ("\": ");
-
-    read_string (FILENAME_MAX, (zchar *)file_name);
-
-    /* Use the default name if nothing was typed */
-    
-    if (file_name[0] == 0)
-        strcpy (file_name, default_name);
-
-    /* Restore state of playback and recording */
-
-    istream_replay = saved_replay;
-    ostream_record = saved_record;
-
-    return 1;
-
-} /* os_read_file_name */
-#endif
 
 /*
  * os_read_mouse
@@ -883,10 +597,10 @@ int os_read_file_name (char *file_name, const char *default_name, int flag)
  * "mouse_y" and return the mouse buttons currently pressed.
  *
  */
-zword os_read_mouse (void)
+zword ui_read_mouse (void)
 {
 	/* INCOMPLETE */
-
+    return 0;
 } /* os_read_mouse */
 
 

@@ -19,8 +19,6 @@
  */
 
 
-#define __UNIX_PORT_FILE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,13 +33,14 @@
  */
 bool color_enabled = FALSE;
 
-// screen character / cursor management stuff copied from 'dumb' frontend
+// \ character / cursor management stuff copied from 'dumb' frontend
 
 static int screen_cells;
 
 /* The in-memory state of the screen.  */
 /* Each cell contains a style in the upper byte and a char in the lower. */
 cell *screen_data = NULL;
+cellcolor *screen_colors = NULL;
 
 static cell make_cell(int style, char c) {return (style << 8) | (0xff & c);}
 static char cell_char(cell c) {return c & 0xff;}
@@ -57,22 +56,27 @@ static int cell_style(cell c) {return c >> 8;}
 static int current_style = 0;
 
 /* Which cells have changed (1 byte per cell).  */
-static char *screen_changes;
+//static char *screen_changes;
 
 int cursor_row = 0, cursor_col = 0;
 
-static cell *scr_row(int r) {return screen_data + r * MAX_COLS;}
+static cell *scr_row(int r) { return screen_data + r * MAX_COLS; }
+static cellcolor *scr_color(int r) { return screen_colors + r * MAX_COLS; }
 
 void iphone_init_screen() {
-  screen_cells = h_screen_rows * MAX_COLS;
+  screen_cells = MAX_ROWS * MAX_COLS;
   int i;
 
   if (!screen_data)
     screen_data = malloc(screen_cells * sizeof(cell));
+  if (!screen_colors)
+    screen_colors = malloc(screen_cells * sizeof(cellcolor));
   if (do_autosave)
     return;
-  for (i = 0; i < screen_cells; ++i)
+  for (i = 0; i < screen_cells; ++i) {
     screen_data[i] = ' ';
+    screen_colors[i] = (h_default_foreground<<4) | h_default_background;
+  }
 }
 
 
@@ -143,11 +147,11 @@ int os_font_data (int font, int *height, int *width)
 
 void os_set_colour (int new_foreground, int new_background)
 {
-    if (new_foreground == 1) new_foreground = h_default_foreground;
-    if (new_background == 1) new_background = h_default_background;
+//    if (new_foreground == 1) new_foreground = h_default_foreground;
+//    if (new_background == 1) new_background = h_default_background;
 
     int new_color = u_setup.current_color = (new_foreground << 4) | new_background;
-    iphone_set_text_attribs(u_setup.current_text_style, new_color, TRUE);
+    iphone_set_text_attribs(0, u_setup.current_text_style, new_color, TRUE);
 }/* os_set_colour */
 
 /*
@@ -166,7 +170,7 @@ void os_set_text_style (int new_style)
 {
     current_style = new_style;
     u_setup.current_text_style = new_style;
-    iphone_set_text_attribs(new_style, u_setup.current_color, TRUE);
+    iphone_set_text_attribs(0, new_style, u_setup.current_color, TRUE);
 } /* os_set_text_style */
 
 /*
@@ -186,7 +190,26 @@ void os_set_font (int new_font)
 
 static void iphone_set_cell(int row, int col, cell c)
 {
+  int color = u_setup.current_color;
+  if (color != 0x11 && (color >> 4) == (color & 0xf)) { // varicella workaround
+    if ((color >> 4) == BLACK_COLOUR)
+	color = (WHITE_COLOUR<<4)|BLACK_COLOUR;
+    else
+	color = (BLACK_COLOUR<<4)|(color & 0xf);
+  }
+#if 0
+  if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
+    color = 0;
+#endif
   scr_row(row)[col] = c;
+  scr_color(row)[col] = color;
+
+  if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << 8))) {
+    while (++col < MAX_COLS) {
+	scr_row(row)[col] = make_cell(REVERSE_STYLE, ' ');
+	scr_color(row)[col] = color;
+    }
+  }
 }
 
 /* Copy a cell and copy its changedness state.
@@ -195,24 +218,44 @@ static void scr_copy_cell(int dest_row, int dest_col,
                            int src_row, int src_col)
 {
   scr_row(dest_row)[dest_col] = scr_row(src_row)[src_col];
+  scr_color(dest_row)[dest_col] = scr_color(src_row)[src_col];
 }
+
+int top_win_height = 1; // hack; for use by iphone frontend
 
 
 /* put a character in the cell at the cursor and advance the cursor.  */
-static void iphone_display_char(char c)
+void iphone_display_char(char c)
 {
+    // hack to make the status line/uppper window auto-grow for games like anchorhead which
+    // don't resize it big enough for the menus they want to display
+    if (cwin == 1 && cursor_row >= top_win_height) {
+	if (1 ||!top_win_height)
+	    iphone_set_top_win_height(cursor_row+1);
+	else
+	    top_win_height = cursor_row+1;
+
+    }
+	
     iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c));
     iphone_putchar(c);
 
     if (++cursor_col == h_screen_cols)
 	if (cursor_row == h_screen_rows - 1)
 	    cursor_col--;
-	else {
+	else if (cwin==0 || cursor_col >= MAX_COLS) {
 	    cursor_row++;
 	    cursor_col = 0;
 	}
 }
 
+void iphone_backspace()
+{
+    cursor_col--;
+    if (cursor_col < 0)
+	cursor_col = 0;
+    iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, ' '));
+}
 
 /*
  * os_display_char
@@ -235,7 +278,7 @@ void os_display_char (zchar c)
 	  char *ptr = latin1_to_ascii + 3 * (c - ZC_LATIN1_MIN);
 	  char c1 = *ptr++;
 	  char c2 = *ptr++;
-	  char c3 = *ptr++;
+	  char c3 = *ptr;
 
 	  iphone_display_char(c1);
 
@@ -250,6 +293,10 @@ void os_display_char (zchar c)
     }
     if (c >= ZC_ASCII_MIN && c <= ZC_ASCII_MAX) {
         iphone_display_char(c);
+	return;
+    }
+    if (c == ZC_BACKSPACE) {
+	iphone_backspace();
 	return;
     }
     if (c == ZC_INDENT) {
@@ -306,7 +353,7 @@ int os_char_width (zchar c)
         const char *ptr = latin1_to_ascii + 3 * (c - ZC_LATIN1_MIN);
 	char c1 = *ptr++;
 	char c2 = *ptr++;
-	char c3 = *ptr++;
+	char c3 = *ptr;
 
 	/* Why, oh, why did you declare variables that way??? */
 
@@ -358,17 +405,15 @@ int os_string_width (const zchar *s)
  *
  */
 
+extern int lastInputWindow;
+
 void os_set_cursor (int row, int col)
 {
 //printf ("os_set_cursor %d %d\n", row, col);
-#if 0
-    if ((row < h_screen_rows && cursor_row+1 == row
-        || cursor_row+2 == row || cursor_row == row) && col == 1)
-	iphone_putchar('\n');
-#endif
     cursor_row = row - 1; cursor_col = col - 1;
     if (cursor_row >= h_screen_rows)
 	cursor_row = h_screen_rows - 1;
+    lastInputWindow = -1;
 
 }/* os_set_cursor */
 
@@ -382,7 +427,7 @@ void os_set_cursor (int row, int col)
 
 void os_more_prompt (void)
 {
-    iphone_more_prompt();
+//    iphone_more_prompt();
 }/* os_more_prompt */
 
 /*
@@ -393,13 +438,15 @@ void os_more_prompt (void)
  *
  */
 
-void os_erase_area (int top, int left, int bottom, int right)
+void os_erase_area (int top, int left, int bottom, int right, int windowNum)
 {
   int row, col;
-  if ((top == 1) && (bottom == h_screen_rows) &&
-        (left == 1) && (right == h_screen_cols)) {
+  if (top == 1 && bottom == h_screen_rows &&
+        left == 1 && right == h_screen_cols) {
 	iphone_erase_screen();
-  }
+	right = MAX_COLS;
+  } else if (windowNum == 0)
+    iphone_erase_mainwin();    
   top--; left--; bottom--; right--;
   for (row = top; row <= bottom; row++)
     for (col = left; col <= right; col++)
@@ -407,27 +454,24 @@ void os_erase_area (int top, int left, int bottom, int right)
 }/* os_erase_area */
 
 
-int top_win_height = 1; // hack; for use by iphone frontend
-
 
 void os_split_win(int height) {
-    if (height > top_win_height) {
+    if (height > h_screen_height || height > MAX_ROWS)
+	height = h_screen_height;
+    if (height > top_win_height && top_win_height > 0) { // >0 cond to help reduce bronze flicker
 	int row, col;
 	  for (row = top_win_height; row < h_screen_rows; row++)
 	    for (col = 0; col < h_screen_cols; col++)
 		iphone_set_cell(row, col, make_cell(current_style, ' '));
     }
-
-    pthread_mutex_lock(&winSizeMutex);
-    top_win_height = height;
-    winSizeChanged = TRUE;
-    pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
-    pthread_mutex_unlock(&winSizeMutex);
+    iphone_set_top_win_height(height);
 }
+
+extern int currTextStyle;
 
 void os_new_line(bool wrapping) { // only called by word wrap
     if (wrapping)
-      iphone_putchar(' ');
+      iphone_putchar(' '); // all word wrapping handled by text view
     else
       iphone_putchar('\n');
 }
@@ -449,15 +493,25 @@ void os_scroll_area (int top, int left, int bottom, int right, int units)
     for (row = top; row <= bottom - units; row++)
       for (col = left; col <= right; col++)
         scr_copy_cell(row, col, row + units, col);
-    os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1);
+    os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1, -1);
   } else if (units < 0) {
     for (row = bottom; row >= top - units; row--)
       for (col = left; col <= right; col++)
          scr_copy_cell(row, col, row + units, col);
-    os_erase_area(top + 1, left + 1, top - units, right + 1);
+    os_erase_area(top + 1, left + 1, top - units, right + 1, -1);
   }
-  //if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
-    //iphone_putchar('\n');
+//  if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
+//    iphone_putchar('\n');
   
 }/* os_scroll_area */
+
+extern char script_name[];
+
+void	os_start_script() {
+    iphone_start_script(script_name);
+}
+
+void	os_stop_script() {
+    iphone_stop_script();
+}
 

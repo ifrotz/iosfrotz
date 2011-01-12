@@ -1,12 +1,5 @@
 # Define your C compiler.  I recommend gcc if you have it.
 # MacOS users should use "cc" even though it's really "gcc".
-
-# iPhone build put in separate Makefile.iphone.
-# Only the default (forwarding) target has been changed in this one.
-# Type 'make help' to se the other targets.
-iphone:	
-	$(MAKE) -f Makefile.iphone
-
 #
 CC = gcc
 #CC = cc
@@ -14,7 +7,8 @@ CC = gcc
 # Define your optimization flags.  Most compilers understand -O and -O2,
 # Standard (note: Solaris on UltraSparc using gcc 2.8.x might not like this.)
 #
-OPTS = -g #-O2 
+#OPTS = -O2 
+OPTS = -g
 
 # Pentium with gcc 2.7.0 or better
 #OPTS = -O2 -fomit-frame-pointer -malign-functions=2 -malign-loops=2 \
@@ -167,11 +161,16 @@ COMP_DEFS = $(OPT_DEFS) $(COLOR_DEFS) $(SOUND_DEFS) $(SOUNDCARD) \
 
 FLAGS = $(OPTS) $(COMP_DEFS) $(INCL)
 
+ios:
+	@echo To build the iOS version of Frotz, use XCode and Frotz.xcodeproj.
+	@echo To build the Unix curses and dumb versions, use 'make all'.
+
 $(NAME): $(NAME)-curses
 
 $(NAME)-curses:		soundcard.h  $(COMMON_TARGET) $(CURSES_TARGET)
 	$(CC) -o $(BINNAME)$(EXTENSION) $(TARGETS) $(LIB) $(CURSES) \
 		$(SOUND_LIB)
+
 
 all:	$(NAME) d$(NAME)
 
@@ -263,7 +262,6 @@ dist: distclean
 	@echo
 
 clean:
-	make -f Makefile.iphone clean
 	rm -f $(SRCDIR)/*.h $(SRCDIR)/*.a
 	rm -f $(COMMON_DIR)/*.o $(CURSES_DIR)/*.o $(DUMB_DIR)/*.o
 
@@ -280,7 +278,6 @@ clobber: distclean
 help:
 	@echo
 	@echo "Targets:"
-	@echo "    iphone"
 	@echo "    frotz"
 	@echo "    dfrotz"
 	@echo "    install"

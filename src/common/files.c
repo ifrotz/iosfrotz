@@ -60,27 +60,25 @@ static FILE *pfp = NULL;
  * name in V5+.
  *
  */
+static bool script_valid = FALSE;
 
-void script_open (void)
-{
-    static bool script_valid = FALSE;
+void script_reset(char *scriptName) {
+    if (sfp)
+	fclose(sfp);
+    sfp = NULL;
+    ostream_script = FALSE;
 
-    char new_name[MAX_FILE_NAME + 1];
+    if (scriptName && *scriptName) {
+	strcpy(script_name, scriptName);
+	script_reopen();
+    } else
+	script_valid = FALSE;
+}
 
+void script_reopen(void) {
     h_flags &= ~SCRIPTING_FLAG;
 
-    if (h_version >= V5 || !script_valid) {
-
-	if (!os_read_file_name (new_name, script_name, FILE_SCRIPT))
-	    goto done;
-
-	strcpy (script_name, new_name);
-
-    }
-
-    /* Opening in "at" mode doesn't work for script_erase_input... */
-
-    if ((sfp = fopen (script_name, "r+t")) != NULL || (sfp = fopen (script_name, "w+t")) != NULL) {
+    if (*script_name && ((sfp = fopen (script_name, "r+t")) != NULL || (sfp = fopen (script_name, "w+t")) != NULL)) {
 
 	fseek (sfp, 0, SEEK_END);
 
@@ -91,11 +89,36 @@ void script_open (void)
 
 	script_width = 0;
 
-    } else print_string ("Cannot open file\n");
-
-done:
+    } else
+	print_string ("[Cannot open script file]\n");
 
     SET_WORD (H_FLAGS, h_flags)
+}
+
+void script_open (void)
+{
+    char new_name[MAX_FILE_NAME + 1];
+
+    if (h_version >= V5 || !script_valid) {
+
+	if (!os_read_file_name (new_name, script_name, FILE_SCRIPT)) {
+	    print_string ("[Scripting canceled.");
+	    if (h_version < V8)
+		print_string(" Some games may not detect this; type 'unscript' to correct.");
+	    print_string ("]\n");
+
+	    h_flags &= ~SCRIPTING_FLAG;
+	    SET_WORD (H_FLAGS, h_flags)
+	    return;
+	}
+
+	strcpy (script_name, new_name);
+#if FROTZ_IOS_PORT
+	os_start_script();
+#endif
+    }
+
+    script_reopen();
 
 }/* script_open */
 
@@ -113,6 +136,10 @@ void script_close (void)
     SET_WORD (H_FLAGS, h_flags)
 
     fclose (sfp); ostream_script = FALSE;
+#if FROTZ_IOS_PORT
+	os_stop_script();
+#endif
+
 
 }/* script_close */
 

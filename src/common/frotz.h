@@ -11,7 +11,7 @@
 
 /* #include "../config.h" */
 
-#if !defined(__UNIX_PORT_FILE) && !defined(__IPHONE)
+#if !defined(__UNIX_PORT_FILE) && !defined(__OBJC__) && !defined(FROTZ_IOS_FILE)
 #include <signal.h>
 typedef int bool;
 
@@ -48,10 +48,10 @@ typedef unsigned char zchar;
 /*** Constants that may be set at compile time ***/
 
 #ifndef MAX_UNDO_SLOTS
-#define MAX_UNDO_SLOTS 500
+#define MAX_UNDO_SLOTS 10
 #endif
 #ifndef MAX_FILE_NAME
-#define MAX_FILE_NAME 80
+#define MAX_FILE_NAME 256
 #endif
 #ifndef TEXT_BUFFER_SIZE
 #define TEXT_BUFFER_SIZE 200
@@ -60,7 +60,7 @@ typedef unsigned char zchar;
 #define INPUT_BUFFER_SIZE 200
 #endif
 #ifndef STACK_SIZE
-#define STACK_SIZE 1024
+#define STACK_SIZE 61440
 #endif
 
 #ifndef DEFAULT_SAVE_NAME
@@ -172,6 +172,7 @@ typedef unsigned char zchar;
 #define INTERP_APPLE_IIGS 10
 #define INTERP_TANDY 11
 
+#define DEFAULT_COLOUR 1
 #define BLACK_COLOUR 2
 #define RED_COLOUR 3
 #define GREEN_COLOUR 4
@@ -574,6 +575,12 @@ void 	print_string (const char *);
 void 	stream_mssg_on (void);
 void 	stream_mssg_off (void);
 
+void	script_reset(char *scriptName);
+void	script_reopen(void);
+void	script_open (void);
+void	script_close(void);
+
+
 void	ret (zword);
 void 	store (zword);
 void 	branch (bool);
@@ -588,7 +595,7 @@ int  	os_char_width (zchar);
 void 	os_display_char (zchar);
 void 	os_display_string (const zchar *);
 void 	os_draw_picture (int, int, int);
-void 	os_erase_area (int, int, int, int);
+void 	os_erase_area (int, int, int, int, int);
 void 	os_fatal (const char *);
 void 	os_finish_with_sample (int);
 int  	os_font_data (int, int *, int *);
@@ -614,10 +621,23 @@ void 	os_stop_sample (int);
 int  	os_string_width (const zchar *);
 void	os_init_setup (void);
 int	os_speech_output(const zchar *);
+FILE	*os_path_open (const char *, const char *);
+
+#if FROTZ_IOS_PORT
 void	os_new_line(bool);
 void	os_split_win (int);
+void	os_mark_recent_save();
+void	os_start_script();
+void	os_stop_script();
+#endif
+
+extern void init_buffer(), init_interpreter(), init_sound(), init_undo(), split_window(zword), interpret(), reset_memory(), resize_screen();
+extern int init_memory();
 
 #include "setup.h"
 
-extern int do_autosave, autosave_done;
+#if FROTZ_IOS_PORT
+extern int do_autosave, autosave_done, refresh_savedir;
+extern char AUTOSAVE_FILE[];
+#endif
 
