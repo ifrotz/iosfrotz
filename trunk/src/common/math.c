@@ -79,10 +79,11 @@ void z_art_shift (void)
 void z_div (void)
 {
 
-    if (zargs[1] == 0)
+    if (zargs[1] == 0) {
 	runtime_error (ERR_DIV_ZERO);
-
-    store ((zword) ((short) zargs[0] / (short) zargs[1]));
+	store((zword)0);
+    } else 
+	store ((zword) ((short) zargs[0] / (short) zargs[1]));
 
 }/* z_div */
 
@@ -179,10 +180,11 @@ void z_log_shift (void)
 void z_mod (void)
 {
 
-    if (zargs[1] == 0)
+    if (zargs[1] == 0) {
 	runtime_error (ERR_DIV_ZERO);
-
-    store ((zword) ((short) zargs[0] % (short) zargs[1]));
+	store ((zword) 0);
+    } else
+	store ((zword) ((short) zargs[0] % (short) zargs[1]));
 
 }/* z_mod */
 

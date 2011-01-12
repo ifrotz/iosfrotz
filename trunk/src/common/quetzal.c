@@ -145,7 +145,12 @@ zword restore_quetzal (FILE *svf, FILE *stf)
 	|| !read_long (svf, &currlen))				return 0;
     if (tmpl != ID_FORM || currlen != ID_IFZS)
     {
-	print_string ("This is not a saved game file!\n");
+	if (
+#if FROTZ_IOS_PORT
+	    !do_autosave ||
+#endif
+	    (tmpl >> 16)!=h_release) // old format save file; caller will try again
+	    print_string ("This is not a saved game file!\n");
 	return 0;
     }
     if ((ifzslen & 1) || ifzslen<4) /* Sanity checks. */	return 0;
@@ -202,6 +207,10 @@ zword restore_quetzal (FILE *svf, FILE *stf)
 		pc |= (zlong) x << 8;
 		if ((x = get_c (svf)) == EOF)			return fatal;
 		pc |= (zlong) x;
+		if (pc > story_size) {
+		    print_string("Corrupt save file.\n");
+		    return fatal;
+		}
 		fatal = -1;	/* Setting PC means errors must be fatal. */
 		SET_PC (pc);
 
@@ -539,7 +548,7 @@ zword save_quetzal (FILE *svf, FILE *stf)
 	    || !write_word (svf, nstk))			return 0;
 
 	/* Write the variables and eval stack. */
-	for (j=0, ++p; j<nvars+nstk; ++j, --p)
+	for (j=0, --p; j<nvars+nstk; ++j, --p)
 	    if (!write_word (svf, *p))			return 0;
 
 	/* Calculate length written thus far. */
@@ -558,5 +567,9 @@ zword save_quetzal (FILE *svf, FILE *stf)
     if (!write_long (svf, stkslen))			return 0;
 
     /* After all that, still nothing went wrong! */
+#if FROTZ_IOS_PORT
+    refresh_savedir = 1;
+#endif
+
     return 1;
 }

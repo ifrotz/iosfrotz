@@ -260,11 +260,13 @@ void interpret (void)
     void (*zfunc)(void);
     
     do {
+#if FROTZ_IOS_PORT
 	zbyte *save_pcp = pcp;
 	zword *save_sp = sp,  *save_fp = fp;
         int save_frame_count = frame_count;
 	zword save_zargs[5] = { zargs[0], zargs[1], zargs[2], zargs[3], zargs[4] };
 	int j, save_zargc = 0; //zargc;
+#endif
 	zbyte opcode;
 
 	CODE_BYTE (opcode)
@@ -305,9 +307,9 @@ void interpret (void)
 
 	    zfunc = var_opcodes[opcode - 0xc0];
 	}
-	
 	zfunc();
-	
+
+#if FROTZ_IOS_PORT
 	if (do_autosave) {
 	    pcp = save_pcp;
 	    sp = save_sp;
@@ -319,7 +321,7 @@ void interpret (void)
 	    z_save();
 	    continue;
         }       
-	
+#endif
 	
 #if defined(DJGPP) && defined(SOUND_SUPPORT)
     if (end_of_sound_flag)
@@ -445,8 +447,9 @@ void ret (zword value)
 
     /* Stop main loop for direct calls */
 
-    if (ct == 2)
+    if (ct == 2) {
 	finished++;
+    }
 
 }/* ret */
 
@@ -755,8 +758,7 @@ void z_nop (void)
 
 void z_quit (void)
 {
-
-    finished = 9999;
+    finished = 1;
 
 }/* z_quit */
 

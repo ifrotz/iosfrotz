@@ -20,8 +20,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#define __UNIX_PORT_FILE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,28 +39,8 @@
 f_setup_t f_setup;
 u_setup_t u_setup;
 
-pthread_mutex_t outputMutex, winSizeMutex;
-pthread_cond_t winSizeChangedCond;
-bool winSizeChanged = 0;
-
-#define INFORMATION "\
-An interpreter for all Infocom and other Z-Machine games.\n\
-Complies with standard 1.0 of Graham Nelson's specification.\n\
-\n\
-Syntax: frotz [options] story-file\n\
-  -a   watch attribute setting  \t -O   watch object locating\n\
-  -A   watch attribute testing  \t -p   plain ASCII output only\n\
-  -b # background color         \t -P   alter piracy opcode\n\
-  -c # context lines            \t -r # right margin\n\
-  -d   disable color            \t -q   quiet (disable sound effects)\n\
-  -e   enable sound             \t -Q   use old-style save format\n\
-  -f # foreground color         \t -s # random number seed value\n\
-  -F   Force color mode         \t -S # transscript width\n\
-  -h # screen height            \t -t   set Tandy bit\n\
-  -i   ignore fatal errors      \t -u # slots for multiple undo\n\
-  -l # left margin              \t -w # screen width\n\
-  -o   watch object movement    \t -x   expand abbreviations g/x/z"
-
+#define PATHSEP		':'	/* for pathopen()	*/
+#define DIRSEP		'/'	/* for pathopen()	*/
 
 char stripped_story_name[FILENAME_MAX+1];
 char semi_stripped_story_name[FILENAME_MAX+1];
@@ -80,10 +58,10 @@ void os_fatal (const char *s)
    // os_reset_screen();
  
     iphone_puts ("\nFatal error: ");
-    iphone_puts (s);
+    iphone_puts ((char*)s);
     iphone_puts ("\n\n");
 
-    exit (1);
+    finished = 2;
 
 }/* os_fatal */
 
@@ -92,139 +70,10 @@ extern char command_name[];
 extern char save_name[];
 extern char auxilary_name[];
 
-/*
- * os_process_arguments
- *
- * Handle command line switches. Some variables may be set to activate
- * special features of Frotz:
- *
- *     option_attribute_assignment
- *     option_attribute_testing
- *     option_context_lines
- *     option_object_locating
- *     option_object_movement
- *     option_left_margin
- *     option_right_margin
- *     option_ignore_errors
- *     option_piracy
- *     option_undo_slots
- *     option_expand_abbreviations
- *     option_script_cols
- *
- * The global pointer "story_name" is set to the story file name.
- *
- *
- */
-
 int autorestore = 0;
 
 int os_process_arguments (int argc, char *argv[])
 {
-    int c, i;
-
-    char *p = NULL;
-
-    char *home;
-    char configfile[FILENAME_MAX + 1];
-
-    if ((home = getenv("HOME")) == NULL) {
-        home = "/var/root";
-    }
-
-/* 
- * It doesn't look like Frotz can reliably be resized given its current
- * screen-handling code.  While playing with Nitfol, I noticed that it
- * resized itself fairly reliably, even though the terminal looked rather
- * ugly to begin with.  Since Nitfol uses the Glk library for screen I/O,
- * I think there might be something in Glk that can make resizing easier.
- * Something to think about for later.
- *
- */
-
-/*
-    if (signal(SIGWINCH, SIG_IGN) != SIG_IGN)
-	signal(SIGWINCH, sig_winch_handler);
-*/
-
-    /* First check for a "$HOME/.frotzrc". */
-    /* If not found, look for CONFIG_DIR/frotz.conf */
-    /* $HOME/.frotzrc overrides CONFIG_DIR/frotz.conf */
-
-    strncpy(configfile, home, FILENAME_MAX);
-    strncat(configfile, "/", 1);
-
-    strncat(configfile, USER_CONFIG, strlen(USER_CONFIG));
-    if (!getconfig(configfile)) {
-	strncpy(configfile, CONFIG_DIR, FILENAME_MAX);
-	strncat(configfile, "/", 1);	/* added by DJP */
-	strncat(configfile, MASTER_CONFIG, FILENAME_MAX-10);
-	getconfig(configfile);  /* we're not concerned if this fails */
-    }
-
-    /* Parse the options */
-
-    do {
-	c = getopt(argc, argv, "aAb:c:def:Fh:il:oOpPQqRr:s:S:tu:w:xZ:");
-	switch(c) {
-	  case 'a': f_setup.attribute_assignment = 1; break;
-	  case 'A': f_setup.attribute_testing = 1; break;
-
-	  case 'b': u_setup.background_color = atoi(optarg);
-		if ((u_setup.background_color < 2) ||
-		    (u_setup.background_color > 9))
-		  u_setup.background_color = -1;
-		break;
-	  case 'c': f_setup.context_lines = atoi(optarg); break;
-	  case 'd': u_setup.disable_color = 1; break;
-	  case 'e': f_setup.sound = 1; break;
-	  case 'f': u_setup.foreground_color = atoi(optarg);
-	            if ((u_setup.foreground_color < 2) || 
-			(u_setup.foreground_color > 9)) 
-		      u_setup.foreground_color = -1;
-		    break;
-	  case 'F': u_setup.force_color = 1; 
-		    u_setup.disable_color = 0;
-		    break;
-          case 'h': u_setup.screen_height = atoi(optarg); break;
-	  case 'i': f_setup.ignore_errors = 1; break;
-	  case 'l': f_setup.left_margin = atoi(optarg); break;
-	  case 'o': f_setup.object_movement = 1; break;
-	  case 'O': f_setup.object_locating = 1; break;
-	  case 'p': u_setup.plain_ascii = 1; break;
-	  case 'P': f_setup.piracy = 1; break;
-	  case 'q': f_setup.sound = 0; break;
-	  case 'Q': f_setup.save_quetzal = 0; break;
-	  case 'R': autorestore = 1; break;
-	  case 'r': f_setup.right_margin = atoi(optarg); break;
-	  case 's': u_setup.random_seed = atoi(optarg); break;
-	  case 'S': f_setup.script_cols = atoi(optarg); break;
-	  case 't': u_setup.tandy_bit = 1; break;
-	  case 'u': f_setup.undo_slots = atoi(optarg); break;
-	  case 'w': u_setup.screen_width = atoi(optarg); break;
-	  case 'x': f_setup.expand_abbreviations = 1; break;
-	  case 'Z': f_setup.err_report_mode = atoi(optarg);
-		    if ((f_setup.err_report_mode < ERR_REPORT_NEVER) ||
-			(f_setup.err_report_mode > ERR_REPORT_FATAL))
-		      f_setup.err_report_mode = ERR_DEFAULT_REPORT_MODE;
-		    break;
-	}
-
-    } while (c != EOF);
-
-    /* This section is exceedingly messy and really can't be fixed
-       without major changes all over the place.
-     */
-
-    /* Save the story file name */
-
-    story_name = malloc(FILENAME_MAX + 1);
-    if (optind < argc)
-       strcpy(story_name, argv[optind]); 
-    else
-       strcpy(story_name, "savegame.z3");
-
-    os_set_default_file_names(story_name);
-
     return iphone_main(argc, argv);
 }/* os_process_arguments */
 
@@ -254,7 +103,7 @@ void os_set_default_file_names(char *basename) {
 
     /* Don't forget the extensions */
 
-    strcat (script_name, ".scr");
+    strcat (script_name, "-transcript.txt");
     strcat (command_name, ".rec");
     strcat (save_name, ".sav");
     strcat (auxilary_name, ".aux");
@@ -291,8 +140,6 @@ void os_set_default_file_names(char *basename) {
 
 void os_init_screen (void)
 {
-    static int didInit = 0;
-
     if (h_version == V3 && u_setup.tandy_bit != 0)
         h_config |= CONFIG_TANDY;
 
@@ -341,12 +188,14 @@ void os_init_screen (void)
     h_font_height = 1;
 
     /* Must be after screen dimensions are computed.  */
+#if 0
     if (h_version == V6) {
       if (unix_init_pictures())
 	h_config |= CONFIG_PICTURES;
       else
 	h_flags &= ~GRAPHICS_FLAG;
     }
+#endif
 
     /* Use the ms-dos interpreter number for v6, because that's the
      * kind of graphics files we understand.  Otherwise, use DEC.  */
@@ -373,12 +222,8 @@ void os_init_screen (void)
     if (u_setup.color_enabled) {
         h_config |= CONFIG_COLOUR;
         h_flags |= COLOUR_FLAG; /* FIXME: beyond zork handling? */
-	h_default_foreground =
-	  (u_setup.foreground_color == -1) 
-	  	? FOREGROUND_DEF : u_setup.foreground_color;
-	h_default_background =  
-	  (u_setup.background_color ==-1) 
-		? BACKGROUND_DEF : u_setup.background_color;
+	h_default_foreground =	1; //(u_setup.foreground_color == -1) ? FOREGROUND_DEF : u_setup.foreground_color;
+	h_default_background =  1; //(u_setup.background_color ==-1) ? BACKGROUND_DEF : u_setup.background_color;
     } else 
 #endif
     {
@@ -388,20 +233,17 @@ void os_init_screen (void)
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     
-    if (!didInit) {
-	pthread_mutex_init(&winSizeMutex, NULL);
-	pthread_mutex_init(&outputMutex, NULL);
-	pthread_cond_init(&winSizeChangedCond, NULL);
-    }
-
     iphone_init_screen();    
 
-    os_set_colour(h_default_foreground, h_default_background);
     //NSLog (@"uiinit f %d b %d\n", h_default_foreground, h_default_background);
+#if FROTZ_IOS_PORT
     if (!do_autosave)
-       os_erase_area(1, 1, h_screen_rows, h_screen_cols);
+#endif
+    {
+	os_set_colour(h_default_foreground, h_default_background);
+	os_erase_area(1, 1, h_screen_rows, h_screen_cols, 0);
+    }
 
-    didInit = 1;
 }/* os_init_screen */
 
 /*
@@ -418,8 +260,6 @@ void os_reset_screen (void)
     os_set_text_style(0);
     os_display_string((zchar *) "[Hit any key to exit.]");
     os_read_key(0, FALSE); 
-    pthread_mutex_destroy(&outputMutex);
-    pthread_mutex_destroy(&winSizeMutex);
 
 }/* os_reset_screen */
 
@@ -471,7 +311,6 @@ FILE *os_path_open(const char *name, const char *mode)
 {
 	FILE *fp;
 	char buf[FILENAME_MAX + 1];
-	char *p;
 
 	/* Let's see if the file is in the currect directory */
 	/* or if the user gave us a full path. */
@@ -489,14 +328,6 @@ FILE *os_path_open(const char *name, const char *mode)
 		}
 	}
 
-	if ( (p = getenv(PATH1) ) == NULL)
-		p = getenv(PATH2);
-
-	if (p != NULL) {
-		fp = pathopen(name, p, mode, buf);
-		strncpy(story_name, buf, FILENAME_MAX);
-		return fp;
-	}
 	return NULL;	/* give up */
 } /* os_path_open() */
 
@@ -534,295 +365,6 @@ FILE *pathopen(const char *name, const char *p, const char *mode, char *fullname
 	return NULL;
 } /* FILE *pathopen() */
 
-
-/*
- * getconfig
- *
- * Parse a <variable> <whitespace> <value> config file.
- * The til-end-of-line comment character is the COMMENT define.  I use '#'
- * here.  This code originally appeared in my q2-wrapper program.  Find it
- * at metalab.cs.unc.edu or assorted Quake2 websites.
- *
- * This section must be modified whenever new options are added to 
- * the config file.  Ordinarily I would use yacc and lex, but the grammar
- * is too simple to involve those resources, and I can't really expect all
- * compile targets to have those two tools installed.
- *
- */
-int getconfig(char *configfile)
-{
-	FILE	*fp;
-
-	int	num, num2;
-
-	char	varname[LINELEN + 1];
-	char	value[LINELEN + 1];
-
-
-	/*
-	 * We shouldn't care if the config file is unreadable or not
-	 * present.  Just use the defaults.
-	 *
-	 */
-
-	if ((fp = fopen(configfile, "r")) == NULL)
-		return FALSE;
-
-	while (fgets(varname, LINELEN, fp) != NULL) {
-
-		/* If we don't get a whole line, dump the rest of the line */
-		if (varname[strlen(varname)-1] != '\n')
-			while (fgetc(fp) != '\n')
-			;
-
-		/* Remove trailing whitespace and newline */
-		for (num = strlen(varname) - 1; isspace(varname[num]); num--)
-		;
-		varname[num+1] = 0;
-
-		/* Drop everything past the comment character */
-		for (num = 0; num <= strlen(varname)+1; num++) {
-			if (varname[num] == COMMENT)
-				varname[num] = 0;
-		}
-
-		/* Find end of variable name */
-		for (num = 0; !isspace(varname[num]) && num < LINELEN; num++);
-
-		for (num2 = num; isspace(varname[num2]) && num2 < LINELEN; num2++);
-
-		/* Find the beginning of the value */
-		strncpy(value, &varname[num2], LINELEN);
-		varname[num] = 0; /* chop off value from the var name */
-
-		/* varname now contains the variable name */
-
-
-		/* First, boolean config stuff */
-		if (strcmp(varname, "attrib_set") == 0) {
-			f_setup.attribute_assignment = getbool(value);
-		}
-		else if (strcmp(varname, "attrib_test") == 0) {
-			f_setup.attribute_testing = getbool(value);
-		}
-
-		else if (strcmp(varname, "ignore_fatal") == 0) {
-			f_setup.ignore_errors = getbool(value);
-		}
-
-		else if (strcmp(varname, "color") == 0) {
-			u_setup.disable_color = !getbool(value);
-		}
-		else if (strcmp(varname, "colour") == 0) {
-			u_setup.disable_color = !getbool(value);
-		}
-		else if (strcmp(varname, "force_color") == 0) {
-			u_setup.force_color = getbool(value);
-		}
-		else if (strcmp(varname, "obj_move") == 0) {
-			f_setup.object_movement = getbool(value);
-		}
-		else if (strcmp(varname, "obj_loc") == 0) {
-			f_setup.object_locating = getbool(value);
-		}
-		else if (strcmp(varname, "piracy") == 0) {
-			f_setup.piracy = getbool(value);
-		}
-		else if (strcmp(varname, "ascii") == 0) {
-			u_setup.plain_ascii = getbool(value);
-		}
-		else if (strcmp(varname, "sound") == 0) {
-			f_setup.sound = getbool(value);
-		}
-		else if (strcmp(varname, "quetzal") == 0) {
-			f_setup.save_quetzal = getbool(value);
-		}
-		else if (strcmp(varname, "tandy") == 0) {
-			u_setup.tandy_bit = getbool(value);
-		}
-		else if (strcmp(varname, "expand_abb") == 0) {
-			f_setup.expand_abbreviations = getbool(value);
-		}
-
-		/* now for stringtype yet still numeric variables */
-		else if (strcmp(varname, "background") == 0) {
-			u_setup.background_color = getcolor(value);
-		}
-		else if (strcmp(varname, "foreground") == 0) {
-			u_setup.foreground_color = getcolor(value);
-		}
-		else if (strcmp(varname, "context_lines") == 0) {
-			f_setup.context_lines = atoi(value);
-		}
-		else if (strcmp(varname, "screen_height") == 0) {
-			u_setup.screen_height = atoi(value);
-		}
-		else if (strcmp(varname, "left_margin") == 0) {
-			f_setup.left_margin = atoi(value);
-		}
-		else if (strcmp(varname, "right_margin") == 0) {
-			f_setup.right_margin = atoi(value);
-		}
-		else if (strcmp(varname, "randseed") == 0) {
-			u_setup.random_seed = atoi(value);
-		}
-		else if (strcmp(varname, "script_width") == 0) {
-			f_setup.script_cols = atoi(value);
-		}
-		else if (strcmp(varname, "undo_slots") == 0) {
-			f_setup.undo_slots = atoi(value);
-		}
-		else if (strcmp(varname, "screen_width") == 0) {
-			u_setup.screen_width = atoi(value);
-		}
-		/* default is set in main() by call to init_err() */
-		else if (strcmp(varname, "errormode") == 0) {
-			f_setup.err_report_mode = geterrmode(value);
-		}
-
-		/* now for really stringtype variable */
-
-		else if (strcmp(varname, "zcode_path") == 0) {
-			option_zcode_path = malloc(strlen(value) * sizeof(char) + 1);
-			strncpy(option_zcode_path, value, strlen(value) * sizeof(char));
-		}
-
-		/* The big nasty if-else thingy is finished */		
-	} /* while */
-
-	return TRUE;
-} /* getconfig() */
-
-
-/* 
- * getbool
- *
- * Check a string for something that means "yes" and return TRUE.
- * Otherwise return FALSE.
- *
- */
-int getbool(char *value)
-{
-	int num;
-
-	/* Be case-insensitive */
-	for (num = 0; value[num] !=0; num++)
-		value[num] = tolower(value[num]);
-
-	if (strncmp(value, "y", 1) == 0)
-		return TRUE;
-	if (strcmp(value, "true") == 0)
-		return TRUE;
-	if (strcmp(value, "on") == 0)
-		return TRUE;
-	if (strcmp(value, "1") == 0)
-		return TRUE;
-
-	return FALSE;
-} /* getbool() */
-
-
-/* 
- * getcolor
- *
- * Figure out what color this string might indicate and returns an integer 
- * corresponding to the color macros defined in frotz.h.
- *
- */
-int getcolor(char *value)
-{	
-	int num;
-
-	/* Be case-insensitive */
-	for (num = 0; value[num] !=0; num++)
-		value[num] = tolower(value[num]);
-
-	if (strcmp(value, "black") == 0)
-		return BLACK_COLOUR;
-	if (strcmp(value, "red") == 0)
-		return RED_COLOUR;
-	if (strcmp(value, "green") == 0)
-		return GREEN_COLOUR;
-	if (strcmp(value, "blue") == 0)
-		return BLUE_COLOUR;
-	if (strcmp(value, "magenta") == 0)
-		return MAGENTA_COLOUR;
-	if (strcmp(value, "cyan") == 0)
-		return CYAN_COLOUR;
-	if (strcmp(value, "white") == 0)
-		return WHITE_COLOUR;
-
-	if (strcmp(value, "purple") == 0)
-		return MAGENTA_COLOUR;
-	if (strcmp(value, "violet") == 0)
-		return MAGENTA_COLOUR;
-	if (strcmp(value, "aqua") == 0)
-		return CYAN_COLOUR;
-
-	/* If we can't tell what that string means, 
-	 * we tell caller to use the default.
-	 */
-
-	return -1;	
-
-} /* getcolor() */
-
-
-/*
- * geterrmode
- *
- * Parse for "never", "once", "always", or "fatal" and return a macro
- * defined in iphone_frotz.h related to the error reporting mode.
- *
- */
-int geterrmode(char *value)
-{
-	int num;
-
-        /* Be case-insensitive */
-	for (num = 0; value[num] !=0; num++)
-		value[num] = tolower(value[num]);
-
-	if (strcmp(value, "never") == 0)
-		return ERR_REPORT_NEVER;
-	if (strcmp(value, "once") == 0)
-		return ERR_REPORT_ONCE;
-	if (strcmp(value, "always") == 0)
-		return ERR_REPORT_ALWAYS;
-	if (strcmp(value, "fatal") == 0)
-		return ERR_REPORT_FATAL;
-
-	return ERR_DEFAULT_REPORT_MODE;
-} /* geterrmode() */
-
-
-/*
- * sig_winch_handler
- *
- * Called whenever Frotz recieves a SIGWINCH signal to make curses 
- * cleanly resize the window.
- *
- */
-
-void sig_winch_handler(int sig)
-{
-/* 
-There are some significant problems involved in getting resizes to work
-properly with at least this implementation of the Z Machine and probably
-the Z-Machine standard itself.  See the file BUGS for a detailed  
-explaination for this.  Because of this trouble, this function currently
-does nothing.
-*/
-
-/*
-	signal(sig, SIG_DFL);
-	signal(sig, SIG_IGN);
-
-
-	signal(SIGWINCH, sig_winch_handler);
-*/
-}
-
 void redraw(void)
 {
 	/* not implemented */
@@ -844,7 +386,7 @@ void os_init_setup(void)
 	f_setup.undo_slots = MAX_UNDO_SLOTS;
 	f_setup.expand_abbreviations = 0;
 	f_setup.script_cols = 80;
-	f_setup.save_quetzal = 0;
+	f_setup.save_quetzal = QUETZAL_DEF;
 	f_setup.sound = 1;
 	f_setup.err_report_mode = ERR_REPORT_NEVER;
 

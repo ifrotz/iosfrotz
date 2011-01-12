@@ -33,7 +33,7 @@
 #endif
 
 extern void interpret (void);
-extern void init_memory (void);
+extern int init_memory (void);
 extern void init_undo (void);
 extern void reset_memory (void);
 

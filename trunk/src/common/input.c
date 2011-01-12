@@ -315,7 +315,7 @@ void z_read_mouse (void)
 
     /* Read the mouse position and which buttons are down */
 
-    btn = os_read_mouse ();
+    btn = 0; // ui_read_mouse ();
     hx_mouse_y = mouse_y;
     hx_mouse_x = mouse_x;
 

@@ -40,7 +40,7 @@
  *
  */
 
-void os_erase_area (int top, int left, int bottom, int right)
+void os_erase_area (int top, int left, int bottom, int right, int winnum)
 {
     int y, x, i, j;
 
@@ -122,14 +122,7 @@ void os_scroll_area (int top, int left, int bottom, int right, int units)
     move(y, x);
   }
   if (units > 0)
-    os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1);
+    os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1, -1);
   else if (units < 0)
-    os_erase_area(top + 1, left + 1, top - units, right + 1);
+    os_erase_area(top + 1, left + 1, top - units, right + 1, -1);
 }/* os_scroll_area */
-
-void os_split_win(int h) {
-}
-
-void os_new_line(bool wrapping) {
-}
-

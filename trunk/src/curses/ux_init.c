@@ -431,7 +431,7 @@ void os_init_screen (void)
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     os_set_colour(h_default_foreground, h_default_background);
-    os_erase_area(1, 1, h_screen_rows, h_screen_cols);
+    os_erase_area(1, 1, h_screen_rows, h_screen_cols, -1);
 }/* os_init_screen */
 
 /*

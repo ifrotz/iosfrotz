@@ -18,14 +18,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#define __UNIX_PORT_FILE
-
-#ifdef USE_NCURSES_H
-#include <ncurses.h>
-#else
-#include <curses.h>
-#endif
-
 #include "iphone_frotz.h"
 
 #ifdef NO_SOUND	/* don't compile this unless we're using no audio */
@@ -97,7 +89,7 @@ void os_stop_sample (int number)
  *
  */
 
-void os_finish_with_sample (number)
+void os_finish_with_sample(int number)
 {
 
     /* Not implemented */

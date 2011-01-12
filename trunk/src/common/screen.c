@@ -138,7 +138,11 @@ static void reset_cursor (zword win)
 {
     int lines = 0;
 
-    if ((h_version <= V4 || do_autosave) && win == 0)
+    if ((h_version <= V4 
+#if FROTZ_IOS_PORT
+	|| do_autosave
+#endif
+	) && win == 0)
 	lines = wp[0].y_size / hi (wp[0].font_size) - 1;
 
     wp[win].y_cursor = hi (wp[0].font_size) * lines + 1;
@@ -172,9 +176,13 @@ void set_more_prompts (bool flag)
  * Return the #screen units from the cursor to the end of the line.
  *
  */
+extern int currTextStyle;
 
 static int units_left (void)
 {
+
+//    if (cwin == 0 && (currTextStyle & (REVERSE_STYLE|FIXED_WIDTH_STYLE))==FIXED_WIDTH_STYLE)
+//	return 50 - cwp->right - cwp->x_cursor + 1;
 
     return cwp->x_size - cwp->right - cwp->x_cursor + 1;
 
@@ -264,7 +272,10 @@ void screen_new_line (bool wrapping)
 
     else cwp->y_cursor += font_height;
     update_cursor ();
+
+#if FROTZ_IOS_PORT
     os_new_line(wrapping);
+#endif
 
     /* See if we need to print a more prompt (unless the game has set
        the line counter to -999 in order to suppress more prompts). */
@@ -311,6 +322,7 @@ void screen_char (zchar c)
     if (c == ZC_INDENT && cwp->x_cursor != cwp->left + 1)
 	c = ' ';
 
+#if 1
     if (units_left () < (width = os_char_width (c))) {
 
 	if (!enable_wrapping)
@@ -319,7 +331,7 @@ void screen_char (zchar c)
 	screen_new_line (TRUE);
 
     }
-
+#endif
     os_display_char (c); cwp->x_cursor += width;
 
 }/* screen_char */
@@ -425,7 +437,7 @@ void screen_erase_input (const zchar *buf)
 	y = cwp->y_pos + cwp->y_cursor - 1;
 	x = cwp->x_pos + cwp->x_cursor - 1;
 
-	os_erase_area (y, x, y + font_height - 1, x + width - 1);
+	os_erase_area (y, x, y + font_height - 1, x + width - 1, -1);
 	os_set_cursor (y, x);
 
     }
@@ -571,7 +583,6 @@ static void set_window (zword win)
 {
 
     flush_buffer ();
-
     cwin = win; cwp = wp + win;
 
     update_attributes ();
@@ -614,7 +625,7 @@ void erase_window (zword win)
     os_erase_area (y,
 		   x,
 		   y + wp[win].y_size - 1,
-		   x + wp[win].x_size - 1);
+		   x + wp[win].x_size - 1, win);
 
     if (h_version == V6 && win != cwin && h_interpreter_number != INTERP_AMIGA)
 	os_set_colour (lo (cwp->colour), hi (cwp->colour));
@@ -653,7 +664,9 @@ void split_window (zword height)
     wp[1].y_pos = 1 + stat_height;
     wp[1].y_size = height;
 
+#if FROTZ_IOS_PORT
     os_split_win(height + stat_height);
+#endif
 
     if ((short) wp[1].y_cursor > (short) wp[1].y_size)
 	reset_cursor (1);
@@ -670,11 +683,17 @@ void split_window (zword height)
 
     /* Erase the upper window in V3 only */
 
-    if (h_version == V3 && height != 0 && !do_autosave)
+    if (h_version == V3 && height != 0
+#if FROTZ_IOS_PORT
+	&& !do_autosave
+#endif
+	)
 	erase_window (1);
+
+#if FROTZ_IOS_PORT
     if (do_autosave)
 	wp[0].y_cursor = wp[0].y_size;
-
+#endif
 
 }/* split_window */
 
@@ -689,7 +708,7 @@ static void erase_screen (zword win)
 {
     int i;
 
-    os_erase_area (1, 1, h_screen_height, h_screen_width);
+    os_erase_area (1, 1, h_screen_height, h_screen_width, 0);
 
     if ((short) win == -1) {
 	split_window (0);
@@ -740,7 +759,10 @@ void restart_screen (void)
 
     /* Use default settings */
 
-    os_set_colour (h_default_foreground, h_default_background);
+#if FROTZ_IOS_PORT
+    if (!do_autosave)
+#endif
+	os_set_colour (h_default_foreground, h_default_background);
 
     if (os_font_data (TEXT_FONT, &font_height, &font_width))
 	os_set_font (TEXT_FONT);
@@ -789,9 +811,11 @@ void restart_screen (void)
 
     /* Clear the screen, unsplit it and select window 0 */
 
-    if (!do_autosave) {
+#if FROTZ_IOS_PORT
+    if (!do_autosave)
+#endif
       erase_screen ((zword) (-1));
-    }
+
     update_attributes ();
 
 }/* restart_screen */
@@ -1012,7 +1036,7 @@ void z_erase_line (void)
     y = cwp->y_pos + cwp->y_cursor - 1;
     x = cwp->x_pos + cwp->x_cursor - 1;
 
-    os_erase_area (y, x, y + font_height - 1, x + pixels - 1);
+    os_erase_area (y, x, y + font_height - 1, x + pixels - 1, -1);
 
 }/* z_erase_line */
 
@@ -1044,7 +1068,7 @@ void z_erase_picture (void)
     y += cwp->y_pos - 1;
     x += cwp->x_pos - 1;
 
-    os_erase_area (y, x, y + height - 1, x + width - 1);
+    os_erase_area (y, x, y + height - 1, x + width - 1, -1);
 
 }/* z_erase_picture */
 
@@ -1352,11 +1376,28 @@ void z_set_colour (void)
     if (bg == 0)
 	bg = hi (wp[win].colour);
 
-    if (fg == 1)		/* colour 1 is the system default colour */
-	fg = h_default_foreground;
-    if (bg == 1)
-	bg = h_default_background;
-
+    /* only allow setting fg or bg to default if both are default,
+       else the explicitly set color may clash or match the default
+       and be unreadable, so choose a new 'default' that contrasts the
+       color being set -bcs */
+    if (fg == 1 && bg == 1) {		/* colour 1 is the system default colour */
+//	fg = h_default_foreground; // let front end handle defaults
+//	bg = h_default_background;
+    }
+     else if (fg == 1) {
+	if (bg==BLACK_COLOUR)
+	    fg = WHITE_COLOUR;
+	else
+	    fg = BLACK_COLOUR;
+    }
+#if 0
+     else if (bg == 1) {
+	if (fg==BLACK_COLOUR)
+	    bg = WHITE_COLOUR;
+	else
+	    bg = BLACK_COLOUR;
+    }
+#endif
     if (h_version == V6 && h_interpreter_number == INTERP_AMIGA)
 
 	/* Changing colours of window 0 affects the entire screen */

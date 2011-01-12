@@ -139,6 +139,8 @@ void os_set_colour (int new_foreground, int new_background)
 	static int colorspace[10][10];
 	static int n_colors = 0;
 
+	fprintf(stderr,"osc[%02x]", new_foreground, new_background);
+	fflush(stderr);
 	if (!colorspace[new_foreground][new_background]) {
 	  init_pair(++n_colors, unix_convert(new_foreground),
 			unix_convert(new_background));
