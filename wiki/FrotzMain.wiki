@@ -50,7 +50,7 @@ The code is also iPad ready, and I'll submit an update with support for running 
 
 ----
 
-||http://iphonefrotz.googlecode.com/svn/trunk/etc/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?<br><br><br>Nostalgic for a simpler time?<br><br><br>Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.||
+||http://iphonefrotz.googlecode.com/svn/trunk/resources/FrotzSplash.png|| Burned out on all the new-fangled graphics and dazzling eye candy on your shiny new iPhone?<br><br><br>Nostalgic for a simpler time?<br><br><br>Then take advantage of those crisp high-resolution fonts to relive the glory days of the Great Underground Empire, or play any of hundreds of great works from the Interactive Fiction Database.||
 
 
 *Update - Version 1.3 available*
