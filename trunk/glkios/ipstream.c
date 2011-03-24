@@ -1,8 +1,8 @@
 /* gtstream.c: Stream objects
-        for GlkIOS, iPhone/IOS implementation of the Glk API.
-    Designed by Andrew Plotkin <erkyrath@eblong.com>
-    http://www.eblong.com/zarf/glk/index.html
-*/
+ for GlkIOS, iPhone/IOS implementation of the Glk API.
+ Designed by Andrew Plotkin <erkyrath@eblong.com>
+ http://www.eblong.com/zarf/glk/index.html
+ */
 
 #include "gtoption.h"
 #include <stdio.h>
@@ -14,19 +14,19 @@
 #include "iphone_frotz.h"
 
 /* This implements pretty much what any Glk implementation needs for 
-    stream stuff. Memory streams, file streams (using stdio functions), 
-    and window streams (which print through window functions in other
-    files.) A different implementation would change the window stream
-    stuff, but not file or memory streams. (Unless you're on a 
-    wacky platform like the Mac and want to change stdio to native file 
-    functions.) 
-*/
+ stream stuff. Memory streams, file streams (using stdio functions), 
+ and window streams (which print through window functions in other
+ files.) A different implementation would change the window stream
+ stuff, but not file or memory streams. (Unless you're on a 
+ wacky platform like the Mac and want to change stdio to native file 
+ functions.) 
+ */
 
 static stream_t *gli_streamlist = NULL; /* linked list of all streams */
 static stream_t *gli_currentstr = NULL; /* the current output stream */
 
 stream_t *gli_new_stream(int type, int readable, int writable, 
-    glui32 rock)
+                         glui32 rock)
 {
     stream_t *str = (stream_t *)malloc(sizeof(stream_t));
     if (!str)
@@ -35,7 +35,7 @@ stream_t *gli_new_stream(int type, int readable, int writable,
     str->magicnum = MAGIC_STREAM_NUM;
     str->type = type;
     str->rock = rock;
-
+    
     str->unicode = FALSE;
     
     str->win = NULL;
@@ -81,7 +81,7 @@ void gli_delete_stream(stream_t *str)
     gli_windows_unechostream(str);
     
     str->magicnum = 0;
-
+    
     switch (str->type) {
         case strtype_Window:
             /* nothing necessary; the window is already being closed */
@@ -92,7 +92,7 @@ void gli_delete_stream(stream_t *str)
                 char *typedesc = (str->unicode ? "&+#!Iu" : "&+#!Cn");
                 void *buf = (str->unicode ? (void*)str->ubuf : (void*)str->buf);
                 (*gli_unregister_arr)(buf, str->buflen, typedesc,
-                    str->arrayrock);
+                                      str->arrayrock);
             }
             break;
         case strtype_File:
@@ -101,24 +101,24 @@ void gli_delete_stream(stream_t *str)
             str->file = NULL;
             break;
     }
-
+    
     if (gli_unregister_obj) {
         (*gli_unregister_obj)(str, gidisp_Class_Stream, str->disprock);
         str->disprock.ptr = NULL;
     }
-
+    
     prev = str->prev;
     next = str->next;
     str->prev = NULL;
     str->next = NULL;
-
+    
     if (prev)
         prev->next = next;
     else
         gli_streamlist = next;
     if (next)
         next->prev = prev;
-
+    
     free(str);
 }
 
@@ -150,7 +150,7 @@ void glk_stream_close(stream_t *str, stream_result_t *result)
 void gli_streams_close_all()
 {
     /* This is used only at shutdown time; it closes file streams (the
-        only ones that need finalization.) */
+     only ones that need finalization.) */
     stream_t *str, *strnext;
     
     str=gli_streamlist;
@@ -166,7 +166,7 @@ void gli_streams_close_all()
 }
 
 strid_t glk_stream_open_memory(char *buf, glui32 buflen, glui32 fmode, 
-    glui32 rock)
+                               glui32 rock)
 {
     stream_t *str;
     
@@ -178,9 +178,9 @@ strid_t glk_stream_open_memory(char *buf, glui32 buflen, glui32 fmode,
     }
     
     str = gli_new_stream(strtype_Memory, 
-        (fmode != filemode_Write), 
-        (fmode != filemode_Read), 
-        rock);
+                         (fmode != filemode_Write), 
+                         (fmode != filemode_Read), 
+                         rock);
     if (!str) {
         gli_strict_warning(L"stream_open_memory: unable to create stream.");
         return 0;
@@ -210,14 +210,14 @@ stream_t *gli_stream_open_window(window_t *win)
     str = gli_new_stream(strtype_Window, FALSE, TRUE, 0);
     if (!str)
         return NULL;
-
+    
     str->win = win;
     
     return str;
 }
 
 strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
-    glui32 rock)
+                             glui32 rock)
 {
     stream_t *str;
     char modestr[16];
@@ -229,18 +229,18 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     }
     
     /* The spec says that Write, ReadWrite, and WriteAppend create the
-       file if necessary. However, fopen(filename, "r+") doesn't create
-       a file. So we have to pre-create it in the ReadWrite and
-       WriteAppend cases. (We use "a" so as not to truncate, and "b" 
-       because we're going to close it immediately, so it doesn't matter.) */
-
+     file if necessary. However, fopen(filename, "r+") doesn't create
+     a file. So we have to pre-create it in the ReadWrite and
+     WriteAppend cases. (We use "a" so as not to truncate, and "b" 
+     because we're going to close it immediately, so it doesn't matter.) */
+    
     if (fmode == filemode_ReadWrite || fmode == filemode_WriteAppend) {
         fl = fopen(fref->filename, "ab");
         if (!fl) {
             gli_strict_warning(L"stream_open_file: unable to open file.");
             return 0;
         }
-
+        
         fclose(fl);
     }
     
@@ -256,14 +256,14 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
             break;
         case filemode_WriteAppend:
             /* Can't use "a" here, because then fseek wouldn't work.
-               Instead we use "r+" and then fseek to the end. */
+             Instead we use "r+" and then fseek to the end. */
             strcpy(modestr, "r+");
             break;
     }
     
     if (!fref->textmode)
         strcat(modestr, "b");
-        
+    
     fl = fopen(fref->filename, modestr);
     if (!fl) {
         gli_strict_warning(L"stream_open_file: unable to open file.");
@@ -273,11 +273,11 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     if (fmode == filemode_WriteAppend) {
         fseek(fl, 0, 2); /* ...to the end. */
     }
-
+    
     str = gli_new_stream(strtype_File, 
-        (fmode == filemode_Read || fmode == filemode_ReadWrite), 
-        !(fmode == filemode_Read), 
-        rock);
+                         (fmode == filemode_Read || fmode == filemode_ReadWrite), 
+                         !(fmode == filemode_Read), 
+                         rock);
     if (!str) {
         gli_strict_warning(L"stream_open_file: unable to create stream.");
         fclose(fl);
@@ -292,10 +292,10 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
 #ifdef GLK_MODULE_UNICODE
 
 strid_t glk_stream_open_memory_uni(glui32 *ubuf, glui32 buflen, glui32 fmode, 
-    glui32 rock)
+                                   glui32 rock)
 {
     stream_t *str;
-
+    
     if (fmode != filemode_Read 
         && fmode != filemode_Write 
         && fmode != filemode_ReadWrite) {
@@ -304,16 +304,16 @@ strid_t glk_stream_open_memory_uni(glui32 *ubuf, glui32 buflen, glui32 fmode,
     }
     
     str = gli_new_stream(strtype_Memory, 
-        (fmode != filemode_Write), 
-        (fmode != filemode_Read), 
-        rock);
+                         (fmode != filemode_Write), 
+                         (fmode != filemode_Read), 
+                         rock);
     if (!str) {
         gli_strict_warning(L"stream_open_memory_uni: unable to create stream.");
         return NULL;
     }
     
     str->unicode = TRUE;
-
+    
     if (ubuf && buflen) {
         str->ubuf = ubuf;
         str->ubufptr = ubuf;
@@ -332,7 +332,7 @@ strid_t glk_stream_open_memory_uni(glui32 *ubuf, glui32 buflen, glui32 fmode,
 }
 
 strid_t glk_stream_open_file_uni(fileref_t *fref, glui32 fmode,
-    glui32 rock)
+                                 glui32 rock)
 {
     strid_t str = glk_stream_open_file(fref, fmode, rock);
     /* Unlovely, but it works in this library */
@@ -343,7 +343,7 @@ strid_t glk_stream_open_file_uni(fileref_t *fref, glui32 fmode,
 #endif /* GLK_MODULE_UNICODE */
 
 strid_t gli_stream_open_pathname(char *pathname, int textmode, 
-    glui32 rock)
+                                 glui32 rock)
 {
     char modestr[16];
     stream_t *str;
@@ -352,14 +352,14 @@ strid_t gli_stream_open_pathname(char *pathname, int textmode,
     strcpy(modestr, "r");
     if (!textmode)
         strcat(modestr, "b");
-        
+    
     fl = fopen(pathname, modestr);
     if (!fl) {
         return 0;
     }
-
+    
     str = gli_new_stream(strtype_File, 
-        TRUE, FALSE, rock);
+                         TRUE, FALSE, rock);
     if (!str) {
         fclose(fl);
         return 0;
@@ -424,7 +424,7 @@ void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
         gli_strict_warning(L"stream_set_position: invalid ref");
         return;
     }
-
+    
     switch (str->type) {
         case strtype_Memory: 
             if (!str->unicode) {
@@ -469,8 +469,8 @@ void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
                 pos *= 4;
             }
             fseek(str->file, pos, 
-                ((seekmode == seekmode_Current) ? 1 :
-                ((seekmode == seekmode_End) ? 2 : 0)));
+                  ((seekmode == seekmode_Current) ? 1 :
+                   ((seekmode == seekmode_End) ? 2 : 0)));
             break;
     }   
 }
@@ -481,7 +481,7 @@ glui32 glk_stream_get_position(stream_t *str)
         gli_strict_warning(L"stream_get_position: invalid ref");
         return 0;
     }
-
+    
     switch (str->type) {
         case strtype_Memory: 
             if (!str->unicode) {
@@ -508,7 +508,7 @@ static void gli_put_char(stream_t *str, unsigned char ch)
 {
     if (!str || !str->writable)
         return;
-
+    
     str->writecount++;
     
     switch (str->type) {
@@ -541,8 +541,8 @@ static void gli_put_char(stream_t *str, unsigned char ch)
             break;
         case strtype_File:
             /* Really, if the stream was opened in text mode, we ought to do 
-                character-set conversion here. As it is we're printing a
-                file of Latin-1 characters. */
+             character-set conversion here. As it is we're printing a
+             file of Latin-1 characters. */
             if (!str->unicode) {
                 putc(ch, str->file);
             }
@@ -563,7 +563,7 @@ void gli_put_char_uni(stream_t *str, glui32 ch)
 {
     if (!str || !str->writable)
         return;
-
+    
     str->writecount++;
     
     switch (str->type) {
@@ -622,7 +622,7 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
     
     if (!str || !str->writable)
         return;
-
+    
     str->writecount += len;
     
     switch (str->type) {
@@ -683,8 +683,8 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
             break;
         case strtype_File:
             /* Really, if the stream was opened in text mode, we ought to do 
-                character-set conversion here. As it is we're printing a
-                file of Latin-1 characters. */
+             character-set conversion here. As it is we're printing a
+             file of Latin-1 characters. */
             if (!str->unicode) {
                 fwrite((unsigned char *)buf, 1, len, str->file);
             }
@@ -707,31 +707,30 @@ static void gli_set_style(stream_t *str, glui32 val)
     int istyle = 0;
     if (!str || !str->writable)
         return;
-
+    
     if (val >= style_NUMSTYLES)
         val = style_Normal;
     
     switch (str->type) {
         case strtype_Window:
             str->win->style = val;
-	    
-	    if (val == style_Emphasized || val == style_Note)
-		istyle |=  EMPHASIS_STYLE;// kFSItalic;
-	    if (val == style_Alert)
-		istyle |=  REVERSE_STYLE; // kFSReverse;
-	    if (val == style_Header || val == style_Subheader || val == style_Input)
-		istyle |= BOLDFACE_STYLE; // kFSBold;
-	    
-	    if (str->win->type == wintype_TextBuffer) {
-		iphone_set_text_attribs(str->win->iphone_glkViewNum, istyle, -1, TRUE);
-
-		unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
-		unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
-		if (textColor != BAD_STYLE || bgColor != BAD_STYLE) {
-		    iphone_glk_set_text_colors(str->win->iphone_glkViewNum, textColor, bgColor);
-		    //printf("stc v %d style %d text %x bg %x\n", str->win->iphone_glkViewNum, val, textColor, bgColor);
-		}
-	    }
+            
+            if (val == style_Emphasized || val == style_Note)
+                istyle |=  EMPHASIS_STYLE;// kFSItalic;
+            if (val == style_Alert)
+                istyle |=  REVERSE_STYLE; // kFSReverse;
+            if (val == style_Header || val == style_Subheader || val == style_Input)
+                istyle |= BOLDFACE_STYLE; // kFSBold;
+            
+            if (str->win->type == wintype_TextBuffer) {
+                iphone_set_text_attribs(str->win->iphone_glkViewNum, istyle, -1, TRUE);
+                
+                unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
+                unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
+                //if (textColor != BAD_STYLE || bgColor != BAD_STYLE)
+                iphone_glk_set_text_colors(str->win->iphone_glkViewNum, textColor, bgColor);
+                //printf("stc v %d style %d text %x bg %x\n", str->win->iphone_glkViewNum, val, textColor, bgColor);
+            }
             if (str->win->echostr)
                 gli_set_style(str->win->echostr, val);
             break;
@@ -741,7 +740,7 @@ static void gli_set_style(stream_t *str, glui32 val)
 void gli_stream_echo_line(stream_t *str, char *buf, glui32 len)
 {
     /* This is only used to echo line input to an echo stream. See
-        the line input methods in gtw_grid and gtw_buf. */
+     the line input methods in gtw_grid and gtw_buf. */
     gli_put_buffer(str, buf, len);
     gli_put_char(str, '\n');
 }
@@ -752,7 +751,7 @@ void gli_stream_echo_line_uni(stream_t *str, glui32 *buf, glui32 len)
 {
     glui32 ix;
     /* This is only used to echo line input to an echo stream. See
-        glk_select(). */
+     glk_select(). */
     for (ix=0; ix<len; ix++) {
         gli_put_char_uni(str, buf[ix]);
     }
@@ -808,7 +807,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
                 if (res != -1) {
                     str->readcount++;
                     /* Really, if the stream was opened in text mode, we ought
-                       to do character-set conversion here. */
+                     to do character-set conversion here. */
                     return (glsi32)res;
                 }
                 else {
@@ -847,7 +846,7 @@ static glsi32 gli_get_char(stream_t *str, int want_unicode)
 }
 
 static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
-    glui32 len)
+                             glui32 len)
 {
     if (!str || !str->readable)
         return 0;
@@ -925,7 +924,7 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
                     glui32 res;
                     res = fread(cbuf, 1, len, str->file);
                     /* Really, if the stream was opened in text mode, we ought
-                       to do character-set conversion here. */
+                     to do character-set conversion here. */
                     str->readcount += res;
                     return res;
                 }
@@ -984,11 +983,11 @@ static glui32 gli_get_buffer(stream_t *str, char *cbuf, glui32 *ubuf,
 }
 
 static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf, 
-    glui32 len)
+                           glui32 len)
 {
     glui32 lx;
     int gotnewline;
-
+    
     if (!str || !str->readable)
         return 0;
     
@@ -1071,7 +1070,7 @@ static glui32 gli_get_line(stream_t *str, char *cbuf, glui32 *ubuf,
                     char *res;
                     res = fgets(cbuf, len, str->file);
                     /* Really, if the stream was opened in text mode, we ought
-                       to do character-set conversion here. */
+                     to do character-set conversion here. */
                     if (!res) {
                         return 0;
                     }
@@ -1211,7 +1210,7 @@ void glk_put_string_uni(glui32 *us)
 {
     int len = 0;
     glui32 val;
-
+    
     while (1) {
         val = us[len];
         if (!val)
@@ -1225,12 +1224,12 @@ void glk_put_string_stream_uni(stream_t *str, glui32 *us)
 {
     int len = 0;
     glui32 val;
-
+    
     if (!str) {
         gli_strict_warning(L"put_string_stream: invalid ref");
         return;
     }
-
+    
     while (1) {
         val = us[len];
         if (!val)

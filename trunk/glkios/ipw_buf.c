@@ -545,7 +545,7 @@ GLK_STYLE_HINTS win_textbuffer_styleattrs[style_NUMSTYLES];
 
 void win_textbuffer_stylehint_set(glui32 styl, glui32 hint, glsi32 val)
 {
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
 //      fd("BUFF styl: %ld, hint: %ld, val: %lX", styl, hint, val);
         switch (hint) {
             case stylehint_Indentation:
@@ -594,7 +594,7 @@ void win_textbuffer_stylehint_set(glui32 styl, glui32 hint, glsi32 val)
 
 void win_textbuffer_stylehint_clear(glui32 styl, glui32 hint)
 {
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
         switch (hint) {
             case stylehint_Indentation:
                 win_textbuffer_styleattrs[styl].styleSetMask &= ~kGlkStyleIndentationMask;
@@ -634,7 +634,7 @@ glui32 win_textbuffer_stylehint_get(window_t *win, glui32 styl, glui32 hint)
 {
     window_textbuffer_t *dwin = win->data;
 
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
         switch (hint) {
             case stylehint_Indentation:
             case stylehint_ParaIndentation:

@@ -524,7 +524,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	NSString *pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
 	int len = [pageStr length];
 	NSRange range1 = [pageStr rangeOfString: @"<h1>"];
-	if (range1.length > 0 && range1.location >= 0) {
+	if (range1.length > 0) {
 	    range1.location += 4;
 	    range1.length = len - range1.location;
 	    NSRange range2 = [pageStr rangeOfString: @"</h1>" options:0 range:range1];

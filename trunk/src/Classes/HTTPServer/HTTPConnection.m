@@ -107,7 +107,7 @@ static NSMutableArray *recentNonces;
 **/
 - (id)initWithAsyncSocket:(AsyncSocket *)newSocket forServer:(HTTPServer *)myServer
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		// Take over ownership of the socket
 		asyncSocket = [newSocket retain];
@@ -1097,7 +1097,7 @@ static NSMutableArray *recentNonces;
 		    NSEnumerator *keyEnumerator = [responseHeaders keyEnumerator];
 		    NSString *key;
 		    
-		    while(key = [keyEnumerator nextObject])
+		    while((key = [keyEnumerator nextObject]))
 		    {
 			    NSString *value = [responseHeaders objectForKey:key];
 			    
@@ -1150,7 +1150,7 @@ static NSMutableArray *recentNonces;
 		NSEnumerator *keyEnumerator = [responseHeaders keyEnumerator];
 		NSString *key;
 		
-		while(key = [keyEnumerator nextObject])
+		while((key = [keyEnumerator nextObject]))
 		{
 			NSString *value = [responseHeaders objectForKey:key];
 			

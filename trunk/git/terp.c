@@ -1243,7 +1243,7 @@ do_tailcall:
 		os_mark_recent_save();
 	    do_autosave = 0; 
 	    autosave_done = 1;
-	    POP; POP; POP; POP; 
+	    (void)POP; (void)POP; (void)POP; (void)POP; 
 	}
 
         NEXT;

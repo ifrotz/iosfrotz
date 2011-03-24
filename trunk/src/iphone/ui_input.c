@@ -368,7 +368,7 @@ static void translate_special_chars(char *s)
 /* Read one line, including the newline, into s.  Safely avoids buffer
  * overruns (but that's kind of pointless because there are several
  * other places where I'm not so careful).  */
-static void getline(char *s)
+static void zgetline(char *s)
 {
     int c = 0;
     char *p = s;
@@ -427,7 +427,7 @@ static bool ui_read_line(char *s, char *prompt, bool show_cursor,
     unix_set_global_timeout(timeout);
     if (prompt)
 	iphone_puts(prompt);
-    getline(s);
+    zgetline(s);
     translate_special_chars(s);
     if (*s == ZC_AUTOSAVE)
 	return FALSE;

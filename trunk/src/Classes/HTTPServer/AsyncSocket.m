@@ -183,7 +183,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 		terminator:(NSData *)e
          maxLength:(CFIndex)m
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		buffer = [d retain];
 		timeout = t;
@@ -324,7 +324,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 
 - (id)initWithData:(NSData *)d timeout:(NSTimeInterval)t tag:(long)i
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		buffer = [d retain];
 		timeout = t;
@@ -362,7 +362,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 
 - (id)initWithTLSSettings:(NSDictionary *)settings
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		tlsSettings = [settings copy];
 	}
@@ -396,7 +396,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 // Designated initializer.
 - (id)initWithDelegate:(id)delegate userData:(long)userData
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		theFlags = DEFAULT_PREBUFFERING ? kEnablePreBuffering : 0x00;
 		theDelegate = delegate;
@@ -2807,7 +2807,7 @@ Failed:;
 			[self doAcceptWithSocket: *((CFSocketNativeHandle *)pData)];
 			break;
 		default:
-			NSLog (@"AsyncSocket %p received unexpected CFSocketCallBackType %d.", self, type);
+			NSLog (@"AsyncSocket %p received unexpected CFSocketCallBackType %lu.", self, type);
 			break;
 	}
 }
@@ -2835,7 +2835,7 @@ Failed:;
 			[self closeWithError: [self errorFromCFStreamError:err]];
 			break;
 		default:
-			NSLog (@"AsyncSocket %p received unexpected CFReadStream callback, CFStreamEventType %d.", self, type);
+			NSLog (@"AsyncSocket %p received unexpected CFReadStream callback, CFStreamEventType %lu.", self, type);
 	}
 }
 
@@ -2862,7 +2862,7 @@ Failed:;
 			[self closeWithError: [self errorFromCFStreamError:err]];
 			break;
 		default:
-			NSLog (@"AsyncSocket %p received unexpected CFWriteStream callback, CFStreamEventType %d.", self, type);
+			NSLog (@"AsyncSocket %p received unexpected CFWriteStream callback, CFStreamEventType %lu.", self, type);
 	}
 }
 

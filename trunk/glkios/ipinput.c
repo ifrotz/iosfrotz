@@ -336,7 +336,7 @@ static wchar_t *key_to_name(glui32 key)
             return L"Function-12";
     }
 
-    if (key >= 0 && key < 32) {
+    if (key < 32) {
         /* swprintf(kbuf, 32, L"ctrl-%c", '@'+key); */
         kbuf[0] = L'\0';
         wcsncat(kbuf, L"ctrl-", 32);

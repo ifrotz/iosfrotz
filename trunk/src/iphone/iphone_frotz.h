@@ -124,7 +124,7 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSavePListFile "FrotzSIP.plist"
 #define kFrotzAutoSaveActiveFile "Current.plist"
 
-#define IPHONE_FROTZ_VERS "1.5"
+#define IPHONE_FROTZ_VERS "1.5.1"
 #define FROTZ_BETA 0
 
 #define APPLE_FASCISM (!FROTZ_BETA)

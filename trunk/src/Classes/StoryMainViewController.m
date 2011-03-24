@@ -6,17 +6,17 @@
  modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation; version 2
  of the License.
-
+ 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
+ 
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+ 
+ */
 
 #import <UIKit/UIKit.h>
 
@@ -115,16 +115,16 @@ static BOOL winSizeChanged;
 void iphone_ioinit() {
     static BOOL didInitIO = NO;
     if (!didInitIO) {
-	pthread_mutex_init(&winSizeMutex, NULL);
-	pthread_mutex_init(&outputMutex, NULL);
-	pthread_mutex_init(&inputMutex, NULL);
-	pthread_cond_init(&winSizeChangedCond, NULL);
-	winSizeChanged = 0;
-	ipzBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-	ipzStatusStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-	ipzInputBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-	
-	didInitIO = YES;
+        pthread_mutex_init(&winSizeMutex, NULL);
+        pthread_mutex_init(&outputMutex, NULL);
+        pthread_mutex_init(&inputMutex, NULL);
+        pthread_cond_init(&winSizeChangedCond, NULL);
+        winSizeChanged = 0;
+        ipzBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
+        ipzStatusStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
+        ipzInputBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
+        
+        didInitIO = YES;
     }
 }
 
@@ -138,37 +138,37 @@ static NSMutableArray *glkInputs;
 
 void iphone_flush(bool lock) {
     if (lock)
-	pthread_mutex_lock(&outputMutex);
+        pthread_mutex_lock(&outputMutex);
     if (outputBufferLen) {
-	outputBuffer[outputBufferLen] = '\0';
-	
-	NSString *tmp = [[NSString alloc] initWithCString:outputBuffer encoding:NSISOLatin1StringEncoding];
-	[ipzBufferStr appendString: tmp];
-	[tmp release];
-	outputBufferLen = 0;
-	*outputBuffer = '\0';
+        outputBuffer[outputBufferLen] = '\0';
+        
+        NSString *tmp = [[NSString alloc] initWithCString:outputBuffer encoding:NSISOLatin1StringEncoding];
+        [ipzBufferStr appendString: tmp];
+        [tmp release];
+        outputBufferLen = 0;
+        *outputBuffer = '\0';
     }
     if (lock)
-	pthread_mutex_unlock(&outputMutex);
+        pthread_mutex_unlock(&outputMutex);
 }
 
 
 static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
     NSMutableString *bufferStr = nil;
     if (gStoryInterp == kGlxStory) {
-	*isStatus = (glkGridArray[winNum].win && glkGridArray[winNum].win->type == wintype_TextGrid);
-	if (!glkInputs)
-	    glkInputs = [[NSMutableArray alloc] initWithCapacity: kMaxGlkViews];
-	while (winNum >= [glkInputs count]) {
-	    if ([glkInputs count] == 0)
-		[glkInputs addObject: ipzBufferStr];
-	    else
-		[glkInputs addObject: [[[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding] autorelease]];
-	}
-	bufferStr = [glkInputs objectAtIndex: winNum];
+        *isStatus = (glkGridArray[winNum].win && glkGridArray[winNum].win->type == wintype_TextGrid);
+        if (!glkInputs)
+            glkInputs = [[NSMutableArray alloc] initWithCapacity: kMaxGlkViews];
+        while (winNum >= [glkInputs count]) {
+            if ([glkInputs count] == 0)
+                [glkInputs addObject: ipzBufferStr];
+            else
+                [glkInputs addObject: [[[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding] autorelease]];
+        }
+        bufferStr = [glkInputs objectAtIndex: winNum];
     } else {
-	*isStatus = (winNum == 1 || winNum == 7);
-	bufferStr = *isStatus ? ipzStatusStr : ipzBufferStr;
+        *isStatus = (winNum == 1 || winNum == 7);
+        bufferStr = *isStatus ? ipzStatusStr : ipzBufferStr;
     }
     return bufferStr;
 }
@@ -176,58 +176,60 @@ static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
 
 void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned int bgColor) {
     pthread_mutex_lock(&outputMutex);
-
+    
     iphone_flush(NO);
     if (textColor != BAD_STYLE)
-	[ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "t%06x", textColor & 0xffffff];
+        [ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "t%06x", textColor & 0xffffff];
+    else
+        [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", 0];
     if (bgColor != BAD_STYLE)
-	[ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "b%06x", bgColor & 0xffffff];
-
+        [ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "b%06x", bgColor & 0xffffff];
+    
     pthread_mutex_unlock(&outputMutex);
 }
 
 void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
     if (lock)
-	pthread_mutex_lock(&outputMutex);
+        pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
-
+    
     if (style != currTextStyle /*|| gStoryInterp==kGlxStory*/) {
-	iphone_flush(NO);
-	[bufferStr appendFormat: @ kOutputEscCode kStyleEscCode "%1x", style];
-	currTextStyle = style;
+        iphone_flush(NO);
+        [bufferStr appendFormat: @ kOutputEscCode kStyleEscCode "%1x", style];
+        currTextStyle = style;
     }
     if (color != -1 && color != currColor && gStoryInterp==kZStory) {
-	iphone_flush(NO);
+        iphone_flush(NO);
     	if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
-	    color = 0;
-	if (color != currColor) {
-	    [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", color & 0xff];
-	    currColor = color;
-	}
+            color = 0;
+        if (color != currColor) {
+            [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", color & 0xff];
+            currColor = color;
+        }
     }
     if (lock)
-	pthread_mutex_unlock(&outputMutex);
+        pthread_mutex_unlock(&outputMutex);
 }
 
 void iphone_win_putchar(int winNum, char c) {
     pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(winNum, &isStatus);
-
+    
     if (c == kClearEscChar)
-	[bufferStr setString: @""];
-
+        [bufferStr setString: @""];
+    
     if (isStatus && c != ' ' && c != kClearEscChar)
-	[bufferStr setString: @"\n\n"];
+        [bufferStr setString: @"\n\n"];
     else if (winNum == 0) {
-	if (outputBufferLen >= sizeof(outputBuffer)-1)
-	    iphone_flush(NO);
-	outputBuffer[outputBufferLen++] = c;
+        if (outputBufferLen >= sizeof(outputBuffer)-1)
+            iphone_flush(NO);
+        outputBuffer[outputBufferLen++] = c;
     }
     else
-	[bufferStr appendFormat:@"%c", c];
-
+        [bufferStr appendFormat:@"%c", c];
+    
     pthread_mutex_unlock(&outputMutex);
     return;
 }
@@ -263,45 +265,45 @@ int iphone_getchar(int timeout) {
     struct timeval now, then;
     iphone_flush(YES);
     int c = 0;
-
+    
     if (timeout > 0) {
-	gettimeofday(&then, NULL);
-	then.tv_usec += timeout * 1000;
-	if (then.tv_usec >= 1000000) {
-	    then.tv_usec -= 1000000;
-	    ++then.tv_sec;
-	}	    
+        gettimeofday(&then, NULL);
+        then.tv_usec += timeout * 1000;
+        if (then.tv_usec >= 1000000) {
+            then.tv_usec -= 1000000;
+            ++then.tv_sec;
+        }	    
     }
-
+    
     while (1) {
-	pthread_mutex_lock(&inputMutex);
-	if ([ipzInputBufferStr length] > 0) {
+        pthread_mutex_lock(&inputMutex);
+        if ([ipzInputBufferStr length] > 0) {
     	    UInt8 buf[4];
-	    CFRange r = {0,1}; NSRange nr = {0,1};
-	    CFIndex usedBufferLength;
-	    CFIndex numChars = CFStringGetBytes((CFStringRef)ipzInputBufferStr, r, kCFStringEncodingISOLatin1,'?',FALSE,(UInt8 *)buf,2,&usedBufferLength);
-	    [ipzInputBufferStr deleteCharactersInRange: nr];
-	    if (numChars)
-		c = (int)*(unsigned char*)buf;
-	}
-	pthread_mutex_unlock(&inputMutex);
-	if (c)
-	    return c;
-
-	if (timeout == 0)
-	    break;
-	else if (screen_size_changed) {
-	    if (gStoryInterp == kZStory)
-		screen_size_changed = 0; // Z interp doesn't check this, ignore
-	    else
-		break;
-	} else if (timeout > 0) {
-	    gettimeofday(&now, NULL);
-	    if (now.tv_sec > then.tv_sec || now.tv_sec == then.tv_sec && now.tv_usec > then.tv_usec)
-		break;
-	} 
+            CFRange r = {0,1}; NSRange nr = {0,1};
+            CFIndex usedBufferLength;
+            CFIndex numChars = CFStringGetBytes((CFStringRef)ipzInputBufferStr, r, kCFStringEncodingISOLatin1,'?',FALSE,(UInt8 *)buf,2,&usedBufferLength);
+            [ipzInputBufferStr deleteCharactersInRange: nr];
+            if (numChars)
+                c = (int)*(unsigned char*)buf;
+        }
+        pthread_mutex_unlock(&inputMutex);
+        if (c)
+            return c;
+        
+        if (timeout == 0)
+            break;
+        else if (screen_size_changed) {
+            if (gStoryInterp == kZStory)
+                screen_size_changed = 0; // Z interp doesn't check this, ignore
+            else
+                break;
+        } else if (timeout > 0) {
+            gettimeofday(&now, NULL);
+            if (now.tv_sec > then.tv_sec || now.tv_sec == then.tv_sec && now.tv_usec > then.tv_usec)
+                break;
+        } 
 	    
-	usleep(10000);
+        usleep(10000);
     }
     return -1;
 }
@@ -319,27 +321,27 @@ static int gNewGlkWinNum = -1;
 int iphone_new_glk_view(window_t *win) {
     // This is not thread safe and should only be called from the thread running glk_main()!
     if (!win || numGlkViews >= kMaxGlkViews)
-	return -1;
+        return -1;
     gNewGlkWinNum = -1;
-
+    
     if (!finished) {
-	[theSMVC performSelectorOnMainThread:@selector(newGlkViewWithWin:) withObject:[NSValue valueWithPointer: win] waitUntilDone:YES]; // will increment numGlkViews
-	if (gNewGlkWinNum < 0)
-	    NSLog(@"error in iphone_new_glk_view!");
+        [theSMVC performSelectorOnMainThread:@selector(newGlkViewWithWin:) withObject:[NSValue valueWithPointer: win] waitUntilDone:YES]; // will increment numGlkViews
+        if (gNewGlkWinNum < 0)
+            NSLog(@"error in iphone_new_glk_view!");
     }
-//    NSLog(@"new glk win %d, type=%d, win=%p", gNewGlkWinNum, win->type, win);
+    //    NSLog(@"new glk win %d, type=%d, win=%p", gNewGlkWinNum, win->type, win);
     if (gNewGlkWinNum >= 0) {
-	glkGridArray[gNewGlkWinNum].win = win;
-	glkGridArray[gNewGlkWinNum].bgColor = 0xffffff;
+        glkGridArray[gNewGlkWinNum].win = win;
+        glkGridArray[gNewGlkWinNum].bgColor = 0xffffff;
     }
     return gNewGlkWinNum;
 }
 
 void iphone_destroy_glk_view(int viewNum) {
     if (viewNum < 0 || viewNum > kMaxGlkViews)
-	return;
-//    NSLog(@"destroy glk view %d", viewNum);
-
+        return;
+    //    NSLog(@"destroy glk view %d", viewNum);
+    
     glkGridArray[viewNum].pendingClose = YES;
     [theSMVC performSelectorOnMainThread:@selector(destroyGlkView:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];    
 }
@@ -347,24 +349,24 @@ void iphone_destroy_glk_view(int viewNum) {
 // delay grid allocation until here; we always call this shortly after new
 void iphone_glk_view_rearrange(int viewNum, window_t *win) {
     if (viewNum >= 0 && viewNum < numGlkViews) {
-	if (win != glkGridArray[viewNum].win)
-	    abort();
-	if (glkGridArray[viewNum].gridArray) {
-	    wchar_t *ga = glkGridArray[viewNum].gridArray;
-	    glkGridArray[viewNum].gridArray = nil;
-	    free(ga);
-	}
-	CGRect box = CGRectMake(win->bbox.left, win->bbox.top, win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
-	NSArray *a = [NSArray arrayWithObjects: [NSNumber numberWithInt:viewNum], [NSValue valueWithCGRect:box], nil];
-
-	int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iphone_fixed_font_height; 
-	int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iphone_fixed_font_width;
-	if (nRows && nCols) {
-	    glkGridArray[viewNum].gridArray = malloc(nRows*nCols*sizeof(wchar_t));
-	    wchar_t sp = L' ';
-	    memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
-	}
-	[theSMVC performSelectorOnMainThread:@selector(resizeGlkView:) withObject:a waitUntilDone:YES];
+        if (win != glkGridArray[viewNum].win)
+            abort();
+        if (glkGridArray[viewNum].gridArray) {
+            wchar_t *ga = glkGridArray[viewNum].gridArray;
+            glkGridArray[viewNum].gridArray = nil;
+            free(ga);
+        }
+        CGRect box = CGRectMake(win->bbox.left, win->bbox.top, win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
+        NSArray *a = [NSArray arrayWithObjects: [NSNumber numberWithInt:viewNum], [NSValue valueWithCGRect:box], nil];
+        
+        int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iphone_fixed_font_height; 
+        int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iphone_fixed_font_width;
+        if (nRows && nCols) {
+            glkGridArray[viewNum].gridArray = malloc(nRows*nCols*sizeof(wchar_t));
+            wchar_t sp = L' ';
+            memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
+        }
+        [theSMVC performSelectorOnMainThread:@selector(resizeGlkView:) withObject:a waitUntilDone:YES];
     }
 }
 
@@ -372,15 +374,15 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
 void iphone_erase_screen() {
     int saved_cwin = cwin;
     iphone_flush(YES);
-//NSLog(@"erase screen\n");
+    //NSLog(@"erase screen\n");
     if (!finished) {
-	pthread_mutex_lock(&winSizeMutex);
-	cwin = 1;
-	iphone_putchar(kClearEscChar);
-	cwin = saved_cwin;
-	winSizeChanged = YES;
-	pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
-	pthread_mutex_unlock(&winSizeMutex);
+        pthread_mutex_lock(&winSizeMutex);
+        cwin = 1;
+        iphone_putchar(kClearEscChar);
+        cwin = saved_cwin;
+        winSizeChanged = YES;
+        pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
+        pthread_mutex_unlock(&winSizeMutex);
     }
 }
 
@@ -391,16 +393,16 @@ void iphone_set_glk_default_colors(int winNum) {
 
 void iphone_erase_win(int winnum) {
     iphone_flush(YES);
-//NSLog(@"erase mainwin\n");
-
+    //NSLog(@"erase mainwin\n");
+    
 #if UseRichTextView
     // we have to wait for output to drain even though we're about to clear the screen in case
     // the output contains font changes
     while ([ipzBufferStr length])
-	usleep(1000);
-
+        usleep(1000);
+    
 #endif
-
+    
     int saved_cwin = cwin;
     pthread_mutex_lock(&winSizeMutex);
     cwin = winnum;
@@ -419,7 +421,7 @@ void iphone_enable_input() {
     pthread_mutex_lock(&outputMutex);
     iphone_flush(NO);
     if (ipzAllowInput == kIPZDisableInput)
-	ipzAllowInput = kIPZRequestInput;
+        ipzAllowInput = kIPZRequestInput;
     pthread_mutex_unlock(&outputMutex);
 }
 
@@ -427,8 +429,8 @@ void iphone_enable_single_key_input() {
     pthread_mutex_lock(&outputMutex);
     iphone_flush(NO);
     if (ipzAllowInput == kIPZDisableInput)
-	ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
-
+        ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+    
     pthread_mutex_unlock(&outputMutex);
 }
 
@@ -440,11 +442,11 @@ void iphone_disable_input() {
 }
 
 void iphone_set_top_win_height(int height) {
-
+    
     // wait for output to drain so size won't take effect
     // until new output in window
     iphone_flush(YES);
-
+    
     pthread_mutex_lock(&winSizeMutex);
     top_win_height = height;
     winSizeChanged = YES;
@@ -459,37 +461,37 @@ void iphone_mark_recent_save() {
 int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
     *iphone_filename = 0;
     switch (flag) {
-	case FILE_SAVE:
-	    do_filebrowser = kFBDoShowSave;
-	    break;
-	case FILE_RESTORE:
-	    do_filebrowser = kFBDoShowRestore;
-	    break;
-	case FILE_SCRIPT:
-	    do_filebrowser = kFBDoShowScript;
-	    strcpy(iphone_filename, default_name);
-	    break;
-	default:
-	    do_filebrowser = kFBHidden;
-	    *iphone_filename = 0;
-	    return FALSE;
+        case FILE_SAVE:
+            do_filebrowser = kFBDoShowSave;
+            break;
+        case FILE_RESTORE:
+            do_filebrowser = kFBDoShowRestore;
+            break;
+        case FILE_SCRIPT:
+            do_filebrowser = kFBDoShowScript;
+            strcpy(iphone_filename, default_name);
+            break;
+        default:
+            do_filebrowser = kFBHidden;
+            *iphone_filename = 0;
+            return FALSE;
     }
-
+    
     [theSMVC performSelectorOnMainThread:@selector(openFileBrowserWrap:) withObject:[NSNumber numberWithInt:do_filebrowser] waitUntilDone:YES];
-
+    
     while (do_filebrowser) {
-	usleep(100000);
+        usleep(100000);
     }
-
+    
     if (!*iphone_filename)
-	return FALSE;
-
+        return FALSE;
+    
     char *basefile = strrchr(iphone_filename, '/');
     strcpy(file_name, basefile ? basefile+1 : iphone_filename);
     
-//    if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
-//	; // ask before overwriting... // this is now done in the dialog itself
-
+    //    if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
+    //	; // ask before overwriting... // this is now done in the dialog itself
+    
     return TRUE;
 }
 
@@ -505,9 +507,9 @@ void iphone_enable_autocompletion() {
 
 void iphone_start_script(char *scriptName) {
     if (scriptName)
-	strcpy(iphone_scriptname, scriptName);
+        strcpy(iphone_scriptname, scriptName);
     else
-	*iphone_scriptname = '\0';
+        *iphone_scriptname = '\0';
 }
 
 void iphone_stop_script() {
@@ -522,20 +524,20 @@ void iphone_recompute_screensize() {
     iphone_textview_width = (int)(frame.size.width / fontwid);
     iphone_textview_height = (int)(frame.size.height / [[storyView font] leading])+1;
     if (iphone_textview_width > MAX_COLS)
-	iphone_textview_width = MAX_COLS;
+        iphone_textview_width = MAX_COLS;
     if (iphone_textview_height > MAX_ROWS)
-	iphone_textview_height = MAX_ROWS;    
+        iphone_textview_height = MAX_ROWS;    
     
     iphone_screenwidth = frame.size.width;
     iphone_screenheight = frame.size.height;
     iphone_fixed_font_width = fontwid;
     iphone_fixed_font_height = [theSMVC statusFixedFontPixelHeight];
-
+    
 }
 
 void iphone_set_background_color(int viewNum, glui32 color) {
     if (viewNum > kMaxGlkViews)
-	return;
+        return;
     glkGridArray[viewNum].bgColor = color;
     [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
 }
@@ -544,26 +546,26 @@ glui32 iphone_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
     giblorb_map_t *map;
     giblorb_err_t err;
     giblorb_result_t blorbres;
-
+    
     map = giblorb_get_resource_map();
     if (!map)
         return FALSE;
-
+    
     err = giblorb_load_resource(map, giblorb_method_Memory, &blorbres, giblorb_ID_Pict, image);
     if (!err) {
-	NSData *data = nil;
-	if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
-	    data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
-	if (data) {
-	    UIImage *img = [UIImage imageWithData: data];
-	    if (img) {
-		if (width)
-		    *width = gLargeScreenDevice ? img.size.width : img.size.width / 2;
-		if (height)
-		    *height = gLargeScreenDevice ? img.size.height : img.size.height / 2;
-		return TRUE;
-	    }
-	}
+        NSData *data = nil;
+        if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
+            data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
+        if (data) {
+            UIImage *img = [UIImage imageWithData: data];
+            if (img) {
+                if (width)
+                    *width = gLargeScreenDevice ? img.size.width : img.size.width / 2;
+                if (height)
+                    *height = gLargeScreenDevice ? img.size.height : img.size.height / 2;
+                return TRUE;
+            }
+        }
     }
     *width = *height = 0;
     return FALSE;
@@ -597,7 +599,7 @@ void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 
 glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
     GlkImageDrawArgs args = { viewNum, image, val1, val2, width, height, 0 };
     if (!finished)
-	[theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+        [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
     return args.retVal;
 }
 
@@ -605,84 +607,84 @@ void run_zinterp(bool autorestore) {
     gStoryInterp = kZStory;
     os_set_default_file_names(story_name);
     if (autorestore)
-	do_autosave = 1;
+        do_autosave = 1;
     init_buffer ();
     init_err ();
     if (init_memory () == 0) {
-	script_reset(iphone_scriptname);
-	init_interpreter ();
-	iphone_ioinit();
-	init_sound ();
-	os_init_screen ();
-	init_undo ();
-	z_restart ();
-	if (autorestore) {
-	    frame_count = restore_frame_count;
-	    split_window(h_version > 3 ? top_win_height : top_win_height-1);
-
-	    z_restore ();
-	    do_autosave = 0;
-	}
-	interpret ();
-	finished = -1;
+        script_reset(iphone_scriptname);
+        init_interpreter ();
+        iphone_ioinit();
+        init_sound ();
+        os_init_screen ();
+        init_undo ();
+        z_restart ();
+        if (autorestore) {
+            frame_count = restore_frame_count;
+            split_window(h_version > 3 ? top_win_height : top_win_height-1);
+            
+            z_restore ();
+            do_autosave = 0;
+        }
+        interpret ();
+        finished = -1;
     } else
-	finished = 2;
-
+        finished = 2;
+    
     reset_memory ();
 }
 void run_glxinterp(const char *story, bool autorestore) {
-
+    
     gStoryInterp = kGlxStory;
-
+    
     char *argv[] = { "frotz", (char*)story };
     glkunix_startup_t  glkunix_startup = { 2,  argv };
     iphone_ioinit();
-
+    
     h_default_foreground = BLACK_COLOUR;
     h_default_background = WHITE_COLOUR;
-
+    
     iphone_recompute_screensize();
-
+    
     gli_initialize_misc();
     gli_initialize_windows();
     gli_initialize_events();
     
     glkunix_startup_code(&glkunix_startup);
-
+    
     if (autorestore)
-	do_autosave = 1;
+        do_autosave = 1;
     else {
-	iphone_puts("\n\nPlease note that support for glulx games is new and is likely to be rough around the edges.\n\n"
-		"Please report any major problems you encounter on the Frotz support page or e-mail ifrotz@gmail.com.\n\n[Tap to continue.]\n");
-	iphone_enable_single_key_input();
-	iphone_getchar(-1);
-	iphone_disable_input();
-	iphone_erase_win(0);
+        iphone_puts("\n\nPlease note that support for glulx games is new and is likely to be rough around the edges.\n\n"
+                    "Please report any major problems you encounter on the Frotz support page or e-mail ifrotz@gmail.com.\n\n[Tap to continue.]\n");
+        iphone_enable_single_key_input();
+        iphone_getchar(-1);
+        iphone_disable_input();
+        iphone_erase_win(0);
     }
-
+    
     glk_main();
     
     glk_window_close(gli_rootwin, NULL);
-
+    
     finished = -1;
 }
 
 void run_interp(const char *story, bool autorestore) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
+    
     winSizeChanged = NO;
     finished = 0;
-
+    
     NSMutableString *str = [NSMutableString stringWithUTF8String: story];
     story_name  = (char*)[str UTF8String];
     
     if ([[str pathExtension] isEqualToString: @"blb"]
-	|| [[str pathExtension] isEqualToString: @"gblorb"]
-	|| [[str pathExtension] isEqualToString: @"ulx"])
-	run_glxinterp(story, autorestore);
+        || [[str pathExtension] isEqualToString: @"gblorb"]
+        || [[str pathExtension] isEqualToString: @"ulx"])
+        run_glxinterp(story, autorestore);
     else
-	run_zinterp(autorestore);
-
+        run_zinterp(autorestore);
+    
     [pool release];
 }
 
@@ -728,65 +730,65 @@ static void setColorTable(RichTextView *v) {
     self = [super init];
     if (self)
     {
-	NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-	if (osVersStr && [osVersStr characterAtIndex: 0] >= '3') {
-	    isOS30 = YES;
-	    if ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 2] >= '2')
-		isOS32 = YES;
-	}
-
-	// this title will appear in the navigation bar
-//	self.title = NSLocalizedString(@"Frotz", @"");
-	[self resetSettingsToDefault];
-
-	id fileMgr = [NSFileManager defaultManager];
-	
-	NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-	docPath = [[array objectAtIndex: 0] copy];
-	chdir([docPath UTF8String]);
-
-	storyGamePath = [[docPath stringByAppendingPathComponent: @kFrotzGameDir] retain];
-	storyTopSavePath = [[docPath stringByAppendingPathComponent: @kFrotzSaveDir] retain];
-
-
-	if (![fileMgr fileExistsAtPath: storyGamePath]) {
-	    [fileMgr createDirectoryAtPath: storyGamePath attributes: nil];
-	}
-	if (![fileMgr fileExistsAtPath: storyTopSavePath]) {
-	    [fileMgr createDirectoryAtPath: storyTopSavePath attributes: nil];
-	}
-
-	NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-	resourceGamePath = [resourcePath stringByAppendingPathComponent: @kFrotzGameDir];
-
-	frotzPrefsPath  = nil;
-	storySIPPath    = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile] retain];
-	storySIPPathOld = [storySIPPath retain];
-	storySIPSavePath= [[storyTopSavePath stringByAppendingPathComponent: @kFrotzOldAutoSaveFile] retain];
-	activeStoryPath = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSaveActiveFile] retain];
-
-	strcpy(SAVE_PATH, [storyTopSavePath UTF8String]);
-	
-	strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
-
-	m_currentStory = [[NSMutableString stringWithString: @""] retain];
-	
-	inputsSinceSaveRestore = 0;
-	
-	[self loadPrefs];
-
-	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-	[center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
-	[center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
-	[center addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
-	[center addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
-
-	// Stupidly, there is no notification sent when accessibllity is turned on and off with triple-home
-	// Check for the loading of the accessibility bundle to detect this instead.
-	// Calls to setAccessibilityLabel:, etc. do nothing unless Accessibility is on, so if we don't do this,
-	// the names we set for controls, etc. during launch won't get used.
-	[center addObserver:self selector:@selector(handleAccessibilityLoad:) name:NSBundleDidLoadNotification object:nil];
-
+        NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
+        if (osVersStr && [osVersStr characterAtIndex: 0] >= '3') {
+            isOS30 = YES;
+            if ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 2] >= '2')
+                isOS32 = YES;
+        }
+        
+        // this title will appear in the navigation bar
+        //	self.title = NSLocalizedString(@"Frotz", @"");
+        [self resetSettingsToDefault];
+        
+        id fileMgr = [NSFileManager defaultManager];
+        
+        NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
+        docPath = [[array objectAtIndex: 0] copy];
+        chdir([docPath UTF8String]);
+        
+        storyGamePath = [[docPath stringByAppendingPathComponent: @kFrotzGameDir] retain];
+        storyTopSavePath = [[docPath stringByAppendingPathComponent: @kFrotzSaveDir] retain];
+        
+        
+        if (![fileMgr fileExistsAtPath: storyGamePath]) {
+            [fileMgr createDirectoryAtPath: storyGamePath attributes: nil];
+        }
+        if (![fileMgr fileExistsAtPath: storyTopSavePath]) {
+            [fileMgr createDirectoryAtPath: storyTopSavePath attributes: nil];
+        }
+        
+        NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
+        resourceGamePath = [resourcePath stringByAppendingPathComponent: @kFrotzGameDir];
+        
+        frotzPrefsPath  = nil;
+        storySIPPath    = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile] retain];
+        storySIPPathOld = [storySIPPath retain];
+        storySIPSavePath= [[storyTopSavePath stringByAppendingPathComponent: @kFrotzOldAutoSaveFile] retain];
+        activeStoryPath = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSaveActiveFile] retain];
+        
+        strcpy(SAVE_PATH, [storyTopSavePath UTF8String]);
+        
+        strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
+        
+        m_currentStory = [[NSMutableString stringWithString: @""] retain];
+        
+        inputsSinceSaveRestore = 0;
+        
+        [self loadPrefs];
+        
+        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+        [center addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
+        [center addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
+        
+        // Stupidly, there is no notification sent when accessibllity is turned on and off with triple-home
+        // Check for the loading of the accessibility bundle to detect this instead.
+        // Calls to setAccessibilityLabel:, etc. do nothing unless Accessibility is on, so if we don't do this,
+        // the names we set for controls, etc. during launch won't get used.
+        [center addObserver:self selector:@selector(handleAccessibilityLoad:) name:NSBundleDidLoadNotification object:nil];
+        
     }
     return self;
 }
@@ -794,9 +796,9 @@ static void setColorTable(RichTextView *v) {
 -(void)clearGlkViews {
     NSNull *null = [NSNull null];
     for (RichTextView *v in m_glkViews)
-	if (v != m_storyView && (NSNull*)v != null)
-	    [v removeFromSuperview];
-
+        if (v != m_storyView && (NSNull*)v != null)
+            [v removeFromSuperview];
+    
     [m_glkViews release];
     m_glkViews = nil;
     numGlkViews = 0;
@@ -806,56 +808,56 @@ static void setColorTable(RichTextView *v) {
     window_t *win = [winVal pointerValue];
     int winType = win->type;
     if (!m_glkViews) {
-	m_glkViews = [[NSMutableArray alloc] initWithCapacity: 8];
-	[m_glkViews addObject: m_storyView];
-	gNewGlkWinNum = 0;
+        m_glkViews = [[NSMutableArray alloc] initWithCapacity: 8];
+        [m_glkViews addObject: m_storyView];
+        gNewGlkWinNum = 0;
     } else {
-	GlkView *newView = (GlkView*)[[GlkView alloc] initWithFrame: CGRectZero border:YES];
-	[newView setTextColor:m_defaultFGColor];
-	if (winType == wintype_TextGrid || winType == wintype_Graphics) {
-	    if (winType == wintype_Graphics) {
-		[newView setBackgroundColor: [UIColor whiteColor]];
-		[newView setAutoresizingMask: 0];
-	    } else {
-		[newView setBackgroundColor: m_defaultBGColor];
-		[newView setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-	    }
-	    [newView setLeftMargin: 0];
-	    [newView setRightMargin: 0];
-	    [newView setTopMargin: 0];
-	    [newView setBottomMargin: 0];
-	    [newView setBounces: NO];
-	    [newView setFont: [m_statusLine fixedFont]];
-	    [newView setFixedFont: [m_statusLine fixedFont]];
-	} else {
-	    [newView setBackgroundColor: m_defaultBGColor];
-	    [newView setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
-	    [newView setFont: [m_storyView font]];
-	    [newView setFixedFont: [m_storyView fixedFont]];
-	}
-	setColorTable(newView);
-	[newView setDelegate: self];
-
-	NSUInteger holeIndex = [m_glkViews indexOfObject: [NSNull null]];
-	if (holeIndex != NSNotFound) {
-	    gNewGlkWinNum = holeIndex;
-	    glkGridArray[gNewGlkWinNum].win = win;
-	    glkGridArray[gNewGlkWinNum].pendingClose = NO;
-	    glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
-	    [m_glkViews replaceObjectAtIndex: holeIndex withObject: newView];
-	}
-	else {
-	    gNewGlkWinNum = [m_glkViews count];
-	    glkGridArray[gNewGlkWinNum].win = win;
-	    glkGridArray[gNewGlkWinNum].pendingClose = NO;
-	    glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
-	    [m_glkViews addObject: newView];
-	}
-	[self.view addSubview: newView];
-	
-	UIView *launchMsgView = [self.view viewWithTag:kLaunchMsgViewTag];
-	if (launchMsgView)
-	    [self.view bringSubviewToFront: launchMsgView];
+        GlkView *newView = (GlkView*)[[GlkView alloc] initWithFrame: CGRectZero border:YES];
+        [newView setTextColor:m_defaultFGColor];
+        if (winType == wintype_TextGrid || winType == wintype_Graphics) {
+            if (winType == wintype_Graphics) {
+                [newView setBackgroundColor: [UIColor whiteColor]];
+                [newView setAutoresizingMask: 0];
+            } else {
+                [newView setBackgroundColor: m_defaultBGColor];
+                [newView setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+            }
+            [newView setLeftMargin: 0];
+            [newView setRightMargin: 0];
+            [newView setTopMargin: 0];
+            [newView setBottomMargin: 0];
+            [newView setBounces: NO];
+            [newView setFont: [m_statusLine fixedFont]];
+            [newView setFixedFont: [m_statusLine fixedFont]];
+        } else {
+            [newView setBackgroundColor: m_defaultBGColor];
+            [newView setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+            [newView setFont: [m_storyView font]];
+            [newView setFixedFont: [m_storyView fixedFont]];
+        }
+        setColorTable(newView);
+        [newView setDelegate: self];
+        
+        NSUInteger holeIndex = [m_glkViews indexOfObject: [NSNull null]];
+        if (holeIndex != NSNotFound) {
+            gNewGlkWinNum = holeIndex;
+            glkGridArray[gNewGlkWinNum].win = win;
+            glkGridArray[gNewGlkWinNum].pendingClose = NO;
+            glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
+            [m_glkViews replaceObjectAtIndex: holeIndex withObject: newView];
+        }
+        else {
+            gNewGlkWinNum = [m_glkViews count];
+            glkGridArray[gNewGlkWinNum].win = win;
+            glkGridArray[gNewGlkWinNum].pendingClose = NO;
+            glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
+            [m_glkViews addObject: newView];
+        }
+        [self.view addSubview: newView];
+        
+        UIView *launchMsgView = [self.view viewWithTag:kLaunchMsgViewTag];
+        if (launchMsgView)
+            [self.view bringSubviewToFront: launchMsgView];
     }
     ++numGlkViews;
 }
@@ -864,152 +866,152 @@ static void setColorTable(RichTextView *v) {
     int viewNum = [[arg objectAtIndex:0] intValue];
     CGRect r = [[arg objectAtIndex: 1] CGRectValue];
     RichTextView *v = [m_glkViews objectAtIndex: viewNum];
-//    NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
+    //    NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
     if (v) {
-	CGRect fullFrame = [m_storyView frame];
-	if (viewNum > 0) {
-	    if (glkGridArray[viewNum].win->type == wintype_Graphics) {
-		window_t *parent = glkGridArray[viewNum].win->parent;
-		if (!parent || parent->type != wintype_Pair || ((window_pair_t*)parent->data)->division != winmethod_Fixed
-		    || v.frame.size.height != r.size.height) {
-		    // kludge for games which don't resize on events like Beyond; if height doesn't change, don't clear
-		    UIView *imgv = [v viewWithTag: kGlkImageViewTag];
-		    if (imgv)
-			[imgv removeFromSuperview];
-		}
-	    }
-	    [v setFrame: r];
-	} else if (viewNum == 0) {
-	    [v setTopMargin: r.origin.y];
-	    [v setRightMargin: fullFrame.size.width - (r.origin.x+r.size.width) + 6];
-	    [v setBottomMargin: fullFrame.size.height - (r.origin.y+r.size.height) + 8];
-	    [v setLeftMargin: r.origin.x  + 6];
-	}
+        CGRect fullFrame = [m_storyView frame];
+        if (viewNum > 0) {
+            if (glkGridArray[viewNum].win->type == wintype_Graphics) {
+                window_t *parent = glkGridArray[viewNum].win->parent;
+                if (!parent || parent->type != wintype_Pair || ((window_pair_t*)parent->data)->division != winmethod_Fixed
+                    || v.frame.size.height != r.size.height) {
+                    // kludge for games which don't resize on events like Beyond; if height doesn't change, don't clear
+                    UIView *imgv = [v viewWithTag: kGlkImageViewTag];
+                    if (imgv)
+                        [imgv removeFromSuperview];
+                }
+            }
+            [v setFrame: r];
+        } else if (viewNum == 0) {
+            [v setTopMargin: r.origin.y];
+            [v setRightMargin: fullFrame.size.width - (r.origin.x+r.size.width) + 6];
+            [v setBottomMargin: fullFrame.size.height - (r.origin.y+r.size.height) + 8];
+            [v setLeftMargin: r.origin.x  + 6];
+        }
     }
 }
 
 -(void)destroyGlkView:(NSNumber*)arg {
     int viewNum = [arg intValue];
     if (viewNum > 0) {
-	glkGridArray[viewNum].win = NULL;
-	glkGridArray[viewNum].bgColor = 0xffffff;
-	glkGridArray[viewNum].nRows = 0;
-	glkGridArray[viewNum].nCols = 0;
-	if (glkGridArray[viewNum].gridArray) {
-	    wchar_t *ga = glkGridArray[viewNum].gridArray;
-	    glkGridArray[viewNum].gridArray = nil;
-	    free(ga);
-	}
-	--numGlkViews;
-	[[m_glkViews objectAtIndex: viewNum] removeFromSuperview];
-	if (viewNum == [m_glkViews count]-1)
-	    [m_glkViews removeLastObject];
-	else
-	    [m_glkViews replaceObjectAtIndex:viewNum withObject:[NSNull null]];
+        glkGridArray[viewNum].win = NULL;
+        glkGridArray[viewNum].bgColor = 0xffffff;
+        glkGridArray[viewNum].nRows = 0;
+        glkGridArray[viewNum].nCols = 0;
+        if (glkGridArray[viewNum].gridArray) {
+            wchar_t *ga = glkGridArray[viewNum].gridArray;
+            glkGridArray[viewNum].gridArray = nil;
+            free(ga);
+        }
+        --numGlkViews;
+        [[m_glkViews objectAtIndex: viewNum] removeFromSuperview];
+        if (viewNum == [m_glkViews count]-1)
+            [m_glkViews removeLastObject];
+        else
+            [m_glkViews replaceObjectAtIndex:viewNum withObject:[NSNull null]];
     }
 }
 
 -(void)setGlkBGColor:(NSNumber*)arg {
     int winNum = [arg intValue];
     if (winNum > 0 && winNum < [m_glkViews count]) {
-	unsigned int color = glkGridArray[winNum].bgColor;
-	CGFloat red = ((color >> 16) & 0xff) / 255.0;
-	CGFloat green = ((color >> 8) & 0xff) / 255.0;
-	CGFloat blue = (color & 0xff) / 255.0;
-	UIColor *bgColor = [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
-	[[m_glkViews objectAtIndex: winNum] setBackgroundColor: bgColor];
+        unsigned int color = glkGridArray[winNum].bgColor;
+        CGFloat red = ((color >> 16) & 0xff) / 255.0;
+        CGFloat green = ((color >> 8) & 0xff) / 255.0;
+        CGFloat blue = (color & 0xff) / 255.0;
+        UIColor *bgColor = [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
+        [[m_glkViews objectAtIndex: winNum] setBackgroundColor: bgColor];
     }
 }
 
 -(void)drawGlkRect:(NSValue*)argsVal {
     GlkRectDrawArgs *args = [argsVal pointerValue];
     if (!args)
-	return;
+        return;
     int viewNum = args->viewNum;
     glui32 color = args->color;
     glsi32 left = args->left, top = args->top;
     glui32 width = args->width, height = args->height;
-
+    
     UIView *v = [theSMVC glkView: viewNum];
     if (v) {
-	UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
-	if (imgView) 
-	    [imgView retain];
-	else {
-	    imgView = [[UIImageView alloc] initWithFrame: v.bounds];
-	    [imgView setTag: kGlkImageViewTag];
-	    [imgView setContentMode: UIViewContentModeScaleAspectFit];
-	}
-	if (imgView) {
-	    UIImage *dImg = imgView.image;
-	    if (!dImg)
-		dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
-	    dImg = drawRectInImage(color, left, top, width, height, dImg);
-	    [imgView setImage: dImg];
-	}
+        UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
+        if (imgView) 
+            [imgView retain];
+        else {
+            imgView = [[UIImageView alloc] initWithFrame: v.bounds];
+            [imgView setTag: kGlkImageViewTag];
+            [imgView setContentMode: UIViewContentModeScaleAspectFit];
+        }
+        if (imgView) {
+            UIImage *dImg = imgView.image;
+            if (!dImg)
+                dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
+            dImg = drawRectInImage(color, left, top, width, height, dImg);
+            [imgView setImage: dImg];
+        }
     }
-
+    
 }
 
 -(void)drawGlkImage:(NSValue*)argsVal {
     GlkImageDrawArgs *args = [argsVal pointerValue];
     if (!args)
-	return;
+        return;
     int viewNum = args->viewNum;
     glui32 image = args->image;
     glsi32 val1 = args->val1, val2 = args->val2;
     glui32 width = args->width, height = args->height;
-
+    
     glui32 retval = FALSE;
     giblorb_map_t *map;
     giblorb_err_t err;
     giblorb_result_t blorbres;
-
+    
     map = giblorb_get_resource_map();
     if (!map) {
         args->retVal =  FALSE;
-	return;
+        return;
     }
-
+    
     err = giblorb_load_resource(map, giblorb_method_Memory, &blorbres, giblorb_ID_Pict, image);
     if (err)
         goto out;
-//    NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
+    //    NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
     NSData *data = nil;
     if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
-	data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
-
+        data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
+    
     if (data) {
-	UIImage *img = [UIImage imageWithData: data];
-	UIView *v = [theSMVC glkView: viewNum];
-	UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
-	if (v) {
-	    if (imgView) 
-		[imgView retain];
-	    else {
-		imgView = [[UIImageView alloc] initWithFrame: v.bounds];
-		[imgView setTag: kGlkImageViewTag];
-		[imgView setContentMode: UIViewContentModeScaleAspectFit];
-	    }
-
-	    if (imgView) {
-		if (!width)
-		    width = img.size.width;
-		if (!height)
-		    height = img.size.height;
-		UIImage *dImg = imgView.image;
-		if (!dImg)
-		    dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
-		dImg = drawUIImageInImage(img, val1, val2, width, height, dImg);
-
-		[imgView setImage: dImg];
-		[v addSubview: imgView];
-		[imgView release];
-		retval = TRUE;
-	    }
-	}
+        UIImage *img = [UIImage imageWithData: data];
+        UIView *v = [theSMVC glkView: viewNum];
+        UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
+        if (v) {
+            if (imgView) 
+                [imgView retain];
+            else {
+                imgView = [[UIImageView alloc] initWithFrame: v.bounds];
+                [imgView setTag: kGlkImageViewTag];
+                [imgView setContentMode: UIViewContentModeScaleAspectFit];
+            }
+            
+            if (imgView) {
+                if (!width)
+                    width = img.size.width;
+                if (!height)
+                    height = img.size.height;
+                UIImage *dImg = imgView.image;
+                if (!dImg)
+                    dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
+                dImg = drawUIImageInImage(img, val1, val2, width, height, dImg);
+                
+                [imgView setImage: dImg];
+                [v addSubview: imgView];
+                [imgView release];
+                retval = TRUE;
+            }
+        }
     }
-out:
+    out:
     args->retVal = retval;
 }
 
@@ -1018,26 +1020,26 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)focusGlkView:(UIView*)view {
     if (m_glkViews) {
-	int winNum = [m_glkViews indexOfObject: view];
-	if (winNum != NSNotFound) {
-	    window_t *win = glkGridArray[winNum].win;
-	    if (win->char_request || win->line_request) {
-		gli_iphone_set_focus(win); 	// bcs??? cross-thread unsafe
-		cwin = winNum;
-		[m_inputLine updatePosition];
-	    }
-	}
+        int winNum = [m_glkViews indexOfObject: view];
+        if (winNum != NSNotFound) {
+            window_t *win = glkGridArray[winNum].win;
+            if (win->char_request || win->line_request) {
+                gli_iphone_set_focus(win); 	// bcs??? cross-thread unsafe
+                cwin = winNum;
+                [m_inputLine updatePosition];
+            }
+        }
     }
 }
 
 -(FrotzView*)glkView:(int)viewNum {
     if (gStoryInterp != kGlxStory)
-	return nil;
+        return nil;
     if (viewNum >= [m_glkViews count])
-	return nil;
+        return nil;
     FrotzView *v = [m_glkViews objectAtIndex: viewNum];
     if ((NSNull*)v == [NSNull null]) 
-	return nil;
+        return nil;
     return v;
 }
 
@@ -1051,15 +1053,15 @@ extern void gli_iphone_set_focus(window_t *winNum);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-
+    
     if (!gLargeScreenDevice && interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown)
-	return NO;
-
+        return NO;
+    
     if (m_storyView) {
-	[[self view] setTransform: CGAffineTransformIdentity];
-	[self hideInputHelper];
+        [[self view] setTransform: CGAffineTransformIdentity];
+        [self hideInputHelper];
     }
-
+    
     return YES;
 }
 
@@ -1081,11 +1083,11 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)viewDidAppear:(BOOL)animated {
     [self checkAccessibility];
-
+    
     self.navigationItem.titleView = [m_frotzInfoController view];
-
-//    if (m_autoRestoreDict)
-//	[self autoRestoreSession];
+    
+    //    if (m_autoRestoreDict)
+    //	[self autoRestoreSession];
 }
 
 -(void)storyDidPressBackButton:(id)sender {
@@ -1095,20 +1097,20 @@ extern void gli_iphone_set_focus(window_t *winNum);
 - (void)abortToBrowser {
     [self abandonStory: YES];
     if (gUseSplitVC)
-	[m_storyBrowser didPressModalStoryListButton];
+        [m_storyBrowser didPressModalStoryListButton];
     else
-	[self.navigationController popViewControllerAnimated: YES];
+        [self.navigationController popViewControllerAnimated: YES];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 0) {
-	[self abortToBrowser];
+        [self abortToBrowser];
     }
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 1) {
-	[self abortToBrowser];
+        [self abortToBrowser];
     }
 }
 
@@ -1117,27 +1119,27 @@ extern void gli_iphone_set_focus(window_t *winNum);
     [m_frotzInfoController setKeyboardOwner: self];    
     disable_complete = !m_completionEnabled;
     if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-	m_landscape = YES;
+        m_landscape = YES;
     }
     else {
-	m_landscape = NO;
+        m_landscape = NO;
     }
     if (m_notesController) {
-	[m_notesController hide];
-	[m_notesController viewWillAppear:animated];
+        [m_notesController hide];
+        [m_notesController viewWillAppear:animated];
     }
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     disable_complete = YES;
-
+    
     [[self view] setTransform: CGAffineTransformIdentity];
-
+    
     [self.navigationItem.rightBarButtonItem setEnabled: YES];
-//  [m_frotzInfoController dismissInfo];
+    //  [m_frotzInfoController dismissInfo];
     [self dismissKeyboard];
     if (m_notesController)
-	[m_notesController viewWillDisappear:animated];
+        [m_notesController viewWillDisappear:animated];
 }
 
 - (id)dismissKeyboard
@@ -1145,7 +1147,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
     BOOL kbdWasShown = m_kbShown;
     [m_inputLine resignFirstResponder];
     return kbdWasShown ? m_inputLine : nil;
-//    self.navigationItem.rightBarButtonItem = nil;	// this would remove the button
+    //    self.navigationItem.rightBarButtonItem = nil;	// this would remove the button
 }
 
 -(void)activateKeyboard {
@@ -1156,21 +1158,21 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)hideNotes {
     if (m_notesController)
-	[m_notesController hide];
+        [m_notesController hide];
 }
 
 - (void)toggleKeyboard
 {
     if (m_notesController) {
-	if ([m_notesController isVisible]) {
-	    [m_notesController toggleKeyboard];
-	    return;
-	}
+        if ([m_notesController isVisible]) {
+            [m_notesController toggleKeyboard];
+            return;
+        }
     }
     if (m_kbShown)
-	[m_inputLine resignFirstResponder];
+        [m_inputLine resignFirstResponder];
     else
-	[m_inputLine becomeFirstResponder];
+        [m_inputLine becomeFirstResponder];
 }
 
 static BOOL checkedAccessibility = NO, hasAccessibility = NO;
@@ -1179,9 +1181,9 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 }
 
 -(void)viewDidUnload {
-    NSLog(@"smc viewDidUnload! %x", (void*)sbrk(0));
+    NSLog(@"smc viewDidUnload! %x", (unsigned int)(void*)sbrk(0));
 #if 0 // A lot of state is maintained in the RichTextViws, and there's nothing to be gained by releasing and reloading them.
-//  loadView will reset self.view and continue to use these.
+    //  loadView will reset self.view and continue to use these.
     [m_inputLine release];
     m_inputLine = nil;
     [m_statusLine release];
@@ -1194,29 +1196,29 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 }
 
 - (void)loadView {
-
+    
     if (m_background) {
-	self.view = m_background;
-	return;
+        self.view = m_background;
+        return;
     }
-
+    
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
     if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-	CGFloat t = frame.size.width;
-	frame.size.width = frame.size.height;
-	frame.size.height = t;
-	t = frame.origin.x; frame.origin.x = frame.origin.y; frame.origin.y = t;
+        CGFloat t = frame.size.width;
+        frame.size.width = frame.size.height;
+        frame.size.height = t;
+        t = frame.origin.x; frame.origin.x = frame.origin.y; frame.origin.y = t;
     }
     float navHeight = 44.0; //[self.navigationController.navigationBar bounds].size.height;
     frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
     frame.origin.y += navHeight;
     frame.size.height -= navHeight;
     
-//notes page support
+    //notes page support
 #if 1
     if (!m_notesController) {
-	m_notesController = [[NotesViewController alloc] initWithFrame: frame];
-	[m_notesController setDelegate: self];
+        m_notesController = [[NotesViewController alloc] initWithFrame: frame];
+        [m_notesController setDelegate: self];
     }
     m_background = [m_notesController.view retain];
 #else
@@ -1227,15 +1229,15 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     
     [m_background setAutoresizesSubviews: YES];
     [m_background setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|
-		UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
-
+     UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
+    
     topWinSize = kStatusLineHeight;
-   
+    
     m_statusLine = [[StatusLine alloc] initWithFrame: CGRectMake(0.0f, kStatusLineYPos,  frame.size.width, kStatusLineHeight)];
     m_inputLine = [[StoryInputLine alloc] initWithFrame:  CGRectMake(0.0f, frame.size.height-236-2*kStatusLineHeight, frame.size.width, 2*kStatusLineHeight)];
     if (m_notesController)
-	[m_notesController setChainResponder: m_inputLine];
-
+        [m_notesController setChainResponder: m_inputLine];
+    
     [m_statusLine setScrollsToTop: NO];
 #if UseRichTextView
     [m_statusLine setLeftMargin: 0];
@@ -1244,18 +1246,18 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [m_statusLine setBottomMargin: 0];
     [m_statusLine setBounces: NO];
 #endif
-
+    
     [m_inputLine setAutocapitalizationType: UITextAutocapitalizationTypeNone];
-
+    
     const NSString *fixedFontName;
     NSArray *fontArray = [UIFont fontNamesForFamilyName: kFixedWidthFontName];
     for (fixedFontName in fontArray) {
-	if ([fixedFontName rangeOfString: @"bold" options: NSCaseInsensitiveSearch].length > 0)
-	    break;
+        if ([fixedFontName rangeOfString: @"bold" options: NSCaseInsensitiveSearch].length > 0)
+            break;
     }
 #if !UseRichTextView
     if (!fixedFontName)
-	fixedFontName = kFixedWidthFontName;
+        fixedFontName = kFixedWidthFontName;
     m_statusLine.editable = NO;
 #endif
     m_statusLine.delegate = self;
@@ -1273,23 +1275,23 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     
     m_storyView = [[StoryView alloc] initWithFrame:frame];
     [m_storyView setScrollsToTop: YES];
-
+    
     m_storyView.delegate = self;
 #if !UseRichTextView
     m_storyView.editable = NO;
 #endif
     UIEdgeInsets edgeInsets = [m_storyView contentInset];
-//    edgeInsets.right = 8;
+    //    edgeInsets.right = 8;
     edgeInsets.bottom = 8;
     [m_storyView setContentInset: edgeInsets];
-
+    
     m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     [self loadPrefs];
     if (!m_fontname) // loadPrefs didn't set font
-	[self setFont: kVariableWidthFontName withSize: m_fontSize];
-
+        [self setFont: kVariableWidthFontName withSize: m_fontSize];
+    
     [m_storyView setAutoresizingMask: /*UIViewAutoresizingFlexibleTopMargin|*/UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin|
-					UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
+     UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
 #if !UseRichTextView
     [m_storyView setAutocapitalizationType: UITextAutocapitalizationTypeNone];
     [m_storyView setAutocorrectionType: UITextAutocorrectionTypeNo];
@@ -1299,40 +1301,40 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     
     [m_storyView setSelectionDelegate: self];
 #endif
-
+    
     [[self view] addSubview: m_storyView];
     [[self view] addSubview: m_statusLine];
     [[self view] addSubview: m_inputLine];
     [m_inputLine setStoryView: m_storyView];
     [m_inputLine setStatusLine: m_statusLine];
     [[self view] bringSubviewToFront: m_inputLine];
-
+    
     [m_inputLine setAutocorrectionType: UITextAutocorrectionTypeNo];
     [m_inputLine setDelegate: self];
     [m_storyView setDelegate: self];
-
+    
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     [m_kbdToggleItem release];
- 
+    
     m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
-
+    
     theSMVC = self;
     theStoryView = m_storyView;
     theStatusLine = m_statusLine;
     theInputLine = m_inputLine;
-
-
+    
+    
     [self setBackgroundColor: m_defaultBGColor makeDefault: NO];
     [self setTextColor: m_defaultFGColor makeDefault: NO];
     
     [self checkAccessibility];
     if (hasAccessibility) {
-	[m_storyView setAccessibilityValue: nil];
-	[m_inputLine setAccessibilityValue: nil];
+        [m_storyView setAccessibilityValue: nil];
+        [m_inputLine setAccessibilityValue: nil];
     }
-
+    
 }
 
 -(void)textSelectedAnimDidFinish:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
@@ -1340,13 +1342,13 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     NSString *text = (NSString*)context;
     [UIView setAnimationDelegate: nil];
     if (finished && [finished boolValue]) {
-	if ([[m_inputLine text] length]) {
-	    if (![origText hasSuffix: @" "])
-		origText = [origText stringByAppendingString: @" "];
-	    [m_inputLine setText: [origText stringByAppendingString: text]];
-	}
-	else
-	    [m_inputLine setText: text];
+        if ([[m_inputLine text] length]) {
+            if (![origText hasSuffix: @" "])
+                origText = [origText stringByAppendingString: @" "];
+            [m_inputLine setText: [origText stringByAppendingString: text]];
+        }
+        else
+            [m_inputLine setText: text];
     }
     [text release];
     [m_storyView clearSelection];
@@ -1354,81 +1356,81 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
     if (/*m_kbShown && */!(ipzAllowInput & kIPZNoEcho)) {
-    // m_kbShown commented out so this still works with paired hardware keyboards
-	NSString *origText = [m_inputLine text];
-	[text retain];
-	[UIView beginAnimations: @"tsel" context: text];
-	[UIView setAnimationDelay: 0.1];
-	CGRect frame = [m_inputLine frame];
-	CGRect origViewFrame = [view frame];
-	CGFloat inputLineWidth = frame.size.width;
-	frame.size = origViewFrame.size;
-	frame = [m_inputLine.superview convertRect:frame toView:view.superview];
-	CGFloat maxDist = [[UIScreen mainScreen] applicationFrame].size.height;
-	if (frame.origin.y - origViewFrame.origin.y > maxDist)
-	    frame.origin.y = origViewFrame.origin.y + maxDist;
-	CGFloat duration = animDuration;
-	if (duration < 0) {
-	    duration = 1.0*(frame.origin.y - origViewFrame.origin.y)/maxDist;
-	    if (duration < 0.2)
-		duration = 0.2;
-	}
-	[UIView setAnimationDuration: duration];
-	[view setFont: [m_inputLine font]];
-	if (origText && [origText length]) {
-	    if (![origText hasSuffix: @" "])
-		origText = [origText stringByAppendingString: @" "];
-	    CGFloat clearButtonWidth = [m_inputLine clearButtonRectForBounds: [m_inputLine bounds]].size.width+1;
-	    CGFloat textWidth = [origText sizeWithFont: [m_inputLine font]].width;
-	    if (textWidth + frame.size.width < inputLineWidth - clearButtonWidth)
-		frame.origin.x += textWidth;
-	    else 
-		frame.origin.x = inputLineWidth - frame.size.width - clearButtonWidth;
-	}
-	[UIView setAnimationDelegate: self];
-	[UIView setAnimationDidStopSelector: @selector(textSelectedAnimDidFinish:finished:context:)];
-	[view setFrame: frame];
-	
-	[UIView commitAnimations];
+        // m_kbShown commented out so this still works with paired hardware keyboards
+        NSString *origText = [m_inputLine text];
+        [text retain];
+        [UIView beginAnimations: @"tsel" context: text];
+        [UIView setAnimationDelay: 0.1];
+        CGRect frame = [m_inputLine frame];
+        CGRect origViewFrame = [view frame];
+        CGFloat inputLineWidth = frame.size.width;
+        frame.size = origViewFrame.size;
+        frame = [m_inputLine.superview convertRect:frame toView:view.superview];
+        CGFloat maxDist = [[UIScreen mainScreen] applicationFrame].size.height;
+        if (frame.origin.y - origViewFrame.origin.y > maxDist)
+            frame.origin.y = origViewFrame.origin.y + maxDist;
+        CGFloat duration = animDuration;
+        if (duration < 0) {
+            duration = 1.0*(frame.origin.y - origViewFrame.origin.y)/maxDist;
+            if (duration < 0.2)
+                duration = 0.2;
+        }
+        [UIView setAnimationDuration: duration];
+        [view setFont: [m_inputLine font]];
+        if (origText && [origText length]) {
+            if (![origText hasSuffix: @" "])
+                origText = [origText stringByAppendingString: @" "];
+            CGFloat clearButtonWidth = [m_inputLine clearButtonRectForBounds: [m_inputLine bounds]].size.width+1;
+            CGFloat textWidth = [origText sizeWithFont: [m_inputLine font]].width;
+            if (textWidth + frame.size.width < inputLineWidth - clearButtonWidth)
+                frame.origin.x += textWidth;
+            else 
+                frame.origin.x = inputLineWidth - frame.size.width - clearButtonWidth;
+        }
+        [UIView setAnimationDelegate: self];
+        [UIView setAnimationDidStopSelector: @selector(textSelectedAnimDidFinish:finished:context:)];
+        [view setFrame: frame];
+        
+        [UIView commitAnimations];
     }
 }
 
 -(void)handleAccessibilityLoad:(NSNotification*)aNotification {
     if ([[(NSObject*)aNotification.object description] rangeOfString: @"UIAccessibility"].length > 0) {
-	[[NSNotificationCenter defaultCenter] removeObserver:self name:NSBundleDidLoadNotification object:nil];
-	checkedAccessibility = NO;
-	[self performSelector: @selector(checkAccessibility) withObject:nil afterDelay:0.01];
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:NSBundleDidLoadNotification object:nil];
+        checkedAccessibility = NO;
+        [self performSelector: @selector(checkAccessibility) withObject:nil afterDelay:0.01];
     }
 }
 
 -(void)checkAccessibility {
     static BOOL hadAccessibility = NO;
     if (hadAccessibility)
-	return;
+        return;
     hasAccessibility = [m_inputLine respondsToSelector: @selector(setAccessibilityLabel:)];
     if (hasAccessibility) {
-	[m_statusLine setAccessibilityLabel: NSLocalizedString(@"Status line",nil)];
-	[m_statusLine setAccessibilityHint: nil];
-	[m_statusLine setAccessibilityTraits: UIAccessibilityTraitNotEnabled]; //256,128
-	[m_storyView setAccessibilityLabel: NSLocalizedString(@"Story output",nil)];
-	[m_storyView setAccessibilityHint: nil];
-	// [m_storyView setAccessibilityTraits: UIAccessibilityTraitNotEnabled|UIAccessibilityTraitStaticText]; //256,64
-	[m_storyView setAccessibilityTraits: UIAccessibilityTraitSummaryElement];
-
+        [m_statusLine setAccessibilityLabel: NSLocalizedString(@"Status line",nil)];
+        [m_statusLine setAccessibilityHint: nil];
+        [m_statusLine setAccessibilityTraits: UIAccessibilityTraitNotEnabled]; //256,128
+        [m_storyView setAccessibilityLabel: NSLocalizedString(@"Story output",nil)];
+        [m_storyView setAccessibilityHint: nil];
+        // [m_storyView setAccessibilityTraits: UIAccessibilityTraitNotEnabled|UIAccessibilityTraitStaticText]; //256,64
+        [m_storyView setAccessibilityTraits: UIAccessibilityTraitSummaryElement];
+        
 #if UseRichTextView
-	[m_statusLine setIsAccessibilityElement: YES];
-	[m_storyView setIsAccessibilityElement: YES];
+        [m_statusLine setIsAccessibilityElement: YES];
+        [m_storyView setIsAccessibilityElement: YES];
 #endif
-	[m_inputLine setAccessibilityLabel: NSLocalizedString(@"Input command",nil)];
-	[m_inputLine setAccessibilityHint: nil];
-	[m_inputLine setAccessibilityTraits: UIAccessibilityTraitStaticText]; //64
-
-	UIBarButtonItem *shkb = self.navigationItem.rightBarButtonItem;
-	if ([shkb respondsToSelector: @selector(view)])
-	    [(UIView*)[shkb view] setAccessibilityLabel: NSLocalizedString(@"Show/Hide Keyboard",nil)];
-	[m_frotzInfoController updateAccessibility];
-	[m_storyBrowser updateAccessibility];
-	hadAccessibility = YES;
+        [m_inputLine setAccessibilityLabel: NSLocalizedString(@"Input command",nil)];
+        [m_inputLine setAccessibilityHint: nil];
+        [m_inputLine setAccessibilityTraits: UIAccessibilityTraitStaticText]; //64
+        
+        UIBarButtonItem *shkb = self.navigationItem.rightBarButtonItem;
+        if ([shkb respondsToSelector: @selector(view)])
+            [(UIView*)[shkb view] setAccessibilityLabel: NSLocalizedString(@"Show/Hide Keyboard",nil)];
+        [m_frotzInfoController updateAccessibility];
+        [m_storyBrowser updateAccessibility];
+        hadAccessibility = YES;
     }
 }
 
@@ -1439,12 +1441,12 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [m_background release];
     m_background = nil;
     if (m_notesController)
-	[m_notesController release];
+        [m_notesController release];
     m_notesController = nil;
-
+    
     [m_currentStory release];
     [m_fontname release];
-  
+    
     [storyGamePath release];
     [resourceGamePath release];
     [storyTopSavePath release];
@@ -1477,48 +1479,48 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     m_rotationInProgress = YES;
     if (!self.navigationController.modalViewController)
-	[m_frotzInfoController dismissInfo];
+        [m_frotzInfoController dismissInfo];
     
     if (m_notesController)
-	[m_notesController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+        [m_notesController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
 }
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
     if (UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
-	m_landscape = YES;
-	if (isOS30 && !gLargeScreenDevice)
-	    [[UIApplication sharedApplication] setStatusBarHidden:YES animated:YES];
-	[self.navigationController setNavigationBarHidden:gLargeScreenDevice?NO:YES animated:YES];
+        m_landscape = YES;
+        if (isOS30 && !gLargeScreenDevice)
+            [[UIApplication sharedApplication] setStatusBarHidden:YES animated:YES];
+        [self.navigationController setNavigationBarHidden:gLargeScreenDevice?NO:YES animated:YES];
     } else {
-	if (isOS30 && !gLargeScreenDevice)
-	    [[UIApplication sharedApplication] setStatusBarHidden:NO animated:YES];
-	m_landscape = NO;
-	[self.navigationController setNavigationBarHidden:NO animated:YES];
+        if (isOS30 && !gLargeScreenDevice)
+            [[UIApplication sharedApplication] setStatusBarHidden:NO animated:YES];
+        m_landscape = NO;
+        [self.navigationController setNavigationBarHidden:NO animated:YES];
     }
     [self performSelector: @selector(_clearRotationInProgress) withObject: nil afterDelay:0.05];
-
+    
     CGRect frame = [self storyViewFullFrame];
-
+    
     // Work around weird bug where the owning NotesVC scrollview resizes the view 20
     // pixels smaller when presentModalViewController shows the view.  Dunno why, but this
     // compensates for it.
     if (gUseSplitVC && m_landscape && m_autoRestoreDict!=nil)
-	frame.size.height += 20;
-
+        frame.size.height += 20;
+    
     [m_storyView setFrame: frame];
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
     [m_statusLine setNeedsDisplay];
-
+    
     if (m_notesController)
-	[m_notesController didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-
+        [m_notesController didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    
 #if 1
     if (gStoryInterp == kGlxStory && !m_kbShown) {
-	iphone_recompute_screensize();
-	screen_size_changed = 1;
+        iphone_recompute_screensize();
+        screen_size_changed = 1;
     }
 #endif
 }
@@ -1539,31 +1541,31 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     frame.origin.y = statusHeight;
 #endif
     BOOL navHidden = [self.navigationController isNavigationBarHidden];
-//    if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]) || !m_rotationInProgress && m_landscape) { // m_landscape
+    //    if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]) || !m_rotationInProgress && m_landscape) { // m_landscape
     if (UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
-	if (navHidden)
-	    frame.size.height = applicationFrame.size.width - statusHeight;
-	else
-	    frame.size.height = applicationFrame.size.width - (gLargeScreenDevice?navHeight:navHeight /2) - statusHeight;
-	frame.size.width = applicationFrame.size.height;
+        if (navHidden)
+            frame.size.height = applicationFrame.size.width - statusHeight;
+        else
+            frame.size.height = applicationFrame.size.width - (gLargeScreenDevice?navHeight:navHeight /2) - statusHeight;
+        frame.size.width = applicationFrame.size.height;
     } else {
-	if (navHidden)
-	    frame.size.height = applicationFrame.size.height - (gLargeScreenDevice?0:navHeight/2) - statusHeight;
-	else
-	    frame.size.height = applicationFrame.size.height - navHeight - statusHeight;
-	frame.size.width = applicationFrame.size.width;
+        if (navHidden)
+            frame.size.height = applicationFrame.size.height - (gLargeScreenDevice?0:navHeight/2) - statusHeight;
+        else
+            frame.size.height = applicationFrame.size.height - navHeight - statusHeight;
+        frame.size.width = applicationFrame.size.width;
     }
-
-//    frame.size.width = m_storyView.frame.size.width; ??? why was this here
-
-//    NSLog(@"sv full frame nav=%d dev=%d frame +%.0f,%.0f,%.0fx%.0f", navHidden, UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]),
-//	    frame.origin.x, frame.origin.y,frame.size.width, frame.size.height);
+    
+    //    frame.size.width = m_storyView.frame.size.width; ??? why was this here
+    
+    //    NSLog(@"sv full frame nav=%d dev=%d frame +%.0f,%.0f,%.0fx%.0f", navHidden, UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]),
+    //	    frame.origin.x, frame.origin.y,frame.size.width, frame.size.height);
     return frame;
 }
 
 -(void) keyboardDidShow:(NSNotification*)notif {
     m_kbShown = YES;
-
+    
     // Even though we already did this in keyboardWillShow, we do it again here
     // so the animation of the storyview resizing will sync up with the keyboard
     // appearing, to make sure the size is correct for whether the
@@ -1579,7 +1581,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     
     [UIView beginAnimations: @"kbd" context: 0];
     [UIView setAnimationBeginsFromCurrentState:YES];
-
+    
     [m_storyView setFrame: frame];
     
     CGRect statusFrame = [m_statusLine frame];
@@ -1588,20 +1590,20 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [UIView commitAnimations];
     
     [self scrollStoryViewToEnd: YES];
-
+    
     [m_inputLine updatePosition];
     
     if (gStoryInterp == kGlxStory) {
-	iphone_recompute_screensize();
-	screen_size_changed = 1;
+        iphone_recompute_screensize();
+        screen_size_changed = 1;
     }
 }
 
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
     if (gStoryInterp == kGlxStory) {
-	iphone_recompute_screensize();
-	screen_size_changed = 1;
+        iphone_recompute_screensize();
+        screen_size_changed = 1;
     }
 }
 
@@ -1610,44 +1612,44 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     NSValue *boundsValue = [userInfo objectForKey: UIKeyboardBoundsUserInfoKey];
     CGRect bounds = [boundsValue CGRectValue];
     CGRect frame = [self storyViewFullFrame];
-
+    
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
 #endif
     CGFloat botMargin = [m_storyView bottomMargin];
     if (botMargin > 0) {
-	bounds.size.height -= botMargin;
-	if (bounds.size.height < 0)
-	    bounds.size.height = 0;
+        bounds.size.height -= botMargin;
+        if (bounds.size.height < 0)
+            bounds.size.height = 0;
     }
     if (m_notesController)
-	[m_notesController keyboardWillShow: bounds];
-
+        [m_notesController keyboardWillShow: bounds];
+    
     frame.size.height -= bounds.size.height;
-
+    
     [UIView beginAnimations: @"kbd" context: 0];
     [UIView setAnimationDuration: 0.3];
     [UIView setAnimationBeginsFromCurrentState:YES];
-
+    
     if (!m_rotationInProgress) {
-	CGPoint cofst = [m_storyView contentOffset];
-	cofst.y += bounds.size.height;
-	[m_storyView setContentOffset: cofst];
+        CGPoint cofst = [m_storyView contentOffset];
+        cofst.y += bounds.size.height;
+        [m_storyView setContentOffset: cofst];
     }
     [m_storyView setFrame: frame];
-
+    
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
-
+    
     [UIView commitAnimations];
-
+    
     if (!m_rotationInProgress)
-	[self scrollStoryViewToEnd: YES];
-
+        [self scrollStoryViewToEnd: YES];
+    
     [m_inputLine updatePosition];
-
-//NSLog(@"kbd will show notif frame height=%f kbbh=%f", frame.size.height, bounds.size.height);
+    
+    //NSLog(@"kbd will show notif frame height=%f kbbh=%f", frame.size.height, bounds.size.height);
 }
 
 
@@ -1657,14 +1659,14 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [m_storyView prepareForKeyboardShowHide];
 #endif
     if (m_notesController)
-	[m_notesController keyboardWillHide];
-
+        [m_notesController keyboardWillHide];
+    
     [UIView beginAnimations: @"kbd" context: 0];
     [UIView setAnimationDuration: 0.3];
     [UIView setAnimationBeginsFromCurrentState:YES];
-
+    
     [m_storyView setFrame: frame];
-
+    
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
@@ -1679,13 +1681,13 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 -(void) scrollStoryViewToEnd:(BOOL)animated {
     FrotzView *storyView = m_storyView;
     if (gStoryInterp == kGlxStory && cwin > 0 && cwin < [m_glkViews count] && glkGridArray[cwin].win->type == wintype_TextBuffer) {
-	storyView = [m_glkViews objectAtIndex: cwin];
+        storyView = [m_glkViews objectAtIndex: cwin];
     }
     CGSize contentSize = [storyView contentSize];
     float height = contentSize.height-[storyView visibleRect].size.height - [storyView bottomMargin];
     if (height < 0)
-	height = 0;
-     CGPoint contentOffset = CGPointMake(0, height);
+        height = 0;
+    CGPoint contentOffset = CGPointMake(0, height);
     removeAnim(storyView);
     [storyView setContentOffset: contentOffset animated: animated];
 }
@@ -1693,24 +1695,24 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 
 -(BOOL) scrollStoryViewOnePage:(FrotzView*)view fraction:(float)fraction {
     CGRect visRect = [view visibleRect];
-//    visRect.size.height += [view bottomMargin]; // bcs
+    //    visRect.size.height += [view bottomMargin]; // bcs
     CGFloat topMargin = [view topMargin];
     CGPoint contentOffset = [view contentOffset];
     CGSize contentSize = [view contentSize];
     float height = visRect.size.height/fraction;
     if (contentOffset.y < contentSize.height - 2*height + topMargin) {
-	contentOffset.y += height - topMargin - 16;
+        contentOffset.y += height - topMargin - 16;
     } else if (contentOffset.y <  contentSize.height - height) {
-	contentOffset.y = contentSize.height - height;
+        contentOffset.y = contentSize.height - height;
     } else {
-	int viewNum = [m_glkViews indexOfObject:view];
-	if (viewNum = NSNotFound)
-	    viewNum = 0;
-	if (lastVisibleYPos[viewNum] < contentOffset.y)
-	    lastVisibleYPos[viewNum] = contentOffset.y;
-	return NO;
+        int viewNum = [m_glkViews indexOfObject:view];
+        if (viewNum == NSNotFound)
+            viewNum = 0;
+        if (lastVisibleYPos[viewNum] < contentOffset.y)
+            lastVisibleYPos[viewNum] = contentOffset.y;
+        return NO;
     }
-
+    
     [view setContentOffset: contentOffset animated: YES];
     return YES;
 }
@@ -1721,31 +1723,36 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
-
+    
     [fileBrowser setPath: storySavePath];
     
     [fileBrowser setDelegate: self];
     [fileBrowser reloadData];
-
+    
     if (gUseSplitVC) {
-	UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
-	[nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
-	nc.modalPresentationStyle = UIModalPresentationFormSheet;
-	[self.navigationController presentModalViewController: nc animated: YES];
-    } else
-
-    [self.navigationController pushViewController: fileBrowser animated: YES];
+        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
+        [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
+        nc.modalPresentationStyle = UIModalPresentationFormSheet;
+        [self.navigationController presentModalViewController: nc animated: YES];
+    } else {
+        if (!gLargeScreenDevice)
+            [self.navigationController setNavigationBarHidden:NO animated:YES];
+        [self.navigationController pushViewController: fileBrowser animated: YES];
+    }
     [fileBrowser release];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
     if (gUseSplitVC) {
-	UINavigationController *nc = browser.navigationController;
-	[self.navigationController dismissModalViewControllerAnimated:YES];
-	[nc release];
+        UINavigationController *nc = browser.navigationController;
+        [self.navigationController dismissModalViewControllerAnimated:YES];
+        [nc release];
     }
-    else
-	[self.navigationController popViewControllerAnimated: YES];
+    else {
+        [self.navigationController popViewControllerAnimated: YES];
+        if (!gLargeScreenDevice)
+            [self.navigationController setNavigationBarHidden:YES animated:YES];
+    }
     if (file)
         strcpy(iphone_filename, [file UTF8String]);
     else
@@ -1759,44 +1766,44 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     NSError *error;
     [fileMgr removeItemAtPath: filePath error: &error];
     if ([[DBSession sharedSession] isLinked]) {
-	NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""];
-	NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
-	[self.restClient deletePath: dbPath];
-	[self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
+        NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""];
+        NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
+        [self.restClient deletePath: dbPath];
+        [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
     }
 }
 
 -(void) setBackgroundColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
     if (makeDefault && color != m_defaultBGColor) {
-	[m_defaultBGColor release];
-	m_defaultBGColor = [color retain];
+        [m_defaultBGColor release];
+        m_defaultBGColor = [color retain];
     }
     if (!m_storyView)
-	return;
-//    if (makeDefault && currColor != 0 && currColor != 0x29)
-//	return;
+        return;
+    //    if (makeDefault && currColor != 0 && currColor != 0x29)
+    //	return;
     [m_storyView setBackgroundColor: color];
     [m_background setBackgroundColor: color];
-
-     [m_background setBackgroundColor: m_defaultBGColor];
-
+    
+    [m_background setBackgroundColor: m_defaultBGColor];
+    
 #if UseRichTextView
     [m_statusLine setBackgroundColor: color];
 #else
     [m_statusLine setTextColor: color];
 #endif
-//    [m_inputLine setBackgroundColor: color];
+    //    [m_inputLine setBackgroundColor: color];
 }
 
 -(void) setTextColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
     if (makeDefault && color != m_defaultFGColor) {
-	[m_defaultFGColor release];
-	m_defaultFGColor = [color retain];
+        [m_defaultFGColor release];
+        m_defaultFGColor = [color retain];
     }
     if (!m_storyView)
-	return;
-//    if (makeDefault && currColor != 0 && currColor != 0x29)
-//	return;
+        return;
+    //    if (makeDefault && currColor != 0 && currColor != 0x29)
+    //	return;
     [m_storyView setTextColor: color];
 #if UseRichTextView
     [m_statusLine setTextColor: color];
@@ -1825,17 +1832,17 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 }
 
 -(void) setFont: (NSString*) fontname withSize:(int)size {
-    m_fontname = [[fontname copy] retain];
+    m_fontname = [fontname copy];
     if (size)
-	m_fontSize = size;
+        m_fontSize = size;
     if (m_fontSize < 8 || m_fontSize > 20)
-	m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+        m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
     [m_storyView setFontFamily: [font familyName] size: m_fontSize];
     int fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
-
+    
     m_statusFixedFontSize = gLargeScreenDevice ? (m_fontSize > 15 ? 15 : m_fontSize) : 8;
     NSString *statusFixedFontFamily = [[m_statusLine fixedFont] familyName];
     [m_statusLine setFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
@@ -1845,17 +1852,17 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     m_statusFixedFontPixelHeight = !gLargeScreenDevice ? 10 : [fixedFont leading];    
     
     if (gStoryInterp == kGlxStory) {
-	int c = [m_glkViews count];
-	for (int k = 0; k < c; ++k) {
-	    if (glkGridArray[k].win->type == wintype_TextGrid) {
-		[[m_glkViews objectAtIndex:k] setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
-		[[m_glkViews objectAtIndex:k] setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
-	    } else {
-		[[m_glkViews objectAtIndex:k] setFontFamily: [font familyName] size:m_fontSize];
-		[[m_glkViews objectAtIndex:k] setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
-	    }
-	}
-	screen_size_changed = 1;
+        int c = [m_glkViews count];
+        for (int k = 0; k < c; ++k) {
+            if (glkGridArray[k].win->type == wintype_TextGrid) {
+                [[m_glkViews objectAtIndex:k] setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
+                [[m_glkViews objectAtIndex:k] setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
+            } else {
+                [[m_glkViews objectAtIndex:k] setFontFamily: [font familyName] size:m_fontSize];
+                [[m_glkViews objectAtIndex:k] setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
+            }
+        }
+        screen_size_changed = 1;
     }
 #else
     m_statusFixedFontSize = 8;
@@ -1901,7 +1908,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     NSString *aStorySavePath = [storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: storyPath]];
     NSString *sipPath = [aStorySavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile];
     if ([[NSFileManager defaultManager] fileExistsAtPath: sipPath])
-	return YES;
+        return YES;
     return NO;
 }
 
@@ -1914,21 +1921,21 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [[NSFileManager defaultManager] removeItemAtPath: savePath error: &error];
     
     if (m_currentStory && [m_currentStory isEqualToString: storyPath]) {
-	[self forceAbandonStory];
+        [self forceAbandonStory];
     }
 }
 
 -(void)updateAutosavePaths {
     if (storySIPPath)
-	[storySIPPath release];
+        [storySIPPath release];
     storySIPPath    = [[storySavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile] retain];
     if (storySIPSavePath) {
-	[storySIPSavePath release];
-	storySIPSavePath = nil;
+        [storySIPSavePath release];
+        storySIPSavePath = nil;
     }
     if (storySavePath) {
-	storySIPSavePath= [[storySavePath stringByAppendingPathComponent: @kFrotzAutoSaveFile] retain];
-	strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
+        storySIPSavePath= [[storySavePath stringByAppendingPathComponent: @kFrotzAutoSaveFile] retain];
+        strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
     }
 }
 
@@ -1943,35 +1950,35 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 -(void) setCurrentStory: (NSString*)storyPath {
     id fileMgr = [NSFileManager defaultManager];
     if (m_currentStory != storyPath) {
-	[m_currentStory release];
-	m_currentStory = nil;
-	BOOL isDir = NO;
-	if (storyPath && [storyPath length] > 0) {
-	    if ([fileMgr fileExistsAtPath: storyPath isDirectory:&isDir] && !isDir)
-		m_currentStory = [[NSMutableString stringWithString: storyPath] retain];
-	    else {
-		NSString *altPath = [storyGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
-		if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
-		    m_currentStory = [[NSMutableString stringWithString: altPath] retain];
-		else {
-		    altPath = [resourceGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
-		    if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
-			m_currentStory = [[NSMutableString stringWithString: altPath] retain];
-		}
-	    }
-	}
+        [m_currentStory release];
+        m_currentStory = nil;
+        BOOL isDir = NO;
+        if (storyPath && [storyPath length] > 0) {
+            if ([fileMgr fileExistsAtPath: storyPath isDirectory:&isDir] && !isDir)
+                m_currentStory = [[NSMutableString stringWithString: storyPath] retain];
+            else {
+                NSString *altPath = [storyGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
+                if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
+                    m_currentStory = [[NSMutableString stringWithString: altPath] retain];
+                else {
+                    altPath = [resourceGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
+                    if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
+                        m_currentStory = [[NSMutableString stringWithString: altPath] retain];
+                }
+            }
+        }
     }
     if (m_currentStory) {
-	if (storySavePath)
-	    [storySavePath release];
-	storySavePath = [[storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]] retain];
-	if (![fileMgr fileExistsAtPath: storySavePath])
-	    [fileMgr createDirectoryAtPath: storySavePath attributes: nil];
+        if (storySavePath)
+            [storySavePath release];
+        storySavePath = [[storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]] retain];
+        if (![fileMgr fileExistsAtPath: storySavePath])
+            [fileMgr createDirectoryAtPath: storySavePath attributes: nil];
     	strcpy(SAVE_PATH, [storySavePath UTF8String]);
-
-	if (![fileMgr fileExistsAtPath: storySIPPathOld]) {
-	    [self updateAutosavePaths];
-	}
+        
+        if (![fileMgr fileExistsAtPath: storySIPPathOld]) {
+            [self updateAutosavePaths];
+        }
     }
 }
 
@@ -1991,10 +1998,10 @@ static int iphone_top_win_height = 1;
     int maxCols = 80; //h_screen_cols;
     NSUInteger viewNum = [m_glkViews indexOfObject: view];
     if (!screen_colors || gStoryInterp == kGlxStory) {
-	if (viewNum == NSNotFound) 
-	    return;
-	maxCols = maxPossCols = glkGridArray[viewNum].nCols;
-	numRows = glkGridArray[viewNum].nRows;
+        if (viewNum == NSNotFound) 
+            return;
+        maxCols = maxPossCols = glkGridArray[viewNum].nCols;
+        numRows = glkGridArray[viewNum].nRows;
     }
     NSMutableString *buf = [[NSMutableString alloc] init];
     int color = gStoryInterp == kGlxStory ? 0 : screen_colors[0];
@@ -2004,75 +2011,75 @@ static int iphone_top_win_height = 1;
     [view setTextStyle: slStyle];
     m_cursorOffset = CGPointMake(0, 0);
     for (i=0; i < numRows; ++i) {
-	int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> 8) & REVERSE_STYLE;
-	for (j=0; j < maxCols; ++j) {
-	    char c;
-	    if (gStoryInterp == kGlxStory) {
-		c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
-		color = 0;
-		style = 0;
-	    } else {
-		c = (char)screen_data[i * maxPossCols + j];
-		color = screen_colors[i * maxPossCols + j];
-		style = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
-		if (currColor==0x22 || j >= h_screen_cols-1 && iphone_top_win_height <= 4 && firstColStyle) {
-		    style = REVERSE_STYLE;
-		    color = prevColor;
-		}
-	    }
-	    if (color != prevColor) {
-		if ([buf length]) {
-		    [view appendText: buf];
-		    [buf setString: @""];
-		}
-		[view setTextColorIndex: color >> 4];
-		[view setBgColorIndex: color & 0xf];
-		prevColor = color;
-	    }
-	    if (style != prevStyle) {
-		if ([buf length]) {
-		    [view appendText: buf];
-		    [buf setString: @""];
-		}
-		if (style & REVERSE_STYLE)
-		    [view setTextStyle: slStyle|kFTReverse];
-		else
-		    [view setTextStyle: slStyle];
-		prevStyle = style;
-	    }
-	    if (i == cursor_row && j == cursor_col) {
-    		if ([buf length]) {
-		    [view appendText: buf];
-		    [buf setString: @""];
-		}
-		m_cursorOffset = [m_statusLine lastPt];
-	    }
-	    if (c==' ')
-		[buf appendString: @" "];
-	    else if (c==kClearEscChar) {
-		[buf release];
-		[view clear];
-		return;
-		}		
-	    else
-		[buf appendFormat: @"%c", c];
-	    ++off;
-	}
-	if (h_screen_cols == maxCols) {
-	    [buf appendString: @"             "];
-	    off += 15;
-	}
-	[buf appendString: @"                      "];
-	off += 20;
-	if (1 || i < iphone_top_win_height-1) {
-	    [buf appendString: @"\n"];
-	    ++off;
-	}
+        int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> 8) & REVERSE_STYLE;
+        for (j=0; j < maxCols; ++j) {
+            char c;
+            if (gStoryInterp == kGlxStory) {
+                c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
+                color = 0;
+                style = 0;
+            } else {
+                c = (char)screen_data[i * maxPossCols + j];
+                color = screen_colors[i * maxPossCols + j];
+                style = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                if (currColor==0x22 || j >= h_screen_cols-1 && iphone_top_win_height <= 4 && firstColStyle) {
+                    style = REVERSE_STYLE;
+                    color = prevColor;
+                }
+            }
+            if (color != prevColor) {
+                if ([buf length]) {
+                    [view appendText: buf];
+                    [buf setString: @""];
+                }
+                [view setTextColorIndex: color >> 4];
+                [view setBgColorIndex: color & 0xf];
+                prevColor = color;
+            }
+            if (style != prevStyle) {
+                if ([buf length]) {
+                    [view appendText: buf];
+                    [buf setString: @""];
+                }
+                if (style & REVERSE_STYLE)
+                    [view setTextStyle: slStyle|kFTReverse];
+                else
+                    [view setTextStyle: slStyle];
+                prevStyle = style;
+            }
+            if (i == cursor_row && j == cursor_col) {
+                if ([buf length]) {
+                    [view appendText: buf];
+                    [buf setString: @""];
+                }
+                m_cursorOffset = [m_statusLine lastPt];
+            }
+            if (c==' ')
+                [buf appendString: @" "];
+            else if (c==kClearEscChar) {
+                [buf release];
+                [view clear];
+                return;
+            }		
+            else
+                [buf appendFormat: @"%c", c];
+            ++off;
+        }
+        if (h_screen_cols == maxCols) {
+            [buf appendString: @"             "];
+            off += 15;
+        }
+        [buf appendString: @"                      "];
+        off += 20;
+        if (1 || i < iphone_top_win_height-1) {
+            [buf appendString: @"\n"];
+            ++off;
+        }
     }
     [view appendText: buf];
     [view setTextStyle: slStyle];
     if (hasAccessibility)
-	[view setAccessibilityValue: view.text];
+        [view setAccessibilityValue: view.text];
     [buf release];
 }
 #else
@@ -2080,11 +2087,11 @@ char *tempStatusLineScreenBuf() {
     static char buf[MAX_ROWS * MAX_COLS];
     int i, j=0;
     for (i=0; i < iphone_top_win_height; ++i) {
-	for (j=0; j < h_screen_cols; ++j) {
-	    char c = (char)screen_data[i * MAX_COLS + j];
-	    buf[i * (h_screen_cols+1) + j] = c;
-	}
-	buf[i*(h_screen_cols+1) + j] = '\n';
+        for (j=0; j < h_screen_cols; ++j) {
+            char c = (char)screen_data[i * MAX_COLS + j];
+            buf[i * (h_screen_cols+1) + j] = c;
+        }
+        buf[i*(h_screen_cols+1) + j] = '\n';
     }
     
     buf[i*(h_screen_cols+1)] = '\0';	
@@ -2103,361 +2110,361 @@ char *tempStatusLineScreenBuf() {
     RichTextView *statusLine = nil;
     NSMutableString *inputStatusStr = ipzStatusStr;
     NSMutableString *inputBufferStr = ipzBufferStr;
-
+    
     pthread_mutex_lock(&winSizeMutex);
-
+    
     int viewNum = 0;
     if (gStoryInterp == kGlxStory && [m_glkViews count] > 1) {
-	int glkInputsCount = glkInputs ? [glkInputs count] : 0;
-
-	int vn = 0;
-	for (RichTextView *v in m_glkViews) {
-	    if (glkInputsCount <= viewNum)
-		break;
-	    if ((NSNull*)v == [NSNull null])
-		;
-	    else if (!statusLine && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextGrid && [[glkInputs objectAtIndex:vn] length] > 0) {
-		statusLine = v;
-		inputStatusStr = [glkInputs objectAtIndex:vn];
-	    }
-	    else if (!storyView && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextBuffer && [[glkInputs objectAtIndex:vn] length] > 0) {
-		storyView = v;
-		inputBufferStr = [glkInputs objectAtIndex:vn];
-		viewNum = vn;
-	    }
-	    ++vn;
-	}
-	if (!storyView) {
-	    storyView = m_storyView;
-	}
-	if (!statusLine)
-	    statusLine = m_statusLine;
+        int glkInputsCount = glkInputs ? [glkInputs count] : 0;
+        
+        int vn = 0;
+        for (RichTextView *v in m_glkViews) {
+            if (glkInputsCount <= viewNum)
+                break;
+            if ((NSNull*)v == [NSNull null])
+                ;
+            else if (!statusLine && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextGrid && [[glkInputs objectAtIndex:vn] length] > 0) {
+                statusLine = v;
+                inputStatusStr = [glkInputs objectAtIndex:vn];
+            }
+            else if (!storyView && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextBuffer && [[glkInputs objectAtIndex:vn] length] > 0) {
+                storyView = v;
+                inputBufferStr = [glkInputs objectAtIndex:vn];
+                viewNum = vn;
+            }
+            ++vn;
+        }
+        if (!storyView) {
+            storyView = m_storyView;
+        }
+        if (!statusLine)
+            statusLine = m_statusLine;
     } else {
-	storyView = m_storyView;
-	statusLine = m_statusLine;
+        storyView = m_storyView;
+        statusLine = m_statusLine;
     }
     int statusLen = [inputStatusStr length];
-
+    
     if (iphone_top_win_height < 0)
-	prevTopWinHeight = -1;
-
+        prevTopWinHeight = -1;
+    
     BOOL frozeDisplay = NO;
     
     if (statusLen > 1 && top_win_height <=1 && prevTopWinHeight>=3) { // && [storyView textStyle]==kFTFixedWidth) {
-	[storyView setFreezeDisplay: YES];
-	[statusLine setFreezeDisplay: YES];
-	frozeDisplay = YES;
+        [storyView setFreezeDisplay: YES];
+        [statusLine setFreezeDisplay: YES];
+        frozeDisplay = YES;
     }
-
+    
     if (iphone_top_win_height < 0 || prevTopWinHeight != top_win_height && (statusLen > 1 && !grewStatus || top_win_height==0 || top_win_height > prevTopWinHeight)) {
-
-	if (top_win_height > 1 && top_win_height > prevTopWinHeight)
-	    grewStatus = 1;
-	else
-	    grewStatus = 0;
-	fast=YES;
-	topWinSize = top_win_height * m_statusFixedFontPixelHeight + 0; // was 3 in 1.3, was 6 in 1.2
-
-	if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
-	    [self setupFadeWithDuration: 0.08];
-
-	[statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
-
-	iphone_top_win_height = top_win_height;
-	[storyView setTopMargin: topWinSize+0];
-	prevTopWinHeight = top_win_height;
-//	NSLog(@"set topwinheight %d", top_win_height);
+        
+        if (top_win_height > 1 && top_win_height > prevTopWinHeight)
+            grewStatus = 1;
+        else
+            grewStatus = 0;
+        fast=YES;
+        topWinSize = top_win_height * m_statusFixedFontPixelHeight + 0; // was 3 in 1.3, was 6 in 1.2
+        
+        if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
+            [self setupFadeWithDuration: 0.08];
+        
+        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
+        
+        iphone_top_win_height = top_win_height;
+        [storyView setTopMargin: topWinSize+0];
+        prevTopWinHeight = top_win_height;
+        //	NSLog(@"set topwinheight %d", top_win_height);
     }
-
+    
     if (winSizeChanged) {
-	winSizeChanged = NO;
-	pthread_cond_signal(&winSizeChangedCond);
+        winSizeChanged = NO;
+        pthread_cond_signal(&winSizeChangedCond);
     }
     pthread_mutex_unlock(&winSizeMutex);
-
+    
     pthread_mutex_lock(&outputMutex);
     if (finished)
-	iphone_flush(NO);
+        iphone_flush(NO);
     textLen = [inputBufferStr length];
     
     BOOL clearStory = ([inputBufferStr hasPrefix: @kClearEscCode]);
     BOOL setDefColors = ([inputBufferStr hasPrefix: @kSetDefColorsCode]);
     if (textLen > 0) {
-	if (!clearStory && !setDefColors) {
+        if (!clearStory && !setDefColors) {
 #if UseRichTextView
-	    NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
-	    while (escCodeRange.length > 0) {
-		if (escCodeRange.location > 0)
-		    [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
-		if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @kStyleEscCode]) {
-		    char c = [inputBufferStr characterAtIndex: escCodeRange.location+2];
-		    RichTextStyle style = kFTNormal;		
-		    int fstyle = 0;
-		    if (c >= '0' && c <='9')
-			fstyle = c - '0';
-		    else if (c >='a')
-			fstyle = c - 'a'+10;
-		    else
-			fstyle = c - 'A'+10;
-		    if (fstyle & BOLDFACE_STYLE)
-			style |= kFTBold;
-		    if (fstyle & EMPHASIS_STYLE)
-			style |= kFTItalic;
-		    if (fstyle & FIXED_WIDTH_STYLE)
-			style |= kFTFixedWidth; //|kFTNoWrap;
-		    if (fstyle & REVERSE_STYLE)
-			style |= kFTReverse  | ((fstyle & FIXED_WIDTH_STYLE) ? (kFTBold|kFTNoWrap) : 0);
-		    [storyView setTextStyle: style];
-		    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+3]];
-		} else if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @ kArbColorEscCode]) {
-		    NSString *colorStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,7)];
-		    unsigned int intRGB;
-		    float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		    UIColor *color = nil;
-		    int skip = escCodeRange.location+2;
-		    NSScanner *scanner = [NSScanner scannerWithString: colorStr];
-		    BOOL isBGColor = ([colorStr characterAtIndex:0] == 'b');
-		    [scanner setScanLocation: 1];
-		    if ([scanner scanHexInt: &intRGB]) {
-			floatRGB[0] = (float)((intRGB & 0xff0000) >> 16) / 255.0f;
-			floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
-			floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
-			color = [UIColor colorWithRed: floatRGB[0] green:floatRGB[1] blue:floatRGB[2] alpha:1.0];
-			int colIndex = [storyView getOrAllocColorIndex: color];
-			if (isBGColor)
-			    [storyView setBgColorIndex: colIndex];
-			else {
-			    [storyView setTextColorIndex: colIndex];
-			}
-			skip += [scanner scanLocation];
-		    }
-    		    [inputBufferStr setString: [inputBufferStr substringFromIndex: skip]];
-
-		} else {
-		    int col[2];
-		    for (int i=0; i < 2; ++i) {
-			char c = [inputBufferStr characterAtIndex: escCodeRange.location+i+2];
-			col[i] = 0;
-			if (c >= '0' && c <='9')
-			    col[i] = c - '0';
-			else if (c >='a')
-			    col[i] = c - 'a'+10;
-			else
-			    col[i] = c - 'A'+10;
-			if (i==0) {
-			    [storyView setTextColorIndex: col[i]];
-			    [statusLine setTextColorIndex: col[i]];
-			    if (col[i]<=1)
-				[m_inputLine setTextColor: m_defaultFGColor];
-			} else {
-			    [storyView setBgColorIndex: col[i]];
-			    [statusLine setBgColorIndex: col[i]];
-			}
-		    }
-		    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+4]];
-		}
-		escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
-	    }
+            NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
+            while (escCodeRange.length > 0) {
+                if (escCodeRange.location > 0)
+                    [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
+                if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @kStyleEscCode]) {
+                    char c = [inputBufferStr characterAtIndex: escCodeRange.location+2];
+                    RichTextStyle style = kFTNormal;		
+                    int fstyle = 0;
+                    if (c >= '0' && c <='9')
+                        fstyle = c - '0';
+                    else if (c >='a')
+                        fstyle = c - 'a'+10;
+                    else
+                        fstyle = c - 'A'+10;
+                    if (fstyle & BOLDFACE_STYLE)
+                        style |= kFTBold;
+                    if (fstyle & EMPHASIS_STYLE)
+                        style |= kFTItalic;
+                    if (fstyle & FIXED_WIDTH_STYLE)
+                        style |= kFTFixedWidth; //|kFTNoWrap;
+                    if (fstyle & REVERSE_STYLE)
+                        style |= kFTReverse  | ((fstyle & FIXED_WIDTH_STYLE) ? (kFTBold|kFTNoWrap) : 0);
+                    [storyView setTextStyle: style];
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+3]];
+                } else if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @ kArbColorEscCode]) {
+                    NSString *colorStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,7)];
+                    unsigned int intRGB;
+                    float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+                    UIColor *color = nil;
+                    int skip = escCodeRange.location+2;
+                    NSScanner *scanner = [NSScanner scannerWithString: colorStr];
+                    BOOL isBGColor = ([colorStr characterAtIndex:0] == 'b');
+                    [scanner setScanLocation: 1];
+                    if ([scanner scanHexInt: &intRGB]) {
+                        floatRGB[0] = (float)((intRGB & 0xff0000) >> 16) / 255.0f;
+                        floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
+                        floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
+                        color = [UIColor colorWithRed: floatRGB[0] green:floatRGB[1] blue:floatRGB[2] alpha:1.0];
+                        int colIndex = [storyView getOrAllocColorIndex: color];
+                        if (isBGColor)
+                            [storyView setBgColorIndex: colIndex];
+                        else {
+                            [storyView setTextColorIndex: colIndex];
+                        }
+                        skip += [scanner scanLocation];
+                    }
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: skip]];
+                    
+                } else {
+                    int col[2];
+                    for (int i=0; i < 2; ++i) {
+                        char c = [inputBufferStr characterAtIndex: escCodeRange.location+i+2];
+                        col[i] = 0;
+                        if (c >= '0' && c <='9')
+                            col[i] = c - '0';
+                        else if (c >='a')
+                            col[i] = c - 'a'+10;
+                        else
+                            col[i] = c - 'A'+10;
+                        if (i==0) {
+                            [storyView setTextColorIndex: col[i]];
+                            [statusLine setTextColorIndex: col[i]];
+                            if (col[i]<=1)
+                                [m_inputLine setTextColor: m_defaultFGColor];
+                        } else {
+                            [storyView setBgColorIndex: col[i]];
+                            [statusLine setBgColorIndex: col[i]];
+                        }
+                    }
+                    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+4]];
+                }
+                escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
+            }
 #endif
-	    [storyView appendText: inputBufferStr];
-	    [inputBufferStr setString: @""];
-	} else {
-	    [inputBufferStr setString: [inputBufferStr substringFromIndex: 1]];
-	}	
-	continuousPrintCount++;
+            [storyView appendText: inputBufferStr];
+            [inputBufferStr setString: @""];
+        } else {
+            [inputBufferStr setString: [inputBufferStr substringFromIndex: 1]];
+        }	
+        continuousPrintCount++;
     } else
-	continuousPrintCount = 0;
-
+        continuousPrintCount = 0;
+    
     if (statusLen > 0 || clearStory || setDefColors) {
-	if (statusLen == 1 && [inputStatusStr isEqualToString: @kClearEscCode] || clearStory || setDefColors) {
-	    int color, j;
-	    if (gStoryInterp == kZStory) {
-		[storyView setFreezeDisplay: YES];
-		[statusLine setFreezeDisplay: YES];
-
-		UIColor *uicol[2] = { nil, nil };
-		for (j=0; j < 2; ++j) {
-		    if (j==0)
-			color = (currColor & 0xF);
-		    else
-			color = currColor >> 4;
-		    if (j==0 && (!color || color == h_default_background))
-			uicol[j] = m_defaultBGColor;
-		    else if (j==1 && (!color || color == h_default_foreground)) {
-			if ((currColor & 0xF) == h_default_foreground) { // if fg same color as bg because of defaults, cheat
-			    if (color == BLACK_COLOUR)
-				uicol[j] = [UIColor whiteColor];
-			    else
-				uicol[j] = [UIColor blackColor];
-			}
-			else
-			    uicol[j] = m_defaultFGColor;
-		    }
-		    else
-			switch (color) {
-			    case 0:
-				//uicol[j] = [m_background backgroundColor];
-				break;
-			    case BLACK_COLOUR:
-				uicol[j] = [UIColor blackColor];
-				break;
-			    case RED_COLOUR:
-				uicol[j] = [UIColor redColor];
-				break;
-			    case GREEN_COLOUR:
-				uicol[j] = [UIColor greenColor];
-				break;
-			    case YELLOW_COLOUR:
-				uicol[j] = [UIColor yellowColor];
-				break;
-			    case BLUE_COLOUR:
-				uicol[j] = [UIColor blueColor];
-				break;
-			    case MAGENTA_COLOUR:
-				uicol[j] = [UIColor magentaColor];
-				break;
-			    case CYAN_COLOUR:
-				uicol[j] = [UIColor cyanColor];
-				break;
-			    case WHITE_COLOUR:
-				uicol[j] = [UIColor whiteColor];
-				break;
-			    case LIGHTGREY_COLOUR:
-				uicol[j] = [UIColor lightGrayColor];
-				break;
-			    case MEDIUMGREY_COLOUR:
-				uicol[j] = [UIColor grayColor];
-				break;
-			    case DARKGREY_COLOUR:
-				uicol[j] = [UIColor darkGrayColor];
-				break;
-			    default:
-				break;
-			}
-		    if (j) {
-			if (uicol[j]) {
-			    if (color && color != DEFAULT_COLOUR)
-				[m_inputLine setTextColor: uicol[j]];
-			    //[self setTextColor: uicol[j] makeDefault:NO];
-			}
-			if (clearStory || gStoryInterp==kZStory)
-			    [storyView setTextColorIndex: color];
-			else if (statusLen==1) // kGlxStory
-			    [statusLine setTextColorIndex: color];
-		    }
-		    else {
-			if (uicol[j])
-			    [self setBackgroundColor: uicol[j] makeDefault:NO];
-			if (clearStory || gStoryInterp==kZStory)
-			    [storyView setBgColorIndex: color];
-			else if (statusLen==1) // kGlxStory
-			    [statusLine setBgColorIndex: color];
-		    }
-		}
-	    }
-	    if (statusLen == 1) {
-		[statusLine setContentOffset: CGPointMake(0,0) animated: NO];
-		[statusLine setText: @""];
-		[inputStatusStr setString: @""];
-	    }
-	    [storyView setContentOffset: CGPointMake(0,0) animated: NO];
-	    if (gStoryInterp == kGlxStory) {
-		if (viewNum >= 0 && viewNum < [m_glkViews count] ) {
-		    glui32 bgColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_BackColor);
-		    glui32 textColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_TextColor);
-		    if (bgColor != BAD_STYLE) {
-			UIColor *bcolor = UIColorFromInt(bgColor);
-			[storyView setBackgroundColor: bcolor];
-			[self setBackgroundColor: bcolor makeDefault:NO];
-			[statusLine setBackgroundColor: bcolor];
-		    }
-		    if (textColor != BAD_STYLE) {
-			UIColor *tcolor = UIColorFromInt(textColor);
-			[storyView setTextColor: tcolor];
-			[statusLine setTextColor: tcolor];
-			[m_inputLine setTextColor: tcolor];
-		    }
-		}
-	    }
-	    if (!setDefColors) {
-		[storyView clear];
-		for (int k = 0; k < 32; ++k)
-		    lastVisibleYPos[k] = 0;
-	    }
-	} else {
-	    [statusLine setContentOffset: CGPointMake(0, 0) animated: NO];
-	    [self updateStatusLine: statusLine];
-	    [inputStatusStr setString: @""];
-	}
+        if (statusLen == 1 && [inputStatusStr isEqualToString: @kClearEscCode] || clearStory || setDefColors) {
+            int color, j;
+            if (gStoryInterp == kZStory) {
+                [storyView setFreezeDisplay: YES];
+                [statusLine setFreezeDisplay: YES];
+                
+                UIColor *uicol[2] = { nil, nil };
+                for (j=0; j < 2; ++j) {
+                    if (j==0)
+                        color = (currColor & 0xF);
+                    else
+                        color = currColor >> 4;
+                    if (j==0 && (!color || color == h_default_background))
+                        uicol[j] = m_defaultBGColor;
+                    else if (j==1 && (!color || color == h_default_foreground)) {
+                        if ((currColor & 0xF) == h_default_foreground) { // if fg same color as bg because of defaults, cheat
+                            if (color == BLACK_COLOUR)
+                                uicol[j] = [UIColor whiteColor];
+                            else
+                                uicol[j] = [UIColor blackColor];
+                        }
+                        else
+                            uicol[j] = m_defaultFGColor;
+                    }
+                    else
+                        switch (color) {
+                            case 0:
+                                //uicol[j] = [m_background backgroundColor];
+                                break;
+                            case BLACK_COLOUR:
+                                uicol[j] = [UIColor blackColor];
+                                break;
+                            case RED_COLOUR:
+                                uicol[j] = [UIColor redColor];
+                                break;
+                            case GREEN_COLOUR:
+                                uicol[j] = [UIColor greenColor];
+                                break;
+                            case YELLOW_COLOUR:
+                                uicol[j] = [UIColor yellowColor];
+                                break;
+                            case BLUE_COLOUR:
+                                uicol[j] = [UIColor blueColor];
+                                break;
+                            case MAGENTA_COLOUR:
+                                uicol[j] = [UIColor magentaColor];
+                                break;
+                            case CYAN_COLOUR:
+                                uicol[j] = [UIColor cyanColor];
+                                break;
+                            case WHITE_COLOUR:
+                                uicol[j] = [UIColor whiteColor];
+                                break;
+                            case LIGHTGREY_COLOUR:
+                                uicol[j] = [UIColor lightGrayColor];
+                                break;
+                            case MEDIUMGREY_COLOUR:
+                                uicol[j] = [UIColor grayColor];
+                                break;
+                            case DARKGREY_COLOUR:
+                                uicol[j] = [UIColor darkGrayColor];
+                                break;
+                            default:
+                                break;
+                        }
+                    if (j) {
+                        if (uicol[j]) {
+                            if (color && color != DEFAULT_COLOUR)
+                                [m_inputLine setTextColor: uicol[j]];
+                            //[self setTextColor: uicol[j] makeDefault:NO];
+                        }
+                        if (clearStory || gStoryInterp==kZStory)
+                            [storyView setTextColorIndex: color];
+                        else if (statusLen==1) // kGlxStory
+                            [statusLine setTextColorIndex: color];
+                    }
+                    else {
+                        if (uicol[j])
+                            [self setBackgroundColor: uicol[j] makeDefault:NO];
+                        if (clearStory || gStoryInterp==kZStory)
+                            [storyView setBgColorIndex: color];
+                        else if (statusLen==1) // kGlxStory
+                            [statusLine setBgColorIndex: color];
+                    }
+                }
+            }
+            if (statusLen == 1) {
+                [statusLine setContentOffset: CGPointMake(0,0) animated: NO];
+                [statusLine setText: @""];
+                [inputStatusStr setString: @""];
+            }
+            [storyView setContentOffset: CGPointMake(0,0) animated: NO];
+            if (gStoryInterp == kGlxStory) {
+                if (viewNum >= 0 && viewNum < [m_glkViews count] ) {
+                    glui32 bgColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_BackColor);
+                    glui32 textColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_TextColor);
+                    if (bgColor != BAD_STYLE) {
+                        UIColor *bcolor = UIColorFromInt(bgColor);
+                        [storyView setBackgroundColor: bcolor];
+                        [self setBackgroundColor: bcolor makeDefault:NO];
+                        [statusLine setBackgroundColor: bcolor];
+                    }
+                    if (textColor != BAD_STYLE) {
+                        UIColor *tcolor = UIColorFromInt(textColor);
+                        [storyView setTextColor: tcolor];
+                        [statusLine setTextColor: tcolor];
+                        [m_inputLine setTextColor: tcolor];
+                    }
+                }
+            }
+            if (!setDefColors) {
+                [storyView clear];
+                for (int k = 0; k < 32; ++k)
+                    lastVisibleYPos[k] = 0;
+            }
+        } else {
+            [statusLine setContentOffset: CGPointMake(0, 0) animated: NO];
+            [self updateStatusLine: statusLine];
+            [inputStatusStr setString: @""];
+        }
     } 
     if (ipzAllowInput & kIPZRequestInput) {
-	grewStatus = 0;
-	CGSize sz = [storyView contentSize];
-	float viewWidth = viewFrame.size.width;
-	if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == top_win_height) {
-	    sz.width = viewWidth;
-	    [storyView setContentSize: sz];
-	}
-	
-	static int recentScrollToVisYPos[32];
-	if (textLen > 0 || !(ipzAllowInput & kIPZAllowInput) && recentScrollToVisYPos[cwin]!=lastVisibleYPos[cwin]) {
-	    CGSize contentSz = [storyView contentSize];
-	    CGSize viewSz = [storyView frame].size;
-	    if (contentSz.height > viewSz.height) {
-		float visHeight = contentSz.height - lastVisibleYPos[cwin];
-		if (visHeight > viewSz.height - topWinSize - m_fontSize)
-		    visHeight = viewSz.height - topWinSize - m_fontSize;
-		CGRect visrect = CGRectMake(0, lastVisibleYPos[cwin], viewSz.width, visHeight);
-		[storyView scrollRectToVisible:visrect  animated:YES];
-		recentScrollToVisYPos[cwin] = lastVisibleYPos[cwin];
-	    }
-	}
-	if ([storyView displayFrozen]) {
-	    [storyView setFreezeDisplay: NO];
-	    [statusLine setFreezeDisplay: NO];
-	}
-	if (!(ipzAllowInput & kIPZAllowInput)) {
-	    if (cwin != lastInputWindow || (ipzAllowInput & kIPZNoEcho)) {
-		[m_inputLine setFont: (top_win_height > 0 && cursor_row <= top_win_height) ? [statusLine fixedFont] :
-		    ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
-//		[m_inputLine updatePosition];
-		[m_inputLine setText: @" "]; [m_inputLine setText: @""]; // *sigh* needed to force cursor to resize
-		[storyView markWaitForInput];
-//movedbelow	[m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
-		lastInputWindow = cwin;
-	    }
-	    [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
-	    ipzAllowInput |= kIPZAllowInput;
-	}
+        grewStatus = 0;
+        CGSize sz = [storyView contentSize];
+        float viewWidth = viewFrame.size.width;
+        if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == top_win_height) {
+            sz.width = viewWidth;
+            [storyView setContentSize: sz];
+        }
+        
+        static int recentScrollToVisYPos[32];
+        if (textLen > 0 || !(ipzAllowInput & kIPZAllowInput) && recentScrollToVisYPos[cwin]!=lastVisibleYPos[cwin]) {
+            CGSize contentSz = [storyView contentSize];
+            CGSize viewSz = [storyView frame].size;
+            if (contentSz.height > viewSz.height) {
+                float visHeight = contentSz.height - lastVisibleYPos[cwin];
+                if (visHeight > viewSz.height - topWinSize - m_fontSize)
+                    visHeight = viewSz.height - topWinSize - m_fontSize;
+                CGRect visrect = CGRectMake(0, lastVisibleYPos[cwin], viewSz.width, visHeight);
+                [storyView scrollRectToVisible:visrect  animated:YES];
+                recentScrollToVisYPos[cwin] = lastVisibleYPos[cwin];
+            }
+        }
+        if ([storyView displayFrozen]) {
+            [storyView setFreezeDisplay: NO];
+            [statusLine setFreezeDisplay: NO];
+        }
+        if (!(ipzAllowInput & kIPZAllowInput)) {
+            if (cwin != lastInputWindow || (ipzAllowInput & kIPZNoEcho)) {
+                [m_inputLine setFont: (top_win_height > 0 && cursor_row <= top_win_height) ? [statusLine fixedFont] :
+                 ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
+                //		[m_inputLine updatePosition];
+                [m_inputLine setText: @" "]; [m_inputLine setText: @""]; // *sigh* needed to force cursor to resize
+                [storyView markWaitForInput];
+                //movedbelow	[m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
+                lastInputWindow = cwin;
+            }
+            [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
+            ipzAllowInput |= kIPZAllowInput;
+        }
     }
     pthread_mutex_unlock(&outputMutex);
     
     if (finished && finished != 1) {
-	if ([m_currentStory length] > 0) {
-	    if (finished == 2) {
-		finished = -1;
-	        UIAlertView *dialog = [[UIAlertView alloc] initWithTitle:@"Unreadable story file" message: @"Frotz doesn't understand the format of this file" delegate:self cancelButtonTitle:@"Drat" otherButtonTitles:nil];
-		[dialog show];
-		[dialog release];
-	    }
-	    [storyView setFreezeDisplay:NO];
-	    [storyView setTextStyle: kFTBold];
-	    if (viewFrame.size.height < statusLine.frame.size.height) {
-		viewFrame.size.height = statusLine.frame.size.height + 24;
-		[storyView setFrame: viewFrame];
-		[storyView appendText: @"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"];
-	    }
-	    [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
-	    [storyView scrollRectToVisible:CGRectMake(0, lastVisibleYPos[0]+50, viewFrame.size.width, 24) animated:YES];
-	    [self abandonStory: YES];
-	}
+        if ([m_currentStory length] > 0) {
+            if (finished == 2) {
+                finished = -1;
+                UIAlertView *dialog = [[UIAlertView alloc] initWithTitle:@"Unreadable story file" message: @"Frotz doesn't understand the format of this file" delegate:self cancelButtonTitle:@"Drat" otherButtonTitles:nil];
+                [dialog show];
+                [dialog release];
+            }
+            [storyView setFreezeDisplay:NO];
+            [storyView setTextStyle: kFTBold];
+            if (viewFrame.size.height < statusLine.frame.size.height) {
+                viewFrame.size.height = statusLine.frame.size.height + 24;
+                [storyView setFrame: viewFrame];
+                [storyView appendText: @"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"];
+            }
+            [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
+            [storyView scrollRectToVisible:CGRectMake(0, lastVisibleYPos[0]+50, viewFrame.size.width, 24) animated:YES];
+            [self abandonStory: YES];
+        }
     } else {
-	[self performSelector:@selector(printText:) withObject:nil afterDelay:clearStory||fast ? 0.0 : 0.03];
+        [self performSelector:@selector(printText:) withObject:nil afterDelay:clearStory||fast ? 0.0 : 0.03];
     }
     if (refresh_savedir) {
-	refresh_savedir = 0;
-	if ([[DBSession sharedSession] isLinked])
-	    [self.restClient loadMetadata: [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]]];	
+        refresh_savedir = 0;
+        if ([[DBSession sharedSession] isLinked])
+            [self.restClient loadMetadata: [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]]];	
     }
 }
 
@@ -2467,14 +2474,14 @@ char *tempStatusLineScreenBuf() {
 
 -(void) savePrefs {
     if (gUseSplitVC)
-	[[m_storyBrowser detailsController] refresh];
-
+        [[m_storyBrowser detailsController] refresh];
+    
     NSUserDefaults *dict = [NSUserDefaults standardUserDefaults];
-
+    
     if (m_fontname) {
-	[dict setObject: m_fontname forKey: @"font"];
-	if (m_fontSize)
-	    [dict setObject: [NSNumber numberWithInt: m_fontSize] forKey: @"fontSize"];
+        [dict setObject: m_fontname forKey: @"font"];
+        if (m_fontSize)
+            [dict setObject: [NSNumber numberWithInt: m_fontSize] forKey: @"fontSize"];
     }
     CGColorRef textColor = [[self textColor] CGColor];
     CGColorRef bgColor = [[self backgroundColor] CGColor];
@@ -2482,81 +2489,81 @@ char *tempStatusLineScreenBuf() {
     const CGFloat *bgColorRGB = CGColorGetComponents(bgColor);
     size_t tnc = CGColorGetNumberOfComponents(textColor), bnc = CGColorGetNumberOfComponents(bgColor);
     NSString *textColorStr = [NSString stringWithFormat:  @"#%02X%02X%02X",
-	    (int)(textColorRGB[0]*255),
-	    (int)(textColorRGB[tnc >=3 ? 1 : 0]*255),
-	    (int)(textColorRGB[tnc >=3 ? 2 : 0]*255)];
+                              (int)(textColorRGB[0]*255),
+                              (int)(textColorRGB[tnc >=3 ? 1 : 0]*255),
+                              (int)(textColorRGB[tnc >=3 ? 2 : 0]*255)];
     NSString *bgColorStr = [NSString stringWithFormat: @"#%02X%02X%02X",
-	    (int)(bgColorRGB[0]*255),
-	    (int)(bgColorRGB[bnc >=3 ? 1 : 0]*255),
-	    (int)(bgColorRGB[bnc >=3 ? 2 : 0]*255)];
+                            (int)(bgColorRGB[0]*255),
+                            (int)(bgColorRGB[bnc >=3 ? 1 : 0]*255),
+                            (int)(bgColorRGB[bnc >=3 ? 2 : 0]*255)];
     [dict setObject: textColorStr forKey: @"textColor"];
     [dict setObject: bgColorStr forKey: @"backgroundColor"];
     [dict setObject: [NSNumber numberWithBool: !m_completionEnabled] forKey: @"completionDisabled"];
     [dict setObject: [NSNumber numberWithBool: m_canEditStoryInfo] forKey: @"canEditStoryInfo"];
     [dict setObject: [NSNumber numberWithInt: iphone_ifrotz_verbose_debug] forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: [NSNumber numberWithBool: m_autoRestoreEnabled] forKey:@"autorestore_preference"];
-
+    
     [dict synchronize];    
 }
 
-static struct UIColor *scanColor(NSString *colorStr) {
+static UIColor *scanColor(NSString *colorStr) {
     unsigned int intRGB;
     float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
+    
     UIColor *color = nil;
     if ([colorStr characterAtIndex: 0] == '#') {
-	NSScanner *scanner = [NSScanner scannerWithString: colorStr];
-	[scanner setScanLocation: 1];
-	[scanner scanHexInt: &intRGB];
-	floatRGB[0] = (float)((intRGB & 0xff0000) >> 16) / 255.0f;
-	floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
-	floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
-	color = [UIColor colorWithRed: floatRGB[0] green:floatRGB[1] blue:floatRGB[2] alpha:1.0];
+        NSScanner *scanner = [NSScanner scannerWithString: colorStr];
+        [scanner setScanLocation: 1];
+        [scanner scanHexInt: &intRGB];
+        floatRGB[0] = (float)((intRGB & 0xff0000) >> 16) / 255.0f;
+        floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
+        floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
+        color = [UIColor colorWithRed: floatRGB[0] green:floatRGB[1] blue:floatRGB[2] alpha:1.0];
     }
     return color;
 }
 
 -(void) loadPrefs {
     NSUserDefaults *dict = [NSUserDefaults standardUserDefaults];
-
+    
     if (dict) {
-	NSString *fontname =  [dict objectForKey: @"font"];
-	int fontSize= [[dict objectForKey: @"fontSize"] longValue];
-	iphone_ifrotz_verbose_debug = [[dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ] longValue];
-	if (fontname && fontSize)
-	    [self setFont: fontname withSize: fontSize];
-	NSString *textColorStr = [dict objectForKey: @"textColor"];
-	NSString *bgColorStr = [dict objectForKey: @"backgroundColor"];
-	UIColor *textColor = scanColor(textColorStr);
-	if (textColor) {
-	    [self setTextColor: textColor makeDefault:YES];
-	}
-	if (![textColorStr isEqualToString: bgColorStr]) {
-	    UIColor *bgColor = scanColor(bgColorStr);
-	    if (bgColor) {
-		[self setBackgroundColor: bgColor makeDefault:YES];
-	    }
-	}
-	m_completionEnabled = ![[dict objectForKey: @"completionDisabled"] boolValue];
-	m_canEditStoryInfo = [[dict objectForKey: @"canEditStoryInfo"] boolValue];
-	id arp = [dict objectForKey: @"autorestore_preference"];
-	if (arp)
-	    m_autoRestoreEnabled = [arp boolValue];
-	else
-	    m_autoRestoreEnabled = YES;
+        NSString *fontname =  [dict objectForKey: @"font"];
+        int fontSize= [[dict objectForKey: @"fontSize"] longValue];
+        iphone_ifrotz_verbose_debug = [[dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ] longValue];
+        if (fontname && fontSize)
+            [self setFont: fontname withSize: fontSize];
+        NSString *textColorStr = [dict objectForKey: @"textColor"];
+        NSString *bgColorStr = [dict objectForKey: @"backgroundColor"];
+        UIColor *textColor = scanColor(textColorStr);
+        if (textColor) {
+            [self setTextColor: textColor makeDefault:YES];
+        }
+        if (![textColorStr isEqualToString: bgColorStr]) {
+            UIColor *bgColor = scanColor(bgColorStr);
+            if (bgColor) {
+                [self setBackgroundColor: bgColor makeDefault:YES];
+            }
+        }
+        m_completionEnabled = ![[dict objectForKey: @"completionDisabled"] boolValue];
+        m_canEditStoryInfo = [[dict objectForKey: @"canEditStoryInfo"] boolValue];
+        id arp = [dict objectForKey: @"autorestore_preference"];
+        if (arp)
+            m_autoRestoreEnabled = [arp boolValue];
+        else
+            m_autoRestoreEnabled = YES;
     }
 }
 
 -(void)rememberActiveStory {
     if (m_currentStory && [m_currentStory length] > 0) {
-	NSDictionary *storyLocDict  = [[NSDictionary alloc] initWithObjectsAndKeys: m_currentStory, @"storyPath", nil];
-	if (storyLocDict) {
-	    NSString *errString = nil;
-	    NSData *slData = [NSPropertyListSerialization dataFromPropertyList:storyLocDict format:NSPropertyListBinaryFormat_v1_0
-	     errorDescription:&errString];
-	    [slData writeToFile:activeStoryPath atomically:NO];
-	    [storyLocDict release];
-	}
+        NSDictionary *storyLocDict  = [[NSDictionary alloc] initWithObjectsAndKeys: m_currentStory, @"storyPath", nil];
+        if (storyLocDict) {
+            NSString *errString = nil;
+            NSData *slData = [NSPropertyListSerialization dataFromPropertyList:storyLocDict format:NSPropertyListBinaryFormat_v1_0
+                                                              errorDescription:&errString];
+            [slData writeToFile:activeStoryPath atomically:NO];
+            [storyLocDict release];
+        }
     }
 }
 
@@ -2564,40 +2571,40 @@ static struct UIColor *scanColor(NSString *colorStr) {
     NSFileManager *fileMgr = [NSFileManager defaultManager];
     NSString *storyPath = nil;
     if ((!m_currentStory || [m_currentStory length]==0) && [fileMgr fileExistsAtPath: activeStoryPath]) {
-	NSDictionary *storyLocDict  = [NSDictionary dictionaryWithContentsOfFile: activeStoryPath];
-	if (storyLocDict) {
-	    storyPath = [storyLocDict objectForKey: @"storyPath"];
-	    [self setCurrentStory: storyPath];
-	    if (gUseSplitVC) {
-		StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath];
-		[m_storyBrowser setStoryDetails: si];	
-		[si release];
-	    }
-	}
+        NSDictionary *storyLocDict  = [NSDictionary dictionaryWithContentsOfFile: activeStoryPath];
+        if (storyLocDict) {
+            storyPath = [storyLocDict objectForKey: @"storyPath"];
+            [self setCurrentStory: storyPath];
+            if (gUseSplitVC) {
+                StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath];
+                [m_storyBrowser setStoryDetails: si];	
+                [si release];
+            }
+        }
     }
     if (isFirstLaunch) {
-	if (!m_autoRestoreEnabled && ![m_storyBrowser launchPath]) {
-	    [self setCurrentStory: nil];
-	    return NO;
-	}
+        if (!m_autoRestoreEnabled && ![m_storyBrowser launchPath]) {
+            [self setCurrentStory: nil];
+            return NO;
+        }
     }
-
+    
     if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
     	NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: storySIPPath] retain];
-	if (dict) {
-	    storyPath = [dict objectForKey: @"storyPath"];
-	    [self setCurrentStory: storyPath];
-	    if (m_currentStory && [fileMgr fileExistsAtPath: m_currentStory]) {
-		m_autoRestoreDict = dict;
-		return YES;
-	    }
-	    [dict release];
-	}
+        if (dict) {
+            storyPath = [dict objectForKey: @"storyPath"];
+            [self setCurrentStory: storyPath];
+            if (m_currentStory && [fileMgr fileExistsAtPath: m_currentStory]) {
+                m_autoRestoreDict = dict;
+                return YES;
+            }
+            [dict release];
+        }
     }
     if (storyPath) { //  save file not found
-	NSError *error = nil;
-	[fileMgr removeItemAtPath: activeStoryPath error:&error];
-	[self setCurrentStory: nil];
+        NSError *error = nil;
+        [fileMgr removeItemAtPath: activeStoryPath error:&error];
+        [self setCurrentStory: nil];
     }
     return NO;
 }
@@ -2607,24 +2614,24 @@ static void setScreenDims(char *storyNameBuf) {
     iphone_textview_height = kDefaultTextViewHeight;
     
     if (gStoryInterp == kZStory) {
-	char *s = strrchr(storyNameBuf, '/');
-	if (s)
-	    s++;
-	else
-	    s = storyNameBuf;
-	// Hack alert - pretend ot be 80 cols for these games because they fail or display poorly with less
-	// Should detect this in a cleaner way (at least)
-	if (iphone_textview_width < 80 && (strncasecmp(s, "trinity", 7) == 0 || strncasecmp(s, "amfv", 4) == 0
-	    || strncasecmp(s, "vgame", 5) == 0))
-	    iphone_textview_width = 80;
+        char *s = strrchr(storyNameBuf, '/');
+        if (s)
+            s++;
+        else
+            s = storyNameBuf;
+        // Hack alert - pretend ot be 80 cols for these games because they fail or display poorly with less
+        // Should detect this in a cleaner way (at least)
+        if (iphone_textview_width < 80 && (strncasecmp(s, "trinity", 7) == 0 || strncasecmp(s, "amfv", 4) == 0
+                                           || strncasecmp(s, "vgame", 5) == 0))
+            iphone_textview_width = 80;
     } else 
-	iphone_recompute_screensize();
+        iphone_recompute_screensize();
 }
 
 -(void)setLaunchMessage:(NSString*)msg clear:(BOOL)clear {
     if (clear) {
-	[m_storyView clear];
-	[m_statusLine clear];
+        [m_storyView clear];
+        [m_statusLine clear];
     }
     m_launchMessage = [msg retain];
 }
@@ -2633,106 +2640,106 @@ static void setScreenDims(char *storyNameBuf) {
     [UIView setAnimationDelegate: nil];
     UIView *msgView = [m_storyView.superview viewWithTag: kLaunchMsgViewTag];
     if (msgView)
-	[msgView removeFromSuperview];
+        [msgView removeFromSuperview];
 }
 
 -(void)displayLaunchMessageWithDelay: (CGFloat)delay duration:(CGFloat)duration alpha:(CGFloat)alpha {
     if (m_launchMessage) {
-	CGRect frame = [[m_storyView superview] frame];
-	UILabel *msgView = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, 60)];
-	[msgView setText: m_launchMessage];
-	[msgView setTextAlignment: UITextAlignmentCenter];
-	[msgView setLineBreakMode: UILineBreakModeTailTruncation];
-	[msgView setNumberOfLines: 0];
-	[msgView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
-	[msgView sizeToFit];
-	CGRect msgFrame = [msgView frame];
-	msgFrame.size.height += 20;
-	msgFrame.origin.y = frame.size.height - msgFrame.size.height + 2;
-	msgFrame.size.width = frame.size.width;
-	[msgView setFrame: msgFrame];
-	[msgView setBackgroundColor: [UIColor blackColor]];
-	[msgView setTextColor: [UIColor whiteColor]];
-	[msgView setAlpha: alpha];
-	[msgView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleRightMargin];
-	[self.view addSubview: msgView];
-	[msgView setTag: kLaunchMsgViewTag];
-	[UIView beginAnimations: @"asmsg" context:0];
-	[UIView setAnimationDelay: delay];
-	[UIView setAnimationDuration: duration];
-	[msgView setAlpha: 0.0];
-	[msgView release];
-	[UIView setAnimationDelegate: self];
-	[UIView setAnimationDidStopSelector: @selector(launchMessageAnimDidFinish:finished:context:)];
-	[UIView commitAnimations];
-	[m_launchMessage release];
-	m_launchMessage = nil;
+        CGRect frame = [[m_storyView superview] frame];
+        UILabel *msgView = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, 60)];
+        [msgView setText: m_launchMessage];
+        [msgView setTextAlignment: UITextAlignmentCenter];
+        [msgView setLineBreakMode: UILineBreakModeTailTruncation];
+        [msgView setNumberOfLines: 0];
+        [msgView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
+        [msgView sizeToFit];
+        CGRect msgFrame = [msgView frame];
+        msgFrame.size.height += 20;
+        msgFrame.origin.y = frame.size.height - msgFrame.size.height + 2;
+        msgFrame.size.width = frame.size.width;
+        [msgView setFrame: msgFrame];
+        [msgView setBackgroundColor: [UIColor blackColor]];
+        [msgView setTextColor: [UIColor whiteColor]];
+        [msgView setAlpha: alpha];
+        [msgView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleRightMargin];
+        [self.view addSubview: msgView];
+        [msgView setTag: kLaunchMsgViewTag];
+        [UIView beginAnimations: @"asmsg" context:0];
+        [UIView setAnimationDelay: delay];
+        [UIView setAnimationDuration: duration];
+        [msgView setAlpha: 0.0];
+        [msgView release];
+        [UIView setAnimationDelegate: self];
+        [UIView setAnimationDidStopSelector: @selector(launchMessageAnimDidFinish:finished:context:)];
+        [UIView commitAnimations];
+        [m_launchMessage release];
+        m_launchMessage = nil;
     }
 }
 
 // Mutate old HTML buffer from UITextView-based save game to plain text
 -(NSMutableString*)convertHTML:(NSString*)htmlString {
 #define hgetchar() ((i < len) ? ([htmlString characterAtIndex: i++]) : 0)
-
+    
     NSMutableString *text = [[NSMutableString alloc] initWithCapacity: 10240];
     NSString *tag = nil;
     int len = [htmlString length], i = 0, j, k;
     unichar c;
     NSRange r = [htmlString rangeOfString: @"</style>"];
     if (r.length)
-	i = r.location + r.length;
+        i = r.location + r.length;
     while ((c = hgetchar()) != 0) {
-	switch (c) {
-	    case '&':
-		j = i;
-		while ((c = hgetchar()) != ';')
-		    ;
-		if (i > j) {
-		    tag = [htmlString substringWithRange: NSMakeRange(j, i-1-j)];
-		    if ([tag isEqualToString: @"nbsp"])
-			[text appendString: @" "];
-		    else if ([tag isEqualToString: @"gt"])
-			[text appendString: @">"];
-		    else if ([tag isEqualToString: @"lt"])
-			[text appendString: @"<"];
-		    else if ([tag isEqualToString: @"amp"])
-			[text appendString: @"&"];
-		    else
-			[text appendFormat: @"&%@;", tag];
-		}
-		break;
-	    case '<':
-		j = i;
-		BOOL openTag = ((c = hgetchar()) != '/');
-		if (!openTag)
-		    ++j;
-		k = j;
-		unichar prevc = 0;
-   		while ((c = hgetchar()) != '>') {
-		    prevc = c;
-		    if (c == ' ' && j==k)
-			k = i;
-		}
-		if (j==k)
-		    k = i;
-		if (prevc == '/')
-		    openTag = NO;
-		if (j < k) {
-		    tag = [htmlString substringWithRange: NSMakeRange(j, k-1-j)];
-		    if ([tag isEqualToString: @"br"])
-			[text appendString: @"\n"];
-		}
-	    case '\n':
-	    case '\r':
-		break;
-	    case 0x2013:
-		[text appendString: @"-"];
-		break;
-	    default:
-		[text appendFormat: @"%c", c];
-		break;
-	}
-	
+        switch (c) {
+            case '&':
+                j = i;
+                while ((c = hgetchar()) != ';')
+                    ;
+                if (i > j) {
+                    tag = [htmlString substringWithRange: NSMakeRange(j, i-1-j)];
+                    if ([tag isEqualToString: @"nbsp"])
+                        [text appendString: @" "];
+                    else if ([tag isEqualToString: @"gt"])
+                        [text appendString: @">"];
+                    else if ([tag isEqualToString: @"lt"])
+                        [text appendString: @"<"];
+                    else if ([tag isEqualToString: @"amp"])
+                        [text appendString: @"&"];
+                    else
+                        [text appendFormat: @"&%@;", tag];
+                }
+                break;
+            case '<':
+                j = i;
+                BOOL openTag = ((c = hgetchar()) != '/');
+                if (!openTag)
+                    ++j;
+                k = j;
+                unichar prevc = 0;
+                while ((c = hgetchar()) != '>') {
+                    prevc = c;
+                    if (c == ' ' && j==k)
+                        k = i;
+                }
+                if (j==k)
+                    k = i;
+                if (prevc == '/')
+                    openTag = NO;
+                if (j < k) {
+                    tag = [htmlString substringWithRange: NSMakeRange(j, k-1-j)];
+                    if ([tag isEqualToString: @"br"])
+                        [text appendString: @"\n"];
+                }
+            case '\n':
+            case '\r':
+                break;
+            case 0x2013:
+                [text appendString: @"-"];
+                break;
+            default:
+                [text appendFormat: @"%c", c];
+                break;
+        }
+        
     }
     
     return text;
@@ -2746,188 +2753,188 @@ static void setScreenDims(char *storyNameBuf) {
     NSError *error = nil;
     [self displayLaunchMessageWithDelay: 3.0 duration:1.0 alpha:0.85];
     if (m_splashImageView) { // stale
-	[m_splashImageView removeFromSuperview];
-	[m_splashImageView release];
-	m_splashImageView = nil;
+        [m_splashImageView removeFromSuperview];
+        [m_splashImageView release];
+        m_splashImageView = nil;
     }
     if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
     	NSDictionary *dict = m_autoRestoreDict;
-	NSData *statusScreenData = NULL, *statusScreenColors = NULL;
-	if (dict) {
-	    (void)[self view];  // ensure storyView is loaded so we can restore its text contents
-
-	    NSString *storyPath = m_currentStory;
-	    if (!storyPath) {
-		storyPath = [dict objectForKey: @"storyPath"];
-		[self setCurrentStory: storyPath];
-	    }
-	    if (m_currentStory) {
-		NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
-		if (m_notesController) {
-		    NSString *notesText = [m_storyBrowser getNotesForStory:story];
-		    [m_notesController setTitle: [m_storyBrowser fullTitleForStory: story]];
-		    [m_notesController setText: notesText];
-		}
-
-	       if ([[m_currentStory pathExtension] isEqualToString: @"blb"]
-		    || [[m_currentStory pathExtension] isEqualToString: @"gblorb"]
-		    || [[m_currentStory pathExtension] isEqualToString: @"ulx"])
-		    gStoryInterp = kGlxStory;
-		else
-		    gStoryInterp = kZStory;
-
-		inputsSinceSaveRestore = 1;
-		int hvers = 0;
-		strcpy(storyNameBuf, [m_currentStory UTF8String]);
-		FILE *sf = fopen(storyNameBuf, "r");
-		if (sf) hvers = fgetc(sf);
-		fclose(sf);
-		if ((hvers < 2 || hvers > 8) && hvers != 'F' && hvers != 'G') { // F for zblorb, G for glulx
-		    NSLog(@"autoRestoreFailed");
-		    [fileMgr removeItemAtPath: storySIPPath error:&error];
-		    return NO;
-		}
-
-		h_version = hvers;
-		iphone_top_win_height = -1;
-		top_win_height = [[dict objectForKey: @"statusWinHeight"] longValue];
-		cwin = [[dict objectForKey: @"currentWindow"] longValue];
-		cursor_row = [[dict objectForKey: @"cursorRow"] longValue];
-		cursor_col = [[dict objectForKey: @"cursorCol"] longValue];
-		restore_frame_count = [[dict objectForKey: @"frameCount"] longValue];
-		
-		NSString *savedScriptname = [dict objectForKey: @"scriptname"];
-		if (savedScriptname) {
-		    iphone_start_script((char*)[savedScriptname UTF8String]);
-		} else
-		    iphone_stop_script();
-
-		int color = [[dict objectForKey: @"textColors"] longValue] & 0xff;
-		if (color == 0x21)
-		    color = 0x11; // fix corrupt autosave
-		if (color && color != 0x11 && (color & 0xf) == (color >> 4)) { // don't allow fg same as bg
-		    if ((color & 0xf) == BLACK_COLOUR)
-			color = BLACK_COLOUR | (WHITE_COLOUR<<4);
-		    else
-			color = (color & 0xf) | (BLACK_COLOUR<<4);
-		    currColor = u_setup.current_color = color;
-		} else 	if (color > 0x11 && (color != 0x29))
-		    currColor = u_setup.current_color = color;
-		statusScreenData = [dict objectForKey: @"statusWinData"];
-		statusScreenColors = [dict objectForKey: @"statusWinColors"];
-		setScreenDims(storyNameBuf);
-		h_screen_rows = iphone_textview_height;
-		h_screen_cols = iphone_textview_width;
-		h_screen_width = h_screen_cols;
-		h_screen_height = h_screen_rows;
-
-		do_autosave = 0;
-		iphone_init_screen();
-		do_autosave = 1;
-		resize_screen();
-		iphone_ioinit();
-		[m_statusLine reset];
-		[m_storyView resetMargins];
-		[m_storyView reset];
-		[self clearGlkViews];
-
-		iphone_flush(NO);
-		if (!statusScreenData) {
-		    [fileMgr removeItemAtPath: storySIPPath error:&error];
-		    [dict release];
-		    m_autoRestoreDict = nil;
-		    return NO;
-		}
-		[ipzStatusStr setString: @kClearEscCode];
-		[ipzBufferStr setString: @""];
-		iphone_clear_input(NULL);
-		[self printText: nil];
-		int len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
-		if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
-		    len = maxLen;
-		memcpy(screen_data, (char*)[statusScreenData bytes], len);
-		if (statusScreenColors) {
-		    len = [statusScreenColors length];
-		    if (len > maxLen)
-			len = maxLen;
-		    memcpy(screen_colors, (char*)[statusScreenColors bytes], len);
-		}
-		[m_statusLine setBgColorIndex: currColor & 0xf];
-		[m_statusLine setTextColorIndex: currColor >> 4];
-		[ipzStatusStr setString: @"i\n"];
-
+        NSData *statusScreenData = NULL, *statusScreenColors = NULL;
+        if (dict) {
+            (void)[self view];  // ensure storyView is loaded so we can restore its text contents
+            
+            NSString *storyPath = m_currentStory;
+            if (!storyPath) {
+                storyPath = [dict objectForKey: @"storyPath"];
+                [self setCurrentStory: storyPath];
+            }
+            if (m_currentStory) {
+                NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+                if (m_notesController) {
+                    NSString *notesText = [m_storyBrowser getNotesForStory:story];
+                    [m_notesController setTitle: [m_storyBrowser fullTitleForStory: story]];
+                    [m_notesController setText: notesText];
+                }
+                
+                if ([[m_currentStory pathExtension] isEqualToString: @"blb"]
+                    || [[m_currentStory pathExtension] isEqualToString: @"gblorb"]
+                    || [[m_currentStory pathExtension] isEqualToString: @"ulx"])
+                    gStoryInterp = kGlxStory;
+                else
+                    gStoryInterp = kZStory;
+                
+                inputsSinceSaveRestore = 1;
+                int hvers = 0;
+                strcpy(storyNameBuf, [m_currentStory UTF8String]);
+                FILE *sf = fopen(storyNameBuf, "r");
+                if (sf) hvers = fgetc(sf);
+                fclose(sf);
+                if ((hvers < 2 || hvers > 8) && hvers != 'F' && hvers != 'G') { // F for zblorb, G for glulx
+                    NSLog(@"autoRestoreFailed");
+                    [fileMgr removeItemAtPath: storySIPPath error:&error];
+                    return NO;
+                }
+                
+                h_version = hvers;
+                iphone_top_win_height = -1;
+                top_win_height = [[dict objectForKey: @"statusWinHeight"] longValue];
+                cwin = [[dict objectForKey: @"currentWindow"] longValue];
+                cursor_row = [[dict objectForKey: @"cursorRow"] longValue];
+                cursor_col = [[dict objectForKey: @"cursorCol"] longValue];
+                restore_frame_count = [[dict objectForKey: @"frameCount"] longValue];
+                
+                NSString *savedScriptname = [dict objectForKey: @"scriptname"];
+                if (savedScriptname) {
+                    iphone_start_script((char*)[savedScriptname UTF8String]);
+                } else
+                    iphone_stop_script();
+                
+                int color = [[dict objectForKey: @"textColors"] longValue] & 0xff;
+                if (color == 0x21)
+                    color = 0x11; // fix corrupt autosave
+                if (color && color != 0x11 && (color & 0xf) == (color >> 4)) { // don't allow fg same as bg
+                    if ((color & 0xf) == BLACK_COLOUR)
+                        color = BLACK_COLOUR | (WHITE_COLOUR<<4);
+                    else
+                        color = (color & 0xf) | (BLACK_COLOUR<<4);
+                    currColor = u_setup.current_color = color;
+                } else 	if (color > 0x11 && (color != 0x29))
+                    currColor = u_setup.current_color = color;
+                statusScreenData = [dict objectForKey: @"statusWinData"];
+                statusScreenColors = [dict objectForKey: @"statusWinColors"];
+                setScreenDims(storyNameBuf);
+                h_screen_rows = iphone_textview_height;
+                h_screen_cols = iphone_textview_width;
+                h_screen_width = h_screen_cols;
+                h_screen_height = h_screen_rows;
+                
+                do_autosave = 0;
+                iphone_init_screen();
+                do_autosave = 1;
+                resize_screen();
+                iphone_ioinit();
+                [m_statusLine reset];
+                [m_storyView resetMargins];
+                [m_storyView reset];
+                [self clearGlkViews];
+                
+                iphone_flush(NO);
+                if (!statusScreenData) {
+                    [fileMgr removeItemAtPath: storySIPPath error:&error];
+                    [dict release];
+                    m_autoRestoreDict = nil;
+                    return NO;
+                }
+                [ipzStatusStr setString: @kClearEscCode];
+                [ipzBufferStr setString: @""];
+                iphone_clear_input(NULL);
+                [self printText: nil];
+                int len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
+                if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
+                    len = maxLen;
+                memcpy(screen_data, (char*)[statusScreenData bytes], len);
+                if (statusScreenColors) {
+                    len = [statusScreenColors length];
+                    if (len > maxLen)
+                        len = maxLen;
+                    memcpy(screen_colors, (char*)[statusScreenColors bytes], len);
+                }
+                [m_statusLine setBgColorIndex: currColor & 0xf];
+                [m_statusLine setTextColorIndex: currColor >> 4];
+                [ipzStatusStr setString: @"i\n"];
+                
 #if UseRichTextView
-		NSDictionary *storyTextSaveDict = [dict objectForKey: @"storyRichWinContents"];
-		if (storyTextSaveDict) {
-		    [m_storyView restoreFromSaveDataDict: storyTextSaveDict];
-		    [self scrollStoryViewToEnd: NO];
-		} else {
-		    NSMutableString *newText = nil;
-		    NSString *storyText = [dict objectForKey: @"storyWinContents"];
-		    if (storyText) {
-			NSRange r = [storyText rangeOfString: @"<style type="];
-			if (r.length == 0)
-			    r = [storyText rangeOfString: @"<br"];
-			if (r.length > 0 && r.length < 1024) {
-			    newText = [self convertHTML: storyText];
-			    storyText = newText;
-			}
-		    } else
-			storyText = @"";
-		    [m_storyView setText: storyText];
-		    if (newText)
-			[newText release];
-		}
+                NSDictionary *storyTextSaveDict = [dict objectForKey: @"storyRichWinContents"];
+                if (storyTextSaveDict) {
+                    [m_storyView restoreFromSaveDataDict: storyTextSaveDict];
+                    [self scrollStoryViewToEnd: NO];
+                } else {
+                    NSMutableString *newText = nil;
+                    NSString *storyText = [dict objectForKey: @"storyWinContents"];
+                    if (storyText) {
+                        NSRange r = [storyText rangeOfString: @"<style type="];
+                        if (r.length == 0)
+                            r = [storyText rangeOfString: @"<br"];
+                        if (r.length > 0 && r.length < 1024) {
+                            newText = [self convertHTML: storyText];
+                            storyText = newText;
+                        }
+                    } else
+                        storyText = @"";
+                    [m_storyView setText: storyText];
+                    if (newText)
+                        [newText release];
+                }
 #else
-		[m_storyView setText: [dict objectForKey: @"storyWinContents"]];
+                [m_storyView setText: [dict objectForKey: @"storyWinContents"]];
 #endif
-
-		[dict release];
-		m_autoRestoreDict = nil;
-
-		if ([storySIPPath isEqualToString: storySIPPathOld]) {
-		    [fileMgr removeItemAtPath: storySIPPath error:&error];
-		    if (color == 0x29)
-			color = 0;
-		}
-		if (color)
-		    currColor = u_setup.current_color = color;
-		    
-		[self rememberActiveStory];
-		
-		screen_size_changed = 1;
-
-		m_storyTID = 0;
-		pthread_create(&m_storyTID, NULL, interp_cover_autorestore, (void*)storyNameBuf);
-		CGSize sz = [m_storyView contentSize];
-		CGRect rect = CGRectMake(0, sz.height, 1, 1);
-		lastVisibleYPos[cwin] = sz.height-1;
-		[m_storyView scrollRectToVisible: rect animated:YES];
-		[self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
-		return YES;
-	    }
-	    [dict release];
-	    m_autoRestoreDict = nil;
-	}
-	NSLog(@"autoRestoreFailed");
+                
+                [dict release];
+                m_autoRestoreDict = nil;
+                
+                if ([storySIPPath isEqualToString: storySIPPathOld]) {
+                    [fileMgr removeItemAtPath: storySIPPath error:&error];
+                    if (color == 0x29)
+                        color = 0;
+                }
+                if (color)
+                    currColor = u_setup.current_color = color;
+                
+                [self rememberActiveStory];
+                
+                screen_size_changed = 1;
+                
+                m_storyTID = 0;
+                pthread_create(&m_storyTID, NULL, interp_cover_autorestore, (void*)storyNameBuf);
+                CGSize sz = [m_storyView contentSize];
+                CGRect rect = CGRectMake(0, sz.height, 1, 1);
+                lastVisibleYPos[cwin] = sz.height-1;
+                [m_storyView scrollRectToVisible: rect animated:YES];
+                [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
+                return YES;
+            }
+            [dict release];
+            m_autoRestoreDict = nil;
+        }
+        NSLog(@"autoRestoreFailed");
     }
     return NO;
 }
 
 - (void)transitionViewDidFinish:(TransitionView *)transitionView {
     if (m_splashImageView) {
-	[m_splashImageView removeFromSuperview];
-	[m_splashImageView release];
-	m_splashImageView = nil;
+        [m_splashImageView removeFromSuperview];
+        [m_splashImageView release];
+        m_splashImageView = nil;
     }
     [transitionView removeFromSuperview];
 }
 
 - (void)transitionViewDidCancel:(TransitionView *)transitionView {
     if ([[transitionView subviews] count] > 0)
-	[transitionView replaceSubview: m_splashImageView withSubview:nil transition:kCATransitionFade  direction:kCATransitionFromTop duration:0.4];
+        [transitionView replaceSubview: m_splashImageView withSubview:nil transition:kCATransitionFade  direction:kCATransitionFromTop duration:0.4];
     else
-	[self transitionViewDidFinish: transitionView];
+        [self transitionViewDidFinish: transitionView];
     [m_storyView skipNextTap];
 }
 
@@ -2937,134 +2944,135 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void)fadeSplashScreen:(TransitionView*)transitionView  {
     if ([transitionView superview])
-	[transitionView replaceSubview: m_splashImageView withSubview:nil transition:kCATransitionFade  direction:kCATransitionFromTop duration:2.0];
+        [transitionView replaceSubview: m_splashImageView withSubview:nil transition:kCATransitionFade  direction:kCATransitionFromTop duration:2.0];
 }
 
 -(void) launchStory {
     static char storyNameBuf[MAX_FILE_NAME];
     iphone_top_win_height = -1;
-
+    
     strcpy(storyNameBuf, [m_currentStory UTF8String]);
     if (strlen(storyNameBuf) == 0)
-	return;
-
+        return;
+    
     iphone_stop_script();
-
+    
     // Make sure pending performSelector calls are cancelled
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
-
+    
     NSString *story = [[[[self currentStory] lastPathComponent] stringByDeletingPathExtension] lowercaseString];
     StoryBrowser *storyBrowser = [self storyBrowser];
-
+    
     if (m_notesController) {
-	NSString *notesText = [storyBrowser getNotesForStory:story];
-	[m_notesController setTitle: [storyBrowser fullTitleForStory: story]];
-	[m_notesController setText: notesText];
+        NSString *notesText = [storyBrowser getNotesForStory:story];
+        [m_notesController setTitle: [storyBrowser fullTitleForStory: story]];
+        [m_notesController setText: notesText];
     }
-
+    
     [self displayLaunchMessageWithDelay: 2.5 duration:1.0  alpha:0.85];
-
+    
     [self rememberActiveStory];
-
+    
     if (m_splashImageView) { // stale
-	[m_splashImageView removeFromSuperview];
-	[m_splashImageView release];
-	m_splashImageView = nil;
+        [m_splashImageView removeFromSuperview];
+        [m_splashImageView release];
+        m_splashImageView = nil;
     }
-
+    
     if (1 || ![storyBrowser lowMemory]) {
-	BOOL isZblorb = ([[[self currentStory] pathExtension] isEqualToString:@"zblorb"]);
-	NSData *data = nil;
-	// For ZBlorbs, on small screens read the splash once, scale to 320x320, and save
-	// On large screens, read the larger embedded image every time.
-	if (!isZblorb || !gLargeScreenDevice)
-	    data = [storyBrowser splashDataForStory: story];
-	if (!data && isZblorb) {
-	    data = imageDataFromZBlorb([self currentStory]);
+        NSString *pathExt = [[self currentStory] pathExtension];
+        BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
+        NSData *data = nil;
+        // For ZBlorbs, on small screens read the splash once, scale to 320x320, and save
+        // On large screens, read the larger embedded image every time.
+        if (!isZblorb || !gLargeScreenDevice)
+            data = [storyBrowser splashDataForStory: story];
+        if (!data && isZblorb) {
+            data = imageDataFromBlorb([self currentStory]);
 #if 0
-	    if (data && !gLargeScreenDevice) {
-		UIImage *image = [UIImage imageWithData: data];
-		if (image) {
-		    UIImage *splash = scaledUIImage(image, 320, 320);
-		    if (splash)
-			[storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
-		    [data release];
-		    data = [storyBrowser splashDataForStory: story];
-		}
-	    }
+            if (data && !gLargeScreenDevice) {
+                UIImage *image = [UIImage imageWithData: data];
+                if (image) {
+                    UIImage *splash = scaledUIImage(image, 320, 320);
+                    if (splash)
+                        [storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
+                    [data release];
+                    data = [storyBrowser splashDataForStory: story];
+                }
+            }
 #endif
-	}
-	
-	if (data) {
-//	    UIImage *splashImage = [[UIImage alloc] initWithData: data];
-	    UIImage *timg = [[UIImage alloc] initWithData: data];
-	    UIImage *splashImage = scaledUIImage(timg, 0, 0);
-	    m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
-	    [timg release];
-	    
-	    if (![storyBrowser thumbDataForStory: story]) {
-		UIImage *thumb = scaledUIImage(splashImage, 40, 32);
-		if (thumb) {
-		    [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
-		    [storyBrowser saveMetaData];
-		}
-	    }
-	    
-//	    [splashImage release];
-	    CGRect rect = [m_splashImageView bounds];
-
-	    CGSize mySize = [self view].frame.size;	    
-	    if (gLargeScreenDevice || rect.size.width > 320 || rect.size.height > 320) {
-		float scale = 1.0f;
-		if (gLargeScreenDevice && rect.size.height <= 512 && rect.size.width <= 512) {
-		    scale = (rect.size.height <= 320 && rect.size.width <= 320) ? 2.0f : 1.5f;
-		} else if (rect.size.height > mySize.height-40 || rect.size.width > mySize.width) {
-		    scale = mySize.height / rect.size.height;
-		    CGFloat scale2 = mySize.width / rect.size.width;
-		    if (scale2 < scale)
-			scale = scale2;
-		    scale *= 0.9;
-		}
-		rect.size.height *= scale;
-		rect.size.width *= scale;
-	    }
-	    rect.origin.x += mySize.width/2 - rect.size.width/2.0;
-	    rect.origin.y += mySize.height/2 - rect.size.height/2.0 - 20;
-	    [m_splashImageView setFrame: rect];
-
-	    TransitionView *transitionView = [[TransitionView alloc] initWithFrame: [[self view] bounds]];
-	    [transitionView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
-	    [m_splashImageView setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleLeftMargin|
-		UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin];
-	    [transitionView setDelegate: self];
-	    [transitionView addSubview: m_splashImageView];
-	    [transitionView setContentMode:UIViewContentModeScaleAspectFit];
-	    [transitionView bringSubviewToFront: m_splashImageView];
-
-	    [[self view] addSubview: transitionView];
-	    [[self view] bringSubviewToFront: transitionView];
-	    [self performSelector: @selector(fadeSplashScreen:) withObject: transitionView afterDelay: 6.0];
-	}
+        }
+        
+        if (data) {
+            //	    UIImage *splashImage = [[UIImage alloc] initWithData: data];
+            UIImage *timg = [[UIImage alloc] initWithData: data];
+            UIImage *splashImage = scaledUIImage(timg, 0, 0);
+            m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
+            [timg release];
+            
+            if (![storyBrowser thumbDataForStory: story]) {
+                UIImage *thumb = scaledUIImage(splashImage, 40, 32);
+                if (thumb) {
+                    [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
+                    [storyBrowser saveMetaData];
+                }
+            }
+            
+            //	    [splashImage release];
+            CGRect rect = [m_splashImageView bounds];
+            
+            CGSize mySize = [self view].frame.size;	    
+            if (gLargeScreenDevice || rect.size.width > 320 || rect.size.height > 320) {
+                float scale = 1.0f;
+                if (gLargeScreenDevice && rect.size.height <= 512 && rect.size.width <= 512) {
+                    scale = (rect.size.height <= 320 && rect.size.width <= 320) ? 2.0f : 1.5f;
+                } else if (rect.size.height > mySize.height-40 || rect.size.width > mySize.width) {
+                    scale = mySize.height / rect.size.height;
+                    CGFloat scale2 = mySize.width / rect.size.width;
+                    if (scale2 < scale)
+                        scale = scale2;
+                    scale *= 0.9;
+                }
+                rect.size.height *= scale;
+                rect.size.width *= scale;
+            }
+            rect.origin.x += mySize.width/2 - rect.size.width/2.0;
+            rect.origin.y += mySize.height/2 - rect.size.height/2.0 - 20;
+            [m_splashImageView setFrame: rect];
+            
+            TransitionView *transitionView = [[TransitionView alloc] initWithFrame: [[self view] bounds]];
+            [transitionView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
+            [m_splashImageView setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleLeftMargin|
+             UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin];
+            [transitionView setDelegate: self];
+            [transitionView addSubview: m_splashImageView];
+            [transitionView setContentMode:UIViewContentModeScaleAspectFit];
+            [transitionView bringSubviewToFront: m_splashImageView];
+            
+            [[self view] addSubview: transitionView];
+            [[self view] bringSubviewToFront: transitionView];
+            [self performSelector: @selector(fadeSplashScreen:) withObject: transitionView afterDelay: 6.0];
+        }
     }
-
+    
     inputsSinceSaveRestore = 0;
     finished = 0;
-
+    
     setScreenDims(storyNameBuf);
     [m_statusLine reset];
     [m_storyView resetMargins];
     [m_storyView reset];
     [self clearGlkViews];
-
+    
     disable_complete = NO;
-
+    
     iphone_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] leading]);
-
+    
     m_storyTID = 0;
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
-//    NSLog (@"launched tid %d\n", m_storyTID);
+    //    NSLog (@"launched tid %d\n", m_storyTID);
     [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
-
+    
 }
 
 -(void) forceAbandonStory {
@@ -3073,47 +3081,47 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void) abandonStory:(BOOL)deleteAutoSave {
     if ([m_currentStory length] > 0) {
-	NSError *error = nil;
-	iphone_stop_script();
-	script_reset(NULL);
-	[[NSFileManager defaultManager] removeItemAtPath: activeStoryPath error:&error];
-
-	if (deleteAutoSave)
-	    [[NSFileManager defaultManager] removeItemAtPath: storySIPPath error:&error];
-	[self savePrefs];
-	[m_statusLine setBgColorIndex: 0];
-	[m_statusLine setTextColorIndex: 0];
-	[m_storyView setBgColorIndex: 0];
-	[m_storyView setTextColorIndex: 0];
-	[self setBackgroundColor: m_defaultBGColor makeDefault: NO];
-	[self setTextColor: m_defaultFGColor makeDefault: NO];
-	currColor = 0;
-	os_set_colour (DEFAULT_COLOUR, DEFAULT_COLOUR);
-
-//	NSLog(@"abandon story\n");
-	iphone_clear_input(@"\n\n");
-	[m_currentStory setString: @""];
-	[self clearGlkViews];
-	do_autosave = 0;
-	finished = 1;
-	
-	// if story thread is blocked waiting on window size change, wake it up
-	pthread_mutex_lock(&winSizeMutex);
-	winSizeChanged = NO;
-	pthread_cond_signal(&winSizeChangedCond);
-	pthread_mutex_unlock(&winSizeMutex);
-	for (int k = 0; k < 32; ++k)
-	    lastVisibleYPos[k] = 0;
-	
-	if (m_storyTID) {
-	    while (finished == 1) {
-		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; 
-	    }
-	    pthread_join(m_storyTID, NULL);
-	}
-	m_storyTID = 0;
+        NSError *error = nil;
+        iphone_stop_script();
+        script_reset(NULL);
+        [[NSFileManager defaultManager] removeItemAtPath: activeStoryPath error:&error];
+        
+        if (deleteAutoSave)
+            [[NSFileManager defaultManager] removeItemAtPath: storySIPPath error:&error];
+        [self savePrefs];
+        [m_statusLine setBgColorIndex: 0];
+        [m_statusLine setTextColorIndex: 0];
+        [m_storyView setBgColorIndex: 0];
+        [m_storyView setTextColorIndex: 0];
+        [self setBackgroundColor: m_defaultBGColor makeDefault: NO];
+        [self setTextColor: m_defaultFGColor makeDefault: NO];
+        currColor = 0;
+        os_set_colour (DEFAULT_COLOUR, DEFAULT_COLOUR);
+        
+        //	NSLog(@"abandon story\n");
+        iphone_clear_input(@"\n\n");
+        [m_currentStory setString: @""];
+        [self clearGlkViews];
+        do_autosave = 0;
+        finished = 1;
+        
+        // if story thread is blocked waiting on window size change, wake it up
+        pthread_mutex_lock(&winSizeMutex);
+        winSizeChanged = NO;
+        pthread_cond_signal(&winSizeChangedCond);
+        pthread_mutex_unlock(&winSizeMutex);
+        for (int k = 0; k < 32; ++k)
+            lastVisibleYPos[k] = 0;
+        
+        if (m_storyTID) {
+            while (finished == 1) {
+                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; 
+            }
+            pthread_join(m_storyTID, NULL);
+        }
+        m_storyTID = 0;
     }
-
+    
     iphone_clear_input(NULL);
     [m_inputLine setText: @""];
     top_win_height = 0;
@@ -3123,60 +3131,60 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void) autoSaveStory {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
-
-//    if (gStoryInterp == kGlxStory)
-//	return;
+    
+    //    if (gStoryInterp == kGlxStory)
+    //	return;
     [self updateAutosavePaths];
-
+    
     iphone_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
-
+    
     if (m_currentStory && ([m_currentStory length] > 0)) {
-	NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
-	NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
-	[dict setObject: m_currentStory forKey: @"storyPath"];
-	[dict setObject: [NSNumber numberWithInt: iphone_top_win_height] forKey: @"statusWinHeight"];
-	[dict setObject: [NSNumber numberWithInt: cwin] forKey: @"currentWindow"];
-	[dict setObject: [NSNumber numberWithInt: cursor_row] forKey: @"cursorRow"];
-	[dict setObject: [NSNumber numberWithInt: cursor_col] forKey: @"cursorCol"];
-	[dict setObject: [NSNumber numberWithInt: frame_count] forKey: @"frameCount"];
-	[dict setObject: [NSNumber numberWithInt: currColor] forKey: @"textColors"];
-	if (*iphone_scriptname)
-	    [dict setObject: [NSString stringWithUTF8String: iphone_scriptname] forKey: @"scriptname"];
-
-	NSData *statusData = [NSData dataWithBytes: screen_data length: h_screen_rows * MAX_COLS * sizeof(*screen_data)];
-	NSData *statusColors = [NSData dataWithBytes: screen_colors length: h_screen_rows * MAX_COLS * sizeof(*screen_colors)];
-	[dict setObject: statusData  forKey: @"statusWinData"];
-	[dict setObject: statusColors forKey: @"statusWinColors"];
-
+        NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
+        [dict setObject: m_currentStory forKey: @"storyPath"];
+        [dict setObject: [NSNumber numberWithInt: iphone_top_win_height] forKey: @"statusWinHeight"];
+        [dict setObject: [NSNumber numberWithInt: cwin] forKey: @"currentWindow"];
+        [dict setObject: [NSNumber numberWithInt: cursor_row] forKey: @"cursorRow"];
+        [dict setObject: [NSNumber numberWithInt: cursor_col] forKey: @"cursorCol"];
+        [dict setObject: [NSNumber numberWithInt: frame_count] forKey: @"frameCount"];
+        [dict setObject: [NSNumber numberWithInt: currColor] forKey: @"textColors"];
+        if (*iphone_scriptname)
+            [dict setObject: [NSString stringWithUTF8String: iphone_scriptname] forKey: @"scriptname"];
+        
+        NSData *statusData = [NSData dataWithBytes: screen_data length: h_screen_rows * MAX_COLS * sizeof(*screen_data)];
+        NSData *statusColors = [NSData dataWithBytes: screen_colors length: h_screen_rows * MAX_COLS * sizeof(*screen_colors)];
+        [dict setObject: statusData  forKey: @"statusWinData"];
+        [dict setObject: statusColors forKey: @"statusWinColors"];
+        
 #if UseRichTextView
-	NSDictionary *storyTextSaveDict = [m_storyView getSaveDataDict];
-	[dict setObject: storyTextSaveDict forKey: @"storyRichWinContents"];
+        NSDictionary *storyTextSaveDict = [m_storyView getSaveDataDict];
+        [dict setObject: storyTextSaveDict forKey: @"storyRichWinContents"];
 #else
-	NSString *storyText;
-	storyText = [m_storyView text];
-	[dict setObject: storyText forKey: @"storyWinContents"];
+        NSString *storyText;
+        storyText = [m_storyView text];
+        [dict setObject: storyText forKey: @"storyWinContents"];
 #endif
-
-	NSString *errString = nil;
-	NSData *scData = [NSPropertyListSerialization dataFromPropertyList:dict format:NSPropertyListBinaryFormat_v1_0
-	 errorDescription:&errString];
-	[scData writeToFile:storySIPPath atomically:NO];
-
-	[dict release];
-
-	if (m_notesController) {
-	    NSString *notesText = [m_notesController text];
-	    if (notesText)
-		[m_storyBrowser saveNotes:notesText forStory:story];
-	}
-
-	// !!! need a cond var to synchronize this less hackishly
-	int count = 30;
-	while (autosave_done == 0 && count >= 0) {
-	    usleep(100000);
-	    --count;
-	}
-	sync();
+        
+        NSString *errString = nil;
+        NSData *scData = [NSPropertyListSerialization dataFromPropertyList:dict format:NSPropertyListBinaryFormat_v1_0
+                                                          errorDescription:&errString];
+        [scData writeToFile:storySIPPath atomically:NO];
+        
+        [dict release];
+        
+        if (m_notesController) {
+            NSString *notesText = [m_notesController text];
+            if (notesText)
+                [m_storyBrowser saveNotes:notesText forStory:story];
+        }
+        
+        // !!! need a cond var to synchronize this less hackishly
+        int count = 30;
+        while (autosave_done == 0 && count >= 0) {
+            usleep(100000);
+            --count;
+        }
+        sync();
     }
     autosave_done = 0;
 }
@@ -3184,41 +3192,41 @@ static void setScreenDims(char *storyNameBuf) {
 -(void) suspendStory {
     [self autoSaveStory];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
-//    [[NSRunLoop currentRunLoop] cancelPerformSelector:@selector(printText:) target:self argument:nil];
+    //    [[NSRunLoop currentRunLoop] cancelPerformSelector:@selector(printText:) target:self argument:nil];
 }
 
 -(BOOL) possibleUnsavedProgress {
     if (m_notesController && [[m_notesController text] length] > 0)
-	return YES;
+        return YES;
     return inputsSinceSaveRestore != 0;
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-
+    
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
-	return NO;
-
+        return NO;
+    
     // If we accept the input here, word completion from a return key won't get entered.
     // If we call endEditing, then the text is right when we get to the textFieldDidEndEditing callback,
     // but we lose firstResponder and the keyboard goes away.
     // It seems to work best if we just invoke the callback here with a perform/delay, so the
     // autocorrection, if any, has time to take effect
-
+    
     [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: 0.02]; // inModes:[NSArray arrayWithObject: [[NSRunLoop currentRunLoop] currentMode]]];
-//  [self textFieldFakeDidEndEditing: textField];
-
+    //  [self textFieldFakeDidEndEditing: textField];
+    
     [self checkAccessibility];
     return YES;
 }
 
 -(void)autoSaveCallback {
     if ([self possibleUnsavedProgress]) {
-	if (!do_autosave && (ipzAllowInput & kIPZAllowInput) && [[m_inputLine text] length]==0 && [ipzInputBufferStr length] == 0) {
-	    [self setLaunchMessage: @"Autosaving..." clear:NO];
-	    [self displayLaunchMessageWithDelay: 0.8 duration:0.5 alpha:0.4];
-	    [self autoSaveStory];
-	}
+        if (!do_autosave && (ipzAllowInput & kIPZAllowInput) && [[m_inputLine text] length]==0 && [ipzInputBufferStr length] == 0) {
+            [self setLaunchMessage: @"Autosaving..." clear:NO];
+            [self displayLaunchMessageWithDelay: 0.8 duration:0.5 alpha:0.4];
+            [self autoSaveStory];
+        }
     }
 }
 
@@ -3229,21 +3237,21 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldFakeDidEndEditing:(UITextField *)textField {
     NSString *inputText = [textField text];
-//    NSLog(@"input str:'%@' len:%d", inputText, [inputText length]);
+    //    NSLog(@"input str:'%@' len:%d", inputText, [inputText length]);
     BOOL autoplay = [inputText isEqualToString: @"$autoplay"];
     static BOOL doAutoplay = NO;
     if (autoplay)
-	doAutoplay = !doAutoplay;
+        doAutoplay = !doAutoplay;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
-
+    
     FrotzView *textView = m_storyView;
     if (gStoryInterp == kGlxStory)
-	textView = [m_glkViews objectAtIndex:cwin];
-
+        textView = [m_glkViews objectAtIndex:cwin];
+    
     iphone_feed_input(inputText);
     iphone_feed_input(@"\n");
     [m_inputLine addHistoryItem: inputText];
-
+    
     CGRect textFieldFrame = [textField frame];
     textFieldFrame.origin.x = 0;
     textFieldFrame.origin.y = [textView frame].size.height;
@@ -3254,20 +3262,20 @@ static void setScreenDims(char *storyNameBuf) {
     [textView appendText: inputText];
     ++inputsSinceSaveRestore;
     [textField setText: @""];
-
+    
     CGSize sz2 = [textView contentSize];
     contentOffset.y +=  sz2.height - sz1.height + 8;
     [textView setContentOffset: contentOffset animated:YES];
     lastVisibleYPos[cwin] = sz2.height;
-
+    
     [self performSelector: @selector(autoSaveCallback) withObject:nil afterDelay: 30.0];
-
+    
 #if 1
     if (doAutoplay) {
-	[self performSelector: @selector(autoplay) withObject: nil afterDelay: 0.25];
+        [self performSelector: @selector(autoplay) withObject: nil afterDelay: 0.25];
     }
 #endif
-
+    
 }
 
 -(BOOL)isCompletionEnabled {
@@ -3289,7 +3297,7 @@ static void setScreenDims(char *storyNameBuf) {
 -(NSString*)completeWord:(NSString*)word prevString:(NSString*)prevString {
     NSString *completion = completeWord(word, prevString);
     if (completion && [completion isEqualToString: word])
-	return nil;
+        return nil;
     return completion;
 }
 
@@ -3316,19 +3324,19 @@ static void setScreenDims(char *storyNameBuf) {
 -(UIView*) inputHelperView {
     return [m_inputLine inputHelperView];
 }
-    
-    
+
+
 -(void)resetSettingsToDefault {
     if (m_defaultBGColor)
-	[m_defaultBGColor release];
+        [m_defaultBGColor release];
     if (m_defaultFGColor)
-	[m_defaultFGColor release];
+        [m_defaultFGColor release];
     m_defaultBGColor = [[UIColor alloc] initWithRed: 1.0 green:1.0 blue:0.9 alpha:1.0];
     m_defaultFGColor = [[UIColor alloc] initWithRed: 0.0 green:0.0 blue:0.1 alpha:1.0];
     if (currColor == 0 || currColor == 0x11 || currColor == 0x29) // don't override current game's custom colors
     {
-	[self setTextColor: m_defaultFGColor makeDefault:NO];
-	[self setBackgroundColor: m_defaultBGColor makeDefault:NO];
+        [self setTextColor: m_defaultFGColor makeDefault:NO];
+        [self setBackgroundColor: m_defaultBGColor makeDefault:NO];
     }
     m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     [self setFont: kVariableWidthFontName withSize: m_fontSize];
@@ -3358,21 +3366,21 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 -(void) initializeDropbox {
 #ifdef FROTZ_DB_CONSUMER_KEY
     DBSession* session = 
-        [[DBSession alloc] initWithConsumerKey:@FROTZ_DB_CONSUMER_KEY consumerSecret:@FROTZ_DB_CONSUMER_SECRET];
+    [[DBSession alloc] initWithConsumerKey:@FROTZ_DB_CONSUMER_KEY consumerSecret:@FROTZ_DB_CONSUMER_SECRET];
     session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating
     [DBSession setSharedSession:session];
     [session release];
-
+    
     NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
-
+    
     m_dbCachedMetadata = [[NSMutableDictionary dictionaryWithContentsOfFile: dbcPath] retain];
     if (!m_dbCachedMetadata)
-	m_dbCachedMetadata = [[NSMutableDictionary alloc] initWithCapacity: 4];
+        m_dbCachedMetadata = [[NSMutableDictionary alloc] initWithCapacity: 4];
     m_dbTopPath = [m_dbCachedMetadata objectForKey: kDBTopPath];
-
+    
     m_dbActive = [[m_dbCachedMetadata objectForKey: kActiveKey] boolValue];
     if ([[DBSession sharedSession] isLinked]) {
-	[self.restClient loadMetadata: [self dbTopPath]];
+        [self.restClient loadMetadata: [self dbTopPath]];
     }
 #endif
 }
@@ -3383,65 +3391,65 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 - (void)saveDBCacheDict {
     if (!m_dbCachedMetadata)
-	return;
+        return;
     NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
     NSString *error;
-
+    
     NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:m_dbCachedMetadata
-                                    format:NSPropertyListBinaryFormat_v1_0
-                                    errorDescription:&error];
+                                                                   format:NSPropertyListBinaryFormat_v1_0
+                                                         errorDescription:&error];
     if(plistData)
-	[plistData writeToFile:dbcPath atomically:YES];
+        [plistData writeToFile:dbcPath atomically:YES];
     else
     {
-	NSLog(@"savedbc: err %@", error);
-	[error release];
+        NSLog(@"savedbc: err %@", error);
+        [error release];
     }
 }
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile {
     NSMutableDictionary *timeStampDict = [m_dbCachedMetadata objectForKey: kTimestampKey];
     if (!timeStampDict) 
-	return nil;
-
+        return nil;
+    
     return (NSDate*)[timeStampDict objectForKey: saveFile];
 }
 
 -(void)cacheTimestamp:(NSDate*)timeStamp forSaveFile:(NSString*)saveFile {
     NSMutableDictionary *timeStampDict = [m_dbCachedMetadata objectForKey: kTimestampKey];
     if (!timeStampDict) {
-	timeStampDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
-	[m_dbCachedMetadata setValue: timeStampDict forKey: kTimestampKey];
+        timeStampDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
+        [m_dbCachedMetadata setValue: timeStampDict forKey: kTimestampKey];
     }
     if (timeStamp)
-	[timeStampDict setValue: timeStamp forKey:saveFile];
+        [timeStampDict setValue: timeStamp forKey:saveFile];
     else 
-	[timeStampDict removeObjectForKey: saveFile];
+        [timeStampDict removeObjectForKey: saveFile];
 }
 
 -(NSString*)getHashForDBPath:(NSString*)path {
     NSMutableDictionary *hashDict = [m_dbCachedMetadata objectForKey: kHashKey];
     if (!hashDict) 
-	return nil;
-
+        return nil;
+    
     return (NSString*)[hashDict objectForKey: path];
 }
 
 -(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path {
     if (!hash || !path)
-	return;
+        return;
     NSMutableDictionary *hashDict = [m_dbCachedMetadata objectForKey: kHashKey];
     if (!hashDict) {
-	hashDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
-	[m_dbCachedMetadata setValue: hashDict forKey: kHashKey];
+        hashDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
+        [m_dbCachedMetadata setValue: hashDict forKey: kHashKey];
     }
     [hashDict setValue: hash forKey:path];
 }
 
 - (DBRestClient*)restClient {
     if (!m_restClient) {
-	m_restClient = [[DBRestClient alloc] initWithSession:[DBSession sharedSession]];
-	m_restClient.delegate = self;
+        m_restClient = [[DBRestClient alloc] initWithSession:[DBSession sharedSession]];
+        m_restClient.delegate = self;
     }
     return m_restClient;
 }
@@ -3451,17 +3459,17 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 - (void)loginControllerDidLogin:(DBLoginController*)controller {
     if ([[DBSession sharedSession] isLinked]) {
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
-		    message: 
-			[NSString stringWithFormat:
-			 @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
-			 "with separate subfolders per story.  You can access this area from Frotz on other "
-			 "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
-		    delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-	[alert show];
-	[alert release];
-
-	[self.restClient loadMetadata: [self dbTopPath]];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
+                                                        message: 
+                              [NSString stringWithFormat:
+                               @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
+                               "with separate subfolders per story.  You can access this area from Frotz on other "
+                               "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
+                                                       delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+        [alert show];
+        [alert release];
+        
+        [self.restClient loadMetadata: [self dbTopPath]];
     }
 }
 
@@ -3479,50 +3487,50 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     NSString *dbGamePath = [self dbGamePath];
     NSString *dbSavePath = [self dbSavePath];
     NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-
+    
     BOOL foundGames = NO, foundSaves = NO;
     if ([metadata.path isEqualToString: dbTopPath]) {
-	for (DBMetadata* child in metadata.contents) {
-	    if (child.isDirectory) {
-		if ([child.path isEqualToString: dbGamePath])
-		    foundGames = YES;
-		else if ([child.path isEqualToString: dbSavePath])
-		    foundSaves = YES;
-	    }
-	}
+        for (DBMetadata* child in metadata.contents) {
+            if (child.isDirectory) {
+                if ([child.path isEqualToString: dbGamePath])
+                    foundGames = YES;
+                else if ([child.path isEqualToString: dbSavePath])
+                    foundSaves = YES;
+            }
+        }
 #if 0 // creating this if we're not going to populate it will mislead people...
-	if (!foundGames) {
-	    NSLog(@"creating dbgamepath");
-	    [self.restClient createFolder: dbGamePath];
-	}
+        if (!foundGames) {
+            NSLog(@"creating dbgamepath");
+            [self.restClient createFolder: dbGamePath];
+        }
 #endif
-	if (!foundSaves) {
-	    NSLog(@"creating dbsavepath");
-	    [self.restClient createFolder: dbSavePath];
-	}
-	if (!m_dbActive) {
-	    m_dbActive = YES;
-	    [m_dbCachedMetadata setValue: [NSNumber numberWithBool: m_dbActive] forKey: kActiveKey];
-	    [self saveDBCacheDict];
-	}
-//	[self.restClient performSelector:@selector(loadMetadata:) withObject:dbGamePath afterDelay:0.2];
-	[self.restClient performSelector:@selector(loadMetadata:) withObject:dbSavePath afterDelay:0.3];
+        if (!foundSaves) {
+            NSLog(@"creating dbsavepath");
+            [self.restClient createFolder: dbSavePath];
+        }
+        if (!m_dbActive) {
+            m_dbActive = YES;
+            [m_dbCachedMetadata setValue: [NSNumber numberWithBool: m_dbActive] forKey: kActiveKey];
+            [self saveDBCacheDict];
+        }
+        //	[self.restClient performSelector:@selector(loadMetadata:) withObject:dbGamePath afterDelay:0.2];
+        [self.restClient performSelector:@selector(loadMetadata:) withObject:dbSavePath afterDelay:0.3];
     } else if ([metadata.path isEqualToString: dbGamePath]) {
     } else if ([metadata.path isEqualToString: dbSavePath]) {
-	[self dbCheckSaveDirs:metadata];
+        [self dbCheckSaveDirs:metadata];
     } else if ([metadata.path hasPrefix: dbSavePathT]) {
-	[self dbSyncSingleSaveDir: metadata];
+        [self dbSyncSingleSaveDir: metadata];
     }
     
 }
 
 -(void)dbUploadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
-
+    
     if ([saveGameSubPath hasSuffix: @kFrotzAutoSaveFile] || [saveGameSubPath hasSuffix: @kFrotzAutoSavePListFile]
-	|| [saveGameSubPath hasSuffix: @kFrotzOldAutoSaveFile])
-	return;
+        || [saveGameSubPath hasSuffix: @kFrotzOldAutoSaveFile])
+        return;
     NSLog(@"Uploading to DB: %@", saveGameSubPath);
-
+    
     NSString *saveGameFile = [saveGameSubPath lastPathComponent];
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: [saveGameSubPath stringByDeletingLastPathComponent]];
@@ -3532,13 +3540,13 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 -(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
     NSLog(@"Downloading from DB: %@", saveGameSubPath);
-
+    
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath];
     [self.restClient loadFile:dbSGPath intoPath:localSavePath];
 }
 
- 
+
 
 -(void)dbSyncSingleSaveDir:(DBMetadata*)metadata {
     NSString *dbSavePath = [self dbSavePath];
@@ -3549,84 +3557,84 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     
     NSString *dbSavePathWithSubT = [metadata.path stringByAppendingString: @"/"];
     for (DBMetadata* child in metadata.contents) {
-	if (!child.isDirectory)
-	    [dbSaveFiles addObject: child]; // [child.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""]];
+        if (!child.isDirectory)
+            [dbSaveFiles addObject: child]; // [child.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""]];
     }
     [dbSaveFiles sortUsingSelector: @selector(caseInsensitiveCompare:)];
-
-//    NSLog(@"SingleSaveDir: %@: %@", subSavePath, dbSaveFiles);
+    
+    //    NSLog(@"SingleSaveDir: %@: %@", subSavePath, dbSaveFiles);
     
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: subSavePath];
     NSFileManager *defaultManager = [NSFileManager defaultManager];
     NSError *error = nil;
     NSArray *localSaveFiles = [[defaultManager contentsOfDirectoryAtPath:localSavePath error:&error] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
-
+    
     int localCount = [localSaveFiles count];
     int dbCount = [dbSaveFiles count];
     int localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSF, *dbSF;
     while (localIndex < localCount && dbIndex < dbCount) {
-	locSF = [localSaveFiles objectAtIndex: localIndex];
-	DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
-	dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
-	NSDate *dbModDate = md.lastModifiedDate;
-	NSComparisonResult cr = [locSF caseInsensitiveCompare: dbSF];
-	if (cr == NSOrderedSame) {
-	    NSDictionary *fileAttribs = [defaultManager fileAttributesAtPath:[localSavePath stringByAppendingPathComponent:locSF] traverseLink:NO];
-	    NSDate *locModDate = [fileAttribs objectForKey: NSFileModificationDate];
-	    NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
-	    NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]];
-//	    NSLog(@"file %@/%@ cachedmd %@ dbmodd %@ locmd %@", subSavePath, locSF, cachedDBModDate, dbModDate, locModDate);
-	    
-	    // oldest             newest    | result
-	    // cache      db       local    | upload
-	    // db         cache    local    | upload
-	    // local      cache    db       | download
-	    // cache      local    db       | conflict  
-	    // db         local    cache    | no-op
-	    // local      db       cache    | no-op
-	    
-	    if ([locModDate compare: dbModDate] == NSOrderedDescending && [locModDate compare: cachedDBModDate] == NSOrderedDescending) {
-		// If filesystem mod date is newer than db (and cache is same or older than db), upload new file
-		[self dbUploadSaveGameFile: sfPath];
-	    } else if ([dbModDate compare: cachedDBModDate] == NSOrderedDescending) {
-		if ([locModDate compare: cachedDBModDate] == NSOrderedDescending)
-		    ; // conflict; ignore
-		else
-		    [self dbDownloadSaveGameFile: sfPath];
-	    }
-	    ++localIndex;
-	    ++dbIndex;
-	} else if (cr == NSOrderedAscending) { // local, not in db
-	    NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
-	    // If we don't have the file but do have a cached timestamp, the file was deleted in DB.
-	    // We won't delete it locally; the user must delete it by hand, but we won't auto-reupload it either.
-	    // When they delete it locally, we'll also delete the cache, so if the file is recreated it will be uploaded.
-	    if (![self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]])
-		[self dbUploadSaveGameFile: sfPath];
-	    ++localIndex;
-	} else { // cr == NSOrderDescending, db, not in local
-
-	    NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
-	    [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
-	    [self dbDownloadSaveGameFile: sfPath];
-	    ++dbIndex;
-	}
-	++i;
+        locSF = [localSaveFiles objectAtIndex: localIndex];
+        DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
+        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
+        NSDate *dbModDate = md.lastModifiedDate;
+        NSComparisonResult cr = [locSF caseInsensitiveCompare: dbSF];
+        if (cr == NSOrderedSame) {
+            NSDictionary *fileAttribs = [defaultManager fileAttributesAtPath:[localSavePath stringByAppendingPathComponent:locSF] traverseLink:NO];
+            NSDate *locModDate = [fileAttribs objectForKey: NSFileModificationDate];
+            NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
+            NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]];
+            //	    NSLog(@"file %@/%@ cachedmd %@ dbmodd %@ locmd %@", subSavePath, locSF, cachedDBModDate, dbModDate, locModDate);
+            
+            // oldest             newest    | result
+            // cache      db       local    | upload
+            // db         cache    local    | upload
+            // local      cache    db       | download
+            // cache      local    db       | conflict  
+            // db         local    cache    | no-op
+            // local      db       cache    | no-op
+            
+            if ([locModDate compare: dbModDate] == NSOrderedDescending && [locModDate compare: cachedDBModDate] == NSOrderedDescending) {
+                // If filesystem mod date is newer than db (and cache is same or older than db), upload new file
+                [self dbUploadSaveGameFile: sfPath];
+            } else if ([dbModDate compare: cachedDBModDate] == NSOrderedDescending) {
+                if ([locModDate compare: cachedDBModDate] == NSOrderedDescending)
+                    ; // conflict; ignore
+                else
+                    [self dbDownloadSaveGameFile: sfPath];
+            }
+            ++localIndex;
+            ++dbIndex;
+        } else if (cr == NSOrderedAscending) { // local, not in db
+            NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
+            // If we don't have the file but do have a cached timestamp, the file was deleted in DB.
+            // We won't delete it locally; the user must delete it by hand, but we won't auto-reupload it either.
+            // When they delete it locally, we'll also delete the cache, so if the file is recreated it will be uploaded.
+            if (![self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]])
+                [self dbUploadSaveGameFile: sfPath];
+            ++localIndex;
+        } else { // cr == NSOrderDescending, db, not in local
+            
+            NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
+            [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
+            [self dbDownloadSaveGameFile: sfPath];
+            ++dbIndex;
+        }
+        ++i;
     }
     while (localIndex < localCount) {
-	locSF = [localSaveFiles objectAtIndex: localIndex];
-	[self dbUploadSaveGameFile: [subSavePath stringByAppendingPathComponent: locSF]];
-	++localIndex;
+        locSF = [localSaveFiles objectAtIndex: localIndex];
+        [self dbUploadSaveGameFile: [subSavePath stringByAppendingPathComponent: locSF]];
+        ++localIndex;
     }
     while (dbIndex < dbCount) {
     	DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
-	dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
-	NSDate *dbModDate = md.lastModifiedDate;
-	NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
-	[self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
-	[self dbDownloadSaveGameFile: sfPath];
-	++dbIndex;
+        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
+        NSDate *dbModDate = md.lastModifiedDate;
+        NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
+        [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
+        [self dbDownloadSaveGameFile: sfPath];
+        ++dbIndex;
     }
     [self cacheHash:metadata.hash forDBPath:[self metadataSubPath: metadata.path]];
     [self saveDBCacheDict];    
@@ -3635,17 +3643,17 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 -(void)dbCheckSaveDirs:(DBMetadata*)metadata {
     NSString *dbSavePath = [self dbSavePath];
     NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-
+    
     NSArray *storyNames = [m_storyBrowser storyNames];
     NSMutableArray *dbSaveDirs = [NSMutableArray arrayWithCapacity:32];
     NSMutableArray *localSaveDirs = [NSMutableArray arrayWithCapacity:32];
     for (StoryInfo *si in storyNames) {
-	NSString *story = [si path];
-	[localSaveDirs addObject: [self saveSubFolderForStory: story]];
+        NSString *story = [si path];
+        [localSaveDirs addObject: [self saveSubFolderForStory: story]];
     }	
     for (DBMetadata* child in metadata.contents) {
-	if (child.isDirectory)
-	    [dbSaveDirs addObject: [child.path stringByReplacingOccurrencesOfString:dbSavePathT withString:@""]];
+        if (child.isDirectory)
+            [dbSaveDirs addObject: [child.path stringByReplacingOccurrencesOfString:dbSavePathT withString:@""]];
     }
     [localSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
     [dbSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
@@ -3655,53 +3663,53 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     int localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSD, *dbSD;
     while (localIndex < localCount && dbIndex < dbCount) {
-	locSD = [localSaveDirs objectAtIndex: localIndex];
-	dbSD = [dbSaveDirs objectAtIndex: dbIndex];
-	NSComparisonResult cr = [locSD caseInsensitiveCompare: dbSD];
-	NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
-	if (cr == NSOrderedSame) {
-	    ++localIndex;
-	    ++dbIndex;
-	    [self.restClient loadMetadata: subPath withHash:[self getHashForDBPath: [self metadataSubPath: subPath]]];
-	} else if (cr == NSOrderedAscending) { // local, not in db
-	    NSLog(@"create folder in db: %@", locSD);
-	    [self.restClient createFolder: subPath];
-	    [self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
-	    ++localIndex;
-	} else { // cr == NSOrderDescending, db, not in local
-	    // if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
-	    //NSLog(@"create folder local: %@", dbSD);	    
-	    ++dbIndex;
-	}
-	++i;
+        locSD = [localSaveDirs objectAtIndex: localIndex];
+        dbSD = [dbSaveDirs objectAtIndex: dbIndex];
+        NSComparisonResult cr = [locSD caseInsensitiveCompare: dbSD];
+        NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
+        if (cr == NSOrderedSame) {
+            ++localIndex;
+            ++dbIndex;
+            [self.restClient loadMetadata: subPath withHash:[self getHashForDBPath: [self metadataSubPath: subPath]]];
+        } else if (cr == NSOrderedAscending) { // local, not in db
+            NSLog(@"create folder in db: %@", locSD);
+            [self.restClient createFolder: subPath];
+            [self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
+            ++localIndex;
+        } else { // cr == NSOrderDescending, db, not in local
+            // if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
+            //NSLog(@"create folder local: %@", dbSD);	    
+            ++dbIndex;
+        }
+        ++i;
     }
     while (localIndex < localCount) {
-	locSD = [localSaveDirs objectAtIndex: localIndex];
-	NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
-	NSLog(@"create folder in db: %@", locSD);
-	[self.restClient createFolder: subPath];
-	[self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
-	++localIndex;
+        locSD = [localSaveDirs objectAtIndex: localIndex];
+        NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
+        NSLog(@"create folder in db: %@", locSD);
+        [self.restClient createFolder: subPath];
+        [self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
+        ++localIndex;
     }
     while (dbIndex < dbCount) {
-	// if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
-	//NSLog(@"create folder local: %@", dbSD);
-	//dbSD = [dbSaveDirs objectAtIndex: dbIndex];
-	++dbIndex;
+        // if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
+        //NSLog(@"create folder local: %@", dbSD);
+        //dbSD = [dbSaveDirs objectAtIndex: dbIndex];
+        ++dbIndex;
     }
     if (localCount > 0 || dbCount > 0)
-	[self saveDBCacheDict];
+        [self saveDBCacheDict];
 }
 
 - (void)restClient:(DBRestClient*)client loadedFile:(NSString*)destPath {
     NSLog(@"db downloaded %@", destPath);
     [self cacheTimestamp:[NSDate date] forSaveFile:
-	[@kFrotzSaveDir stringByAppendingPathComponent:[destPath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""]]];
+     [@kFrotzSaveDir stringByAppendingPathComponent:[destPath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""]]];
     [self saveDBCacheDict];
 }
 
 - (void)restClient:(DBRestClient*)client loadProgress:(CGFloat)progress forFile:(NSString*)destPath {
-//    NSLog(@"db download progress : %f : %@", progress, destPath);
+    //    NSLog(@"db download progress : %f : %@", progress, destPath);
 }
 
 - (void)restClient:(DBRestClient*)client loadFileFailedWithError:(NSError*)error {
@@ -3715,7 +3723,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 }
 
 - (void)restClient:(DBRestClient*)client uploadProgress:(CGFloat)progress forFile:(NSString*)destPath from:(NSString*)srcPath {
-//    NSLog(@"db uploadProg: %f : %@ from %@", progress, destPath, srcPath);
+    //    NSLog(@"db uploadProg: %f : %@ from %@", progress, destPath, srcPath);
 }
 
 - (void)restClient:(DBRestClient*)client uploadFileFailedWithError:(NSError*)error {
@@ -3723,39 +3731,39 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 }
 
 -(void)restClient:(DBRestClient*)client metadataUnchangedAtPath:(NSString*)path {
-//    NSLog(@"Metadata unchanged for path %@!", path);
+    //    NSLog(@"Metadata unchanged for path %@!", path);
 }
 
 -(NSString*)dbTopPath {
     if (m_dbTopPath)
-	return m_dbTopPath;
+        return m_dbTopPath;
     return kDefaultDBTopPath;
 }
 
 -(void)dbRecursiveMakeParents:(NSString*)path {
     if (![path hasPrefix: @"/"] || [path isEqualToString: @"/"])
-	return;
+        return;
     [self dbRecursiveMakeParents: [path stringByDeletingLastPathComponent]];
     [self.restClient createFolder: path];
 }
 
 -(void)setDBTopPath:(NSString*)path {
     if (m_dbTopPath != path) {
-	if (![path hasPrefix: @"/"] || [path hasSuffix: @"/"])
-	    return;
+        if (![path hasPrefix: @"/"] || [path hasSuffix: @"/"])
+            return;
         if (m_dbActive && [[DBSession sharedSession] isLinked]) {
-	    [self dbRecursiveMakeParents: [path stringByDeletingLastPathComponent]];
-	    
-	    // NOTE: this doesn't work if they try something like move /Frotz -> /Frotz/foo/bar.
-	    // For that to work we'd have to move each top-level subfolder individually.  Oh well.
-	    [self.restClient moveFrom: [self dbTopPath] toPath: path];
-	}
-	[m_dbTopPath release];
-	m_dbTopPath = [path retain];
+            [self dbRecursiveMakeParents: [path stringByDeletingLastPathComponent]];
+            
+            // NOTE: this doesn't work if they try something like move /Frotz -> /Frotz/foo/bar.
+            // For that to work we'd have to move each top-level subfolder individually.  Oh well.
+            [self.restClient moveFrom: [self dbTopPath] toPath: path];
+        }
+        [m_dbTopPath release];
+        m_dbTopPath = [path retain];
     	[m_dbCachedMetadata setObject:m_dbTopPath forKey:kDBTopPath];
-	[self saveDBCacheDict];
-	if ([[DBSession sharedSession] isLinked])
-	    [self.restClient performSelector:@selector(loadMetadata:) withObject:m_dbTopPath afterDelay:1.0];
+        [self saveDBCacheDict];
+        if ([[DBSession sharedSession] isLinked])
+            [self.restClient performSelector:@selector(loadMetadata:) withObject:m_dbTopPath afterDelay:1.0];
     }
 }
 
@@ -3775,14 +3783,14 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     NSLog(@"Error loading metadata: %@ : %@", error.userInfo, error);
     int errCode = [error code];
     if (errCode == 404) {
-	NSString *topPath = [self dbTopPath];
-	NSString *path = [error.userInfo objectForKey: @"path"];
-	if (path && [path isEqualToString: topPath]) {
-	    NSLog(@"creating dbtoppath");
+        NSString *topPath = [self dbTopPath];
+        NSString *path = [error.userInfo objectForKey: @"path"];
+        if (path && [path isEqualToString: topPath]) {
+            NSLog(@"creating dbtoppath");
     	    [self dbRecursiveMakeParents: [topPath stringByDeletingLastPathComponent]];
-	    [self.restClient createFolder: topPath];
-	    [self.restClient loadMetadata: topPath];
-	}
+            [self.restClient createFolder: topPath];
+            [self.restClient loadMetadata: topPath];
+        }
     }
 }
 
@@ -3806,41 +3814,41 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 }
 
 static NSString *completeWord(NSString *str, NSString *prevString) {
-
+    
     static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get",
         @"put", @"quit", @"throw", @"tell", @"open", @"pick",
         @"up", @"i", @"out", @"it", @"in", @"id", @"iv", @"xi", @"is", @"on", @"of", nil };
-        // removed 'inventory' because some games choke on the full spelling (HHGTTG)
+    // removed 'inventory' because some games choke on the full spelling (HHGTTG)
     static NSString *rareWordArray[] = { @"examine", @"do", @"down", @"diagnose", @"say", @"save", @"to", @"no", @"yes",
         @"all", @"but", @"from", @"with", @"about", @"but", @"close", @"climb", @"north", @"east", @"south", @"west",
-	@"ask", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"press", @"push", @"pull", @"show", @"stand",
-	@"switch", @"turn", @"sit", @"kill", @"kick", @"jump",  @"go", @"lock", @"unlock", @"give", @"learn",
-	@"disrobe", @"help", @"hint", @"wear", @"remove", @"window", nil };
+        @"ask", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"press", @"push", @"pull", @"show", @"stand",
+        @"switch", @"turn", @"sit", @"kill", @"kick", @"jump",  @"go", @"lock", @"unlock", @"give", @"learn",
+        @"disrobe", @"help", @"hint", @"wear", @"remove", @"window", nil };
     static NSString *veryRareWordArray[] = { @"attack", @"answer", @"diagnose", @"verbose", @"brief", @"superbrief",
         @"score", @"restart", @"script", @"drink", @"unscript", @"listen", @"touch", @"smell", @"taste", @"feel", @"under",
-	@"untie", @"inventory",	@"memorize", @"follow", @"light", @"knock", @"lantern", @"northwest", @"northeast",
-	@"southeast", @"southwest",
-	nil };
+        @"untie", @"inventory",	@"memorize", @"follow", @"light", @"knock", @"lantern", @"northwest", @"northeast",
+        @"southeast", @"southwest",
+        nil };
     int len = [str length], match;
     BOOL startsWithPunct = NO;
     
     if (len > 0) {
-	char c = [str characterAtIndex: 0];
-	if (ispunct(c)) {
-	    startsWithPunct = YES;
-	    str = [str substringFromIndex: 1];
-	    --len;
-	}
+        char c = [str characterAtIndex: 0];
+        if (ispunct(c)) {
+            startsWithPunct = YES;
+            str = [str substringFromIndex: 1];
+            --len;
+        }
     }
     NSString *candString = nil;
     int prevlen = prevString ? [prevString length] : 0;
     if (prevlen) {
-	NSRange r = [prevString rangeOfString:@"." options:NSBackwardsSearch];
-	if (r.length > 0 && r.location >= prevlen-3)
-	    prevlen = 0;
+        NSRange r = [prevString rangeOfString:@"." options:NSBackwardsSearch];
+        if (r.length > 0 && r.location >= prevlen-3)
+            prevlen = 0;
     }
     if (len == 0)
-	return nil;
+        return nil;
     else if ([str isEqualToString: @"x"])  // 1-letter shortcuts
         candString = startsWithPunct || prevlen ? nil : @"examine";
     else  if ([str isEqualToString: @"z"])
@@ -3852,9 +3860,9 @@ static NSString *completeWord(NSString *str, NSString *prevString) {
     else {
         if ((match = matchWord(str, wordArray)) >= 0)
             candString = wordArray[match];
-	else if (len > 1 && (match = matchWord(str, rareWordArray)) >= 0)
+        else if (len > 1 && (match = matchWord(str, rareWordArray)) >= 0)
             candString = rareWordArray[match];
-	else if (len > 2 && (match = matchWord(str, veryRareWordArray)) >= 0)
+        else if (len > 2 && (match = matchWord(str, veryRareWordArray)) >= 0)
             candString= veryRareWordArray[match];
     }
     return candString;
@@ -3862,17 +3870,17 @@ static NSString *completeWord(NSString *str, NSString *prevString) {
 
 
 void removeAnim(UIView *view) {
-//    [[UIAnimator sharedAnimator] removeAnimationsForTarget:view];
+    //    [[UIAnimator sharedAnimator] removeAnimationsForTarget:view];
     static id c;
     static SEL s,r;
     if (!c) {
-	c = NSClassFromString(@"UIAnimator");
-	NSString *sa = [@"shared" stringByAppendingString: @"Animator"];
-	NSString *rt = [@"remove" stringByAppendingString: @"AnimationsForTarget:"];
-	s = NSSelectorFromString(sa);
-	r = NSSelectorFromString(rt);
+        c = NSClassFromString(@"UIAnimator");
+        NSString *sa = [@"shared" stringByAppendingString: @"Animator"];
+        NSString *rt = [@"remove" stringByAppendingString: @"AnimationsForTarget:"];
+        s = NSSelectorFromString(sa);
+        r = NSSelectorFromString(rt);
     }
     if (c && [c respondsToSelector: s])
-	[[c performSelector: s] performSelector:r withObject:view];
+        [[c performSelector: s] performSelector:r withObject:view];
 }
 
