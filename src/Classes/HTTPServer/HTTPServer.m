@@ -8,10 +8,10 @@
 /**
  * Standard Constructor.
  * Instantiates an HTTP server, but does not start it.
-**/
+ **/
 - (id)init
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		// Initialize underlying asynchronous tcp/ip socket
 		asyncSocket = [[AsyncSocket alloc] initWithDelegate:self];
@@ -49,7 +49,7 @@
 /**
  * Standard Deconstructor.
  * Stops the server, and clients, and releases any resources connected with this instance.
-**/
+ **/
 - (void)dealloc
 {
 	// Remove notification observer
@@ -77,7 +77,7 @@
 
 /**
  * Returns the delegate connected with this instance.
-**/
+ **/
 - (id)delegate
 {
 	return delegate;
@@ -85,7 +85,7 @@
 
 /**
  * Sets the delegate connected with this instance.
-**/
+ **/
 - (void)setDelegate:(id)newDelegate
 {
 	delegate = newDelegate;
@@ -95,7 +95,7 @@
  * The document root is filesystem root for the webserver.
  * Thus requests for /index.html will be referencing the index.html file within the document root directory.
  * All file requests are relative to this document root.
-**/
+ **/
 - (NSURL *)documentRoot {
     return documentRoot;
 }
@@ -113,7 +113,7 @@
  * That is, when a new connection is created, an instance of this class will be intialized.
  * The default connection class is HTTPConnection.
  * If you use a different connection class, it is assumed that the class extends HTTPConnection
-**/
+ **/
 - (Class)connectionClass {
     return connectionClass;
 }
@@ -125,7 +125,7 @@
 /**
  * Domain on which to broadcast this service via Bonjour.
  * The default domain is @"local".
-**/
+ **/
 - (NSString *)domain {
     return domain;
 }
@@ -141,7 +141,7 @@
 /**
  * The type of service to publish via Bonjour.
  * No type is set by default, and one must be set in order for the service to be published.
-**/
+ **/
 - (NSString *)type {
     return type;
 }
@@ -158,7 +158,7 @@
  * The name to use for this service via Bonjour.
  * The default name is an empty string,
  * which should result in the published name being the host name of the computer.
-**/
+ **/
 - (NSString *)name {
     return name;
 }
@@ -178,7 +178,7 @@
  * The port to listen for connections on.
  * By default this port is initially set to zero, which allows the kernel to pick an available port for us.
  * After the HTTP server has started, the port being used may be obtained by this method.
-**/
+ **/
 - (UInt16)port {
     return port;
 }
@@ -188,7 +188,7 @@
 
 /**
  * The extra data to use for this service via Bonjour.
-**/
+ **/
 - (NSDictionary *)TXTRecordDictionary {
 	return txtRecordDictionary;
 }
@@ -252,10 +252,10 @@
 
 -(NSArray*)addresses {
     if (netService && port != 0)
-	return [netService addresses];
+        return [netService addresses];
     return nil;
 }
-    
+
 -(BOOL) isRunning {
     return port != 0;
 }
@@ -289,7 +289,7 @@
 
 /**
  * Returns the number of clients that are currently connected to the server.
-**/
+ **/
 - (uint)numberOfHTTPConnections
 {
 	uint result = 0;
@@ -319,7 +319,7 @@
 /**
  * This method is automatically called when a notification of type HTTPConnectionDidDieNotification is posted.
  * It allows us to remove the connection from our array.
-**/
+ **/
 - (void)connectionDidDie:(NSNotification *)notification
 {
 	// Note: This method is called on the thread/runloop that posted the notification
@@ -337,7 +337,7 @@
 /**
  * Called when our bonjour service has been successfully published.
  * This method does nothing but output a log message telling us about the published service.
-**/
+ **/
 - (void)netServiceDidPublish:(NSNetService *)ns
 {
 	// Override me to do something here...
@@ -348,7 +348,7 @@
 /**
  * Called if our bonjour service failed to publish itself.
  * This method does nothing but output a log message telling us about the published service.
-**/
+ **/
 - (void)netService:(NSNetService *)ns didNotPublish:(NSDictionary *)errorDict
 {
 	// Override me to do something here...

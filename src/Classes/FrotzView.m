@@ -13,7 +13,7 @@
 @synthesize phase;
 @synthesize pt;
 -(id)initWithPhase:(UITouchPhase)aPhase point:(CGPoint)aPt {
-    if (self = [super init]) {
+    if ((self = [super init])) {
 	phase = aPhase;
 	pt = aPt;
     }

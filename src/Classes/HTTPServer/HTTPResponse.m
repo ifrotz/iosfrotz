@@ -7,7 +7,7 @@
 
 - (id)initWithFilePath:(NSString *)filePathParam
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		filePath = [filePathParam copy];
 		fileHandle = [[NSFileHandle fileHandleForReadingAtPath:filePath] retain];
@@ -56,9 +56,9 @@
 
 - (NSDictionary*)httpHeaders {
     if (fileName) {
-	NSDictionary *dict = [[NSDictionary alloc] initWithObjectsAndKeys:
-	    [NSString stringWithFormat: @"attachment; filename=%@", fileName], @"Content-Disposition", nil];
-	return [dict autorelease];
+        NSDictionary *dict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                              [NSString stringWithFormat: @"attachment; filename=%@", fileName], @"Content-Disposition", nil];
+        return [dict autorelease];
     }
     return nil;
 }
@@ -72,7 +72,7 @@
 
 - (id)initWithData:(NSData *)dataParam
 {
-	if(self = [super init])
+	if((self = [super init]))
 	{
 		offset = 0;
 		data = [dataParam retain];

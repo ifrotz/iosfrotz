@@ -782,7 +782,7 @@ void gcmd_grid_move_cursor(window_t *win, glui32 arg)
 
 void win_textgrid_stylehint_set(glui32 styl, glui32 hint, glsi32 val)
 {
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
 //      fd("GRID styl: %ld, hint: %ld, val: %lX", styl, hint, val);
         switch (hint) {
             case stylehint_Indentation:
@@ -831,7 +831,7 @@ void win_textgrid_stylehint_set(glui32 styl, glui32 hint, glsi32 val)
 
 void win_textgrid_stylehint_clear(glui32 styl, glui32 hint)
 {
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
         switch (hint) {
             case stylehint_Indentation:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleIndentationMask;
@@ -871,7 +871,7 @@ glui32 win_textgrid_stylehint_get(window_t *win, glui32 styl, glui32 hint)
 {
     window_textgrid_t *dwin = win->data;
 
-    if (styl >= 0 && styl < style_NUMSTYLES) {
+    if (styl < style_NUMSTYLES) {
         switch (hint) {
             case stylehint_Indentation:
             case stylehint_ParaIndentation:

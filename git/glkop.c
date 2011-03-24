@@ -1587,7 +1587,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
 			//!!!cur->obj.pair = *((window_pair_t *)win->data);
 			saveWinPair(pairwin, &cur->obj.pair);
 
-			(window_pair_t *)&cur->obj.pair;
 			// set the children to their ids so we can find the pair on reload
 			cur->obj.pair.child1 = classes_find_id_for_object(gidisp_Class_Window, pairwin->child1);
 			cur->obj.pair.child2 = classes_find_id_for_object(gidisp_Class_Window, pairwin->child2);
@@ -1771,7 +1770,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 				i++;
 				cur = objects + i;
 				if (cur->type != gidisp_Class_Stream) {
-					sprintf(errbuf, "\nUnexpected window stream type. Aborting restore.\n", cur->type);
+					sprintf(errbuf, "\nUnexpected window stream type %d. Aborting restore.\n", cur->type);
 					iphone_win_puts(0, errbuf);
 					return FALSE;
 				} else {

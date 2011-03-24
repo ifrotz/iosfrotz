@@ -6,151 +6,6 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>${PRODUCT_NAME}</string>
-	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
-	<key>CFBundleGetInfoString</key>
-	<string></string>
-	<key>CFBundleIconFile</key>
-	<string>iPhoneAppIcon.png</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.flippencorp.${PRODUCT_NAME:identifier}</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>${PRODUCT_NAME}</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string></string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>1.5</string>
-	<key>LSRequiresIPhoneOS</key>
-	<string>YES</string>
-	<key>NSMainNibFile</key>
-	<string></string>
-	<key>UIStatusBarStyle</key>
-	<string>UIStatusBarStyleBlackOpaque</string>
-	<key>UIFileSharingEnabled</key>
-	<false/>
-	<key>CFBundleIconFiles</key>
-	<array>
-		<string>iPadAppIcon.png</string>
-		<string>iPhoneAppIcon.png</string>
-		<string>icon-small50.png</string>
-		<string>icon-small.png</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-	<key>UTImportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>public.zcode</string>
-			<key>UTTypeReferenceURL</key>
-			<string>http://www.inform-fiction.org/zmachine/standards/z1point0/</string>
-			<key>UTTypeDescription</key>
-			<string>Z-Machine Code</string>
-			<key>UTTypeIconFile</key>
-			<string>public.png</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>z3</string>
-					<string>z4</string>
-					<string>z5</string>
-					<string>z6</string>
-					<string>z7</string>
-					<string>z8</string>
-					<string>dat</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>application/x-zmachine</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>public.blorb.zcode</string>
-			<key>UTTypeReferenceURL</key>
-			<string>http://www.inform-fiction.org/zmachine/standards/z1point0/</string>
-			<key>UTTypeDescription</key>
-			<string>Z-Machine Code</string>
-			<key>UTTypeIconFile</key>
-			<string>public.png</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>zblorb</string>
-					<string>zblb</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>application/x-zmachine</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>public.glulx</string>
-			<key>UTTypeReferenceURL</key>
-			<string>http://eblong.com/zarf/glulx/glulx-spec.html</string>
-			<key>UTTypeDescription</key>
-			<string>Glulx Code</string>
-			<key>UTTypeIconFile</key>
-			<string>public.png</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>ulx</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>application/x-glulx</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>public.blorb.glulx</string>
-			<key>UTTypeReferenceURL</key>
-			<string>http://eblong.com/zarf/glulx/glulx-spec.html</string>
-			<key>UTTypeDescription</key>
-			<string>Glulx Code</string>
-			<key>UTTypeIconFile</key>
-			<string>public.png</string>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>gblorb</string>
-					<string>blb</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>application/x-glulx</string>
-			</dict>
-		</dict>
-	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -171,12 +26,12 @@
 			<string>public.zcode</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.zcode</string>
 			</array>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -192,12 +47,12 @@
 			<string>public.blorb.zcode</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.blorb.zcode</string>
 			</array>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -212,12 +67,12 @@
 			<string>public.glulx</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.glulx</string>
 			</array>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -233,12 +88,12 @@
 			<string>public.blorb.glulx</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.blorb.glulx</string>
 			</array>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -254,12 +109,157 @@
 			<string>Quetzal saved game</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.quetzal</string>
 			</array>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleGetInfoString</key>
+	<string></string>
+	<key>CFBundleIconFile</key>
+	<string>iPhoneAppIcon.png</string>
+	<key>CFBundleIconFiles</key>
+	<array>
+		<string>iPadAppIcon.png</string>
+		<string>iPhoneAppIcon.png</string>
+		<string>icon-small50.png</string>
+		<string>icon-small.png</string>
+	</array>
+	<key>CFBundleIdentifier</key>
+	<string>com.flippencorp.${PRODUCT_NAME:identifier}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string></string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.5.1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<string>YES</string>
+	<key>NSMainNibFile</key>
+	<string></string>
+	<key>UIFileSharingEnabled</key>
+	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleBlackOpaque</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Z-Machine Code</string>
+			<key>UTTypeIconFile</key>
+			<string>public.png</string>
+			<key>UTTypeIdentifier</key>
+			<string>public.zcode</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://www.inform-fiction.org/zmachine/standards/z1point0/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>z3</string>
+					<string>z4</string>
+					<string>z5</string>
+					<string>z6</string>
+					<string>z7</string>
+					<string>z8</string>
+					<string>dat</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-zmachine</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Z-Machine Code</string>
+			<key>UTTypeIconFile</key>
+			<string>public.png</string>
+			<key>UTTypeIdentifier</key>
+			<string>public.blorb.zcode</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://www.inform-fiction.org/zmachine/standards/z1point0/</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>zblorb</string>
+					<string>zblb</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-zmachine</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Glulx Code</string>
+			<key>UTTypeIconFile</key>
+			<string>public.png</string>
+			<key>UTTypeIdentifier</key>
+			<string>public.glulx</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://eblong.com/zarf/glulx/glulx-spec.html</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>ulx</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-glulx</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Glulx Code</string>
+			<key>UTTypeIconFile</key>
+			<string>public.png</string>
+			<key>UTTypeIdentifier</key>
+			<string>public.blorb.glulx</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://eblong.com/zarf/glulx/glulx-spec.html</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>gblorb</string>
+					<string>blb</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-glulx</string>
+			</dict>
 		</dict>
 	</array>
 </dict>

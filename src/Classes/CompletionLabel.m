@@ -13,15 +13,15 @@
 
 
 -(CompletionLabel*)initWithFont:(UIFont*)font {
-    if (self = [super init]) {
-	[self setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
-	m_label = [[UILabel alloc] init];
-	[m_label setFont: font];
-	[self setText: @""];
-	[m_label setTextColor: [UIColor blueColor]];
-	[m_label setShadowColor: [UIColor darkGrayColor]];
-	[m_label setBackgroundColor: [UIColor whiteColor]];
-	[self addSubview: m_label];
+    if ((self = [super init])) {
+        [self setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
+        m_label = [[UILabel alloc] init];
+        [m_label setFont: font];
+        [self setText: @""];
+        [m_label setTextColor: [UIColor blueColor]];
+        [m_label setShadowColor: [UIColor darkGrayColor]];
+        [m_label setBackgroundColor: [UIColor whiteColor]];
+        [self addSubview: m_label];
     }
     return self;
 }
@@ -96,15 +96,21 @@
 }
 
 -(void)autoSize {
-    CGSize textSize = [[self text] sizeWithFont:[m_label font]];
-    CGSize spacer = [@"xx" sizeWithFont: [m_label font]];
-    CGRect labelFrame = CGRectMake(3, 1, textSize.width, textSize.height-1);
-    CGRect frame = [self frame];
-    frame.size = CGSizeMake(textSize.width+spacer.width+12, textSize.height+6);
-    [self setFrame: frame];
-    [self setNeedsDisplay];
-    [m_label setFrame: labelFrame];
-
+    NSString *text = [self text];
+    if (text) {
+        UIFont *font = [m_label font];
+        CGSize textSize = [text sizeWithFont: font];
+        CGSize spacer = [@"xx" sizeWithFont: font];
+        CGRect labelFrame = CGRectMake(3, 1, textSize.width, textSize.height-1);
+        CGRect frame = [self frame];
+        frame.size = CGSizeMake(textSize.width+spacer.width+12, textSize.height+6);
+        [self setFrame: frame];
+        [self setNeedsDisplay];
+        [m_label setFrame: labelFrame];
+    } else {
+        [self setFrame: CGRectZero];
+        [m_label setFrame: CGRectZero];
+    }
 }
 
 -(void)setText:(NSString*)text {

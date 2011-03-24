@@ -21,7 +21,7 @@
 @implementation ReleaseNotes
 
 - (id)init {
-    if (self = [super init]) {
+    if ((self = [super init])) {
 	self.title = NSLocalizedString(@"Release Notes", @"");
 	NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
 	NSString *docPath = [array objectAtIndex: 0];
@@ -100,8 +100,14 @@
 	"<meta name=\"viewport\" content=\"initial-scale=1.0, user-scalable=no\" />\n"
 	"<h2>What's New in Frotz?</h2>\n"
 	"<hr/>\n"
-	"<p> New features in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
+	"<p> New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
 	"<p><ul>\n"
+#if 1 // 1.5.1
+    "<li><b>iOS 4.3 compatibility</b>: Fixed crash when deleting text that occurred only in iOS 4.3</li>\n"
+    "<li><b>Other minor bug fixes</b>: Fixed issue deleting files via web interface, viewing transcripts in landscape, and text color issues in glulx games.</li>\n"
+    "</ul>\n"
+    "<p>New features in 1.5:</p><ul>\n"
+#endif
 #if 1 // 1.5
 	"<li><b>Improved UI</b>: The interface has been improved and refined, particularly on the iPad.</li>\n"
 	"<li><b>Recently Played Stories</b>: Frotz now keeps track of your most recently played stories at the top of the Story List.</li>\n"
@@ -140,7 +146,8 @@
 #endif
 	"</ul></p>\n"
 	"<hr/>\n"
-	"<p><small><i>October 25, 2010</i><br>\n";
+	"<p><small><i>March 23, 2011</i><br>\n";
+    // 1.5: oct 25, 2010
 	// 1.4: mar 19, 2010
 	// 1.3: sep 4, 2009
     }

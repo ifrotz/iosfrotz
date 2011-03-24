@@ -64,31 +64,31 @@ static cell *scr_row(int r) { return screen_data + r * MAX_COLS; }
 static cellcolor *scr_color(int r) { return screen_colors + r * MAX_COLS; }
 
 void iphone_init_screen() {
-  screen_cells = MAX_ROWS * MAX_COLS;
-  int i;
-
-  if (!screen_data)
-    screen_data = malloc(screen_cells * sizeof(cell));
-  if (!screen_colors)
-    screen_colors = malloc(screen_cells * sizeof(cellcolor));
-  if (do_autosave)
-    return;
-  for (i = 0; i < screen_cells; ++i) {
-    screen_data[i] = ' ';
-    screen_colors[i] = (h_default_foreground<<4) | h_default_background;
-  }
+    screen_cells = MAX_ROWS * MAX_COLS;
+    int i;
+    
+    if (!screen_data)
+        screen_data = malloc(screen_cells * sizeof(cell));
+    if (!screen_colors)
+        screen_colors = malloc(screen_cells * sizeof(cellcolor));
+    if (do_autosave)
+        return;
+    for (i = 0; i < screen_cells; ++i) {
+        screen_data[i] = ' ';
+        screen_colors[i] = (h_default_foreground<<4) | h_default_background;
+    }
 }
 
 
 /* int current_color = 0; */
 
 static char latin1_to_ascii[] =
-    "   !  c  L  >o<Y  |  S  '' C  a  << not-  R  _  "
-    "^0 +/-^2 ^3 '  my P  .  ,  ^1 o  >> 1/41/23/4?  "
-    "A  A  A  A  Ae A  AE C  E  E  E  E  I  I  I  I  "
-    "Th N  O  O  O  O  Oe *  O  U  U  U  Ue Y  Th ss "
-    "a  a  a  a  ae a  ae c  e  e  e  e  i  i  i  i  "
-    "th n  o  o  o  o  oe :  o  u  u  u  ue y  th y  ";
+"   !  c  L  >o<Y  |  S  '' C  a  << not-  R  _  "
+"^0 +/-^2 ^3 '  my P  .  ,  ^1 o  >> 1/41/23/4?  "
+"A  A  A  A  Ae A  AE C  E  E  E  E  I  I  I  I  "
+"Th N  O  O  O  O  Oe *  O  U  U  U  Ue Y  Th ss "
+"a  a  a  a  ae a  ae c  e  e  e  e  i  i  i  i  "
+"th n  o  o  o  o  oe :  o  u  u  u  ue y  th y  ";
 /*
  * os_font_data
  *
@@ -107,12 +107,12 @@ static char latin1_to_ascii[] =
 
 int os_font_data (int font, int *height, int *width)
 {
-
+    
     if (font == TEXT_FONT) {
-      *height = 1; *width = 1; return 1; /* Truth in advertising */
+        *height = 1; *width = 1; return 1; /* Truth in advertising */
     }
     return 0;
-
+    
 }/* os_font_data */
 
 /*
@@ -147,9 +147,9 @@ int os_font_data (int font, int *height, int *width)
 
 void os_set_colour (int new_foreground, int new_background)
 {
-//    if (new_foreground == 1) new_foreground = h_default_foreground;
-//    if (new_background == 1) new_background = h_default_background;
-
+    //    if (new_foreground == 1) new_foreground = h_default_foreground;
+    //    if (new_background == 1) new_background = h_default_background;
+    
     int new_color = u_setup.current_color = (new_foreground << 4) | new_background;
     iphone_set_text_attribs(0, u_setup.current_text_style, new_color, TRUE);
 }/* os_set_colour */
@@ -183,42 +183,42 @@ void os_set_text_style (int new_style)
 
 void os_set_font (int new_font)
 {
-
+    
     /* Not implemented */
-
+    
 }/* os_set_font */
 
 static void iphone_set_cell(int row, int col, cell c)
 {
-  int color = u_setup.current_color;
-  if (color != 0x11 && (color >> 4) == (color & 0xf)) { // varicella workaround
-    if ((color >> 4) == BLACK_COLOUR)
-	color = (WHITE_COLOUR<<4)|BLACK_COLOUR;
-    else
-	color = (BLACK_COLOUR<<4)|(color & 0xf);
-  }
-#if 0
-  if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
-    color = 0;
-#endif
-  scr_row(row)[col] = c;
-  scr_color(row)[col] = color;
-
-  if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << 8))) {
-    while (++col < MAX_COLS) {
-	scr_row(row)[col] = make_cell(REVERSE_STYLE, ' ');
-	scr_color(row)[col] = color;
+    int color = u_setup.current_color;
+    if (color != 0x11 && (color >> 4) == (color & 0xf)) { // varicella workaround
+        if ((color >> 4) == BLACK_COLOUR)
+            color = (WHITE_COLOUR<<4)|BLACK_COLOUR;
+        else
+            color = (BLACK_COLOUR<<4)|(color & 0xf);
     }
-  }
+#if 0
+    if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
+        color = 0;
+#endif
+    scr_row(row)[col] = c;
+    scr_color(row)[col] = color;
+    
+    if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << 8))) {
+        while (++col < MAX_COLS) {
+            scr_row(row)[col] = make_cell(REVERSE_STYLE, ' ');
+            scr_color(row)[col] = color;
+        }
+    }
 }
 
 /* Copy a cell and copy its changedness state.
  * This is used for scrolling.  */
 static void scr_copy_cell(int dest_row, int dest_col,
-                           int src_row, int src_col)
+                          int src_row, int src_col)
 {
-  scr_row(dest_row)[dest_col] = scr_row(src_row)[src_col];
-  scr_color(dest_row)[dest_col] = scr_color(src_row)[src_col];
+    scr_row(dest_row)[dest_col] = scr_row(src_row)[src_col];
+    scr_color(dest_row)[dest_col] = scr_color(src_row)[src_col];
 }
 
 int top_win_height = 1; // hack; for use by iphone frontend
@@ -230,30 +230,30 @@ void iphone_display_char(char c)
     // hack to make the status line/uppper window auto-grow for games like anchorhead which
     // don't resize it big enough for the menus they want to display
     if (cwin == 1 && cursor_row >= top_win_height) {
-	if (1 ||!top_win_height)
-	    iphone_set_top_win_height(cursor_row+1);
-	else
-	    top_win_height = cursor_row+1;
-
+        if (1 ||!top_win_height)
+            iphone_set_top_win_height(cursor_row+1);
+        else
+            top_win_height = cursor_row+1;
+        
     }
 	
     iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c));
     iphone_putchar(c);
-
+    
     if (++cursor_col == h_screen_cols)
-	if (cursor_row == h_screen_rows - 1)
-	    cursor_col--;
-	else if (cwin==0 || cursor_col >= MAX_COLS) {
-	    cursor_row++;
-	    cursor_col = 0;
-	}
+        if (cursor_row == h_screen_rows - 1)
+            cursor_col--;
+        else if (cwin==0 || cursor_col >= MAX_COLS) {
+            cursor_row++;
+            cursor_col = 0;
+        }
 }
 
 void iphone_backspace()
 {
     cursor_col--;
     if (cursor_col < 0)
-	cursor_col = 0;
+        cursor_col = 0;
     iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, ' '));
 }
 
@@ -271,43 +271,43 @@ void iphone_backspace()
 
 void os_display_char (zchar c)
 {
-
+    
     if (c >= ZC_LATIN1_MIN /*&& c <= ZC_LATIN1_MAX*/) {
         if (u_setup.plain_ascii) {
-
-	  char *ptr = latin1_to_ascii + 3 * (c - ZC_LATIN1_MIN);
-	  char c1 = *ptr++;
-	  char c2 = *ptr++;
-	  char c3 = *ptr;
-
-	  iphone_display_char(c1);
-
-	  if (c2 != ' ')
-	    iphone_display_char(c2);
-	  if (c3 != ' ')
-	    iphone_display_char(c3);
-
-	} else
-	  iphone_display_char(c);
-	return;
+            
+            char *ptr = latin1_to_ascii + 3 * (c - ZC_LATIN1_MIN);
+            char c1 = *ptr++;
+            char c2 = *ptr++;
+            char c3 = *ptr;
+            
+            iphone_display_char(c1);
+            
+            if (c2 != ' ')
+                iphone_display_char(c2);
+            if (c3 != ' ')
+                iphone_display_char(c3);
+            
+        } else
+            iphone_display_char(c);
+        return;
     }
     if (c >= ZC_ASCII_MIN && c <= ZC_ASCII_MAX) {
         iphone_display_char(c);
-	return;
+        return;
     }
     if (c == ZC_BACKSPACE) {
-	iphone_backspace();
-	return;
+        iphone_backspace();
+        return;
     }
     if (c == ZC_INDENT) {
-      iphone_display_char(' '); iphone_display_char(' '); iphone_display_char(' ');
-      return;
+        iphone_display_char(' '); iphone_display_char(' '); iphone_display_char(' ');
+        return;
     }
     if (c == ZC_GAP) {
-      iphone_display_char(' '); iphone_display_char(' ');
-      return;
+        iphone_display_char(' '); iphone_display_char(' ');
+        return;
     }
-
+    
 }/* os_display_char */
 
 /*
@@ -319,22 +319,22 @@ void os_display_char (zchar c)
 
 void os_display_string (const zchar *s)
 {
-
+    
     zchar c;
-
+    
     while ((c = (unsigned char) *s++) != 0)
-
+        
         if (c == ZC_NEW_FONT || c == ZC_NEW_STYLE) {
-
+            
             int arg = (unsigned char) *s++;
-
+            
             if (c == ZC_NEW_FONT)
                 os_set_font (arg);
             if (c == ZC_NEW_STYLE)
                 os_set_text_style (arg);
-
+            
         } else os_display_char (c);
-
+    
 }/* os_display_string */
 
 /*
@@ -346,27 +346,26 @@ void os_display_string (const zchar *s)
 
 int os_char_width (zchar c)
 {
-
+    
     if (c >= ZC_LATIN1_MIN /*&& c <= ZC_LATIN1_MAX*/ && u_setup.plain_ascii) {
-
+        
         int width = 0;
         const char *ptr = latin1_to_ascii + 3 * (c - ZC_LATIN1_MIN);
-	char c1 = *ptr++;
-	char c2 = *ptr++;
-	char c3 = *ptr;
-
-	/* Why, oh, why did you declare variables that way??? */
-
-	if (c1 == c1)  /* let's avoid confusing the compiler (and me) */
-	  width++;
-	if (c2 != ' ')
-	  width++;
-	if (c3 != ' ')
-	  width++;
-	return width;
+        ptr++;
+        char c2 = *ptr++;
+        char c3 = *ptr;
+        
+        /* Why, oh, why did you declare variables that way??? */
+        
+        width++;
+        if (c2 != ' ')
+            width++;
+        if (c3 != ' ')
+            width++;
+        return width;
     }
     return 1;
-
+    
 }/* os_char_width*/
 
 /*
@@ -384,18 +383,18 @@ int os_string_width (const zchar *s)
 {
     int width = 0;
     zchar c;
-
+    
     while ((c = *s++) != 0)
-
-      if (c == ZC_NEW_STYLE || c == ZC_NEW_FONT) {
-
-	s++;
-	/* No effect */
-
-      } else width += os_char_width(c);
-
+        
+        if (c == ZC_NEW_STYLE || c == ZC_NEW_FONT) {
+            
+            s++;
+            /* No effect */
+            
+        } else width += os_char_width(c);
+    
     return width;
-
+    
 }/* os_string_width */
 
 /*
@@ -409,12 +408,12 @@ extern int lastInputWindow;
 
 void os_set_cursor (int row, int col)
 {
-//printf ("os_set_cursor %d %d\n", row, col);
+    //printf ("os_set_cursor %d %d\n", row, col);
     cursor_row = row - 1; cursor_col = col - 1;
     if (cursor_row >= h_screen_rows)
-	cursor_row = h_screen_rows - 1;
+        cursor_row = h_screen_rows - 1;
     lastInputWindow = -1;
-
+    
 }/* os_set_cursor */
 
 /*
@@ -427,7 +426,7 @@ void os_set_cursor (int row, int col)
 
 void os_more_prompt (void)
 {
-//    iphone_more_prompt();
+    //    iphone_more_prompt();
 }/* os_more_prompt */
 
 /*
@@ -440,29 +439,29 @@ void os_more_prompt (void)
 
 void os_erase_area (int top, int left, int bottom, int right, int windowNum)
 {
-  int row, col;
-  if (top == 1 && bottom == h_screen_rows &&
+    int row, col;
+    if (top == 1 && bottom == h_screen_rows &&
         left == 1 && right == h_screen_cols) {
-	iphone_erase_screen();
-	right = MAX_COLS;
-  } else if (windowNum == 0)
-    iphone_erase_mainwin();    
-  top--; left--; bottom--; right--;
-  for (row = top; row <= bottom; row++)
-    for (col = left; col <= right; col++)
-      iphone_set_cell(row, col, make_cell(current_style, ' '));
+        iphone_erase_screen();
+        right = MAX_COLS;
+    } else if (windowNum == 0)
+        iphone_erase_mainwin();    
+    top--; left--; bottom--; right--;
+    for (row = top; row <= bottom; row++)
+        for (col = left; col <= right; col++)
+            iphone_set_cell(row, col, make_cell(current_style, ' '));
 }/* os_erase_area */
 
 
 
 void os_split_win(int height) {
     if (height > h_screen_height || height > MAX_ROWS)
-	height = h_screen_height;
+        height = h_screen_height;
     if (height > top_win_height && top_win_height > 0) { // >0 cond to help reduce bronze flicker
-	int row, col;
-	  for (row = top_win_height; row < h_screen_rows; row++)
-	    for (col = 0; col < h_screen_cols; col++)
-		iphone_set_cell(row, col, make_cell(current_style, ' '));
+        int row, col;
+        for (row = top_win_height; row < h_screen_rows; row++)
+            for (col = 0; col < h_screen_cols; col++)
+                iphone_set_cell(row, col, make_cell(current_style, ' '));
     }
     iphone_set_top_win_height(height);
 }
@@ -471,9 +470,9 @@ extern int currTextStyle;
 
 void os_new_line(bool wrapping) { // only called by word wrap
     if (wrapping)
-      iphone_putchar(' '); // all word wrapping handled by text view
+        iphone_putchar(' '); // all word wrapping handled by text view
     else
-      iphone_putchar('\n');
+        iphone_putchar('\n');
 }
 
 /*
@@ -487,22 +486,22 @@ void os_new_line(bool wrapping) { // only called by word wrap
 
 void os_scroll_area (int top, int left, int bottom, int right, int units)
 {
-  int row, col;
-  top--; left--; bottom--; right--;
-  if (units > 0) { 
-    for (row = top; row <= bottom - units; row++)
-      for (col = left; col <= right; col++)
-        scr_copy_cell(row, col, row + units, col);
-    os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1, -1);
-  } else if (units < 0) {
-    for (row = bottom; row >= top - units; row--)
-      for (col = left; col <= right; col++)
-         scr_copy_cell(row, col, row + units, col);
-    os_erase_area(top + 1, left + 1, top - units, right + 1, -1);
-  }
-//  if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
-//    iphone_putchar('\n');
-  
+    int row, col;
+    top--; left--; bottom--; right--;
+    if (units > 0) { 
+        for (row = top; row <= bottom - units; row++)
+            for (col = left; col <= right; col++)
+                scr_copy_cell(row, col, row + units, col);
+        os_erase_area(bottom - units + 2, left + 1, bottom + 1, right + 1, -1);
+    } else if (units < 0) {
+        for (row = bottom; row >= top - units; row--)
+            for (col = left; col <= right; col++)
+                scr_copy_cell(row, col, row + units, col);
+        os_erase_area(top + 1, left + 1, top - units, right + 1, -1);
+    }
+    //  if (cwin == 0 && units == 1 && left == 0 && right == h_screen_cols-1 && bottom == h_screen_rows-1)
+    //    iphone_putchar('\n');
+    
 }/* os_scroll_area */
 
 extern char script_name[];
