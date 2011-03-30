@@ -1,8 +1,15 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-* Update 11/05/2010 *
+*Update 03/30/2011*
 
-*Frotz 1.5* is now available in the App Store with the following new features:
+*Frotz 1.5.1* is now available in the App Store with the following bug fixes:
+
+ * Fixed iOS 4.3 issues: Frotz would crash when pressing Backspace multiple times, only in iOS 4.3.  This is now fixed.
+ * Web Transfer interface:  Fixed a bug where Frotz would fail to delete stories if the filenames contained spaces.
+ * Transcript viewer: On iPhone only, trying to view transcripts from the note taking screen when in landscape mode would get you stuck, because the navigation bar where the 'Done" button is was hidden.
+ * Glulx font issues: Games which set a text color hint for attributed text w/o setting one for normal text would incorrectly leave the color set after printing the attributed text, instead of returning to default color.
+
+Features added in *Frotz 1.5*:
 
  * Improved UI: The interface has been improved and refined, particularly on the iPad.
  * Recently Played Stories: Frotz now keeps track of your most recently played stories at the top of the Story List.
