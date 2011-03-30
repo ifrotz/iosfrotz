@@ -14,9 +14,19 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 ----
 
+*Update - Version 1.5.1 available!*
+
+*03/30/2011*
+
+New features in 1.5.1:
+ * Fixed iOS 4.3 issues: Frotz would crash when pressing Backspace multiple times, only in iOS 4.3.  This is now fixed.
+ * Web Transfer interface:  Fixed a bug where Frotz would fail to delete stories if the filenames contained spaces.
+ * Transcript viewer: On iPhone only, trying to view transcripts from the note taking screen when in landscape mode would get you stuck, because the navigation bar where the 'Done" button is was hidden.
+ * Glulx font issues: Games which set a text color hint for attributed text w/o setting one for normal text would incorrectly leave the color set after printing the attributed text, instead of returning to default color.
+
 *Update - Version 1.5 available!*
 
-*11/05/2010*
+11/05/2010
 
 New features in 1.5:
  * Improved UI: The interface has been improved and refined, particularly on the iPad.
