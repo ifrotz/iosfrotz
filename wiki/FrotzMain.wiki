@@ -14,9 +14,19 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 ----
 
+
+*Update - Version 1.5.2 now available!*
+
+*04/06/2011*
+
+ * Fixed crashing issue on older devices: Frotz would crash when launching or auto-restoring any story on 1st/2nd generation iPod Touch and iPhone 3G/1st gen. devices only due to a compiler bug in the tools used to build Frotz.  This has been resolved.
+ * UI Navigation Bar: On iPhone and iPod Touch, the navigation bar would disappear after leaving the save/restore/transcript dialogs in portrait mode.  (Rotating to landscape and back would bring it back).  This has been fixed.
+ * Web Transfer interface: Allow downloading/viewing game transcripts. 
+ * Hang on story quit/restart: Fixed bug where Frotz would hang if you restart a story immediately after quitting. 
+
 *Update - Version 1.5.1 available!*
 
-*03/30/2011*
+03/30/2011
 
 New features in 1.5.1:
  * Fixed iOS 4.3 issues: Frotz would crash when pressing Backspace multiple times, only in iOS 4.3.  This is now fixed.
