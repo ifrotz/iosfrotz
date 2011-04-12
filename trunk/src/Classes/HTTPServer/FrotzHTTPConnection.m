@@ -256,19 +256,35 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                  " onclick=\"confirmRemove('remove-%@','/remove=/Games/%@\');\">(Remove)</a></small></td></tr>\n", fname, fname, fname, fname];
                 [outdata appendFormat: @"<tr height=\"2px\" id=\"entry-%@\"><td colspan=\"6\">\n<div class='entry-body'>"   //<style>#showentry {%@}</style>"
                  "<span id=\"showentry\">\n", storyId, showSaves ? @"display:inline;":@"display:none;"];
+                NSMutableString *saveFileList =  [NSMutableString stringWithString: @"<small>&nbsp;&nbsp;&nbsp;<i>No Saved Games</i>&nbsp;&nbsp;"];
+                NSMutableString *scriptFileList = nil;
+                int saveCount = 0, textCount = 0;
                 if ([saveFiles count]) {
-                    [outdata appendString: @"<small>&nbsp;&nbsp;&nbsp;<b><i>Saved Games:</i></b>&nbsp;&nbsp;"];
                     for (NSString *saveFile in saveFiles) {
-                        if ([saveFile hasSuffix: @".sav"] || [saveFile hasSuffix: @".qut"])
-                            [outdata appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp;&nbsp;", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
+                        if ([saveFile hasSuffix: @".sav"] || [saveFile hasSuffix: @".qut"]) {
+                            if (++saveCount == 1)
+                                [saveFileList setString: @"<small>&nbsp;&nbsp;&nbsp;<b><i>Saved Games:</i></b>&nbsp;&nbsp;"];
+                            [saveFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp;&nbsp;", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
+                        } else if ([saveFile hasSuffix: @".txt"]) {
+                            if (++textCount == 1)
+                                scriptFileList = [NSMutableString stringWithString:@"<small>&nbsp;&nbsp;&nbsp;<b><i>Transcripts:</i></b>&nbsp;&nbsp;"];
+                            [scriptFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp;&nbsp;", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
+
+                        }
                     }
                     foundSaves = YES;
-                } else
-                    [outdata appendString: @"<small>&nbsp;&nbsp;&nbsp;<i>No Saved Games</i>&nbsp;&nbsp;"];
+                }
+                [outdata appendString:saveFileList];
+                if (saveCount)
+                    [outdata appendString: @"</small><br/>\n"];
+                if (scriptFileList) {
+                    [outdata appendString:scriptFileList];
+                    [outdata appendString:@"</small><br/>"];
+                }
                 if ([self supportsMethod:@"POST" atPath:path])
                 {
                     [outdata appendFormat:@"<form action=\"/Saves/%@/\" method=\"post\" enctype=\"multipart/form-data\" name=\"%@\" id=\"%@\">", saveDir, story, story];
-                    [outdata appendString:@"<label>&nbsp;&nbsp;&nbsp;Upload Saved Game (.sav,.qut) or Splash Image (.png,.jpg):&nbsp;<input type=\"file\" name=\"file\" id=\"file\" /></label>"];
+                    [outdata appendString:@"<label>&nbsp;&nbsp;&nbsp;<small>Upload Saved Game (.sav,.qut) or Splash Image (.png,.jpg):</small>&nbsp;<input type=\"file\" name=\"file\" id=\"file\" /></label>"];
                     [outdata appendString:@"<span class=\"submitbut\">&nbsp<input type=\"submit\" align=\"right\" name=\"button\" id=\"button\" value=\"Submit\" />&nbsp;</span>"];
                     [outdata appendString:@"</form>\n"];
                 }		    

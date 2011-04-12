@@ -18,4 +18,5 @@
 }
 - (id)init;
 - (void)updateReleaseNotes;
+- (void)showReleaseNotes;
 @end

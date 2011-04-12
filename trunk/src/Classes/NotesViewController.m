@@ -151,8 +151,10 @@ static const int kNotesTitleHeight = 24;
     }
     else {
         [m_delegate.navigationController popViewControllerAnimated:YES];
-        if (!gLargeScreenDevice)
-            [m_delegate.navigationController setNavigationBarHidden:YES animated:YES];
+        if (!gLargeScreenDevice) {
+            BOOL isLandscape = UIInterfaceOrientationIsLandscape([self interfaceOrientation]);
+            [m_delegate.navigationController setNavigationBarHidden:isLandscape animated:YES];
+        }
     }
 }
 

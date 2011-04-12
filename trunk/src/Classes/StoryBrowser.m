@@ -269,7 +269,7 @@ void removeOldPngSplash(const char *filename) {
         {
             [defaultManager createDirectoryAtPath:kSplashesDir withIntermediateDirectories:NO attributes:nil error:&error];
             extractSplashes = YES;
-        } else if (!vers || [vers compare: @IPHONE_FROTZ_VERS]==NSOrderedAscending)
+        } else if (!vers || [vers compare: @"1.5"]==NSOrderedAscending)
             extractSplashes = YES;
         if (extractSplashes) {
             if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
@@ -299,9 +299,7 @@ void removeOldPngSplash(const char *filename) {
                     }
                 }
             }
-        }
-        
-        if (!vers || [vers compare: @"1.5"]==NSOrderedAscending) {
+
             if (titleDict) {
                 // fix misspelling in previous built-in metadata
                 NSString *hhFix = @"Hitchhiker's Guide to the Galaxy";
@@ -311,8 +309,7 @@ void removeOldPngSplash(const char *filename) {
                 [titleDict setObject:@"Bureaucracy" forKey:@"bureaucracy"];
                 needMDDictUpdate = YES;
             }
-        }
-        if (!vers || [vers compare: @"1.5"]==NSOrderedAscending) {
+
             NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
             NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
             NSMutableDictionary *descriptDict = [m_metaDict objectForKey: kMDDescriptsKey];

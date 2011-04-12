@@ -773,18 +773,16 @@ static bool bypassBundle = NO;
     if ([urlString isEqualToString: @"http:"]) // null url
 	return NO;
     if ([ext isEqualToString: @"z3"] ||
-	[ext isEqualToString: @"z4"]||
-	[ext isEqualToString: @"z5"] ||
-	[ext isEqualToString: @"z8"] ||
-	[ext isEqualToString: @"zip"] ||
-	[ext isEqualToString: @"zlb"] ||
-	[ext isEqualToString: @"dat"] ||
-#if 1 //FROTZ_BETA
-	[ext isEqualToString: @"blb"] ||
-	[ext isEqualToString: @"ulx"] ||
-	[ext isEqualToString: @"gblorb"] ||
-#endif
-	[ext isEqualToString: @"zblorb"]) {
+        [ext isEqualToString: @"z4"]||
+        [ext isEqualToString: @"z5"] ||
+        [ext isEqualToString: @"z8"] ||
+        [ext isEqualToString: @"zip"] ||
+        [ext isEqualToString: @"zlb"] ||
+        [ext isEqualToString: @"dat"] ||
+        [ext isEqualToString: @"blb"] ||
+        [ext isEqualToString: @"ulx"] ||
+        [ext isEqualToString: @"gblorb"] ||
+        [ext isEqualToString: @"zblorb"]) {
 #if APPLE_FASCISM
 	NSFileManager *defaultManager = [NSFileManager defaultManager];
 	NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];

@@ -40,8 +40,8 @@ void logMessage(char *x) {
     strncpy(obuf, buf, sizeof(outbuf)-3);
     strcat(obuf, "\r\n");
     int len = strlen(obuf);
-    int sock = [conn fileDescriptor];
 #if 0
+    int sock = [conn fileDescriptor];
     fd_set writefds, errorfds;
     struct timeval tv;
     tv.tv_sec = 0;
@@ -78,9 +78,9 @@ void logMessage(char *x) {
         NSLog(@"caught ex in sendresp");
         len = -1;
     }
-    usleep(250000);
+    //usleep(250000);
 	
-    NSLog(@"sock %d: sendingResponse:%s", sock, obuf);
+    //NSLog(@"sock %d: sendingResponse:%s", sock, obuf);
     return len;
 }
 
