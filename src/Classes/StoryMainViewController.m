@@ -1751,7 +1751,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     else {
         [self.navigationController popViewControllerAnimated: YES];
         if (!gLargeScreenDevice)
-            [self.navigationController setNavigationBarHidden:YES animated:YES];
+            [self.navigationController setNavigationBarHidden:m_landscape ? YES:NO animated:YES];
     }
     if (file)
         strcpy(iphone_filename, [file UTF8String]);
@@ -2956,7 +2956,7 @@ static void setScreenDims(char *storyNameBuf) {
         return;
     
     iphone_stop_script();
-    
+
     // Make sure pending performSelector calls are cancelled
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
     
@@ -3070,7 +3070,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     m_storyTID = 0;
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
-    //    NSLog (@"launched tid %d\n", m_storyTID);
+    //NSLog (@"launched tid %p\n", m_storyTID);
     [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
     
 }
@@ -3080,6 +3080,7 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 -(void) abandonStory:(BOOL)deleteAutoSave {
+   // NSLog(@"abandon story %p %@\n", m_storyTID, m_currentStory);
     if ([m_currentStory length] > 0) {
         NSError *error = nil;
         iphone_stop_script();
@@ -3098,15 +3099,17 @@ static void setScreenDims(char *storyNameBuf) {
         currColor = 0;
         os_set_colour (DEFAULT_COLOUR, DEFAULT_COLOUR);
         
-        //	NSLog(@"abandon story\n");
+        //NSLog(@"abandon story clr inp %p\n", m_storyTID);
         iphone_clear_input(@"\n\n");
         [m_currentStory setString: @""];
         [self clearGlkViews];
         do_autosave = 0;
-        finished = 1;
         
         // if story thread is blocked waiting on window size change, wake it up
         pthread_mutex_lock(&winSizeMutex);
+        if (finished == 0) // else interp already finished
+            finished = 1;
+
         winSizeChanged = NO;
         pthread_cond_signal(&winSizeChangedCond);
         pthread_mutex_unlock(&winSizeMutex);
@@ -3117,6 +3120,7 @@ static void setScreenDims(char *storyNameBuf) {
             while (finished == 1) {
                 [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; 
             }
+            //NSLog(@"joining thread %p", m_storyTID);
             pthread_join(m_storyTID, NULL);
         }
         m_storyTID = 0;
