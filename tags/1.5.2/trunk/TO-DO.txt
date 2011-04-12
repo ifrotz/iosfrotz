@@ -1,0 +1,52 @@
+TO DO:
+
+add contenttype info for blb, gblorb
+
+clear richtext color array when screen cleared
+unload blorb resource map on game quit
+drawing glitch in About Frotz settings field on iPhone, switch disappears (???)
+
+
+if download unsupp, do metadata anyway if file already exists (done)
+scale glkx image windows on iphone (done)
+better transcript support (done)
+make save/restore dialog modal, not navvc (done)
+.qut./sav? (done)
+long press for copy (done)
+photopia landscape size prob on autorestore (worked around)
+details editing/copy/paste (done)
+update release notes (done)
+sort restore filebrowser by timestamp (done)
+dropbox support (mostly done)
+move Frotz(i) to right split view (done)
+iPhone 4 res screenshot, icons? (done)
+implement viewDidUnload (doneish)
+populate author/tuid on download (done)
+bronze descript missing, 905 artwork (done)
+Binary rich text view save plist (done)
+tweak keyboard appear timing so notes does't show (done)
+fix zcode file icon (done, 128x128 ok?)
+notes reposition at story launch (done)
+check free space at launch (done)
+fix zblorb artwork in details screen (fixed)
+authors/tuid for infocoms (done)
+Start amfv, switch stories then back, look.  Status line screws up (fixed)
+autosaving wishbringe/restoring wishbringer!! (fixed)
+"Open in Frotz" doesn't work in iOS 4 when Frotz already running (fixed)
+Tapping on splash screen is tapping through  (fixed)
+scroll to notes, hit key while decelerating.. view scrolls back not all the way (fixed)
+look for leaks (mostly done)
+Story details (done)
+
+  Add suggestions for which stories to try first for new players
+  Layout color picker on rotate
+  Smooth scroll align text to top margin
+  Adjustable margin controls using thumbs?
+
+heroes - Andrew Bossi, Gachala Emerald
+dreamhold - Trey Radcliff, Festival of Lighs in Lyon
+weather - Mike Green, Storm Cliuds Gathering - Topazed
+
+
+
+
