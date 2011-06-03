@@ -9,18 +9,18 @@
 
 @interface FTPServer : NSObject <NSNetServiceDelegate> {
     int m_listenSocket;   // main connection
+    int m_port;
     NSString *m_rootPath;
     NSString *m_url;
     NSFileHandle *m_listenHandle;
     NSNetService *m_netService;
 }
 -(BOOL)isRunning;
--(id)initWithRootPath:(NSString*)rootPath;
+-(id)initWithPort:(int)port rootPath:(NSString*)rootPath;
 -(BOOL)start:(NSError**)error;
 -(BOOL)shutdown;
 @end
 
-#define FTPPORT 2121
 #define BUFSIZE 1024
 
 @interface FTPSession : NSObject {

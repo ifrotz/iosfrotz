@@ -198,6 +198,13 @@
 		44CA10990E3D93B0009AEF85 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44CA10980E3D93B0009AEF85 /* QuartzCore.framework */; };
 		44CA11BD0E3EF636009AEF85 /* FrotzSplash.png in Resources */ = {isa = PBXBuildFile; fileRef = 44CA11BC0E3EF636009AEF85 /* FrotzSplash.png */; };
 		44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 44CA12F00E41076D009AEF85 /* TransitionView.m */; };
+		44D013A71372707D00B7F616 /* FtpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013991372707D00B7F616 /* FtpConnection.m */; };
+		44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139B1372707D00B7F616 /* FtpDataConnection.m */; };
+		44D013A91372707D00B7F616 /* FtpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139E1372707D00B7F616 /* FtpServer.m */; };
+		44D013AC1372707D00B7F616 /* list.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A41372707D00B7F616 /* list.m */; };
+		44D013AD1372707D00B7F616 /* NetworkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A61372707D00B7F616 /* NetworkController.m */; };
+		44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D013AE1372787E00B7F616 /* SystemConfiguration.framework */; };
+		44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44D013B01372799D00B7F616 /* ftp_commands.plist */; };
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
 		44E145CA114C303B001926E1 /* compass-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 44E145C9114C303B001926E1 /* compass-small.png */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
@@ -361,6 +368,7 @@
 		44407A6F1236C16F0021DEE4 /* parchment.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = parchment.jpg; path = resources/parchment.jpg; sourceTree = "<group>"; };
 		44407D0F123742030021DEE4 /* zcode.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zcode.png; path = resources/zcode.png; sourceTree = "<group>"; };
 		44418F7D124576E800F49BC4 /* flip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = flip.png; path = resources/flip.png; sourceTree = "<group>"; };
+		444592F91396DBED00C740B9 /* RichTextStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RichTextStyle.h; sourceTree = "<group>"; };
 		44550A7E1277B39300CDEA97 /* TO-DO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "TO-DO.txt"; sourceTree = "<group>"; };
 		44550B1A1277FC2B00CDEA97 /* glulx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glulx.png; path = resources/glulx.png; sourceTree = "<group>"; };
 		446248DB0E3BABF10057917B /* nowplaying.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = nowplaying.png; path = resources/nowplaying.png; sourceTree = "<group>"; };
@@ -557,6 +565,19 @@
 		44CA11BC0E3EF636009AEF85 /* FrotzSplash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = FrotzSplash.png; path = resources/FrotzSplash.png; sourceTree = "<group>"; };
 		44CA12EF0E41076D009AEF85 /* TransitionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionView.h; sourceTree = "<group>"; };
 		44CA12F00E41076D009AEF85 /* TransitionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransitionView.m; sourceTree = "<group>"; };
+		44D013981372707D00B7F616 /* FtpConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FtpConnection.h; sourceTree = "<group>"; };
+		44D013991372707D00B7F616 /* FtpConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FtpConnection.m; sourceTree = "<group>"; };
+		44D0139A1372707D00B7F616 /* FtpDataConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FtpDataConnection.h; sourceTree = "<group>"; };
+		44D0139B1372707D00B7F616 /* FtpDataConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FtpDataConnection.m; sourceTree = "<group>"; };
+		44D0139C1372707D00B7F616 /* FtpDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FtpDefines.h; sourceTree = "<group>"; };
+		44D0139D1372707D00B7F616 /* FtpServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FtpServer.h; sourceTree = "<group>"; };
+		44D0139E1372707D00B7F616 /* FtpServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FtpServer.m; sourceTree = "<group>"; };
+		44D013A31372707D00B7F616 /* list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = list.h; sourceTree = "<group>"; };
+		44D013A41372707D00B7F616 /* list.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = list.m; sourceTree = "<group>"; };
+		44D013A51372707D00B7F616 /* NetworkController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkController.h; sourceTree = "<group>"; };
+		44D013A61372707D00B7F616 /* NetworkController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkController.m; sourceTree = "<group>"; };
+		44D013AE1372787E00B7F616 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		44D013B01372799D00B7F616 /* ftp_commands.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ftp_commands.plist; path = resources/ftp_commands.plist; sourceTree = "<group>"; };
 		44E0660A0FE76FEC0003A36B /* InputHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputHelper.h; sourceTree = "<group>"; };
 		44E0660B0FE76FEC0003A36B /* InputHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InputHelper.m; sourceTree = "<group>"; };
 		44E145C9114C303B001926E1 /* compass-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "compass-small.png"; path = "resources/compass-small.png"; sourceTree = "<group>"; };
@@ -594,6 +615,7 @@
 				44CA10990E3D93B0009AEF85 /* QuartzCore.framework in Frameworks */,
 				447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */,
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
+				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -603,6 +625,10 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				444592F91396DBED00C740B9 /* RichTextStyle.h */,
+				44D013971372707D00B7F616 /* FTPServLib */,
+				449516A90F7DEDA90060F524 /* FTPServ.h */,
+				449516AA0F7DEDA90060F524 /* FTPServ.m */,
 				449127E112643AA10013AD7C /* GlkView.h */,
 				449127E212643AA10013AD7C /* GlkView.m */,
 				440DAAFA125D68DE0014A8FD /* TextViewExt.h */,
@@ -635,8 +661,6 @@
 				447F88291044DC0B002CA22D /* AboutFrotz.m */,
 				44E0660A0FE76FEC0003A36B /* InputHelper.h */,
 				44E0660B0FE76FEC0003A36B /* InputHelper.m */,
-				449516A90F7DEDA90060F524 /* FTPServ.h */,
-				449516AA0F7DEDA90060F524 /* FTPServ.m */,
 				44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */,
 				44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */,
 				448164520E6D02C60022EDC0 /* GettingStarted.h */,
@@ -745,6 +769,7 @@
 				44FB3BA30E6390DC00142D85 /* hsv-crosshair.png */,
 				44FB3BA40E6390DC00142D85 /* val-crosshair.png */,
 				443C9DE20E46DD59003A44D4 /* metadata.plist */,
+				44D013B01372799D00B7F616 /* ftp_commands.plist */,
 				44CA11BC0E3EF636009AEF85 /* FrotzSplash.png */,
 				446248DB0E3BABF10057917B /* nowplaying.png */,
 				443149D70E3B0154007A075F /* NavForward.png */,
@@ -762,6 +787,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
 				4474905F0E85BA4C00A5310F /* CFNetwork.framework */,
 				2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */,
 				44CA10980E3D93B0009AEF85 /* QuartzCore.framework */,
@@ -1105,6 +1131,24 @@
 			name = minizip;
 			sourceTree = "<group>";
 		};
+		44D013971372707D00B7F616 /* FTPServLib */ = {
+			isa = PBXGroup;
+			children = (
+				44D013981372707D00B7F616 /* FtpConnection.h */,
+				44D013991372707D00B7F616 /* FtpConnection.m */,
+				44D0139A1372707D00B7F616 /* FtpDataConnection.h */,
+				44D0139B1372707D00B7F616 /* FtpDataConnection.m */,
+				44D0139C1372707D00B7F616 /* FtpDefines.h */,
+				44D0139D1372707D00B7F616 /* FtpServer.h */,
+				44D0139E1372707D00B7F616 /* FtpServer.m */,
+				44D013A31372707D00B7F616 /* list.h */,
+				44D013A41372707D00B7F616 /* list.m */,
+				44D013A51372707D00B7F616 /* NetworkController.h */,
+				44D013A61372707D00B7F616 /* NetworkController.m */,
+			);
+			path = FTPServLib;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1208,6 +1252,7 @@
 				442351D0125E77C000BFB245 /* notes.png in Resources */,
 				44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */,
 				44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */,
+				44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1386,6 +1431,11 @@
 				44690D49126A402500B283FF /* search.c in Sources */,
 				44690D4A126A402500B283FF /* terp.c in Sources */,
 				446912F6126BED9300B283FF /* ipw_graphics.c in Sources */,
+				44D013A71372707D00B7F616 /* FtpConnection.m in Sources */,
+				44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */,
+				44D013A91372707D00B7F616 /* FtpServer.m in Sources */,
+				44D013AC1372707D00B7F616 /* list.m in Sources */,
+				44D013AD1372707D00B7F616 /* NetworkController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -61,6 +61,8 @@ struct glk_window_struct {
     int line_request_uni;
     int char_request;
     int char_request_uni;
+    int mouse_request;
+    int hyper_request;
 
     glui32 style;
     
@@ -186,6 +188,8 @@ extern grect_t content_box;
 extern void (*gli_interrupt_handler)(void);
 
 extern int screen_size_changed;
+extern int mouseEvent, mouseEventX, mouseEventY;
+extern window_t *mouseEventWin;
 
 extern unsigned char char_printable_table[256];
 extern unsigned char char_typable_table[256];

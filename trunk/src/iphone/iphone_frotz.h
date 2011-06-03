@@ -58,8 +58,10 @@ void iphone_win_puts(int winNum, char *s);
 void iphone_enable_input();
 void iphone_enable_single_key_input();
 void iphone_disable_input();
-void iphone_putchar(char c);
-void iphone_win_putchar(int winNum, char c);
+void iphone_enable_tap(int winNum);
+void iphone_disable_tap(int winNum);
+void iphone_putchar(wchar_t c);
+void iphone_win_putchar(int winNum, wchar_t c);
 void iphone_backspace();
 void iphone_disable_autocompletion();
 void iphone_enable_autocompletion();
@@ -71,11 +73,13 @@ void iphone_set_top_win_height(int height);
 void iphone_mark_recent_save();
 void iphone_more_prompt();
 void iphone_set_text_attribs(int viewNum, int style, int color, bool lock);
+void iphone_put_image(int viewNum, int imageNum, int imageAlign, bool lock);
 int iphone_prompt_file_name (char *file_name, const char *default_name, int flag);
 int iphone_read_file_name(char *file_name, const char *default_name, int flag);
 void iphone_start_script(char *scriptName);
 void iphone_stop_script();
 void iphone_set_glk_default_colors(int winNum);
+void iphone_glk_window_graphics_update(int viewNum);
 glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height);
 glui32 iphone_glk_image_get_info(glui32 image, glui32 *width, glui32 *height);
 void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height);
@@ -91,20 +95,21 @@ typedef struct {
     window_t *win;
     wchar_t *gridArray;
     bool pendingClose;
+    bool tapsEnabled;
 } IPGlkGridArray;
 
 void iphone_glk_wininit();
 int iphone_new_glk_view(window_t *win);
 void iphone_glk_view_rearrange(int viewNum, window_t *win);
 void iphone_destroy_glk_view(int viewNum);
+void iphone_glk_game_loaded();
+
 IPGlkGridArray *iphone_glk_getGridArray(int viewNum);
 
 int iphone_main(int argc, char **argv);
 #define XYZZY()
 extern int do_autosave, autosave_done, refresh_savedir;
 extern char AUTOSAVE_FILE[];
-
-typedef enum { kFSNormal=0, kFSBold=1, kFSItalic=2, kFSFixedWidth=4, kFSReverse=8, kFSNoWrap=16,  } FrotzTextStyle;
 
 extern int iphone_textview_width, iphone_textview_height; // in characters
 extern int iphone_screenwidth, iphone_screenheight; // in pixels
@@ -124,10 +129,12 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSavePListFile "FrotzSIP.plist"
 #define kFrotzAutoSaveActiveFile "Current.plist"
 
-#define IPHONE_FROTZ_VERS "1.5.2"
+#define IPHONE_FROTZ_VERS "1.5.3"
 #define FROTZ_BETA 0
 
 #define APPLE_FASCISM (!FROTZ_BETA)
+
+#define UseNewFTPServer 1
 
 #include "ifrotzdefs.h"
 

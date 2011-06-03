@@ -638,11 +638,16 @@ glui32 win_textbuffer_stylehint_get(window_t *win, glui32 styl, glui32 hint)
         switch (hint) {
             case stylehint_Indentation:
             case stylehint_ParaIndentation:
-            case stylehint_Justification:
             case stylehint_Size:
             case stylehint_Weight:
             case stylehint_Oblique:
                 return 0;
+                break;
+            case stylehint_Justification:
+                if (dwin->hints[styl].styleSetMask & kGlkStyleProportionalMask)
+                    return dwin->hints[styl].justification;
+                else
+                    return 0;
                 break;
             case stylehint_Proportional:
                 if (dwin->hints[styl].styleSetMask & kGlkStyleProportionalMask)

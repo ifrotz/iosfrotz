@@ -81,7 +81,7 @@
     self.view = webView;
     [webView setAutoresizingMask: UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     webView.backgroundColor = [UIColor darkGrayColor];
-    int baseFontSize = 11 + (gLargeScreenDevice?3:0);
+    int baseFontSize = 11; // + (gLargeScreenDevice?3:0);
     NSString *htmlString = nil;
     NSString *cssString = [NSString stringWithFormat: @
                            "<style type=\"text/css\">\n"
@@ -97,24 +97,39 @@
         htmlString = [NSString stringWithContentsOfFile:m_relNotesPath encoding:NSUTF8StringEncoding error:&error];
     } else {
         htmlString = @
-        "<meta name=\"viewport\" content=\"width = 320\" />\n"
-        "<meta name=\"viewport\" content=\"initial-scale=1.0, user-scalable=no\" />\n"
         "<h2>What's New in Frotz?</h2>\n"
         "<hr/>\n"
-        "<p> Fixed in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
+        "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
+        "<p><ul>\n"
+        "<li><b>Readability:</b> Wider margins and spacing for better readability on iPad.</li>\n"
+        "<li><b>Unicode</b>: Improved Unicode text support for games with non-Latin characters.</li>\n"
+        "<li><b>Updated glulx support</b>: Now conforms to standard spec 3.1.2.</li>\n"
+        "<li><b>Graphics improvements</b>: Performance and stability of games using glk graphics improved; Frotz now supports inline images in text.</li>\n"
+        "<li><b>VoiceOver support</b>: Fixed bug preventing automatic announcement of new output in glulx games.</li>\n"
+        "<li><b>Keyboard</b>: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen).</li>\n"
+        "<li><b>Other bug fixes</b>: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.</li>\n"
+        "</ul>"
+        "<hr>\n"
+        "<p>Author's note: If you've rated Frotz in the App Store before, I'd really appreciate it if you would rate the new version.  Or write  a review! Thanks!</p>"
+        "<p><small><i>June 2, 2011</i><br>\n"
+        "<hr>\n"
+#if 1
+        "<p><i>Previous release notes</i></p>\n"
+        "<br/>\n"
+        "<p>Fixed in 1.5.2:</p>\n"
         "<p><ul>"
         "<li><b>Fixed crash on older devices</b>: iPod Touch (1st/2nd gen.) and iPhone 3G would crash on launch due to bugs in the compiler used to build Frotz. This has been resolved.</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue where navigation bar would disappear after viewing save/restore/transcript dialog on small screen "
         "devices; allow transfer of transcripts in web file transfer server; fixed crash when restarting a story immediately after quitting..</li>"
         "</ul>"
+#endif
 #if 1 // 1.5.1
-        "<p>Fixed in 1.5.1:</p><ul>"
+        "<p>Fixed in 1.5.1:</p><ul>\n"
         "<li><b>iOS 4.3 compatibility</b>: Fixed crash when deleting text that occurred only in iOS 4.3</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue deleting files via web interface, viewing transcripts in landscape, and text color issues in glulx games.</li>"
         "</ul>"
-        "<p>Author's note: If you've rated Frotz in the App Store before, I'd really appreciate you rating the new version.  Thanks!</p> <hr/>"
-        "<p>New features in 1.5:</p><ul>\n"
 #endif
+        "<p>New features in 1.5:</p><ul>\n"
 #if 1 // 1.5
         "<li><b>Improved UI</b>: The interface has been improved and refined, particularly on the iPad.</li>\n"
         "<li><b>Recently Played Stories</b>: Frotz now keeps track of your most recently played stories at the top of the Story List.</li>\n"
@@ -124,8 +139,10 @@
         "<li><b>Bookmarks in Story Browser</b>: You can now bookmark individual pages in the IFDB browser.</li>\n"
         "<li><b>More bundled games added from IFDB</b>: Includes an updated IFDB snapshot with more recent well-rated works.</li>\n"
         "<li><b>Miscellaneous bug fixes</b>: Fixed Bluetooth keyboard support, status line/text resizing bugs, and various other minor bugs.</li>\n"
+        "</ul>"
 #endif
-#if 0 // 1.4
+#if 1 // 1.4
+        "<p>New features in 1.4:</p><ul>\n"
         "<li><b>Improved autosave</b>: Frotz now autosaves each story independently, so you can switch stories without having to manually save or abandon your current one.</li>\n"
         "<li><b>Better text performance</b>: Frotz's text output support has been rewritten and is now faster and has a larger scroll back history.</li>\n"
         "<li><b>Word selection</b>: You can now double-tap on a word in the story output to copy it to the command line.</li>\n"
@@ -134,8 +151,10 @@
         "<li><b>Infocom support</b>: More filename variants of Infocom data files are now recognized.</li>\n"
         "<li><b>Text color bug fixed</b>: Fixed a problem where text color would draw in black instead of customized color.</li>\n"
         "<li><b>Other Bug fixes</b>: Various other minor bugs have been fixed too uninteresting to mention by name.</li>\n"
+        "</ul>"
 #endif
-#if 0 // 1.3
+#if 1 // 1.3
+        "<p>New features in 1.3:</p><ul>\n"
         "<li><b>Story Font Size preference</b>: allows you to vary the main story font size from 8 to 16 point.</li>\n"
         "<li><b>Status Line magnification</b>:  tap anywhere on the status line to magnify it for readability.\n"
         "(This is in lieu of allowing larger status line fonts, because many games require a minimum number\n"
@@ -150,10 +169,9 @@
         "</li>\n"
         "<li><b>Bug fixes (OS 3.0)</b>: restored the ability to tap on the story output to scroll one page, or show the keyboard if at the end.</li>\n"
         "<li><b>Bundled stories</b>: includes a large subset of well-rated stories from the IFDB bundled with Frotz; the IFDB story browser uses these bundled files instead of downloading them from the Internet. </li>\n"
+        "</ul>"
 #endif
-        "</ul></p>\n"
-        "<hr/>\n"
-        "<p><small><i>April 5, 2011</i><br>\n";
+        "<br/>\n";
         // 1.5.1: mar 23, 2011
         // 1.5: oct 25, 2010
         // 1.4: mar 19, 2010

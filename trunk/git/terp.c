@@ -2,6 +2,7 @@
 // Interpreter engine.
 
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,6 +63,98 @@ Opcode* gOpcodeTable;
 #define CHECK_USED(n) if ((sp - values) < (n)) goto stack_underflow
 
 // -------------------------------------------------------------
+// Floating point support
+
+#define ENCODE_FLOAT(f) (* (git_uint32*) &f)
+#define DECODE_FLOAT(n) (* (git_float*) &n)
+
+#if TARGET_CPU_ARM // defined when building for iOS for target device
+
+#define IS_SUBNORMAL(n)  ((n) != 0 && ((n) & 0x7f800000)==0)
+
+double DECODE_DOUBLE(git_sint32 i) {
+    if (IS_SUBNORMAL(i)) {
+        // subnormal will be normalized to zero by ARM FPU on any arith op including conversion to double,
+        // so we must convert manually
+        union {
+            double d;
+            git_uint32 a[2];
+        } u;
+        git_uint32 m = (i & 0x7fffff) << 9;
+        git_uint32 s = (i & 0x80000000);
+        git_sint32 e = ((i & 0x7f800000) >> 23) - 127;
+        if (m && e==-127) {
+            git_uint32 b = 32 - fls(m);
+            m <<= b+1;
+            e -= b;
+        } else e = -1023;
+        u.a[1] = s | (((e+1023) & 0x7ff) << 20) | (m >> 12);
+        u.a[0] = (m & 0xfff) << 20;
+        return u.d;
+    } else
+        return (double)DECODE_FLOAT(i);
+} 
+
+git_float DOUBLE_TO_SUBNORMAL_FLOAT(double d) {
+    union {
+        double d;
+        git_uint32 a[2];
+    } u;
+    git_uint32 i;
+    u.d = d;
+    git_uint32 s = u.a[1] & 0x80000000;
+    git_uint32 m = ((u.a[1] & 0xfffff) << 12) | ((u.a[0] & 0xfff00000) >> 20);
+    git_sint32 e = ((u.a[1] & 0x7ff00000) >> 20) - 1023;
+    if (e > -150 && e<=-127) {
+        m >>= 1;
+        m |= 0x80000000;
+        git_uint32 b = (m >> (-128-e)) & (1<<9);
+        m >>= (-127 - e);
+        m |= b;
+        i = s | (m >> 9);
+        return DECODE_FLOAT(i);
+    } else
+        return (git_float)d;
+}
+#else
+#define IS_SUBNORMAL(n)  (0) // no reason to special case; let compiler optimize out
+#define DECODE_DOUBLE(i) ((double)DECODE_FLOAT(i))
+#define DOUBLE_TO_SUBNORMAL_FLOAT(d) ((git_float)(d))
+#endif // TARGET_CPU_ARM
+
+int floatCompare(git_sint32 L1, git_sint32 L2, git_sint32 L3)
+{
+    git_float F1, F2;
+    
+    if (((L3 & 0x7F800000) == 0x7F800000) && ((L3 & 0x007FFFFF) != 0))
+        return 0;
+    if ((L1 == 0x7F800000 || L1 == 0xFF800000) && (L2 == 0x7F800000 || L2 == 0xFF800000))
+        return (L1 == L2);
+    
+    if (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2) || IS_SUBNORMAL(L2)) {
+        double DF1 = DECODE_DOUBLE(L2) - DECODE_DOUBLE(L1);
+        double DF2 = fabs(DECODE_DOUBLE(L3));
+        return ((DF1 <= DF2) && (DF1 >= -DF2));
+    }
+    F1 = DECODE_FLOAT(L2) - DECODE_FLOAT(L1);
+    F2 = fabsf(DECODE_FLOAT(L3));
+    return ((F1 <= F2) && (F1 >= -F2));
+}
+
+#ifdef USE_OWN_POWF
+float git_powf(float x, float y)
+{
+    if (x == 1.0f)
+        return 1.0f;
+    else if ((y == 0.0f) || (y == -0.0f))
+        return 1.0f;
+    else if ((x == -1.0f) && isinf(y))
+        return 1.0f;
+    return powf(x,y);
+}
+#endif
+
+// -------------------------------------------------------------
 // Functions
 
 void startProgram (size_t cacheSize, enum IOMode ioMode)
@@ -71,6 +164,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
     git_sint32 L1=0, L2=0, L3=0, L4=0, L5=0, L6=0, L7=0;
 #define S1 L1
 #define S2 L2
+    git_float F1=0.0f, F2=0.0f, F3=0.0f, F4=0.0f;
 
     git_sint32* base;   // Bottom of the stack.
     git_sint32* frame;  // Bottom of the current stack frame.
@@ -129,30 +223,32 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
     
     if (do_autosave) {
 
-	frefid_t fref;
-	strid_t fstr;
-	fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
-	if (!fref)
-	    fatalError("unable to create glulx autorestore fileref");
+        frefid_t fref;
+        strid_t fstr;
+        fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
+        if (!fref)
+            fatalError("unable to create glulx autorestore fileref");
         ioMode = IO_GLK;
         ioRock = 0;
-	git_sint32 rstatus = 1;
-	fstr = glk_stream_open_file(fref, filemode_Read, 0);
-	if (fstr) {
-	    git_sint32 rstatus = restoreFromFileStr(base, fstr, protectPos, protectSize);
-	    gli_delete_stream(fstr);
-	    do_autosave = 0;
-	    if (rstatus == 0)
-	    {
-		sp = gStackPointer;
-		S1 = -1;
-		goto do_pop_call_stub;
-	    }
-	}
-	if (rstatus) {
-	    iphone_win_puts(0, "Autorestore failed.\n");
-	    finished = 1;
-	}
+        git_sint32 rstatus = 1;
+        fstr = glk_stream_open_file(fref, filemode_Read, 0);
+        if (fstr) {
+            git_sint32 rstatus = restoreFromFileStr(base, fstr, protectPos, protectSize);
+            gli_delete_stream(fstr);
+            do_autosave = 0;
+            glk_game_loaded();
+
+            if (rstatus == 0)
+            {
+                sp = gStackPointer;
+                S1 = -1;
+                goto do_pop_call_stub;
+            }
+        }
+        if (rstatus) {
+            iphone_win_puts(0, "Autorestore failed.\n");
+            finished = 1;
+        }
     }
     do_autosave = 0;
 
@@ -351,9 +447,9 @@ do_enter_function_L1: // Arg count is in L2.
     PEEPHOLE_STORE(bitor,   S1 = L1 | L2);
     PEEPHOLE_STORE(bitxor,  S1 = L1 ^ L2);
 
-    PEEPHOLE_STORE(shiftl,  if (L2 > 31) S1 = 0; else S1 = L1 << ((git_uint32) L2));
-    PEEPHOLE_STORE(sshiftr, if (L2 > 31) L2 = 31; S1 = ((git_sint32) L1) >> ((git_uint32) L2));
-    PEEPHOLE_STORE(ushiftr, if (L2 > 31) S1 = 0; else S1 = ((git_uint32) L1) >> ((git_uint32) L2));
+    PEEPHOLE_STORE(shiftl,  if (L2 > 31 || L2 < 0) S1 = 0; else S1 = L1 << ((git_uint32) L2));
+    PEEPHOLE_STORE(sshiftr, if (L2 > 31 || L2 < 0) L2 = 31; S1 = ((git_sint32) L1) >> ((git_uint32) L2));
+    PEEPHOLE_STORE(ushiftr, if (L2 > 31 || L2 < 0) S1 = 0; else S1 = ((git_uint32) L1) >> ((git_uint32) L2));
 
     PEEPHOLE_STORE(aload,   S1 = memRead32 (L1 + (L2<<2)));
     PEEPHOLE_STORE(aloads,  S1 = memRead16 (L1 + (L2<<1)));
@@ -364,6 +460,27 @@ do_enter_function_L1: // Arg count is in L2.
     PEEPHOLE_STORE(copyb,   S1 = L1 & 0x00FF);
     PEEPHOLE_STORE(sexs,    S1 = (git_sint32)((signed short)(L1 & 0xFFFF)));
     PEEPHOLE_STORE(sexb,    S1 = (git_sint32)((signed char)(L1 & 0x00FF)));
+
+    PEEPHOLE_STORE(fadd,   
+                   F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) + DECODE_DOUBLE(L2)) :
+                    DECODE_FLOAT(L1) + DECODE_FLOAT(L2);
+                   S1 = ENCODE_FLOAT(F1));
+    PEEPHOLE_STORE(fsub,
+                   F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) - DECODE_DOUBLE(L2)) :
+                   DECODE_FLOAT(L1) - DECODE_FLOAT(L2);
+                   S1 = ENCODE_FLOAT(F1));
+    PEEPHOLE_STORE(fmul,
+                   F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) * DECODE_DOUBLE(L2)) :
+                   DECODE_FLOAT(L1) * DECODE_FLOAT(L2);
+                   S1 = ENCODE_FLOAT(F1));
+    PEEPHOLE_STORE(fdiv,
+                   F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) / DECODE_DOUBLE(L2)) :
+                   DECODE_FLOAT(L1) / DECODE_FLOAT(L2);
+                   S1 = ENCODE_FLOAT(F1));
 
 #define PEEPHOLE_LOAD(tag,reg) \
     do_ ## tag ## _ ## reg ## _const: reg = READ_PC; goto do_ ## tag; \
@@ -398,24 +515,41 @@ do_enter_function_L1: // Arg count is in L2.
     do_ ## tag ## _return0: if (cond) { L1 = 0; goto do_return; } NEXT;                     \
     do_ ## tag ## _return1: if (cond) { L1 = 1; goto do_return; } NEXT
     
-    DO_JUMP(jump, L1, 1 == 1);
-    DO_JUMP(jz,   L2, L1 == 0);
-    DO_JUMP(jnz,  L2, L1 != 0);
-    DO_JUMP(jeq,  L3, L1 == L2);
-    DO_JUMP(jne,  L3, L1 != L2);
-    DO_JUMP(jlt,  L3, L1 < L2);
-    DO_JUMP(jge,  L3, L1 >= L2);
-    DO_JUMP(jgt,  L3, L1 > L2);
-    DO_JUMP(jle,  L3, L1 <= L2);
-    DO_JUMP(jltu, L3, ((git_uint32)L1 < (git_uint32)L2));
-    DO_JUMP(jgeu, L3, ((git_uint32)L1 >= (git_uint32)L2));
-    DO_JUMP(jgtu, L3, ((git_uint32)L1 > (git_uint32)L2));
-    DO_JUMP(jleu, L3, ((git_uint32)L1 <= (git_uint32)L2));
+    DO_JUMP(jump,   L1, 1 == 1);
+    DO_JUMP(jz,     L2, L1 == 0);
+    DO_JUMP(jnz,    L2, L1 != 0);
+    DO_JUMP(jeq,    L3, L1 == L2);
+    DO_JUMP(jne,    L3, L1 != L2);
+    DO_JUMP(jlt,    L3, L1 < L2);
+    DO_JUMP(jge,    L3, L1 >= L2);
+    DO_JUMP(jgt,    L3, L1 > L2);
+    DO_JUMP(jle,    L3, L1 <= L2);
+    DO_JUMP(jltu,   L3, ((git_uint32)L1 < (git_uint32)L2));
+    DO_JUMP(jgeu,   L3, ((git_uint32)L1 >= (git_uint32)L2));
+    DO_JUMP(jgtu,   L3, ((git_uint32)L1 > (git_uint32)L2));
+    DO_JUMP(jleu,   L3, ((git_uint32)L1 <= (git_uint32)L2));
+    DO_JUMP(jisnan, L2, (((L1 & 0x7F800000) == 0x7F800000) && ((L1 & 0x007FFFFF) != 0)));
+    DO_JUMP(jisinf, L2, ((L1 == 0x7F800000) || (L1 == 0xFF800000)));
+    DO_JUMP(jflt,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                        DECODE_DOUBLE(L1) < DECODE_DOUBLE(L2) :
+                        DECODE_FLOAT(L1) < DECODE_FLOAT(L2));
+    DO_JUMP(jfge,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                        DECODE_DOUBLE(L1) >= DECODE_DOUBLE(L2) :
+                        DECODE_FLOAT(L1) >= DECODE_FLOAT(L2));
+    DO_JUMP(jfgt,   L3,(IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                        DECODE_DOUBLE(L1) > DECODE_DOUBLE(L2) :
+                        DECODE_FLOAT(L1) > DECODE_FLOAT(L2));
+    DO_JUMP(jfle,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
+                        DECODE_DOUBLE(L1) <= DECODE_DOUBLE(L2) :
+                        DECODE_FLOAT(L1) <= DECODE_FLOAT(L2));
+    DO_JUMP(jfeq,   L4, floatCompare(L1, L2, L3) != 0);
+    DO_JUMP(jfne,   L4, floatCompare(L1, L2, L3) == 0);
 
 #undef DO_JUMP
 
     do_jumpabs: L7 = L1; goto do_jump_abs_L7; NEXT;
 
+    do_goto_L4_from_L7: L1 = L4; goto do_goto_L1_from_L7;
     do_goto_L3_from_L7: L1 = L3; goto do_goto_L1_from_L7;
     do_goto_L2_from_L7: L1 = L2; goto do_goto_L1_from_L7;
     do_goto_L1_from_L7:
@@ -578,7 +712,7 @@ finish_save_stub:
     do_catch_stub_local:
         CHECK_FREE(4);
         L7 = READ_PC;
-        memWrite32(L7, (sp-base+4)*4);
+        LOCAL(L7 / 4) = (sp-base+4)*4;
         PUSH (2);       // DestType
         goto finish_catch_stub_addr_L7;
 
@@ -1025,8 +1159,8 @@ do_tailcall:
 
                     case 0xC0: case 0xC1: // Function.
                         // Retrieve arguments.
-                        for (L1 += 8, L4 = 0; L4 < L2 ; ++L4, L1+=4)
-                            args[L4] = memRead32(L1);
+                        for (L1 += 8, L4 = L2; L4 > 0 ; --L4, L1+=4)
+                            args[L4-1] = memRead32(L1);
                         // Enter function.
                         L1 = L3;
                         goto do_enter_function_L1;
@@ -1177,7 +1311,6 @@ do_tailcall:
     do_restart:
         // Reset game memory to its initial state.
         resetMemory(protectPos, protectSize);
-        resetUndo();
 
         // Reset all the stack pointers.
         frame = locals = values = sp = base;
@@ -1201,8 +1334,12 @@ do_tailcall:
             // The parameter is zero, so we should generate a
             // random number in "the full 32-bit range". The rand()
             // function might not cover the entire range, so we'll
-            // generate the high 16 bits and low 16 bits separately.
+            // generate the number with several calls.
+#if (RAND_MAX < 0xffff)
+            S1 = rand() ^ (rand() << 12) ^ (rand() << 24);
+#else
             S1 = (rand() & 0xffff) | (rand() << 16);
+#endif
         }
         NEXT;
 
@@ -1277,13 +1414,15 @@ do_tailcall:
             fatalError ("Negative number of elements to rotate in stkroll");
         if (L1 > (sp - values))
             fatalError ("Tried to rotate too many elements in stkroll");
+        if (L1 == 0)
+            NEXT;
         // Now, let's normalise L2 into the range [0..L1).
         if (L2 >= 0)
             L2 = L2 % L1;
         else
             L2 = L1 - (-L2 % L1);
         // Avoid trivial cases.
-        if (L1 == 0 || L2 == 0 || L2 == L1)
+        if (L2 == 0 || L2 == L1)
             NEXT;
         L2 = L1 - L2;
         // The problem is reduced to swapping elements [0..L2) with
@@ -1367,6 +1506,138 @@ do_tailcall:
         accel_set_param(L1, L2);
         NEXT;
         
+    // Floating point (new with glulx spec 3.1.2)
+
+    do_numtof:
+        F1 = (git_float) L1;
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_ftonumz:
+        F1 = DECODE_FLOAT(L1);
+        if (!signbit(F1)) {
+          if (isnan(F1) || isinf(F1) || (F1 > 2147483647.0))
+            S1 = 0x7FFFFFFF;
+          else
+            S1 = (git_sint32) truncf(F1);
+        } else {
+          if (isnan(F1) || isinf(F1) || (F1 < -2147483647.0))
+            S1 = 0x80000000;
+          else
+            S1 = (git_sint32) truncf(F1);
+        }
+        NEXT;
+
+    do_ftonumn:
+        F1 = DECODE_FLOAT(L1);
+        if (!signbit(F1)) {
+          if (isnan(F1) || isinf(F1) || (F1 > 2147483647.0))
+            S1 = 0x7FFFFFFF;
+          else
+            S1 = (git_sint32) roundf(F1);
+        } else {
+          if (isnan(F1) || isinf(F1) || (F1 < -2147483647.0))
+            S1 = 0x80000000;
+          else
+            S1 = (git_sint32) roundf(F1);
+        }
+        NEXT;
+
+    do_ceil:
+        F1 = ceilf(DECODE_FLOAT(L1));
+        L2 = ENCODE_FLOAT(F1);
+        if ((L2 == 0x0) || (L2 == 0x80000000))
+          L2 = L1 & 0x80000000;
+        S1 = L2;
+        NEXT;
+
+    do_floor:
+        F1 = floorf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_sqrt:
+        F1 = sqrtf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_exp:
+        F1 = DECODE_FLOAT(L1);
+        if (F1 < -85.0f)
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(exp(DECODE_DOUBLE(L1)));
+        else
+            F1 =  expf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_log:
+        if (IS_SUBNORMAL(L1))
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(log(DECODE_DOUBLE(L1)));
+        else
+            F1 = logf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_pow:
+#ifdef USE_OWN_POWF
+        F1 = git_powf(DECODE_FLOAT(L1), DECODE_FLOAT(L2));
+#else
+        F2 = DECODE_FLOAT(L2);
+        if (F2 > -150.0f && F2 < -126.0)
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(pow(DECODE_DOUBLE(L1), (double)F2));
+        else
+            F1 = powf(DECODE_FLOAT(L1), DECODE_FLOAT(L2));
+#endif
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_atan2:
+        F1 = atan2f(DECODE_FLOAT(L1), DECODE_FLOAT(L2));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_fmod:
+        F1 = DECODE_FLOAT(L1);
+        F2 = DECODE_FLOAT(L2);
+        F3 = fmodf(F1, F2);
+        F4 = (F1 - F3) / F2;
+        L4 = ENCODE_FLOAT(F4);
+        if ((L4 == 0) || (L4 == 0x80000000))
+          L4 = (L1 ^ L2) & 0x80000000;
+        S1 = ENCODE_FLOAT(F3);
+        S2 = L4;
+        NEXT;
+
+    do_sin:
+        F1 = sinf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_cos:
+        F1 = cosf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_tan:
+        F1 = tanf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_asin:
+        F1 = asinf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_acos:
+        F1 = acosf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
+    do_atan:
+        F1 = atanf(DECODE_FLOAT(L1));
+        S1 = ENCODE_FLOAT(F1);
+        NEXT;
+
     // Special Git opcodes
     
     do_git_setcacheram:

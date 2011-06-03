@@ -9,18 +9,22 @@ static giblorb_map_t *blorbmap = 0; /* NULL */
 
 giblorb_err_t giblorb_set_resource_map(strid_t file)
 {
-  giblorb_err_t err;
+    giblorb_err_t err;    
   
-  err = giblorb_create_map(file, &blorbmap);
-  if (err) {
-    blorbmap = 0; /* NULL */
-    return err;
-  }
+    if (blorbmap) {
+        giblorb_destroy_map(blorbmap);
+        blorbmap = 0;
+    }
+    err = giblorb_create_map(file, &blorbmap);
+    if (err) {
+        blorbmap = 0; /* NULL */
+        return err;
+    }
   
-  return giblorb_err_None;
+    return giblorb_err_None;
 }
 
 giblorb_map_t *giblorb_get_resource_map()
 {
-  return blorbmap;
+    return blorbmap;
 }

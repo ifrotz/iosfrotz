@@ -89,6 +89,10 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
             }
             
         case gestalt_MouseInput: 
+            if (val == wintype_TextGrid)
+                return TRUE;
+            if (val == wintype_Graphics)
+                return TRUE;
             return FALSE;
             
         case gestalt_Timer: 
@@ -99,13 +103,13 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
 #endif /* OPT_TIMED_INPUT */
 
         case gestalt_Graphics:
-	    return TRUE;
+            return TRUE;
         case gestalt_GraphicsTransparency:
             return FALSE;
             
         case gestalt_DrawImage:
-	    if (val == wintype_Graphics)
-		return TRUE;
+            if (val == wintype_Graphics || val == wintype_TextBuffer)
+                return TRUE;
             return FALSE;
             
         case gestalt_Unicode:

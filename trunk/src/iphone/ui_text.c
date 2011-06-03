@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "iphone_frotz.h"
+#include "RichTextStyle.h"
 
 /* When color_enabled is FALSE, we still minimally keep track of colors by
  * setting current_color to A_REVERSE if the game reads the default
@@ -62,6 +63,19 @@ int cursor_row = 0, cursor_col = 0;
 
 static cell *scr_row(int r) { return screen_data + r * MAX_COLS; }
 static cellcolor *scr_color(int r) { return screen_colors + r * MAX_COLS; }
+
+static inline int frotz_to_richtext_style(int fstyle) {
+    int style = kFTNormal;
+    if (fstyle & BOLDFACE_STYLE)
+        style |= kFTBold;
+    if (fstyle & EMPHASIS_STYLE)
+        style |= kFTItalic;
+    if (fstyle & FIXED_WIDTH_STYLE)
+        style |= kFTFixedWidth;
+    if (fstyle & REVERSE_STYLE)
+        style |= kFTReverse;
+    return style;
+}
 
 void iphone_init_screen() {
     screen_cells = MAX_ROWS * MAX_COLS;
@@ -151,7 +165,7 @@ void os_set_colour (int new_foreground, int new_background)
     //    if (new_background == 1) new_background = h_default_background;
     
     int new_color = u_setup.current_color = (new_foreground << 4) | new_background;
-    iphone_set_text_attribs(0, u_setup.current_text_style, new_color, TRUE);
+    iphone_set_text_attribs(0, frotz_to_richtext_style(u_setup.current_text_style), new_color, TRUE);
 }/* os_set_colour */
 
 /*
@@ -170,7 +184,7 @@ void os_set_text_style (int new_style)
 {
     current_style = new_style;
     u_setup.current_text_style = new_style;
-    iphone_set_text_attribs(0, new_style, u_setup.current_color, TRUE);
+    iphone_set_text_attribs(0, frotz_to_richtext_style(new_style), u_setup.current_color, TRUE);
 } /* os_set_text_style */
 
 /*

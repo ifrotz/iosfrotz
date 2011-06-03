@@ -9,6 +9,8 @@
 #include "glkstart.h" // This comes with the Glk library.
 #include "iphone_frotz.h"
 
+#include <string.h>
+
 #ifdef USE_MMAP
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -38,13 +40,14 @@ void fatalError (const char * s)
 // Fast loader that uses some fancy Unix features.
 
 const char * gFilename = 0;
+char * gStartupError = 0;
 
 int glkunix_startup_code(glkunix_startup_t *data)
 {
     if (data->argc <= 1)
     {
-        printf ("usage: git gamefile.ulx\n");
-        return 0;
+        gStartupError = "No file given";
+        return 1;
     }
     gFilename = data->argv[1];
     return 1;
@@ -55,7 +58,10 @@ void glk_main ()
     int          file;
     struct stat  info;
     const char * ptr;
-    
+
+	if (gStartupError)
+		fatalError(gStartupError);
+
     file = open (gFilename, O_RDONLY);
     if (file < 0)
         goto error;
@@ -64,10 +70,7 @@ void glk_main ()
         goto error;
     
     if (info.st_size < 256)
-    {
-        fprintf (stderr, "This is too small to be a glulx file.\n");
-        exit (1);
-    }
+		fatalError("This is too small to be a glulx file.");
 
     ptr = mmap (NULL, info.st_size, PROT_READ, MAP_PRIVATE, file, 0);
     if (ptr == MAP_FAILED)
@@ -86,6 +89,7 @@ error:
 // Generic loader that should work anywhere.
 
 strid_t gStream = 0;
+char * gStartupError = 0;
 
 int glkunix_startup_code(glkunix_startup_t *data)
 {
@@ -97,15 +101,18 @@ int glkunix_startup_code(glkunix_startup_t *data)
     gStream = glkunix_stream_open_pathname ((char*) data->argv[1], 0, 0);
     return 1;
 }
-#if 1
+
 void glk_main ()
 {
+	if (gStartupError)
+		fatalError(gStartupError);
+
     if (gStream == NULL)
         fatalError ("could not open game file");
 
     gitWithStream (gStream, CACHE_SIZE, UNDO_SIZE);
 }
-#endif
+
 #endif // USE_MMAP
 
 

@@ -12,6 +12,7 @@
 #include "glk.h"
 #include "glkios.h"
 #include "iphone_frotz.h"
+#include "RichTextStyle.h"
 
 /* This implements pretty much what any Glk implementation needs for 
  stream stuff. Memory streams, file streams (using stdio functions), 
@@ -412,10 +413,7 @@ void glk_stream_set_current(stream_t *str)
 
 strid_t glk_stream_get_current()
 {
-    if (gli_currentstr)
-        return gli_currentstr;
-    else
-        return 0;
+    return gli_currentstr;
 }
 
 void glk_stream_set_position(stream_t *str, glsi32 pos, glui32 seekmode)
@@ -533,7 +531,8 @@ static void gli_put_char(stream_t *str, unsigned char ch)
         case strtype_Window:
             if (str->win->line_request) {
                 gli_strict_warning(L"put_char: window has pending line request");
-                break;
+                str->win->line_request = 0;
+                //break;
             }
             gli_window_put_char(str->win, UCS(ch));
             if (str->win->echostr)
@@ -590,7 +589,8 @@ void gli_put_char_uni(stream_t *str, glui32 ch)
         case strtype_Window:
             if (str->win->line_request) {
                 gli_strict_warning(L"put_char_uni: window has pending line request");
-                break;
+                str->win->line_request = 0;
+//                break;
             }
             gli_window_put_char(str->win, ch);
             if (str->win->echostr)
@@ -673,7 +673,8 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
         case strtype_Window:
             if (str->win->line_request) {
                 gli_strict_warning(L"put_buffer: window has pending line request");
-                break;
+                str->win->line_request = 0;
+                //break;
             }
             for (lx=0, cx=buf; lx<len; lx++, cx++) {
                 gli_window_put_char(str->win, UCS(*cx));
@@ -716,13 +717,18 @@ static void gli_set_style(stream_t *str, glui32 val)
             str->win->style = val;
             
             if (val == style_Emphasized || val == style_Note)
-                istyle |=  EMPHASIS_STYLE;// kFSItalic;
+                istyle |=  kFTItalic;
             if (val == style_Alert)
-                istyle |=  REVERSE_STYLE; // kFSReverse;
+                istyle |=  kFTReverse;
             if (val == style_Header || val == style_Subheader || val == style_Input)
-                istyle |= BOLDFACE_STYLE; // kFSBold;
+                istyle |=  kFTBold;
             
             if (str->win->type == wintype_TextBuffer) {
+                unsigned int just = gli_stylehint_get(str->win, val, stylehint_Justification);
+                if (just == stylehint_just_Centered)
+                    istyle |= kFTCentered;
+                else if (just == stylehint_just_RightFlush)
+                    istyle |= kFTRightJust;
                 iphone_set_text_attribs(str->win->iphone_glkViewNum, istyle, -1, TRUE);
                 
                 unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);

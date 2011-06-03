@@ -127,6 +127,8 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     win->line_request = FALSE;
     win->line_request_uni = FALSE;
     win->char_request_uni = FALSE;
+    win->mouse_request = FALSE;
+    win->hyper_request = FALSE;
     win->style = style_Normal;
 
     win->str = gli_stream_open_window(win);
@@ -372,9 +374,10 @@ static void gli_window_close(window_t *win, int recurse)
 void glk_window_close(window_t *win, stream_result_t *result)
 {
     if (!win) {
-        gli_strict_warning(L"window_close: invalid ref");
-        return;
+        win = gli_rootwin;
     }
+    if (!win)
+        return;
         
     if (win == gli_rootwin || win->parent == NULL) {
         /* close the root window, which means all windows. */
@@ -834,7 +837,7 @@ void gli_windows_update()
                 win_textbuffer_update(win);
                 break;
             case wintype_Graphics:
-//                win_graphics_update(win);
+                win_graphics_update(win);
 		break;
         }
     }
@@ -1074,9 +1077,17 @@ void glk_request_mouse_event(window_t *win)
         gli_strict_warning(L"request_mouse_event: invalid ref");
         return;
     }
-    
-    /* But, in fact, we can't do much about this. */
-    
+    switch (win->type)
+    {
+        case wintype_Graphics:
+        case wintype_TextGrid:
+            iphone_enable_tap(win->iphone_glkViewNum);
+            win->mouse_request = TRUE;
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
     return;
 }
 
@@ -1136,9 +1147,16 @@ void glk_cancel_mouse_event(window_t *win)
         gli_strict_warning(L"cancel_mouse_event: invalid ref");
         return;
     }
-    
-    /* But, in fact, we can't do much about this. */
-    
+    switch (win->type) {
+        case wintype_Graphics:
+            iphone_disable_tap(win->iphone_glkViewNum);
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+    win->mouse_request = FALSE;
+
     return;
 }
 
@@ -1150,7 +1168,7 @@ void gli_window_put_char(window_t *win, glui32 ch)
      * we should filter it here for a legal value.
      */
 
-    if ( gli_bad_latin_key(ch) || (ch >= 0x100 && ! iswprint(wc)) )
+    if ( gli_bad_latin_key(ch) /*|| (ch >= 0x100 && ! iswprint(wc))*/ )
         wc = L'?';
 
     switch (win->type) {
@@ -1172,7 +1190,7 @@ void glk_window_clear(window_t *win)
     
     if (win->line_request) {
         gli_strict_warning(L"window_clear: window has pending line request");
-        return;
+        win->line_request = 0;
     }
 
     switch (win->type) {
@@ -1391,4 +1409,8 @@ glui32 gli_window_style_distinguish(winid_t win, glui32 styl1, glui32 styl2)
             return FALSE;
     }
     return FALSE;
+}
+
+void glk_game_loaded() {
+    iphone_glk_game_loaded();
 }
