@@ -1,3 +1,4 @@
+
 //
 //  StoryInputLine.m
 //  Frotz
@@ -74,6 +75,8 @@
     CGPoint ihpt = !gLargeScreenDevice && [(StoryMainViewController*)[m_storyView delegate] isLandscape]
     ? CGPointMake(132, 142) : CGPointMake(2, ypos-8);
     if (ihpt.y < 140) ihpt.y = 140;
+    if (gLargeScreenDevice)
+        ihpt.x += [m_storyView leftMargin];
     
     if (m_completionLabel)
         [m_completionLabel removeFromSuperview];
@@ -236,13 +239,12 @@ BOOL cursorVisible = YES;
 #endif
         myFrame.origin.x = frame.origin.x + cursorPt.x - bounds.origin.x;
         myFrame.origin.y = frame.origin.y + cursorPt.y - bounds.origin.y;
-        myFrame.size.width = frame.size.width - myFrame.origin.x - 2;
         if (myFrame.origin.y > frame.origin.y + frame.size.height - [controller fontSize] - 8)
             cursorVisible = NO;
     }
     
     //  NSLog(@"udp cwin %d myFrame=%f %f %f %f", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height);
-    myFrame.size.width = frame.size.width - myFrame.origin.x;
+    myFrame.size.width = frame.size.width - (myFrame.origin.x - frame.origin.x) - [curTextView rightMargin];
     myFrame.size.height = [[self font] leading];
     [self setFrame: myFrame];
     if (m_completionLabel) {
@@ -297,8 +299,16 @@ const int kCompletionViewTag = 21;
     [storyController hideNotes];
     
     if ((ipzAllowInput & kIPZAllowInput)) {
-        
+        // some love for users of bluetooth keyboards
+        if ([text isEqualToString: @" "]) { // option-space = scroll up one page
+            [storyController scrollStoryViewUpOnePage:[self storyView] fraction: 1.0];
+            return NO;
+        }
         if (![self updatePosition]) {
+            if ([text isEqualToString:@" "]) { // space = scroll down one page
+                [storyController scrollStoryViewOnePage:[self storyView] fraction:1.0];
+                return NO;
+            }
             [storyController scrollStoryViewToEnd: YES];
             [self updatePosition];
         }

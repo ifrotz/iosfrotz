@@ -1,8 +1,8 @@
 /* gtw_grid.c: The grid window type
-        for GlkIOS, iPhone/IOS implementation of the Glk API.
-    Designed by Andrew Plotkin <erkyrath@eblong.com>
-    http://www.eblong.com/zarf/glk/index.html
-*/
+ for GlkIOS, iPhone/IOS implementation of the Glk API.
+ Designed by Andrew Plotkin <erkyrath@eblong.com>
+ http://www.eblong.com/zarf/glk/index.html
+ */
 
 #define _XOPEN_SOURCE /* wcwidth */
 #include "gtoption.h"
@@ -18,30 +18,30 @@
 #include "iphone_frotz.h"
 
 /* A grid of characters. We store the window as a list of lines (see
-    ipw_grid.h); within a line, just store an array of characters and
-    an array of styles, the same size.
-*/
+ ipw_grid.h); within a line, just store an array of characters and
+ an array of styles, the same size.
+ */
 
 static void init_lines(window_textgrid_t *dwin, int beg, int end, int linewid);
 static void final_lines(window_textgrid_t *dwin);
 static void export_input_line(void *buf, int unicode, long len, wchar_t *chars);
 static void import_input_line(tgline_t *ln, int offset, void *buf, 
-    int unicode, long len);
+                              int unicode, long len);
 
 GLK_STYLE_HINTS win_textgrid_styleattrs[style_NUMSTYLES];
 
 /* This macro sets the appropriate dirty values, when a single character
-    (at px, py) is changed. */
+ (at px, py) is changed. */
 #define setposdirty(dwn, ll, px, py)   \
-    if (dwn->dirtybeg == -1 || (py) < dwn->dirtybeg)   \
-        dwn->dirtybeg = (py);   \
-    if (dwn->dirtyend == -1 || (py)+1 > dwn->dirtyend)   \
-        dwn->dirtyend = (py)+1;   \
-    if (ll->dirtybeg == -1 || (px) < ll->dirtybeg)   \
-        ll->dirtybeg = (px);   \
-    if (ll->dirtyend == -1 || (px)+1 > ll->dirtyend)   \
-        ll->dirtyend = (px)+1;   \
-    
+if (dwn->dirtybeg == -1 || (py) < dwn->dirtybeg)   \
+dwn->dirtybeg = (py);   \
+if (dwn->dirtyend == -1 || (py)+1 > dwn->dirtyend)   \
+dwn->dirtyend = (py)+1;   \
+if (ll->dirtybeg == -1 || (px) < ll->dirtybeg)   \
+ll->dirtybeg = (px);   \
+if (ll->dirtyend == -1 || (px)+1 > ll->dirtyend)   \
+ll->dirtyend = (px)+1;   \
+
 
 /* lnoffset could be made inline if the compiler supports it */
 int lnoffset(tgline_t *ln, int pos)
@@ -81,10 +81,10 @@ window_textgrid_t *win_textgrid_create(window_t *win)
     dwin->inunicode = FALSE;
     dwin->inorgx = 0;
     dwin->inorgy = 0;
-
+    
     for (int ix = 0; ix < style_NUMSTYLES; ix++)
         dwin->hints[ix] = win_textgrid_styleattrs[ix];
-
+    
     return dwin;
 }
 
@@ -127,7 +127,7 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
             oldval = dwin->linessize;
             dwin->linessize = (newhgt+1) * 2;
             dwin->lines = (tgline_t *)realloc(dwin->lines, 
-                dwin->linessize * sizeof(tgline_t));
+                                              dwin->linessize * sizeof(tgline_t));
             if (!dwin->lines)
                 return;
             init_lines(dwin, oldval, dwin->linessize, newwid);
@@ -147,9 +147,9 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
                 oldval = ln->size;
                 ln->size = (newwid+1) * 2;
                 ln->chars = (wchar_t *)realloc(ln->chars, 
-                    ln->size * sizeof(wchar_t));
+                                               ln->size * sizeof(wchar_t));
                 ln->attrs = (short *)realloc(ln->attrs, 
-                    ln->size * sizeof(short));
+                                             ln->size * sizeof(short));
                 if (!ln->chars || !ln->attrs) {
                     dwin->lines = NULL;
                     return;
@@ -164,7 +164,7 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
     
     dwin->width = newwid;
     dwin->height = newhgt;
-
+    
     dwin->dirtybeg = 0;
     dwin->dirtyend = dwin->height;
 }
@@ -172,7 +172,7 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
 static void init_lines(window_textgrid_t *dwin, int beg, int end, int linewid)
 {
     int ix, jx;
-
+    
     for (jx=beg; jx<end; jx++) {
         tgline_t *ln = &(dwin->lines[jx]);
         ln->size = (linewid+1);
@@ -232,7 +232,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
     
     orgx = dwin->owner->bbox.left;
     orgy = dwin->owner->bbox.top;
-
+    
     IPGlkGridArray *ipGrid = iphone_glk_getGridArray(dwin->owner->iphone_glkViewNum);
     for (jx=dwin->dirtybeg; jx<dwin->dirtyend; jx++) {
         tgline_t *ln = &(dwin->lines[jx]);
@@ -245,38 +245,38 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
                 ln->dirtyend = dwin->width;
             }
         }
-
+        
         if (ln->dirtybeg == -1)
             continue;
         /* draw one line. */
         
         ix=ln->dirtybeg;
         if (jx >= ipGrid->nRows)
-	    break;
+            break;
         while (ix<ln->dirtyend && ix < ipGrid->nCols) {
             wchar_t *ucx;
             beg = ix;
             curattr = ln->attrs[lnoffset(ln, beg)];
             ucx = ln->chars;
-	    wchar_t wch = ucx[lnoffset(ln,ix)];
-	    *(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
+            wchar_t wch = ucx[lnoffset(ln,ix)];
+            *(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
             for (ix+=wcwidth(ln->chars[lnoffset(ln, ix)]); ix<ln->dirtyend && ln->attrs[lnoffset(ln, ix)] == curattr; ix+=wcwidth(ln->chars[lnoffset(ln, ix)])) {	    
-		if (ix >= ipGrid->nCols)
-		    break;
-		wch = ucx[lnoffset(ln,ix)];
-		*(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
-//            local_addnwstr(dwin->owner->iphone_glkViewNum, ucx + lnoffset(ln, beg), lnoffset(ln, ix) - lnoffset(ln, beg));
-	    }
+                if (ix >= ipGrid->nCols)
+                    break;
+                wch = ucx[lnoffset(ln,ix)];
+                *(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
+                //            local_addnwstr(dwin->owner->iphone_glkViewNum, ucx + lnoffset(ln, beg), lnoffset(ln, ix) - lnoffset(ln, beg));
+            }
         }
         
         ln->dirtybeg = -1;
         ln->dirtyend = -1;
     }
     if (ipGrid->pendingClose)
-	abort();
+        abort();
     
     iphone_win_puts(dwin->owner->iphone_glkViewNum, "\n\n");
-
+    
     
     dwin->dirtybeg = -1;
     dwin->dirtyend = -1;
@@ -285,7 +285,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
 void win_textgrid_redraw(window_t *win)
 {
     window_textgrid_t *dwin = win->data;
-
+    
     if (!dwin->lines)
         return;
     
@@ -295,7 +295,7 @@ void win_textgrid_redraw(window_t *win)
 void win_textgrid_update(window_t *win)
 {
     window_textgrid_t *dwin = win->data;
-
+    
     if (!dwin->lines)
         return;
     
@@ -307,11 +307,11 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
     window_textgrid_t *dwin = win->data;
     tgline_t *ln;
     size_t ch_width = wcwidth(ch);
-
+    
     
     /* Canonicalize the cursor position. That is, the cursor may have been
-        left outside the window area, or may be too close to the edge to print
-        the next character; wrap it if necessary. */
+     left outside the window area, or may be too close to the edge to print
+     the next character; wrap it if necessary. */
     if (dwin->curx < 0)
         dwin->curx = 0;
     else if (dwin->curx > 0 && dwin->curx + ch_width > dwin->width) {
@@ -331,10 +331,10 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
     }
     
     if (!dwin->lines)
-	return;
+        return;
     ln = &(dwin->lines[dwin->cury]);
     if (!ln)
-	return;
+        return;
     /* We will use this repeatedly: */
     int curx_offset = lnoffset(ln, dwin->curx);
     
@@ -349,16 +349,16 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
          * the entire chars[] buffer.
          */
         memmove(ln->chars + curx_offset + 2, ln->chars + curx_offset + 1, (ln->size - curx_offset - 1) * sizeof(wchar_t));
-            /* obliterate the previous half-character */
+        /* obliterate the previous half-character */
         /* N.B. This effectively changes the value of lnoffset(ln, dwin->curx) */
         ln->chars[curx_offset++] = L'?';
         /* obliterate target cell, to make calculations below consistent */
         ln->chars[curx_offset] = L'?';
         setposdirty(dwin, ln, dwin->curx - 1, dwin->cury);
     }
-
+    
     size_t target_width = wcwidth(ln->chars[curx_offset]);
-
+    
     /* Test for overlapping with the first half of a 2-glyph character */
     /* N.B. Because we have already dealt with any overlaps with a previous character
      * we know that we start on a character boundary
@@ -371,7 +371,7 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
             ln->chars[curx_offset + 1] = L'?';
             setposdirty(dwin, ln, dwin->curx + ch_width, dwin->cury);
         }
-	else {
+        else {
             /* Next character is narrow, so we'll cover it entirely. */
             memmove(ln->chars + curx_offset + 1, ln->chars + curx_offset + 2, (ln->size - curx_offset - 2) * sizeof(wchar_t));
             /* We don't need to fill in ln->chars[ln->width - 1], because it will never get printed. */
@@ -391,11 +391,11 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
     setposdirty(dwin, ln, dwin->curx, dwin->cury);
     if ( ch_width > 1 )
         setposdirty(dwin, ln, dwin->curx + 1, dwin->cury);
-        
+    
     dwin->curx += ch_width;
     
     /* We can leave the cursor outside the window, since it will be
-        canonicalized next time a character is printed. */
+     canonicalized next time a character is printed. */
 }
 
 void win_textgrid_clear(window_t *win)
@@ -412,7 +412,7 @@ void win_textgrid_clear(window_t *win)
         ln->dirtybeg = 0;
         ln->dirtyend = dwin->width;
     }
-
+    
     dwin->dirtybeg = 0;
     dwin->dirtyend = dwin->height;
     
@@ -425,13 +425,13 @@ void win_textgrid_move_cursor(window_t *win, int xpos, int ypos)
     window_textgrid_t *dwin = win->data;
     
     /* If the values are negative, they're really huge positive numbers -- 
-        remember that they were cast from glui32. So set them huge and
-        let canonicalization take its course. */
+     remember that they were cast from glui32. So set them huge and
+     let canonicalization take its course. */
     if (xpos < 0)
         xpos = 32767;
     if (ypos < 0)
         ypos = 32767;
-        
+    
     dwin->curx = xpos;
     dwin->cury = ypos;
 }
@@ -461,7 +461,7 @@ void win_textgrid_place_cursor(window_t *win, int *xpos, int *ypos)
 
 /* Prepare the window for line input. */
 void win_textgrid_init_line(window_t *win, void *buf, int unicode,
-    int maxlen, int initlen)
+                            int maxlen, int initlen)
 {
     window_textgrid_t *dwin = win->data;
     
@@ -480,26 +480,26 @@ void win_textgrid_init_line(window_t *win, void *buf, int unicode,
     
     if (initlen > maxlen)
         initlen = maxlen;
-        
+    
     if (initlen) {
         tgline_t *ln = &(dwin->lines[dwin->inorgy]);
-
+        
         if (initlen) {
             import_input_line(ln, dwin->inorgx, dwin->inbuf, 
-                dwin->inunicode, initlen);
+                              dwin->inunicode, initlen);
         }        
         
         setposdirty(dwin, ln, dwin->inorgx+0, dwin->inorgy);
         if (initlen > 1) {
             setposdirty(dwin, ln, wcswidth(ln->chars, lnoffset(ln, dwin->inorgx)+initlen-1), dwin->inorgy);
         }
-            
+        
         dwin->incurs += initlen;
         dwin->inlen += initlen;
         dwin->curx = wcswidth(ln->chars, lnoffset(ln, dwin->inorgx)+dwin->incurs);
         dwin->cury = dwin->inorgy;
     }
-
+    
     if (gli_register_arr) {
         char *typedesc = (dwin->inunicode ? "&+#!Iu" : "&+#!Cn");
         dwin->inarrayrock = (*gli_register_arr)(dwin->inbuf, dwin->inoriglen, typedesc);
@@ -514,7 +514,7 @@ void win_textgrid_cancel_line(window_t *win, event_t *ev)
     gidispatch_rock_t inarrayrock;
     window_textgrid_t *dwin = win->data;
     tgline_t *ln = &(dwin->lines[dwin->inorgy]);
-
+    
     if (!dwin->inbuf)
         return;
     
@@ -523,20 +523,20 @@ void win_textgrid_cancel_line(window_t *win, event_t *ev)
     inoriglen = dwin->inoriglen;
     inarrayrock = dwin->inarrayrock;
     inunicode = dwin->inunicode;
-
+    
     export_input_line(inbuf, inunicode, dwin->inlen, &ln->chars[dwin->inorgx]);
-
+    
     if (win->echostr) {
         if (!inunicode)
             gli_stream_echo_line(win->echostr, inbuf, dwin->inlen);
         else
             gli_stream_echo_line_uni(win->echostr, inbuf, dwin->inlen);
     }
-
+    
     dwin->cury = dwin->inorgy+1;
     dwin->curx = 0;
     win->style = dwin->origstyle;
-
+    
     ev->type = evtype_LineInput;
     ev->win = win;
     ev->val1 = dwin->inlen;
@@ -547,7 +547,7 @@ void win_textgrid_cancel_line(window_t *win, event_t *ev)
     dwin->inmax = 0;
     dwin->inorgx = 0;
     dwin->inorgy = 0;
-
+    
     if (gli_unregister_arr) {
         char *typedesc = (inunicode ? "&+#!Iu" : "&+#!Cn");
         (*gli_unregister_arr)(inbuf, inoriglen, typedesc, inarrayrock);
@@ -555,10 +555,10 @@ void win_textgrid_cancel_line(window_t *win, event_t *ev)
 }
 
 static void import_input_line(tgline_t *ln, int offset, void *buf, 
-    int unicode, long len)
+                              int unicode, long len)
 {
     int ix;
-
+    
     if (!unicode) {
         for (ix=0; ix<len; ix++) {
             char ch = ((char *)buf)[ix];
@@ -579,7 +579,7 @@ static void import_input_line(tgline_t *ln, int offset, void *buf,
 static void export_input_line(void *buf, int unicode, long len, wchar_t *chars)
 {
     int ix;
-
+    
     if (!unicode) {
         for (ix=0; ix<len; ix++) {
             wchar_t val = chars[ix];
@@ -623,20 +623,20 @@ void gcmd_grid_accept_line(window_t *win, glui32 arg)
     inoriglen = dwin->inoriglen;
     inarrayrock = dwin->inarrayrock;
     inunicode = dwin->inunicode;
-
+    
     export_input_line(inbuf, inunicode, dwin->inlen, &ln->chars[dwin->inorgx]);
-
+    
     if (win->echostr) {
         if (!inunicode)
             gli_stream_echo_line(win->echostr, inbuf, dwin->inlen);
         else
             gli_stream_echo_line_uni(win->echostr, inbuf, dwin->inlen);
     }
-
+    
     dwin->cury = dwin->inorgy+1;
     dwin->curx = 0;
     win->style = dwin->origstyle;
-
+    
     gli_event_store(evtype_LineInput, win, dwin->inlen, 0);
     win->line_request = FALSE;
     dwin->inbuf = NULL;
@@ -644,7 +644,7 @@ void gcmd_grid_accept_line(window_t *win, glui32 arg)
     dwin->inmax = 0;
     dwin->inorgx = 0;
     dwin->inorgy = 0;
-
+    
     if (gli_unregister_arr) {
         char *typedesc = (inunicode ? "&+#!Iu" : "&+#!Cn");
         (*gli_unregister_arr)(inbuf, inoriglen, typedesc, inarrayrock);
@@ -694,7 +694,7 @@ void gcmd_grid_delete(window_t *win, glui32 arg)
     
     if (dwin->inlen <= 0)
         return;
-                
+    
     switch (arg) {
         case gcmd_Delete:
             if (dwin->incurs <= 0)
@@ -735,7 +735,7 @@ void gcmd_grid_delete(window_t *win, glui32 arg)
             dwin->inlen = dwin->incurs;
             break;
     }
-
+    
     dwin->curx = wcswidth(ln->chars, lnoffset(ln, dwin->inorgx)+dwin->incurs);
     dwin->cury = dwin->inorgy;
     
@@ -750,7 +750,7 @@ void gcmd_grid_move_cursor(window_t *win, glui32 arg)
     
     if (!dwin->inbuf)
         return;
-
+    
     switch (arg) {
         case gcmd_Left:
             if (dwin->incurs <= 0)
@@ -773,7 +773,7 @@ void gcmd_grid_move_cursor(window_t *win, glui32 arg)
             dwin->incurs = dwin->inlen;
             break;
     }
-
+    
     dwin->curx = wcswidth(ln->chars, lnoffset(ln, dwin->inorgx)+dwin->incurs);
     dwin->cury = dwin->inorgy;
     
@@ -783,48 +783,48 @@ void gcmd_grid_move_cursor(window_t *win, glui32 arg)
 void win_textgrid_stylehint_set(glui32 styl, glui32 hint, glsi32 val)
 {
     if (styl < style_NUMSTYLES) {
-//      fd("GRID styl: %ld, hint: %ld, val: %lX", styl, hint, val);
+        //      fd("GRID styl: %ld, hint: %ld, val: %lX", styl, hint, val);
         switch (hint) {
             case stylehint_Indentation:
                 win_textgrid_styleattrs[styl].indentation = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleIndentationMask;
-            break;
+                break;
             case stylehint_ParaIndentation:
                 win_textgrid_styleattrs[styl].paraIndentation = val;            
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleParaIndentationMask;
-            break;
+                break;
             case stylehint_Justification:
                 win_textgrid_styleattrs[styl].justification = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlKStyleJustificationMask;
-            break;
+                break;
             case stylehint_Size:
                 win_textgrid_styleattrs[styl].size = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleSizeMask;
-            break;
+                break;
             case stylehint_Weight:
                 win_textgrid_styleattrs[styl].weight = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleWeightMask;
-            break;
+                break;
             case stylehint_Oblique:
                 win_textgrid_styleattrs[styl].oblique = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleObliqueMask;
-            break;
+                break;
             case stylehint_Proportional:
                 win_textgrid_styleattrs[styl].proportional = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleProportionalMask;
-            break;
+                break;
             case stylehint_TextColor:
                 win_textgrid_styleattrs[styl].textColor = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlkStyleTextColorMask;
-            break;
+                break;
             case stylehint_BackColor:
                 win_textgrid_styleattrs[styl].backColor = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlKStyleBackColorMask;
-            break;
+                break;
             case stylehint_ReverseColor:
                 win_textgrid_styleattrs[styl].reverseColor = val;
                 win_textgrid_styleattrs[styl].styleSetMask |= kGlKStyleRevertColorMask;
-            break;
+                break;
         }
     }
 }
@@ -835,34 +835,34 @@ void win_textgrid_stylehint_clear(glui32 styl, glui32 hint)
         switch (hint) {
             case stylehint_Indentation:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleIndentationMask;
-            break;
+                break;
             case stylehint_ParaIndentation:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleParaIndentationMask;
-            break;
+                break;
             case stylehint_Justification:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlKStyleJustificationMask;
-            break;
+                break;
             case stylehint_Size:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleSizeMask;
-            break;
+                break;
             case stylehint_Weight:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleWeightMask;
-            break;
+                break;
             case stylehint_Oblique:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleObliqueMask;
-            break;
+                break;
             case stylehint_Proportional:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleProportionalMask;
-            break;
+                break;
             case stylehint_TextColor:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlkStyleTextColorMask;
-            break;
+                break;
             case stylehint_BackColor:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlKStyleBackColorMask;
-            break;
+                break;
             case stylehint_ReverseColor:
                 win_textgrid_styleattrs[styl].styleSetMask &= ~kGlKStyleRevertColorMask;
-            break;
+                break;
         }
     }
 }
@@ -870,7 +870,7 @@ void win_textgrid_stylehint_clear(glui32 styl, glui32 hint)
 glui32 win_textgrid_stylehint_get(window_t *win, glui32 styl, glui32 hint)
 {
     window_textgrid_t *dwin = win->data;
-
+    
     if (styl < style_NUMSTYLES) {
         switch (hint) {
             case stylehint_Indentation:
@@ -886,25 +886,25 @@ glui32 win_textgrid_stylehint_get(window_t *win, glui32 styl, glui32 hint)
                     return dwin->hints[styl].proportional;
                 else
                     return BAD_STYLE;
-            break;
+                break;
             case stylehint_TextColor:
                 if (dwin->hints[styl].styleSetMask & kGlkStyleTextColorMask)
                     return dwin->hints[styl].textColor;
                 else
                     return BAD_STYLE;
-            break;
+                break;
             case stylehint_BackColor:
                 if (dwin->hints[styl].styleSetMask & kGlKStyleBackColorMask)
                     return dwin->hints[styl].backColor;
                 else
                     return BAD_STYLE;
-            break;
+                break;
             case stylehint_ReverseColor:
                 if (dwin->hints[styl].styleSetMask & kGlKStyleRevertColorMask)
                     return dwin->hints[styl].reverseColor;
                 else
                     return BAD_STYLE;
-            break;
+                break;
         }
     }
     return BAD_STYLE;
@@ -946,7 +946,7 @@ glui32 win_textgrid_style_distinguish(window_t *win, glui32 styl1, glui32 styl2)
 {
 #if 0
     window_textgrid_t *dwin = win->data;
-
+    
     GLK_STYLE_HINTS *hints1, *hints2;
     unsigned short st1, st2;
     

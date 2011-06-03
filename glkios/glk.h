@@ -345,4 +345,6 @@ extern void glk_cancel_hyperlink_event(winid_t win);
 
 #endif /* GLK_MODULE_HYPERLINKS */
 
+extern void glk_game_loaded();
+
 #endif /* GLK_H */

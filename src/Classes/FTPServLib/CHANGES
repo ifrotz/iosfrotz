@@ -1,0 +1,12 @@
+Jan-01-08 Added in the updated changeRoot code to sandbox into directory
+still needs some extra checks for attempts to save/rename outside of that
+
+
+Nov 09 - Moved the main version into Trunk and older versions into Branches
+
+v1.03 - Feb 2011, recompiled for IOS 4.2.   Added in a test for + (NSString *)localWifiIPAddress in Network controller because simulator seems not to like old method
+v1.02 stopFtpServer and numerous code tidies
+
+v1.01 some types changed from NSData* to NSMutableData* to stop build warnings
+
+v1.0 first release

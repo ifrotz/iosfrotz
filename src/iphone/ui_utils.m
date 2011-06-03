@@ -26,7 +26,8 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     int origHeight = CGImageGetHeight(inImage);
     UIImage *img = nil;
     if (newWidth == 0 && newHeight == 0) {
-        if (!gLargeScreenDevice
+        if (!gLargeScreenDevice &&
+            (origHeight <= screenSize.height*2 && origWidth <= screenSize.width*2)
             && [image respondsToSelector:@selector(scale)]) {
             // ??? can we also check if the device actually supports scale > 1.0?
             if ([image scale] < 2.0 && (origHeight > screenSize.height || origWidth > screenSize.width))
@@ -47,6 +48,9 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     } else {
         newWidth = (int)(origWidth * ((double)newHeight / origHeight));    
     }
+    if (origWidth==newWidth && origHeight==newHeight)
+        return image;
+
     // Create the bitmap context
     CGContextRef cgctx = CreateARGBBitmapContext(newWidth, newHeight);
     if (cgctx == NULL)     // error creating context
@@ -75,30 +79,50 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     return img;
 }
 
+UIImage *drawUIImageInImage(UIImage *image, int x, int y, size_t scaleWidth, size_t scaleHeight, UIImage *destImage) {
 
-UIImage *drawUIImageInImage(UIImage *image, int x, int y, size_t scaleWidth, size_t scaleHeight, UIImage *destImage)
-{
     if (!image || !destImage)
         return nil;
-    CGImageRef inImage = [image CGImage];
-    CGImageRef origImage = [destImage CGImage];
+    CGImageRef imageRef = [image CGImage];
+    CGImageRef destImageRef = [destImage CGImage];
+    destImageRef = drawCGImageInCGImage(imageRef, x, y, scaleWidth, scaleHeight, destImageRef);
+    UIImage *img= [UIImage imageWithCGImage: destImageRef];
+    CGImageRelease(destImageRef);
+    return  img;
+}
+
+void drawCGImageInCGContext(CGContextRef cgctx, CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight)
+{
+    int destHeight = CGBitmapContextGetHeight(cgctx);
+    CGImageRef inImage = imageRef;
+    if (!inImage)
+        return;
+//    NSLog(@"draw img %p +%d+%d %dx%d", imageRef, x, y, scaleWidth, scaleHeight);
+    CGRect rect = {{x, (int)destHeight-y-(int)scaleHeight},{scaleWidth,scaleHeight}};
+
+    CGContextDrawImage(cgctx, rect, inImage);
+
+}
+
+CGImageRef drawCGImageInCGImage(CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight, CGImageRef destImageRef)
+{
+    if (!imageRef || !destImageRef)
+        return nil;
+    CGImageRef inImage = imageRef;
+    CGImageRef origImage = destImageRef;
     
     if (!inImage || !origImage)
         return nil;
     
-    size_t destWidth = destImage.size.width;
-    size_t destHeight = destImage.size.height;
+    size_t destWidth = CGImageGetWidth(destImageRef);
+    size_t destHeight = CGImageGetHeight(destImageRef);
     
-#if 1
     if (scaleHeight > destHeight) {
         scaleHeight /= 2; 
-        //	y /= 2;
     }
     if (scaleWidth > destWidth) {
         scaleWidth /= 2;
-        //	x /= 2;
     }
-#endif
     
     // Create the bitmap context
     CGContextRef cgctx = CreateARGBBitmapContext(destWidth, destHeight);
@@ -123,27 +147,45 @@ UIImage *drawUIImageInImage(UIImage *image, int x, int y, size_t scaleWidth, siz
     
     // When finished, release the context
     CGContextRelease(cgctx);
-    
-    UIImage *img= [UIImage imageWithCGImage: newRef];
-    CGImageRelease(newRef);
     // Free image data memory for the context
     if (data)
         free(data);
     
-    return img;
+    return newRef;
 }
 
-UIImage *drawRectInImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, UIImage *destImage)
-{
+UIImage *drawRectInUIImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, UIImage *destImage) {
     if (!destImage)
         return nil;
     CGImageRef origImage = [destImage CGImage];
+    CGImageRef newRef = drawRectInCGImage(color, x, y, width, height, origImage);
+    UIImage *img= [UIImage imageWithCGImage: newRef];
+    CGImageRelease(newRef);
+    return img;
+
+}
+
+void drawRectInCGContext(CGContextRef cgctx, unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height) {
+    //size_t destWidth = CGBitmapContextGetHeight(cgctx);
+    size_t destHeight = CGBitmapContextGetHeight(cgctx);
+    //CGRect destRect = {{0,0},{destWidth,destHeight}};
+
+    CGFloat red = ((color >> 16) & 0xff) / 255.0;
+    CGFloat green = ((color >> 8) & 0xff) / 255.0;
+    CGFloat blue = (color & 0xff) / 255.0;
+    CGContextSetRGBFillColor(cgctx, red, green, blue, 1.0);
+    CGContextFillRect(cgctx, CGRectMake(x, destHeight-y-height, width, height));
     
-    if (!origImage)
+}
+
+CGImageRef drawRectInCGImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, CGImageRef destImageRef)
+{
+    if (!destImageRef)
         return nil;
-    
-    size_t destWidth = destImage.size.width;
-    size_t destHeight = destImage.size.height;
+    CGImageRef origImage = destImageRef;
+
+    size_t destWidth = CGImageGetWidth(origImage);
+    size_t destHeight = CGImageGetHeight(origImage);
     
     // Create the bitmap context
     CGContextRef cgctx = CreateARGBBitmapContext(destWidth, destHeight);
@@ -167,14 +209,11 @@ UIImage *drawRectInImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width
     // When finished, release the context
     CGContextRelease(cgctx);
     
-    UIImage *img= [UIImage imageWithCGImage: newRef];
-    CGImageRelease(newRef);
-    
     // Free image data memory for the context
     if (data)
         free(data);
     
-    return img;
+    return newRef;
 }
 
 UIColor *UIColorFromInt(unsigned int color) {
@@ -185,7 +224,7 @@ UIColor *UIColorFromInt(unsigned int color) {
 }
 
 
-UIImage *createBlankImage(unsigned int bgColor, size_t destWidth, size_t destHeight) {
+CGContextRef createBlankFilledCGContext(unsigned int bgColor, size_t destWidth, size_t destHeight) {
     CGContextRef cgctx = CreateARGBBitmapContext(destWidth, destHeight);
     
     CGFloat red = ((bgColor >> 16) & 0xff) / 255.0;
@@ -193,24 +232,33 @@ UIImage *createBlankImage(unsigned int bgColor, size_t destWidth, size_t destHei
     CGFloat blue = (bgColor & 0xff) / 255.0;
     CGContextSetRGBFillColor(cgctx, red, green, blue, 1.0);
     CGContextFillRect(cgctx, CGRectMake(0, 0, destWidth, destHeight));
-    
+//`    NSLog(@"new cgctx %p", cgctx);
+    return cgctx;
+}
+
+CGImageRef createBlankCGImage(unsigned int bgColor, size_t destWidth, size_t destHeight) {
+    CGContextRef cgctx = createBlankFilledCGContext(bgColor, destWidth, destHeight);
     CGImageRef newRef = CGBitmapContextCreateImage(cgctx);
     
     void *data = CGBitmapContextGetData(cgctx);
     
     // When finished, release the context
     CGContextRelease(cgctx);
-    // Free image data memory for the context
-    UIImage *img= [UIImage imageWithCGImage: newRef];
-    CGImageRelease(newRef);
     
     // Free image data memory for the context
     if (data)
         free(data);
     
-    return img;
+    return newRef;
 }
 
+UIImage *createBlankUIImage(unsigned int bgColor, size_t destWidth, size_t destHeight) {
+    // Free image data memory for the context
+    CGImageRef imgRef = createBlankCGImage(bgColor, destWidth, destHeight);
+    UIImage *img= [UIImage imageWithCGImage: imgRef];
+    CGImageRelease(imgRef);
+    return img;
+}
 
 CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh)
 {
@@ -362,6 +410,7 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
                         }
                     }
                 }
+                free(buf);
             } else
                 printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
             pos += chunkSize;

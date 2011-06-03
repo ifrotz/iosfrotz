@@ -232,11 +232,13 @@
 	    m_headerLabel.textAlignment = UITextAlignmentCenter;
 	    m_headerLabel.lineBreakMode = UILineBreakModeWordWrap;
 	    m_headerLabel.text = 
-		@"If you have a Dropbox account, you can\n"
-		 "link it to Frotz.  This will automatically\n"
+		[NSString stringWithFormat: @"%@  This will automatically\n"
 		 "synchronize saved game files with your\n"
 		 "Dropbox so you can easily share them \n"
-		 "between multiple devices.";
+		 "between multiple devices.",
+         [[DBSession sharedSession] isLinked] ? 
+         @"Frotz is currently linked to your Dropbox\naccount.":
+         @"If you have a Dropbox account, you can\nlink it to Frotz."];
 	    m_headerLabel.numberOfLines = 0;
 	}
 	return m_headerLabel;
@@ -312,17 +314,17 @@
     NSInteger row = [indexPath row];
     DisplayCell *cell = [self obtainTableCellForRow:row];
     cell.accessoryType = UITableViewCellAccessoryNone;
-
+    BOOL isLinked = [[DBSession sharedSession] isLinked];
     switch (indexPath.section)
     {
 	case 0:
 	{
 	    if (row == 0) {
-		cell.textLabel.text = @"Link to Dropbox Account...";
+            cell.textLabel.text = isLinked ? @"Relink to Dropbox Account..." : @"Link to Dropbox Account...";
 		}
 	    else if (row == 1) {
 		cell.textLabel.text = @"Unlink Account";
-		cell.textLabel.enabled = [[DBSession sharedSession] isLinked];		
+		cell.textLabel.enabled = isLinked;		
 	    }
 	    break;
 	}

@@ -3,6 +3,7 @@
 #import <UIKit/UIKit.h>
 #import "WordSelectionProtocol.h"
 #import "UIFontExt.h"
+#import "RichTextStyle.h"
 
 @class RichTextView;
 @class RichTextAE;
@@ -13,12 +14,11 @@
 @property(nonatomic, assign) RichTextView *textView;
 @end
 
-typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyleMask=7, kFTReverse=8, kFTNoWrap=16,  } RichTextStyle;
-
 @protocol RTSelected
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
 @end
 
+typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 
 @interface RichTextView : UIScrollView <UIScrollViewDelegate> {
     NSMutableString *m_text;
@@ -26,10 +26,18 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
     CGSize m_lastSize;
     CGSize m_tileSize;
     int m_numLines;
-    NSMutableArray *m_textRuns;
-    NSMutableArray *m_textPos;
-    NSMutableArray *m_textStyles;
-    NSMutableArray *m_colorIndex;
+    NSMutableArray *m_textRuns;   // text fragments
+    NSMutableArray *m_textStyles; // bit set, bold, italic, etc.
+    NSMutableArray *m_colorIndex; // fg/bg color for run
+
+    NSMutableArray *m_textPos;     // beginning point of each text run
+    NSMutableArray *m_textLineNum; // which line (0..n) each run starts on
+
+    NSMutableArray *m_lineYPos;    // Y position of each line; indexed by line number, not run
+    NSMutableArray *m_lineWidth;   // width of each text line    
+
+    NSMutableArray *m_imageviews;  // inline image views container
+    NSMutableArray *m_imageIDs;
     
     NSMutableArray *m_colorArray;
     UIColor *m_fgColor, *m_bgColor;
@@ -38,6 +46,10 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
     CGFloat m_savedTopYOffset;    
     
     unsigned int m_topMargin, m_leftMargin, m_rightMargin, m_bottomMargin;
+    unsigned int m_tempLeftMargin, m_tempRightMargin;
+    unsigned int m_tempLeftYThresh, m_tempRightYThresh;
+    unsigned int m_extraLineSpacing;
+
     CGPoint m_prevPt, m_lastPt;
     
     UIFont *m_normalFont, *m_boldFont;
@@ -69,6 +81,8 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
     
     BOOL m_freezeDisplay;
     CGRect m_delayedFrame;
+    CGRect m_origFrame;
+    RichDataGetImageCallback m_richDataGetImageCallback;
 }
 
 @property(nonatomic, retain) NSString *text;
@@ -83,12 +97,14 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
 @property(nonatomic, assign) unsigned int leftMargin;
 @property(nonatomic, assign) unsigned int rightMargin;
 @property(nonatomic, assign) unsigned int bottomMargin;
+@property(nonatomic, assign) unsigned int lineSpacing;
 @property(nonatomic, assign) int lastAEIndexAccessed;
 //@property(nonatomic, assign) int selectedRun;
 //@property(nonatomic, assign) NSRange selectedColumnRange;
 @property(nonatomic, assign) NSObject<RTSelected>* selectionDelegate;
 @property(nonatomic, assign) BOOL selectionDisabled;
 @property(nonatomic, assign, getter=displayFrozen) BOOL freezeDisplay;
+@property(nonatomic, assign) RichDataGetImageCallback richDataGetImageCallback;
 
 - (RichTextView*)initWithFrame: (CGRect)frame;
 - (RichTextView*)initWithFrame: (CGRect)frame border:(BOOL)border;
@@ -98,21 +114,29 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
 - (RichTextTile *)tileForRow:(int)row column:(int)column;
 - (BOOL)findHotText:(NSString *)text charOffset:(int)charsDone pos:(CGPoint)pos minX:(CGFloat)minXPos hotPoint:(CGPoint*)hotPoint font:(UIFont*)font fontHeight:(CGFloat)fontHeight
  width:(CGFloat) width;
+- (void)updateLine:(int)lineNum withYPos:(CGFloat)yPos;
+- (void)updateLine:(int)lineNum width:(CGFloat)width;
 - (BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)pos font:(UIFont*)font style:(RichTextStyle)style fgColor:(UIColor*)fgColor
-   bgColor:(UIColor*)bgColor withRect:(CGRect)rect nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
+   bgColor:(UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(int)lineNum nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
 - (void)appendText:(NSString*)text;
+- (void)appendImage:(int)imageNum withAlignment:(int)imageAlign;
+- (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint;
 - (RichTextTile *)dequeueReusableTile;
 - (void)prepareForKeyboardShowHide;
 - (void)rememberTopLineForReflow;
 - (void)resetColors;
 - (void)resetMargins;
+- (void)setNiceMargins:(BOOL)reflow;
+- (void)setNoMargins;
 - (void)layoutSubviews;
 - (void)reloadData;
 - (void)reset;
 - (void)clear;
 - (void)reflowText;
+- (void)reloadImages;
 - (void)dealloc;
 - (void)setDelegate:(UIViewController<UIScrollViewDelegate>*)delegate;
+- (UIViewController<UIScrollViewDelegate>*)delegate;
 - (void)setFont:(UIFont*)font;
 - (void)setFixedFont:(UIFont*)newFont;
 - (UIFont*)font;
@@ -132,5 +156,6 @@ typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyl
 - (void)restoreFromSaveDataDict: (NSDictionary*)saveData;
 - (CGPoint)cursorPoint;
 @end
+
 
 

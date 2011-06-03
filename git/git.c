@@ -1,9 +1,9 @@
 // $Id: git.c,v 1.21 2004/12/22 12:40:07 iain Exp $
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "git.h"
 #include "gi_blorb.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 // The four-char code 'FORM' as a big-endian value.
 // This is the magic number at the start of Blorb files.
@@ -64,6 +64,8 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     // Shut everything down cleanly.
     shutdownUndo();
     shutdownMemory();
+    glk_window_close(NULL, NULL); 
+    git_shutdown_dispatch();
 }
 
 static giblorb_result_t handleBlorb (strid_t stream)
@@ -148,7 +150,6 @@ void gitWithStream (strid_t str, git_uint32 cacheSize, git_uint32 undoSize)
         remaining -= n;
         ptr += n;
     }
-    
     gitMain ((git_uint8 *) game, gameSize, cacheSize, undoSize);
     free (game);
 }

@@ -95,7 +95,7 @@
                          "Turning your device into landscape (sideways) orientation will usually allow you to view such content correctly.  " : @"",
                          ((iphone_ifrotz_verbose_debug & 2) || !(iphone_ifrotz_verbose_debug & 4)) ? @"" :
                          @"<p><small><sup><b>*</b></sup> Note that App Store policy does not allow Frotz to download new content from the Internet, "
-                         "so many more games are now bundled with Frotz to try to mitigate this unfortunate and unnecessarily restrictive policy.</small></p>"
+                         "so many more games are now bundled with Frotz to try to mitigate this unfortunate and restrictive policy.</small></p>"
                          ];
 	[webView loadHTMLString: content baseURL:nil];
 }

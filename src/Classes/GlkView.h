@@ -14,8 +14,11 @@
 @interface GlkView : FrotzView {
     NSTimer *m_tapTimer;
     BOOL m_skipNextTap;
+    BOOL tapInputEnabled;
 }
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
 - (void)skipNextTap;
+
+@property (nonatomic, assign) BOOL tapInputEnabled;
 @end
 

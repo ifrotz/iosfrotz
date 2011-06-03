@@ -69,6 +69,7 @@ enum GestaltSelector
     GESTALT_MALLOC_HEAP  = 8,
     GESTALT_ACCELERATION = 9,
     GESTALT_ACCELFUNC    = 10,
+    GESTALT_FLOAT        = 11,
     
     // This special selector returns 1 if the cache control
     // opcodes 'git_setcacheram' and 'git_prunecache' are available.
@@ -92,9 +93,9 @@ extern git_uint32 parseLoad  (git_uint32 * pc, LoadReg reg, int mode, TransferSi
 extern void       parseStore (git_uint32 * pc, StoreReg reg, int mode, TransferSize);
 
 extern void parseCallStub  (git_uint32 * pc, int mode);
-extern void parseCatchStub (git_uint32 * pc, int mode);
 extern void parseSaveStub  (git_uint32 * pc, int mode);
 extern void parseUndoStub  (git_uint32 * pc, int mode);
+extern void parseCatchStub (git_uint32 * pc, int * modes);
 
 // compiler.c
 
@@ -121,6 +122,8 @@ extern void startProgram (size_t cacheSize, enum IOMode ioMode);
 // glkop.c
 
 extern int git_init_dispatch();
+extern void git_shutdown_dispatch();
+
 extern glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist);
 extern strid_t git_find_stream_by_id(glui32 id);
 

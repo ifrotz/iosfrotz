@@ -188,6 +188,8 @@ void logMessage(char *x) {
 BOOL isHiddenFile(NSString *file) {
     return ([file isEqualToString: @"metadata.plist"] || [file isEqualToString: @"storyinfo.plist"] || [file isEqualToString: @"dbcache.plist"]
             || [file isEqualToString: @".DS_Store"]
+            || [file isEqualToString: @"alabstersettings"]
+            || [file isEqualToString: @"bookmarks.plist"]
             || [file isEqualToString: @kFrotzOldAutoSaveFile] || [file isEqualToString: @kFrotzAutoSavePListFile]
             || [file isEqualToString: @kFrotzAutoSaveActiveFile]
             || [file isEqualToString:@"Splashes"] || [file hasPrefix: @"release_"]);
@@ -796,9 +798,10 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     
 }
 
--(id)initWithRootPath:(NSString*)rootPath {
+-(id)initWithPort:(int)port rootPath:(NSString*)rootPath {
     signal(SIGPIPE, SIG_IGN);
     if ((self = [self init])) {
+        m_port = port;
         m_rootPath = [rootPath retain];
     }
     return self;
@@ -813,7 +816,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         startFailureCode = errno;
         goto startFailed;
     }
-    int port = FTPPORT;
+    int port = m_port;
     // enable address reuse quicker after we are done w/ our socket
     int yes = 1;
     setsockopt(m_listenSocket, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, (socklen_t)sizeof(yes));

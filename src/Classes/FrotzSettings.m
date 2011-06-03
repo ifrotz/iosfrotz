@@ -217,7 +217,7 @@ enum ControlTableSections
     m_sliderCtl.backgroundColor = [UIColor clearColor];
     
     m_sliderCtl.minimumValue = 8.0;
-    m_sliderCtl.maximumValue = 20.0;
+    m_sliderCtl.maximumValue = 20.0 + (gLargeScreenDevice ? 12.0 : 0.0);
     m_sliderCtl.continuous = YES;
     m_origFontSize = (int)[m_storyDelegate fontSize];
     m_sliderCtl.value = (float)m_origFontSize;

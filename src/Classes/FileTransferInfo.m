@@ -210,10 +210,19 @@
     } else {
 	    NSLog(@"Error starting HTTP Server: %@", error);
     }
+#if UseNewFTPServer
+    if (!m_ftpserv) {
+        m_ftpserv = [[FtpServer alloc] initWithPort:FTPPORT withDir:[m_controller rootPath] notifyObject:self];
+        m_ftpserv.changeRoot = YES;
+    }
+    if (m_ftpserv)
+        [m_ftpserv startFtpServer];
+#else
     if (!m_ftpserv)
-        m_ftpserv = [[FTPServer alloc] initWithRootPath: [m_controller rootPath]];
+        m_ftpserv = [[FTPServer alloc] initWithPort: FTPPORT rootPath: [m_controller rootPath]];
     if (m_ftpserv)
         [m_ftpserv start:&error];
+#endif
     if (m_httpserv || m_ftpserv) {
         m_running = YES;
         [m_startButton setTitle: NSLocalizedString(@"Stop File Transfer Server",@"") forState: UIControlStateNormal];
@@ -233,8 +242,13 @@
 -(void)stopServer {
     if (m_httpserv)
         [m_httpserv stop];
+#if UseNewFTPServer
+    if (m_ftpserv)
+        [m_ftpserv stopFtpServer];
+#else
     if (m_ftpserv)
         [m_ftpserv shutdown];
+#endif
     m_running = NO;
     [[UIApplication sharedApplication] setIdleTimerDisabled: NO]; 
     [m_startButton setTitle: NSLocalizedString(@"Start File Transfer Server",@"") forState: UIControlStateNormal];

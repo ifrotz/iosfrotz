@@ -101,7 +101,7 @@ extern StoryInputLine *theInputLine;
     int m_statusFixedFontWidth;
     int m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
-    
+    CGSize m_kbdSize;
     NSString *m_launchMessage;
 
     NSMutableDictionary *m_dbCachedMetadata;
@@ -153,20 +153,27 @@ extern StoryInputLine *theInputLine;
 -(UIColor*) backgroundColor;
 -(UIColor*) textColor;
 -(CGRect) storyViewFullFrame;
+-(void) scrollStoryViewToEnd;
 -(void) scrollStoryViewToEnd:(BOOL)animated;
 -(BOOL) scrollStoryViewOnePage:(FrotzView*)view fraction:(float)fraction;
+-(BOOL) scrollStoryViewUpOnePage:(FrotzView*)view fraction:(float)fraction;
 -(void) updateStatusLine:(RichTextView*)sl;
 -(void) printText: (id)unused;
 
+-(void)reloadImages;
 -(void)clearGlkViews;
 -(void)newGlkViewWithWin:(NSValue*)winVal;
 -(void)resizeGlkView:(NSArray*)arg;
 -(void)destroyGlkView:(NSNumber*)arg;
 -(void)drawGlkImage:(NSValue*)argsVal;
 -(void)drawGlkRect:(NSValue*)argsVal;
+-(void)updateGlkWin:(NSNumber*)viewNum;
 -(void)focusGlkView:(UIView*)view;
 -(FrotzView*)glkView:(int)viewNum;
 -(BOOL)glkViewTypeIsGrid:(int)viewNum;
+-(void)tapInView:(UIView*)view atPoint:(CGPoint)pt;
+-(void)enableTaps:(NSNumber*)viewNum;
+-(void)disableTaps:(NSNumber*)viewNum;
 
 -(void) setupFadeWithDuration:(float)duration;
 -(StoryInputLine*) inputLine;
@@ -181,6 +188,7 @@ extern StoryInputLine *theInputLine;
 -(void)checkAccessibility;
 -(void) keyboardDidShow:(NSNotification*)notif;
 -(void) keyboardDidHide:(NSNotification*)notif;
+-(CGSize) keyboardSize;
 -(NotesViewController*)notesController;
 -(BOOL) splashVisible;
 -(void) textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;

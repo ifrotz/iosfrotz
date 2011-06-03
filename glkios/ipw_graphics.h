@@ -15,6 +15,7 @@ extern window_graphics_t *win_graphics_create(window_t *win);
 extern void win_graphics_destroy(window_graphics_t *dwin);
 extern void win_graphics_rearrange(window_t *win, grect_t *box);
 extern void win_graphics_redraw(window_t *win);
+extern void win_graphics_update(window_t *win);
 
 glui32 win_graphics_get_background_color(window_t *win);
 void win_graphics_set_background_color(window_t *win, glui32 color);

@@ -58,6 +58,7 @@
 #define kStyleEscCode "S"
 #define kZColorEscCode "z"
 #define kArbColorEscCode "c"
+#define kImageEscCode "I"
 
 int iphone_textview_width = kDefaultTextViewMinWidth;
 int iphone_textview_height = kDefaultTextViewHeight;
@@ -83,7 +84,7 @@ StatusLine *theStatusLine;
 StoryInputLine *theInputLine;
 
 const int kDefaultFontSize = 12;
-const int kDefaultPadFontSize = 16;
+const int kDefaultPadFontSize = 18;
 
 NSString *kFixedWidthFontName = @"Courier New";
 NSString *kVariableWidthFontName = @"Helvetica";    
@@ -112,6 +113,29 @@ static pthread_mutex_t outputMutex, inputMutex, winSizeMutex;
 static pthread_cond_t winSizeChangedCond;
 static BOOL winSizeChanged;
 
+static NSMutableDictionary *glkImageCache, *glkViewImageCache;
+
+static void freeGlkViewImageCache(int vn) {
+    NSNumber *viewNum = [NSNumber numberWithInt:vn];
+    CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: viewNum] pointerValue];
+    if (cgctx) {
+        void *data = CGBitmapContextGetData(cgctx);
+        
+        CGContextRelease(cgctx);
+        // Free image data memory for the context
+        if (data)
+            free(data);
+    }
+    [glkViewImageCache removeObjectForKey: viewNum];
+    
+}
+
+static void freeGlkImageCache() {
+    [glkImageCache release];
+    glkImageCache = nil;
+}
+
+
 void iphone_ioinit() {
     static BOOL didInitIO = NO;
     if (!didInitIO) {
@@ -130,7 +154,8 @@ void iphone_ioinit() {
 
 int currColor = 0, currTextStyle = 0;
 
-static char outputBuffer[2048];
+#define kOutputBufSize 2048
+static unichar outputBuffer[2048];
 static int outputBufferLen = 0;
 
 static IPGlkGridArray glkGridArray[kMaxGlkViews];
@@ -141,10 +166,19 @@ void iphone_flush(bool lock) {
         pthread_mutex_lock(&outputMutex);
     if (outputBufferLen) {
         outputBuffer[outputBufferLen] = '\0';
-        
-        NSString *tmp = [[NSString alloc] initWithCString:outputBuffer encoding:NSISOLatin1StringEncoding];
-        [ipzBufferStr appendString: tmp];
-        [tmp release];
+        if (gStoryInterp == kGlxStory) {
+            NSString *tmp = [[NSString alloc] initWithBytes:outputBuffer length: outputBufferLen*sizeof(unichar) encoding:NSUTF16LittleEndianStringEncoding];
+                        // CString:outputBuffer encoding:NSISOLatin1StringEncoding];
+            [ipzBufferStr appendString: tmp];
+            [tmp release];
+        } else {
+            char latinBuf[2048];
+            for (int l = 0; l <= outputBufferLen; ++l)
+                latinBuf[l] = (char)outputBuffer[l];
+            NSString *tmp = [[NSString alloc] initWithCString:latinBuf encoding:NSISOLatin1StringEncoding];
+            [ipzBufferStr appendString: tmp];
+            [tmp release];
+        }
         outputBufferLen = 0;
         *outputBuffer = '\0';
     }
@@ -196,7 +230,7 @@ void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
     
     if (style != currTextStyle /*|| gStoryInterp==kGlxStory*/) {
         iphone_flush(NO);
-        [bufferStr appendFormat: @ kOutputEscCode kStyleEscCode "%1x", style];
+        [bufferStr appendFormat: @ kOutputEscCode kStyleEscCode "%02x", style];
         currTextStyle = style;
     }
     if (color != -1 && color != currColor && gStoryInterp==kZStory) {
@@ -212,7 +246,19 @@ void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
         pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_win_putchar(int winNum, char c) {
+void iphone_put_image(int viewNum, int imageNum, int imageAlign, bool lock) {
+    if (lock)
+        pthread_mutex_lock(&outputMutex);
+    BOOL isStatus;
+    NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
+    
+    iphone_flush(NO);
+    [bufferStr appendFormat: @kOutputEscCode kImageEscCode "%03d%1d", imageNum, imageAlign];
+    if (lock)
+        pthread_mutex_unlock(&outputMutex);
+}
+
+void iphone_win_putchar(int winNum, wchar_t c) {
     pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(winNum, &isStatus);
@@ -223,7 +269,7 @@ void iphone_win_putchar(int winNum, char c) {
     if (isStatus && c != ' ' && c != kClearEscChar)
         [bufferStr setString: @"\n\n"];
     else if (winNum == 0) {
-        if (outputBufferLen >= sizeof(outputBuffer)-1)
+        if (outputBufferLen >= sizeof(outputBuffer)/sizeof(outputBuffer[0])-1)
             iphone_flush(NO);
         outputBuffer[outputBufferLen++] = c;
     }
@@ -234,7 +280,7 @@ void iphone_win_putchar(int winNum, char c) {
     return;
 }
 
-void iphone_putchar(char c) {
+void iphone_putchar(wchar_t c) {
     iphone_win_putchar(cwin, c);
 }
 
@@ -292,6 +338,12 @@ int iphone_getchar(int timeout) {
         
         if (timeout == 0)
             break;
+        else if (mouseEvent) {
+            if (gStoryInterp == kZStory)
+                mouseEvent = FALSE; // Z interp doesn't check this, ignore
+            else
+                break;
+        }
         else if (screen_size_changed) {
             if (gStoryInterp == kZStory)
                 screen_size_changed = 0; // Z interp doesn't check this, ignore
@@ -314,6 +366,10 @@ IPGlkGridArray *iphone_glk_getGridArray(int viewNum) {
 
 void iphone_glk_wininit() {
     [theSMVC performSelectorOnMainThread:@selector(clearGlkViews) withObject:nil waitUntilDone:YES];
+}
+
+void iphone_glk_game_loaded() {
+    [theSMVC performSelectorOnMainThread:@selector(reloadImages) withObject:nil waitUntilDone:YES];
 }
 
 static int gNewGlkWinNum = -1;
@@ -366,6 +422,8 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
             wchar_t sp = L' ';
             memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
         }
+//        NSLog(@"glk_view_rearrange %d", viewNum);
+
         [theSMVC performSelectorOnMainThread:@selector(resizeGlkView:) withObject:a waitUntilDone:YES];
     }
 }
@@ -415,6 +473,16 @@ void iphone_erase_win(int winnum) {
 
 void iphone_erase_mainwin() {
     iphone_erase_win(0);
+}
+
+void iphone_enable_tap(int viewNum) {
+    [theSMVC performSelectorOnMainThread:@selector(enableTaps:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
+    glkGridArray[viewNum].tapsEnabled = YES;
+}
+
+void iphone_disable_tap(int viewNum) {
+    [theSMVC performSelectorOnMainThread:@selector(disabledTaps:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
+    glkGridArray[viewNum].tapsEnabled = NO;
 }
 
 void iphone_enable_input() {
@@ -520,16 +588,19 @@ void iphone_stop_script() {
 void iphone_recompute_screensize() {
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
-    CGRect frame = [storyView frame];
-    iphone_textview_width = (int)(frame.size.width / fontwid);
-    iphone_textview_height = (int)(frame.size.height / [[storyView font] leading])+1;
+    UIView *parentView = [storyView superview];
+//    CGRect frame = [storyView frame];
+    CGRect pFrame = [parentView frame];
+    pFrame.size.height -= [theSMVC keyboardSize].height;
+    iphone_textview_width = (int)(pFrame.size.width / fontwid);
+    iphone_textview_height = (int)(pFrame.size.height / [[storyView font] leading])+1;
     if (iphone_textview_width > MAX_COLS)
         iphone_textview_width = MAX_COLS;
     if (iphone_textview_height > MAX_ROWS)
         iphone_textview_height = MAX_ROWS;    
     
-    iphone_screenwidth = frame.size.width;
-    iphone_screenheight = frame.size.height;
+    iphone_screenwidth = pFrame.size.width;
+    iphone_screenheight = pFrame.size.height;
     iphone_fixed_font_width = fontwid;
     iphone_fixed_font_height = [theSMVC statusFixedFontPixelHeight];
     
@@ -539,6 +610,8 @@ void iphone_set_background_color(int viewNum, glui32 color) {
     if (viewNum > kMaxGlkViews)
         return;
     glkGridArray[viewNum].bgColor = color;
+    NSLog(@"glk_set_bg_color %d", viewNum);
+
     [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
 }
 
@@ -577,6 +650,7 @@ typedef struct glkImageDrawArgs {
     glsi32 val1, val2;
     glui32 width, height;
     glui32 retVal;
+    giblorb_result_t blorbres;
 } GlkImageDrawArgs;
 
 typedef struct glkRectDrawArgs {
@@ -586,21 +660,47 @@ typedef struct glkRectDrawArgs {
     glui32 width, height;
 } GlkRectDrawArgs;
 
+void iphone_glk_window_graphics_update(int viewNum) {
+    [theSMVC performSelectorOnMainThread:@selector(updateGlkWin:) withObject:[NSNumber numberWithInt: viewNum] waitUntilDone:NO];
+}
+
 void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height) {
+//    NSLog(@"glk_window_erase_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, 0, left, top, width, height };
-    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+//    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
 }
 
 void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
+//    NSLog(@"glk_window_fill_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, color, left, top, width, height };
-    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+//    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
+
 }
 
+
 glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
+    giblorb_map_t *map;
+    giblorb_err_t err;
+    
+//    NSLog(@"glk_image_draw %d %d", viewNum, image);
+    map = giblorb_get_resource_map();
+    if (!map) {
+        return FALSE;
+    }
+    
     GlkImageDrawArgs args = { viewNum, image, val1, val2, width, height, 0 };
-    if (!finished)
-        [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
-    return args.retVal;
+    err = giblorb_load_resource(map, giblorb_method_Memory, &args.blorbres, giblorb_ID_Pict, image);
+    if (err)
+        return FALSE;
+    if (!finished) {
+        if (glkGridArray[viewNum].win->type == wintype_TextBuffer)
+            [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+        else
+            [theSMVC performSelector:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args]];
+    }
+    return TRUE;
 }
 
 void run_zinterp(bool autorestore) {
@@ -654,17 +754,21 @@ void run_glxinterp(const char *story, bool autorestore) {
     if (autorestore)
         do_autosave = 1;
     else {
+#if 0 // Guess we're stable enough now...
         iphone_puts("\n\nPlease note that support for glulx games is new and is likely to be rough around the edges.\n\n"
                     "Please report any major problems you encounter on the Frotz support page or e-mail ifrotz@gmail.com.\n\n[Tap to continue.]\n");
         iphone_enable_single_key_input();
         iphone_getchar(-1);
         iphone_disable_input();
         iphone_erase_win(0);
+#endif
     }
     
     glk_main();
-    
-    glk_window_close(gli_rootwin, NULL);
+
+    freeGlkImageCache();
+
+//    glk_window_close(gli_rootwin, NULL); // now done at end of glk_main so it can shutdown dispatch
     
     finished = -1;
 }
@@ -815,17 +919,18 @@ static void setColorTable(RichTextView *v) {
         GlkView *newView = (GlkView*)[[GlkView alloc] initWithFrame: CGRectZero border:YES];
         [newView setTextColor:m_defaultFGColor];
         if (winType == wintype_TextGrid || winType == wintype_Graphics) {
+            newView.tapInputEnabled = NO;
             if (winType == wintype_Graphics) {
                 [newView setBackgroundColor: [UIColor whiteColor]];
+                UIView *gfxView = [[UIView alloc] initWithFrame: CGRectZero];
+                [gfxView setTag: kGlkImageViewTag];
+                [newView addSubview: gfxView];
                 [newView setAutoresizingMask: 0];
             } else {
                 [newView setBackgroundColor: m_defaultBGColor];
                 [newView setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
             }
-            [newView setLeftMargin: 0];
-            [newView setRightMargin: 0];
-            [newView setTopMargin: 0];
-            [newView setBottomMargin: 0];
+            [newView setNoMargins];
             [newView setBounces: NO];
             [newView setFont: [m_statusLine fixedFont]];
             [newView setFixedFont: [m_statusLine fixedFont]];
@@ -843,6 +948,7 @@ static void setColorTable(RichTextView *v) {
             gNewGlkWinNum = holeIndex;
             glkGridArray[gNewGlkWinNum].win = win;
             glkGridArray[gNewGlkWinNum].pendingClose = NO;
+            glkGridArray[gNewGlkWinNum].tapsEnabled = NO;
             glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
             [m_glkViews replaceObjectAtIndex: holeIndex withObject: newView];
         }
@@ -850,6 +956,7 @@ static void setColorTable(RichTextView *v) {
             gNewGlkWinNum = [m_glkViews count];
             glkGridArray[gNewGlkWinNum].win = win;
             glkGridArray[gNewGlkWinNum].pendingClose = NO;
+            glkGridArray[gNewGlkWinNum].tapsEnabled = NO;
             glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
             [m_glkViews addObject: newView];
         }
@@ -866,9 +973,8 @@ static void setColorTable(RichTextView *v) {
     int viewNum = [[arg objectAtIndex:0] intValue];
     CGRect r = [[arg objectAtIndex: 1] CGRectValue];
     RichTextView *v = [m_glkViews objectAtIndex: viewNum];
-    //    NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
+//    NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
     if (v) {
-        CGRect fullFrame = [m_storyView frame];
         if (viewNum > 0) {
             if (glkGridArray[viewNum].win->type == wintype_Graphics) {
                 window_t *parent = glkGridArray[viewNum].win->parent;
@@ -877,15 +983,18 @@ static void setColorTable(RichTextView *v) {
                     // kludge for games which don't resize on events like Beyond; if height doesn't change, don't clear
                     UIView *imgv = [v viewWithTag: kGlkImageViewTag];
                     if (imgv)
-                        [imgv removeFromSuperview];
+                        [imgv layer].contents = nil;
                 }
+                freeGlkViewImageCache(viewNum);
             }
             [v setFrame: r];
         } else if (viewNum == 0) {
-            [v setTopMargin: r.origin.y];
-            [v setRightMargin: fullFrame.size.width - (r.origin.x+r.size.width) + 6];
-            [v setBottomMargin: fullFrame.size.height - (r.origin.y+r.size.height) + 8];
-            [v setLeftMargin: r.origin.x  + 6];
+//            CGRect fullFrame = [m_storyView frame];
+//            [v setTopMargin: r.origin.y];
+//            [v setRightMargin: fullFrame.size.width - (r.origin.x+r.size.width) + 6];
+//            [v setBottomMargin: fullFrame.size.height - (r.origin.y+r.size.height) + 8];
+//            [v setLeftMargin: r.origin.x  + 6];
+            [v setFrame: r];
         }
     }
 }
@@ -893,6 +1002,9 @@ static void setColorTable(RichTextView *v) {
 -(void)destroyGlkView:(NSNumber*)arg {
     int viewNum = [arg intValue];
     if (viewNum > 0) {
+        if (glkGridArray[viewNum].win->type == wintype_Graphics)
+            freeGlkViewImageCache(viewNum);
+
         glkGridArray[viewNum].win = NULL;
         glkGridArray[viewNum].bgColor = 0xffffff;
         glkGridArray[viewNum].nRows = 0;
@@ -908,6 +1020,7 @@ static void setColorTable(RichTextView *v) {
             [m_glkViews removeLastObject];
         else
             [m_glkViews replaceObjectAtIndex:viewNum withObject:[NSNull null]];
+        
     }
 }
 
@@ -923,6 +1036,45 @@ static void setColorTable(RichTextView *v) {
     }
 }
 
+-(void)updateGlkWin:(NSNumber*)viewNum {
+    int vn = [viewNum intValue];
+    if (glkGridArray[vn].win->type != wintype_Graphics)
+        return;
+    UIView *v = [theSMVC glkView: vn];
+    if (v && glkViewImageCache) {
+        UIView *imgView = [v viewWithTag: kGlkImageViewTag];
+#if 0
+        CGImageRef imgRef = (CGImageRef)[glkViewImageCache objectForKey: viewNum];
+        if (imgView && imgRef) {
+            NSLog(@"updateglkwin: %p %p %p", imgView, [imgView layer], imgRef);
+            imgView.frame = CGRectMake(0, 0, v.bounds.size.width, v.bounds.size.height);
+            [imgView layer].contents = (id)imgRef;
+            [glkViewImageCache removeObjectForKey: viewNum];
+        }
+#else
+        CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: viewNum] pointerValue];
+        if (imgView && cgctx) {
+//            NSLog(@"updateglkwin: %p %p %p", imgView, [imgView layer], cgctx);
+            imgView.frame = CGRectMake(0, 0, v.bounds.size.width, v.bounds.size.height);
+            
+            CGImageRef imgRef = CGBitmapContextCreateImage(cgctx);
+            [imgView layer].contents = (id)imgRef;
+
+#if 0 
+            void *data = CGBitmapContextGetData(cgctx);
+
+            CGContextRelease(cgctx);
+            CGImageRelease(imgRef);
+            // Free image data memory for the context
+            if (data)
+                free(data);
+            [glkViewImageCache removeObjectForKey: viewNum];
+#endif
+        }
+#endif
+    }
+}
+
 -(void)drawGlkRect:(NSValue*)argsVal {
     GlkRectDrawArgs *args = [argsVal pointerValue];
     if (!args)
@@ -934,21 +1086,13 @@ static void setColorTable(RichTextView *v) {
     
     UIView *v = [theSMVC glkView: viewNum];
     if (v) {
-        UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
-        if (imgView) 
-            [imgView retain];
-        else {
-            imgView = [[UIImageView alloc] initWithFrame: v.bounds];
-            [imgView setTag: kGlkImageViewTag];
-            [imgView setContentMode: UIViewContentModeScaleAspectFit];
-        }
-        if (imgView) {
-            UIImage *dImg = imgView.image;
-            if (!dImg)
-                dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
-            dImg = drawRectInImage(color, left, top, width, height, dImg);
-            [imgView setImage: dImg];
-        }
+        if (!glkViewImageCache)
+            glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
+        CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+        if (!cgctx)
+            cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
+        drawRectInCGContext(cgctx, color, left, top, width, height);
+        [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
     }
     
 }
@@ -961,55 +1105,45 @@ static void setColorTable(RichTextView *v) {
     glui32 image = args->image;
     glsi32 val1 = args->val1, val2 = args->val2;
     glui32 width = args->width, height = args->height;
+    giblorb_result_t *blorbres = &args->blorbres;
     
     glui32 retval = FALSE;
-    giblorb_map_t *map;
-    giblorb_err_t err;
-    giblorb_result_t blorbres;
-    
-    map = giblorb_get_resource_map();
-    if (!map) {
-        args->retVal =  FALSE;
-        return;
-    }
-    
-    err = giblorb_load_resource(map, giblorb_method_Memory, &blorbres, giblorb_ID_Pict, image);
-    if (err)
-        goto out;
-    //    NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
-    NSData *data = nil;
-    if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
-        data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
-    
-    if (data) {
-        UIImage *img = [UIImage imageWithData: data];
-        UIView *v = [theSMVC glkView: viewNum];
-        UIImageView *imgView = (UIImageView*)[v viewWithTag: kGlkImageViewTag];
-        if (v) {
-            if (imgView) 
-                [imgView retain];
-            else {
-                imgView = [[UIImageView alloc] initWithFrame: v.bounds];
-                [imgView setTag: kGlkImageViewTag];
-                [imgView setContentMode: UIViewContentModeScaleAspectFit];
-            }
-            
-            if (imgView) {
-                if (!width)
-                    width = img.size.width;
-                if (!height)
-                    height = img.size.height;
-                UIImage *dImg = imgView.image;
-                if (!dImg)
-                    dImg = createBlankImage(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
-                dImg = drawUIImageInImage(img, val1, val2, width, height, dImg);
-                
-                [imgView setImage: dImg];
-                [v addSubview: imgView];
-                [imgView release];
-                retval = TRUE;
-            }
+
+    if (!glkImageCache)
+        glkImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
+    UIView *v = [theSMVC glkView: viewNum];
+    NSNumber *imgKey = [NSNumber numberWithInt: image];
+    UIImage *img = [glkImageCache objectForKey: imgKey];
+    if (!img) {
+        //    NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
+        NSData *data = nil;
+        if (blorbres && (blorbres->chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres->chunktype == giblorb_make_id('P', 'N', 'G', ' ')))
+            data = [NSData dataWithBytesNoCopy: blorbres->data.ptr length:blorbres->length freeWhenDone:NO];
+        
+        if (data) {
+            img = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            [glkImageCache setObject: img forKey: imgKey];
         }
+    }
+    if (img) {
+        if (glkGridArray[viewNum].win->type == wintype_TextBuffer) {
+//            [[m_glkViews objectAtIndex: viewNum] appendImage: image];
+            iphone_put_image(viewNum, image, val1, NO);
+
+        } else if (glkGridArray[viewNum].win->type == wintype_Graphics) {
+            if (!width)
+                width = img.size.width;
+            if (!height)
+                height = img.size.height;
+            if (!glkViewImageCache)
+                glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
+            CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+            if (!cgctx)
+                cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
+            drawCGImageInCGContext(cgctx, [img CGImage],val1, val2, width, height);
+            [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
+        }
+        retval = TRUE;
     }
     out:
     args->retVal = retval;
@@ -1017,6 +1151,32 @@ static void setColorTable(RichTextView *v) {
 
 
 extern void gli_iphone_set_focus(window_t *winNum);
+
+-(void)tapInView:(UIView*)view atPoint:(CGPoint)pt {
+    if (m_glkViews) {
+        int winNum = [m_glkViews indexOfObject: view];
+        if (winNum != NSNotFound) {
+            mouseEvent = TRUE;
+            mouseEventWin = glkGridArray[winNum].win;
+            mouseEventX = (int)pt.x;
+            mouseEventY = (int)pt.y;
+            iphone_feed_input(@"");
+        }
+    }
+}
+
+-(void)enableTaps:(NSNumber*)viewNum {
+    int vn = [viewNum intValue];
+    GlkView *v = [m_glkViews objectAtIndex: vn];
+    v.tapInputEnabled = YES;
+}
+
+-(void)disableTaps:(NSNumber*)viewNum {
+    int vn = [viewNum intValue];
+    GlkView *v = [m_glkViews objectAtIndex: vn];
+    v.tapInputEnabled = NO;
+}
+
 
 -(void)focusGlkView:(UIView*)view {
     if (m_glkViews) {
@@ -1046,7 +1206,6 @@ extern void gli_iphone_set_focus(window_t *winNum);
 -(BOOL)glkViewTypeIsGrid:(int)viewNum {
     return glkGridArray[viewNum].win->type == wintype_TextGrid;
 }
-
 
 -(NotesViewController*)notesController {
     return m_notesController;
@@ -1195,6 +1354,32 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 #endif
 }
 
+static UIImage *GlkGetImageCallback(int imageNum) {
+    if (!glkImageCache)
+        glkImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
+    UIImage *image = [glkImageCache objectForKey: [NSNumber numberWithInt: imageNum]];
+    if (image)
+        return image;
+
+    giblorb_map_t *map = giblorb_get_resource_map();
+    if (!map)
+        return nil;
+    
+    giblorb_result_t blorbres;
+    giblorb_err_t err = giblorb_load_resource(map, giblorb_method_Memory, &blorbres, giblorb_ID_Pict, imageNum);
+    if (!err) {
+        NSData *data = nil;
+        if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
+            data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
+        if (data) {
+            NSNumber *imgKey = [NSNumber numberWithInt: imageNum];
+            image = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            [glkImageCache setObject: image forKey: imgKey];
+        }
+    }
+    return image;
+}
+    
 - (void)loadView {
     
     if (m_background) {
@@ -1260,7 +1445,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
         fixedFontName = kFixedWidthFontName;
     m_statusLine.editable = NO;
 #endif
-    m_statusLine.delegate = self;
+    [m_statusLine setDelegate: self];
     [m_statusLine setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
     
 #if !UseRichTextView
@@ -1276,7 +1461,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     m_storyView = [[StoryView alloc] initWithFrame:frame];
     [m_storyView setScrollsToTop: YES];
     
-    m_storyView.delegate = self;
+    [m_storyView setDelegate: self];
 #if !UseRichTextView
     m_storyView.editable = NO;
 #endif
@@ -1325,7 +1510,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     theStatusLine = m_statusLine;
     theInputLine = m_inputLine;
     
-    
+    m_storyView.richDataGetImageCallback = GlkGetImageCallback;
     [self setBackgroundColor: m_defaultBGColor makeDefault: NO];
     [self setTextColor: m_defaultFGColor makeDefault: NO];
     
@@ -1560,6 +1745,11 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     
     //    NSLog(@"sv full frame nav=%d dev=%d frame +%.0f,%.0f,%.0fx%.0f", navHidden, UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]),
     //	    frame.origin.x, frame.origin.y,frame.size.width, frame.size.height);
+    CGPoint origin = m_storyView.frame.origin;
+    frame.origin.x += origin.x;
+    frame.origin.y += origin.y;
+    frame.size.width -= origin.x;
+    frame.size.height -= origin.y;
     return frame;
 }
 
@@ -1576,6 +1766,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     NSDictionary *userInfo = [notif userInfo];
     NSValue *boundsValue = [userInfo objectForKey: UIKeyboardBoundsUserInfoKey];
     CGRect bounds = [boundsValue CGRectValue];
+    m_kbdSize = bounds.size;
     CGRect frame = [self storyViewFullFrame];
     frame.size.height -= bounds.size.height;
     
@@ -1589,8 +1780,9 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [m_statusLine setFrame: statusFrame];
     [UIView commitAnimations];
     
-    [self scrollStoryViewToEnd: YES];
-    
+    if (m_rotationInProgress)
+        [self performSelector: @selector(scrollStoryViewToEnd) withObject:nil afterDelay:0.2];
+
     [m_inputLine updatePosition];
     
     if (gStoryInterp == kGlxStory) {
@@ -1601,10 +1793,15 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
+    m_kbdSize = CGSizeZero;
     if (gStoryInterp == kGlxStory) {
         iphone_recompute_screensize();
         screen_size_changed = 1;
     }
+}
+
+-(CGSize) keyboardSize {
+    return m_kbdSize;
 }
 
 -(void) keyboardWillShow:(NSNotification*)notif {
@@ -1630,12 +1827,14 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     [UIView beginAnimations: @"kbd" context: 0];
     [UIView setAnimationDuration: 0.3];
     [UIView setAnimationBeginsFromCurrentState:YES];
-    
+
+#if 1
     if (!m_rotationInProgress) {
         CGPoint cofst = [m_storyView contentOffset];
         cofst.y += bounds.size.height;
         [m_storyView setContentOffset: cofst];
     }
+#endif
     [m_storyView setFrame: frame];
     
     CGRect statusFrame = [m_statusLine frame];
@@ -1678,6 +1877,10 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     return m_kbShown;
 }
 
+-(void) scrollStoryViewToEnd {
+    [self scrollStoryViewToEnd: YES];
+}
+
 -(void) scrollStoryViewToEnd:(BOOL)animated {
     FrotzView *storyView = m_storyView;
     if (gStoryInterp == kGlxStory && cwin > 0 && cwin < [m_glkViews count] && glkGridArray[cwin].win->type == wintype_TextBuffer) {
@@ -1691,7 +1894,6 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     removeAnim(storyView);
     [storyView setContentOffset: contentOffset animated: animated];
 }
-
 
 -(BOOL) scrollStoryViewOnePage:(FrotzView*)view fraction:(float)fraction {
     CGRect visRect = [view visibleRect];
@@ -1713,6 +1915,20 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
         return NO;
     }
     
+    [view setContentOffset: contentOffset animated: YES];
+    return YES;
+}
+
+-(BOOL) scrollStoryViewUpOnePage:(FrotzView*)view fraction:(float)fraction {
+    CGRect visRect = [view visibleRect];
+    CGPoint contentOffset = [view contentOffset];
+    float height = visRect.size.height/fraction;
+    if (contentOffset.y == 0)
+        return NO;
+    else if (contentOffset.y < height)
+        contentOffset.y = 0;
+    else
+        contentOffset.y -= height;
     [view setContentOffset: contentOffset animated: YES];
     return YES;
 }
@@ -1835,7 +2051,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     m_fontname = [fontname copy];
     if (size)
         m_fontSize = size;
-    if (m_fontSize < 8 || m_fontSize > 20)
+    if (m_fontSize < 8 || m_fontSize > (gLargeScreenDevice ? 32 : 20))
         m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
@@ -1843,7 +2059,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
     int fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
     
-    m_statusFixedFontSize = gLargeScreenDevice ? (m_fontSize > 15 ? 15 : m_fontSize) : 8;
+    m_statusFixedFontSize = gLargeScreenDevice ? 15 : 8;
     NSString *statusFixedFontFamily = [[m_statusLine fixedFont] familyName];
     [m_statusLine setFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
@@ -2013,7 +2229,7 @@ static int iphone_top_win_height = 1;
     for (i=0; i < numRows; ++i) {
         int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> 8) & REVERSE_STYLE;
         for (j=0; j < maxCols; ++j) {
-            char c;
+            wchar_t c;
             if (gStoryInterp == kGlxStory) {
                 c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
                 color = 0;
@@ -2062,7 +2278,7 @@ static int iphone_top_win_height = 1;
                 return;
             }		
             else
-                [buf appendFormat: @"%c", c];
+                [buf appendFormat: @"%C", c];
             ++off;
         }
         if (h_screen_cols == maxCols) {
@@ -2099,6 +2315,12 @@ char *tempStatusLineScreenBuf() {
 }
 #endif
 
+-(void)reloadImages {
+    for (RichTextView *v in m_glkViews) {
+        [v reloadImages];
+    }
+}
+
 -(void)printText: (id)unused {
     static int prevTopWinHeight = 1;
     static int continuousPrintCount = 0;
@@ -2119,7 +2341,7 @@ char *tempStatusLineScreenBuf() {
         
         int vn = 0;
         for (RichTextView *v in m_glkViews) {
-            if (glkInputsCount <= viewNum)
+            if (glkInputsCount <= vn)
                 break;
             if ((NSNull*)v == [NSNull null])
                 ;
@@ -2196,27 +2418,26 @@ char *tempStatusLineScreenBuf() {
             while (escCodeRange.length > 0) {
                 if (escCodeRange.location > 0)
                     [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
-                if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @kStyleEscCode]) {
-                    char c = [inputBufferStr characterAtIndex: escCodeRange.location+2];
-                    RichTextStyle style = kFTNormal;		
+                NSString *subEscCode = [inputBufferStr substringFromIndex: escCodeRange.location+1];
+                if ([subEscCode hasPrefix: @kStyleEscCode]) {
+                    RichTextStyle style = kFTNormal;
                     int fstyle = 0;
-                    if (c >= '0' && c <='9')
-                        fstyle = c - '0';
-                    else if (c >='a')
-                        fstyle = c - 'a'+10;
-                    else
-                        fstyle = c - 'A'+10;
-                    if (fstyle & BOLDFACE_STYLE)
-                        style |= kFTBold;
-                    if (fstyle & EMPHASIS_STYLE)
-                        style |= kFTItalic;
-                    if (fstyle & FIXED_WIDTH_STYLE)
-                        style |= kFTFixedWidth; //|kFTNoWrap;
-                    if (fstyle & REVERSE_STYLE)
-                        style |= kFTReverse  | ((fstyle & FIXED_WIDTH_STYLE) ? (kFTBold|kFTNoWrap) : 0);
+                    for (int i = 0; i < 2; ++i) {
+                        char c = [inputBufferStr characterAtIndex: escCodeRange.location+i+2];
+                        fstyle <<= 4;
+                        if (c >= '0' && c <='9')
+                            fstyle |= (c - '0');
+                        else if (c >='a')
+                            fstyle |= (c - 'a'+10);
+                        else
+                            fstyle |= c - 'A'+10;
+                    }
+                    style |= fstyle;
+                    if (fstyle & kFTReverse)
+                        style |= ((fstyle & kFTFixedWidth) ? (kFTBold|kFTNoWrap) : 0);
                     [storyView setTextStyle: style];
-                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+3]];
-                } else if ([[inputBufferStr substringFromIndex: escCodeRange.location+1] hasPrefix: @ kArbColorEscCode]) {
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+4]];
+                } else if ([subEscCode hasPrefix: @ kArbColorEscCode]) {
                     NSString *colorStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,7)];
                     unsigned int intRGB;
                     float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -2240,7 +2461,7 @@ char *tempStatusLineScreenBuf() {
                     }
                     [inputBufferStr setString: [inputBufferStr substringFromIndex: skip]];
                     
-                } else {
+                } else if ([subEscCode hasPrefix: @kZColorEscCode])  {
                     int col[2];
                     for (int i=0; i < 2; ++i) {
                         char c = [inputBufferStr characterAtIndex: escCodeRange.location+i+2];
@@ -2262,11 +2483,50 @@ char *tempStatusLineScreenBuf() {
                         }
                     }
                     [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+4]];
+                } else if ([subEscCode hasPrefix: @ kImageEscCode])  {
+                    NSString *imageNumStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,3)];
+                    int imageNum = atoi([imageNumStr UTF8String]);
+                    int imageAlign = [inputBufferStr characterAtIndex: escCodeRange.location+5] - '0';
+                    int rtImageAlign = kFTImage;
+                    switch (imageAlign) {
+                        case imagealign_InlineCenter:
+                            rtImageAlign |= kFTCentered;
+                            break;
+                        case imagealign_InlineDown:
+                            rtImageAlign |= kFTRightJust;
+                            break;
+                        case imagealign_InlineUp:
+                            break;
+                        case imagealign_MarginRight:
+                            rtImageAlign |= kFTRightJust;
+                            // fall thru
+                        case imagealign_MarginLeft:
+                            rtImageAlign |= kFTInMargin;
+                            break;
+                        default:
+                            break;
+                    }
+                    [storyView appendImage: imageNum withAlignment: rtImageAlign];
+                    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+6]];
+
                 }
                 escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             }
 #endif
-            [storyView appendText: inputBufferStr];
+            int iBufLen = [inputBufferStr length];
+            if (iBufLen < 256)
+                [storyView appendText: inputBufferStr];
+            else {
+                NSRange nlr = [inputBufferStr rangeOfString: @"\n"];
+                NSString *substr = inputBufferStr;
+                while (nlr.length > 0) {
+                    [storyView appendText: [substr substringToIndex:nlr.location+1]];
+                    substr = [substr substringFromIndex: nlr.location+1];
+                    nlr = [substr rangeOfString: @"\n"];
+                }
+                if ([substr length] > 0)
+                    [storyView appendText: substr];
+            }
             [inputBufferStr setString: @""];
         } else {
             [inputBufferStr setString: [inputBufferStr substringFromIndex: 1]];
@@ -2386,7 +2646,7 @@ char *tempStatusLineScreenBuf() {
                     }
                 }
             }
-            if (!setDefColors) {
+            if (clearStory || gStoryInterp != kGlxStory && !setDefColors) {
                 [storyView clear];
                 for (int k = 0; k < 32; ++k)
                     lastVisibleYPos[k] = 0;
@@ -2429,10 +2689,11 @@ char *tempStatusLineScreenBuf() {
                  ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
                 //		[m_inputLine updatePosition];
                 [m_inputLine setText: @" "]; [m_inputLine setText: @""]; // *sigh* needed to force cursor to resize
-                [storyView markWaitForInput];
+                // xxx [storyView markWaitForInput];
                 //movedbelow	[m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
                 lastInputWindow = cwin;
             }
+            [storyView markWaitForInput];
             [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
             ipzAllowInput |= kIPZAllowInput;
         }
@@ -2834,8 +3095,8 @@ static void setScreenDims(char *storyNameBuf) {
                 resize_screen();
                 iphone_ioinit();
                 [m_statusLine reset];
-                [m_storyView resetMargins];
                 [m_storyView reset];
+                [m_storyView resetMargins];
                 [self clearGlkViews];
                 
                 iphone_flush(NO);
@@ -2988,7 +3249,7 @@ static void setScreenDims(char *storyNameBuf) {
         if (!isZblorb || !gLargeScreenDevice)
             data = [storyBrowser splashDataForStory: story];
         if (!data && isZblorb) {
-            data = imageDataFromBlorb([self currentStory]);
+            data = [imageDataFromBlorb([self currentStory]) autorelease];
 #if 0
             if (data && !gLargeScreenDevice) {
                 UIImage *image = [UIImage imageWithData: data];
@@ -3060,8 +3321,8 @@ static void setScreenDims(char *storyNameBuf) {
     
     setScreenDims(storyNameBuf);
     [m_statusLine reset];
-    [m_storyView resetMargins];
     [m_storyView reset];
+    [m_storyView resetMargins];
     [self clearGlkViews];
     
     disable_complete = NO;
@@ -3136,8 +3397,6 @@ static void setScreenDims(char *storyNameBuf) {
 -(void) autoSaveStory {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
     
-    //    if (gStoryInterp == kGlxStory)
-    //	return;
     [self updateAutosavePaths];
     
     iphone_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
