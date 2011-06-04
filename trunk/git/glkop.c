@@ -318,8 +318,13 @@ glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist)
             
             /* Grab the string. */
             proto = gidispatch_prototype(funcnum);
-            if (!proto)
-                fatalError("Unknown Glk function.");
+            if (!proto) {
+                if (funcnum >= 0x00F0 && funcnum <= 0x00FF)
+                    fatalError("\nUnknown Glk function.\n[Sound not currently supported; story should check for sound using gestalt before calling!]");
+                else
+                    fatalError("Unknown Glk function.");
+                return 0;
+            }
             
             splot.varglist = arglist;
             splot.numvargs = numargs;
