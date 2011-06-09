@@ -15,9 +15,21 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 ----
 
 
+*Update - Version 1.5.3 now available!*
+
+*06/09/2011*
+
+ * Readability: Wider margins and spacing for better readability on iPad. 
+ * Unicode: Improved Unicode text support for games with non-Latin characters. 
+ * Updated glulx support: Now conforms to standard spec 3.1.2. 
+ * Graphics improvements: Performance and stability of games using glk graphics improved; Frotz now supports inline images in text. 
+ * VoiceOver support: Fixed bug preventing automatic announcement of new output in glulx games
+ * Keyboard: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen). 
+ * Other bug fixes: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.
+
 *Update - Version 1.5.2 now available!*
 
-*04/06/2011*
+04/06/2011
 
  * Fixed crashing issue on older devices: Frotz would crash when launching or auto-restoring any story on 1st/2nd generation iPod Touch and iPhone 3G/1st gen. devices only due to a compiler bug in the tools used to build Frotz.  This has been resolved.
  * UI Navigation Bar: On iPhone and iPod Touch, the navigation bar would disappear after leaving the save/restore/transcript dialogs in portrait mode.  (Rotating to landscape and back would bring it back).  This has been fixed.
