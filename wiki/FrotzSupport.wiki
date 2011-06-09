@@ -1,39 +1,18 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-*Update 04/06/2011*
+*Update 06/09/2011*
 
-*Frotz 1.5.2* is now available in the App Store with the following bug fixes:
+*Frotz 1.5.3* is now available in the App Store with the following enhancements and bug fixes:
 
- * Fixed crashing issue on older devices: Frotz would crash when launching or auto-restoring any story on 1st/2nd generation iPod Touch and iPhone 3G/1st gen. devices only due to a compiler bug in the tools used to build Frotz.  This has been resolved.
- * UI Navigation Bar: On iPhone and iPod Touch, the navigation bar would disappear after leaving the save/restore/transcript dialogs in portrait mode.  (Rotating to landscape and back would bring it back).  This has been fixed.
- * Web Transfer interface: Allow downloading/viewing game transcripts. 
- * Hang on story quit/restart: Fixed bug where Frotz would hang if you restart a story immediately after quitting. 
+ * Readability: Wider margins and spacing for better readability on iPad. 
+ * Unicode: Improved Unicode text support for games with non-Latin characters. 
+ * Updated glulx support: Now conforms to standard spec 3.1.2. 
+ * Graphics improvements: Performance and stability of games using glk graphics improved; Frotz now supports inline images in text. 
+ * VoiceOver support: Fixed bug preventing automatic announcement of new output in glulx games
+ * Keyboard: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen). 
+ * Other bug fixes: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.
 
-*Update 03/30/2011*
-
-*Frotz 1.5.1* is now available in the App Store with the following bug fixes:
-
- * Fixed iOS 4.3 issues: Frotz would crash when pressing Backspace multiple times, only in iOS 4.3.  This is now fixed.
- * Web Transfer interface:  Fixed a bug where Frotz would fail to delete stories if the filenames contained spaces.
- * Transcript viewer: On iPhone only, trying to view transcripts from the note taking screen when in landscape mode would get you stuck, because the navigation bar where the 'Done" button is was hidden.
- * Glulx font issues: Games which set a text color hint for attributed text w/o setting one for normal text would incorrectly leave the color set after printing the attributed text, instead of returning to default color.
-
-Features added in *Frotz 1.5*:
-
- * Improved UI: The interface has been improved and refined, particularly on the iPad.
- * Recently Played Stories: Frotz now keeps track of your most recently played stories at the top of the Story List.
- * Note taking: Swipe left while playing any story to view a note-taking area for that story.
- * View/Edit Story Details: Frotz now has authors, descriptions, and artwork for all built-in stories and can link back to the full IFDB entry for each.
- * Dropbox support: Frotz now supports synchronizing saved games with Dropbox, so you can seamlessly play on multiple devices.
- * Bookmarks in Story Browser: You can now bookmark individual pages in the IFDB browser.
- * More bundled games added from IFDB: Includes an updated IFDB snapshot with more recent well-rated works.
- * Miscellaneous bug fixes: Fixed Bluetooth keyboard support, status line/text resizing bugs, and various other minor bugs.
- * Support launching Frotz as "Open in..." handler for game files as e-mail attachments, Safari downloads, and general file management apps such as Good Reader/Dropbox, etc.
-
-Version 1.5 also includes preliminary support for Glulx games.  This support is considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
-
-*KNOWN ISSUE*
-Apparently iOS 4.1 and later is incompatible with Frotz's FTP support; the same code which worked in earlier iOS versions now sometimes hangs at the end of the first file transfer or directory listing.  I'll try to get a patch released soon; in the mean time, use the Web interface instead.
+Version 1.5.3 includes support for Glulx games.  This support is more complete and stable than when introduced in 1.5, but is still considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
 
 ----
 
