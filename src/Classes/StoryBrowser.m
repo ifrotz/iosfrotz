@@ -1164,20 +1164,21 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 [self removeSplashDataForStory: [[delStory lastPathComponent] stringByDeletingPathExtension]];
             }
             if (doDelete) {
-                m_isDeleting = YES;
                 NSMutableArray *indexPaths = [NSMutableArray arrayWithObject: indexPath];
                 int recentIndex = [m_recents indexOfObject: storyInfo];
+                if ([m_recents count] > 0)
+                    m_isDeleting = YES;
                 if (recentIndex != NSNotFound && recentIndex >= 0 && recentIndex < [m_recents count]) {
                     NSUInteger indexes[] = { 0, recentIndex };
                     [m_recents removeObjectAtIndex: recentIndex];
                     [indexPaths addObject: [NSIndexPath indexPathWithIndexes: indexes length:2]];
                     [self saveRecents];
                 }
-                [m_storyNames removeObjectAtIndex: row];
                 if (gUseSplitVC) {
                     if ([[m_details storyInfo] isEqual: storyInfo])
                         [m_details clear];
                 }
+                [m_storyNames removeObjectAtIndex: row];
                 m_numStories--;
                 [self.tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
                 m_isDeleting = NO;
