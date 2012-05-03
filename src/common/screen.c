@@ -68,6 +68,7 @@ static struct {
     zword line_count;
 } wp[8], *cwp;
 
+static void set_window (zword win);
 
 /*
  * winarg0
@@ -318,7 +319,7 @@ void screen_char (zchar c)
     int width;
 
     if (discarding) return;
-
+    if (!cwp) set_window(0);
     if (c == ZC_INDENT && cwp->x_cursor != cwp->left + 1)
 	c = ' ';
 
