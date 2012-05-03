@@ -638,6 +638,7 @@ extern int init_memory();
 
 #if FROTZ_IOS_PORT
 extern int do_autosave, autosave_done, refresh_savedir;
+extern int fileZCodeOffset;
 extern char AUTOSAVE_FILE[];
 #endif
 
