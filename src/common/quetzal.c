@@ -330,45 +330,50 @@ zword restore_quetzal (FILE *svf, FILE *stf)
 	    case ID_CMem:
 		if (!(progress & GOT_MEMORY))	/* Don't complain if two. */
 		{
-		    (void) fseek (stf, 0, SEEK_SET);
+		    (void) fseek (stf, fileZCodeOffset, SEEK_SET);
 		    i=0;	/* Bytes written to data area. */
 		    for (; currlen > 0; --currlen)
 		    {
-			if ((x = get_c (svf)) == EOF)		return fatal;
-			if (x == 0)	/* Start run. */
-			{
-			    /* Check for bogus run. */
-			    if (currlen < 2)
-			    {
-				print_string ("File contains bogus `CMem' chunk.\n");
-				for (; currlen > 0; --currlen)
-				    (void) get_c (svf);	/* Skip rest. */
-				currlen = 1;
-				i = 0xFFFF;
-				break; /* Keep going; may be a `UMem' too. */
-			    }
-			    /* Copy story file to memory during the run. */
-			    --currlen;
-			    if ((x = get_c (svf)) == EOF)	return fatal;
-			    for (; x >= 0 && i<h_dynamic_size; --x, ++i)
-				if ((y = get_c (stf)) == EOF)	return fatal;
-				else
-				    zmp[i] = (zbyte) y;
-			}
-			else	/* Not a run. */
-			{
-			    if ((y = get_c (stf)) == EOF)	return fatal;
-			    zmp[i] = (zbyte) (x ^ y);
-			    ++i;
-			}
-			/* Make sure we don't load too much. */
-			if (i > h_dynamic_size)
-			{
-			    print_string ("warning: `CMem' chunk too long!\n");
-			    for (; currlen > 1; --currlen)
-				(void) get_c (svf);	/* Skip rest. */
-			    break;	/* Keep going; there may be a `UMem' too. */
-			}
+                if ((x = get_c (svf)) == EOF)		return fatal;
+                if (fileZCodeOffset > 0 && i == 0 && x == ('F' ^ h_version)) {
+                    // Autodetect bad save files from zblorb stories where we incorrectly
+                    // used the whole zblorb file instead of the ZCOD section for compressing
+                    (void) fseek (stf, 0, SEEK_SET);
+                }
+                if (x == 0)	/* Start run. */
+                {
+                    /* Check for bogus run. */
+                    if (currlen < 2)
+                    {
+                        print_string ("File contains bogus `CMem' chunk.\n");
+                        for (; currlen > 0; --currlen)
+                            (void) get_c (svf);	/* Skip rest. */
+                        currlen = 1;
+                        i = 0xFFFF;
+                        break; /* Keep going; may be a `UMem' too. */
+                    }
+                    /* Copy story file to memory during the run. */
+                    --currlen;
+                    if ((x = get_c (svf)) == EOF)	return fatal;
+                    for (; x >= 0 && i<h_dynamic_size; --x, ++i)
+                        if ((y = get_c (stf)) == EOF)	return fatal;
+                        else
+                            zmp[i] = (zbyte) y;
+                }
+                else	/* Not a run. */
+                {
+                    if ((y = get_c (stf)) == EOF)	return fatal;
+                    zmp[i] = (zbyte) (x ^ y);
+                    ++i;
+                }
+                /* Make sure we don't load too much. */
+                if (i > h_dynamic_size)
+                {
+                    print_string ("warning: `CMem' chunk too long!\n");
+                    for (; currlen > 1; --currlen)
+                    (void) get_c (svf);	/* Skip rest. */
+                    break;	/* Keep going; there may be a `UMem' too. */
+                }
 		    }
 		    /* If chunk is short, assume a run. */
 		    for (; i<h_dynamic_size; ++i)
@@ -451,7 +456,7 @@ zword save_quetzal (FILE *svf, FILE *stf)
     /* Write `CMem' chunk. */
     if ((cmempos = ftell (svf)) < 0)			return 0;
     if (!write_chnk (svf, ID_CMem, 0))			return 0;
-    (void) fseek (stf, 0, SEEK_SET);
+    (void) fseek (stf, fileZCodeOffset, SEEK_SET);
     /* j holds current run length. */
     for (i=0, j=0, cmemlen=0; i < h_dynamic_size; ++i)
     {
