@@ -407,6 +407,7 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
     if (viewNum >= 0 && viewNum < numGlkViews) {
         if (win != glkGridArray[viewNum].win)
             abort();
+        pthread_mutex_lock(&outputMutex);
         if (glkGridArray[viewNum].gridArray) {
             wchar_t *ga = glkGridArray[viewNum].gridArray;
             glkGridArray[viewNum].gridArray = nil;
@@ -423,6 +424,7 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
             memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
         }
 //        NSLog(@"glk_view_rearrange %d", viewNum);
+        pthread_mutex_unlock(&outputMutex);
 
         [theSMVC performSelectorOnMainThread:@selector(resizeGlkView:) withObject:a waitUntilDone:YES];
     }
@@ -4078,15 +4080,15 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 
 static NSString *completeWord(NSString *str, NSString *prevString) {
     
-    static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get",
+    static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get", @"p",
         @"put", @"quit", @"throw", @"tell", @"open", @"pick",
         @"up", @"i", @"out", @"it", @"in", @"id", @"iv", @"xi", @"is", @"on", @"of", nil };
     // removed 'inventory' because some games choke on the full spelling (HHGTTG)
     static NSString *rareWordArray[] = { @"examine", @"do", @"down", @"diagnose", @"say", @"save", @"to", @"no", @"yes",
         @"all", @"but", @"from", @"with", @"about", @"but", @"close", @"climb", @"north", @"east", @"south", @"west",
-        @"ask", @"se", @"sw", @"sb", @"port", @"drop", @"door", @"press", @"push", @"pull", @"show", @"stand",
-        @"switch", @"turn", @"sit", @"kill", @"kick", @"jump",  @"go", @"lock", @"unlock", @"give", @"learn",
-        @"disrobe", @"help", @"hint", @"wear", @"remove", @"window", nil };
+        @"ask", @"se", @"sw", @"sb", @"port", @"drop", @"dig", @"door", @"press", @"push", @"pull", @"show", @"stand",
+        @"star", @"starboard", @"switch", @"turn", @"sit", @"kill", @"kick", @"jump",  @"go", @"lock", @"unlock", @"give",
+        @"learn", @"disrobe", @"help", @"hint", @"wear", @"remove", @"window", nil };
     static NSString *veryRareWordArray[] = { @"attack", @"answer", @"diagnose", @"verbose", @"brief", @"superbrief",
         @"score", @"restart", @"script", @"drink", @"unscript", @"listen", @"touch", @"smell", @"taste", @"feel", @"under",
         @"untie", @"inventory",	@"memorize", @"follow", @"light", @"knock", @"lantern", @"northwest", @"northeast",
