@@ -1788,7 +1788,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 //		NSLog(@"got tile %@", tile);
                 [m_tileContainerView addSubview:tile];
                 [m_tileContainerView bringSubviewToFront: tile];
-                //		[self annotateTile: tile];
+                //[self annotateTile: tile];
                 [tile setNeedsDisplay];
             }
         }
@@ -1810,7 +1810,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     UILabel *label = (UILabel *)[tile viewWithTag:LABEL_TAG];
     if (!label) {  
         totalTiles++;  // if we haven't already added a label to this tile, it's a new tile
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(5, 0, 80, DEFAULT_TILE_HEIGHT)];
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(5, 0, DEFAULT_TILE_WIDTH, DEFAULT_TILE_HEIGHT)];
         
         [label setBackgroundColor:[UIColor clearColor]];
         [label setTag:LABEL_TAG];
