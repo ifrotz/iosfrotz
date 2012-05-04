@@ -1889,7 +1889,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         storyView = [m_glkViews objectAtIndex: cwin];
     }
     CGSize contentSize = [storyView contentSize];
-    float height = contentSize.height-[storyView visibleRect].size.height - [storyView bottomMargin];
+    float height = contentSize.height-[storyView visibleRect].size.height;
     if (height < 0)
         height = 0;
     CGPoint contentOffset = CGPointMake(0, height);
