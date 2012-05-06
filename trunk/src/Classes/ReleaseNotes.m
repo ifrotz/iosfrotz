@@ -50,6 +50,7 @@
     [contents release];
     [m_data release];
     m_data = nil;
+    [connection release];
     if (webView && r.length > 0)
         [self showReleaseNotes];
 }
@@ -65,7 +66,7 @@
     NSURL *myURL = [NSURL URLWithString: @FROTZ_REL_URL kRelNotesFilename];
     m_request = [NSURLRequest requestWithURL: myURL];    
     m_data = [[NSMutableData data] retain];
-    [[[NSURLConnection alloc] initWithRequest:m_request delegate:self] release];
+    [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
 #endif
 }
 
