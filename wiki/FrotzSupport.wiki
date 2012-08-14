@@ -69,11 +69,12 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
 
 <wiki:comment>
   Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I've gotten a lot of enjoyment playing these games over the years, and since I'm not a very good writer, this is my way of giving back.
+</wiki:comment>
 
  * *Can I make a donation?*
 
-  See above for my motivation in making Frotz.   But if you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   (Also consider sending thank you emails to the authors of the games you like!) 
-</wiki:comment>
+  If you really like Frotz and want to make a donation, you can do so via [https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 PayPal].   (Also consider sending thank you emails to the authors of the games you like!) 
+
   * *How do I save my game?*
   If you press the Home button or answer a call, Frotz will automatically save your game state.  Starting with Frotz 1.4, a separate autosave is kept per game, and the game is autosaved when you switch stories or after a period of inactivity.   You can also manually save your game in progress the old-fashioned way by typing "*`save`*" at the command prompt; this is recommended for some of the harder/more complex games, so you have the ability to backtrack and try alternate solutions.
 
