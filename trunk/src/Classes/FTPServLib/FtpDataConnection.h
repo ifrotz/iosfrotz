@@ -29,7 +29,7 @@
 	
 	AsyncSocket			*dataListeningSocket;
 	id					dataConnection;	
-	NSMutableData		*receivedData;
+	NSData              *receivedData;
 	int					connectionState;
 	
 }
@@ -47,7 +47,7 @@
 
 -(void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)err;
 
-@property (readonly) NSMutableData *receivedData;
+@property (readonly) NSData *receivedData;
 @property (readwrite) int connectionState;
 
 

@@ -621,6 +621,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 - (void)loadView {
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
+    BOOL fullScreenLarge = (frame.size.width > 320.0);
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
@@ -655,7 +656,8 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
     [hsvCursorImage release];
     UIImage *valCursorImage = [[UIImage alloc]
-	initWithContentsOfFile: [[NSBundle mainBundle] pathForResource:@"val-crosshair" ofType:@"png" inDirectory: @"/"]];
+                               initWithContentsOfFile: [[NSBundle mainBundle] pathForResource:
+                             (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair") ofType:@"png" inDirectory: @"/"]];
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
     [valCursorImage release];
     
@@ -690,17 +692,17 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
     CGFloat radius = !fullScreenLarge ? 128.0f : frame.size.width/3;
     if (fullScreenLarge) {
-	[m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-	[m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin, 96.0f, radius*2)];
-	[m_valuePicker setBarWidth: 64];
+        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
+        [m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin, 96.0f, radius*2)];
+        [m_valuePicker setBarWidth: 64];
     } else {
-	[m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-	[m_valuePicker setFrame: CGRectMake(leftMargin+radius*2, hsvBaseYOrigin, 56.0f, radius*2)];
-	[m_valuePicker setBarWidth: 32];
+        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
+        [m_valuePicker setFrame: CGRectMake(leftMargin+radius*2, hsvBaseYOrigin, 56.0f, radius*2)];
+        [m_valuePicker setBarWidth: 32];
     }
 
     CGRect cursFrame = [m_valueCursor frame];
-    cursFrame.size.width = m_valueCursor.image.size.width * (fullScreenLarge ? 2 : 1);
+//    cursFrame.size.width = m_valueCursor.image.size.width * (fullScreenLarge ? 2 : 1);
     [m_valueCursor setFrame: cursFrame];
 
     [self updateHSVCursors];

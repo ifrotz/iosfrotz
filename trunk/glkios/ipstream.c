@@ -531,7 +531,7 @@ static void gli_put_char(stream_t *str, unsigned char ch)
         case strtype_Window:
             if (str->win->line_request) {
                 gli_strict_warning(L"put_char: window has pending line request");
-                str->win->line_request = 0;
+                ///// str->win->line_request = 0;
                 //break;
             }
             gli_window_put_char(str->win, UCS(ch));

@@ -283,6 +283,11 @@ const int kCompletionViewTag = 21;
     }
 }
 
+-(void)setTextKeepCompletion:(NSString*)text {
+    [super setText: text];
+}
+
+
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt {
     
     if (!m_firstKeyPressed) {

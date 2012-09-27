@@ -277,7 +277,7 @@ void removeOldPngSplash(const char *filename) {
             extractAllFilesFromZIPWithCallback([[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"], splashPath, removeOldPngSplash);
         }
         
-        NSMutableDictionary *dfltMetaData = nil;
+        NSDictionary *dfltMetaData = nil;
         if (!vers || [vers compare: @"1.5"]==NSOrderedAscending) {
             
             if (titleDict && thumbDict) {
@@ -625,6 +625,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
                 [backItem release];
             }
+            [self didPressModalStoryListButton];
             [self.splitViewController presentModalViewController:nc animated:YES];
             return;
         }	
@@ -898,7 +899,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
         if (gUseSplitVC) // delay push of story controller so views have time to be sized correctly
-            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.001];
+            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.05];
         else
             [self autoRestoreAndShowMainStoryController];
     } else
@@ -986,6 +987,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
                 [backItem release];
             }
+            [self.splitViewController dismissModalViewControllerAnimated:NO];
             [self.splitViewController presentModalViewController:nc animated:YES];
             return;
         }

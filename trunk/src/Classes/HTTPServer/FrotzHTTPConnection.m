@@ -250,12 +250,12 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                      [splashPath lastPathComponent], [fname stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
                 }
                 else 
-                    [outdata appendFormat: @"<td height=\"40px\"> </td>\n", fname];
+                    [outdata appendFormat: @"<td height=\"40px\"> </td>\n"];
                 [outdata appendFormat: @"<td>&nbsp;&nbsp;</td><td>%@&nbsp;&nbsp;</td><td><a href=\"/Games/%@\">%32@</a></td>", title, fname, fname];
                 [outdata appendFormat: @"<td><small>&nbsp;&nbsp;&nbsp;<a id=\"remove-%@\" href=\"/remove=/Games/%@\""
                  " onclick=\"confirmRemove('remove-%@','/remove=/Games/%@\');\">(Remove)</a></small></td></tr>\n", fname, fname, fname, fname];
                 [outdata appendFormat: @"<tr height=\"2px\" id=\"entry-%@\"><td colspan=\"6\">\n<div class='entry-body'>"   //<style>#showentry {%@}</style>"
-                 "<span id=\"showentry\">\n", storyId, showSaves ? @"display:inline;":@"display:none;"];
+                 "<span id=\"showentry\">\n", storyId];
                 NSMutableString *saveFileList =  [NSMutableString stringWithString: @"<small>&nbsp;&nbsp;&nbsp;<i>No Saved Games</i>&nbsp;&nbsp;"];
                 NSMutableString *scriptFileList = nil;
                 int saveCount = 0, textCount = 0;
@@ -304,7 +304,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 NSString *fname = [path lastPathComponent];
                 if (ucount % 3 == 2)
                     [outdata appendFormat: @"</tr><tr>\n"];	    
-                [outdata appendFormat: @"<td height=\"40px\"> </td>\n", fname];
+                [outdata appendFormat: @"<td height=\"40px\"> </td>\n"];
                 [outdata appendFormat: @"<td><a href=\"/Games/%@\">%@</a></td>", fname, fname];
                 [outdata appendFormat: @"<td><small>&nbsp;&nbsp;&nbsp;<a id=\"remove-%@\" href=\"/remove=/Games/%@\""
                  " onclick=\"confirmRemove('remove-%@','/remove=/Games/%@\');\">(Remove)</a></small></td>\n", fname, fname, fname, fname];

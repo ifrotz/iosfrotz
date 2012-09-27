@@ -102,6 +102,17 @@
         "<hr/>\n"
         "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
         "<p><ul>\n"
+        "<li>Blah blah blah</li>\n"
+        "</ul>"
+        "<hr>\n"
+        "<p>Author's note: If you've rated Frotz in the App Store before, I'd really appreciate it if you would rate the new version.  Or write  a review! Thanks!</p>"
+        "<p><small><i>Septermber 25, 2012</i><br>\n"
+        "<hr>\n"
+#if 1 // 1.5.3
+        "<p><i>Previous release notes</i></p>\n"
+        "\n"
+        "<p>Version 1.5.3:</p>\n"
+        "<p><ul>\n"
         "<li><b>Readability:</b> Wider margins and spacing for better readability on iPad.</li>\n"
         "<li><b>Unicode</b>: Improved Unicode text support for games with non-Latin characters.</li>\n"
         "<li><b>Updated glulx support</b>: Now conforms to standard spec 3.1.2.</li>\n"
@@ -110,14 +121,9 @@
         "<li><b>Keyboard</b>: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen).</li>\n"
         "<li><b>Other bug fixes</b>: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.</li>\n"
         "</ul>"
-        "<hr>\n"
-        "<p>Author's note: If you've rated Frotz in the App Store before, I'd really appreciate it if you would rate the new version.  Or write  a review! Thanks!</p>"
-        "<p><small><i>June 2, 2011</i><br>\n"
-        "<hr>\n"
-#if 1
-        "<p><i>Previous release notes</i></p>\n"
-        "<br/>\n"
-        "<p>Fixed in 1.5.2:</p>\n"
+#endif
+#if 1 // 1.5.2
+        "<p>Version 1.5.2:</p>\n"
         "<p><ul>"
         "<li><b>Fixed crash on older devices</b>: iPod Touch (1st/2nd gen.) and iPhone 3G would crash on launch due to bugs in the compiler used to build Frotz. This has been resolved.</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue where navigation bar would disappear after viewing save/restore/transcript dialog on small screen "
@@ -125,7 +131,7 @@
         "</ul>"
 #endif
 #if 1 // 1.5.1
-        "<p>Fixed in 1.5.1:</p><ul>\n"
+        "<p>Version 1.5.1:</p><ul>\n"
         "<li><b>iOS 4.3 compatibility</b>: Fixed crash when deleting text that occurred only in iOS 4.3</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue deleting files via web interface, viewing transcripts in landscape, and text color issues in glulx games.</li>"
         "</ul>"
@@ -173,6 +179,8 @@
         "</ul>"
 #endif
         "<br/>\n";
+        // 1.6: sep xx, 2012
+        // 1.5.3: june 2, 2011
         // 1.5.1: mar 23, 2011
         // 1.5: oct 25, 2010
         // 1.4: mar 19, 2010

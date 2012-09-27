@@ -152,9 +152,9 @@
             ftpUrlString = @"<center><h4><i>FTP server is not currently enabled.</i><h4></center><br/>";
         }
     	instructions =  [NSString stringWithFormat: @"<p>Just type one of the URLs shown below into the address bar of your "
-                         "web browser/file explorer.  The http web address is easier to use and is recommended."
+                         "web browser/file explorer.  The http web address is easier to use and is recommended.</p>"];
                          //	"On a Mac, the Finder only provides read-only support for FTP, so try Cyberduck, or just type<br/>'<b>ftp&nbsp;%@&nbsp;%d</b>' from Terminal. "
-                         "</p> ", addr, FTPPORT];
+                         //"</p> ", addr, FTPPORT];
     } else {
         httpUrlString = @"<br/><center><h4><i>File Server is not currently enabled.</i><h4></center><br/>";
         ftpUrlString = @"";

@@ -254,13 +254,14 @@ void iphone_display_char(char c)
     iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c));
     iphone_putchar(c);
     
-    if (++cursor_col == h_screen_cols)
+    if (++cursor_col == h_screen_cols) {
         if (cursor_row == h_screen_rows - 1)
             cursor_col--;
         else if (cwin==0 || cursor_col >= MAX_COLS) {
             cursor_row++;
             cursor_col = 0;
         }
+    }
 }
 
 void iphone_backspace()

@@ -96,7 +96,7 @@ NSString* createList(NSString* directoryPath, BOOL shortForm)
                 
                 binaryString =  int2BinString([filePermissions unsignedLongValue]) ;
                 binaryString = [ binaryString substringFromIndex:7 ];// snip off the front
-                formattedString = [ NSString stringWithFormat:@"%@%@ %5i %12.12@ %12.12@ %10qu %@ %@", fileIsDirectory ? @"d" : @"-" ,bin2perms(binaryString),fileSubdirCount, fileOwner, fileGroup, [fileSize unsignedLongLongValue], fileDateFormatted , filePath ];
+                formattedString = [ NSString stringWithFormat:@"%@%@ %5li %12@ %12@ %10qu %@ %@", fileIsDirectory ? @"d" : @"-" ,bin2perms(binaryString),fileSubdirCount, fileOwner, fileGroup, [fileSize unsignedLongLongValue], fileDateFormatted , filePath ];
             }
 			[ returnString appendString:formattedString ];
 			[ returnString appendString:@"\r\n" ];

@@ -43,7 +43,7 @@
 		dataPort=2001;
 		transferMode = pasvftp;
 		queuedData = [[ NSMutableArray alloc ] init ];								// A buffer for sending data when the connection isn't quite up yet
-		self.currentDir = [ server.baseDir copy];												// the working directory for this connection, Starts in the directory the server is set to.  set chroot=true in server code to sandbox in
+		currentDir = [ server.baseDir copy];												// the working directory for this connection, Starts in the directory the server is set to.  set chroot=true in server code to sandbox in
 		currentFile = nil;	
 		currentFileHandle = nil;													// not saving to a file yet
 		rnfrFilename = nil; 
@@ -143,7 +143,7 @@
 			
 		case lprtftp:					// FIXME wrong return message
 			dataPort = portNumber;
-			responseString = [ NSString stringWithFormat:@"228 Entering Long Passive Mode 	(af, hal, h1, h2, h3,..., pal, p1, p2...)", dataPort >>8, dataPort & 0xff];
+			responseString = [ NSString stringWithFormat:@"228 Entering Long Passive Mode 	(af, hal, h1, h2, h3,..., pal, p1, p2...)"]; //, dataPort >>8, dataPort & 0xff;
 			[ dataSocket connectToHost:[self connectionAddress] onPort:portNumber error:&error ];
 			dataConnection = [[ FtpDataConnection alloc ] initWithAsyncSocket:dataSocket forConnection:self withQueuedData:queuedData ];	
 			break;
@@ -866,12 +866,12 @@
 	{				
 		if ([[ NSFileManager defaultManager ] removeItemAtPath:filePath error:&error ])
 		{
-			cmdStr = [ NSString stringWithFormat:@"250 DELE command successful.",filename ];
+			cmdStr = [ NSString stringWithFormat:@"250 DELE command successful." ];
 			[ server didReceiveFileListChanged];				// Addition by Brendan copied in by Rich 16/12/08
 		}
 		else
 		{
-			cmdStr = [ NSString stringWithFormat:@"550 DELE command unsuccessful.",filename ];					// FIXME put correct error code in
+			cmdStr = [ NSString stringWithFormat:@"550 DELE command unsuccessful." ];					// FIXME put correct error code in
 		}
 	}
 	else

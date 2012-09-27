@@ -449,7 +449,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         [self setTileSize:CGSizeMake(DEFAULT_TILE_WIDTH, DEFAULT_TILE_HEIGHT)];
         m_currentTextStyle = kFTNormal;
         [self clear];
-        m_selectionView = [[UILabel alloc] initWithFrame: CGRectZero];
+        m_selectionView = [(UILabelWA*)[UILabel alloc] initWithFrame: CGRectZero];
         [m_selectionView setTextColor: [UIColor blueColor]];
         [m_selectionView setShadowColor: [UIColor darkGrayColor]];
         [m_selectionView setBackgroundColor: [UIColor whiteColor]];
@@ -471,19 +471,24 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                     marginPerc = 0.06;
                 else if (m_fontSize >= 24)
                     marginPerc = 0.08;
+                if (frame.size.width == 568)
+                    marginPerc *= 0.5;
                 m_tempLeftMargin = m_leftMargin = frame.size.width * marginPerc;
                 m_tempRightMargin = m_rightMargin = frame.size.width * marginPerc;
             } else {
                 m_tempLeftMargin = m_leftMargin = TEXT_LEFT_MARGIN;
                 m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;
             }
-            m_extraLineSpacing = m_fontHeight / 4;
-            if (reflow && (m_leftMargin != origLeft || m_rightMargin != origRight || m_extraLineSpacing != origSpacing))
-                [self reflowText];
-            return;
+            if (frame.size.height > 640)
+                m_extraLineSpacing = m_fontHeight / 4;
+        } else {
+            m_tempLeftMargin = m_leftMargin = TEXT_LEFT_MARGIN;
+            m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;            
+            m_extraLineSpacing = 0;
         }
+        if (reflow && (m_leftMargin != origLeft || m_rightMargin != origRight || m_extraLineSpacing != origSpacing))
+            [self reflowText];
     }
-    m_extraLineSpacing = 0;
 }
 
 -(void)setNoMargins {

@@ -43,38 +43,51 @@
     m_frame = frame;
     NSLog(@"note setframe h=%f w=%f", frame.size.height, frame.size.width);
     if (m_notesView)
-        [self.view setFrame:frame];
+        [m_scrollView setFrame:frame];
 }
 
 static const int kNotesTitleHeight = 24;
 
+-(UIScrollView*)containerScrollView {
+    return m_scrollView;
+}
+
 -(void)loadView {
+    if (m_notesBGView) {
+        self.view = m_notesBGView;
+        return;
+    }
+#if 0
     if (m_scrollView) {
         self.view = m_scrollView;
         return;
     }
+#endif
     UIFont *font = [UIFont fontWithName:@"MarkerFelt-Wide" size:gLargeScreenDevice ? 20:16];
     if (!font)
         font = [UIFont fontWithName:@"MarkerFelt-Thin" size:gLargeScreenDevice ? 20:16];
+
     m_scrollView = [[HScrollView alloc] initWithFrame:m_frame];
     [m_scrollView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
     [m_scrollView setAutoresizesSubviews:YES];
     [m_scrollView setDelegate: self];
-    self.view = m_scrollView;
-    
+
     m_frame.size.width *= 2;
     [m_scrollView setContentSize: m_frame.size];
     m_frame.size.width /= 2;
     [m_scrollView setBounces: NO];
     [m_scrollView setPagingEnabled: YES];
-    
+
     m_notesBGView = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"parchment.jpg"]];
     [m_notesBGView setFrame: CGRectMake(m_frame.size.width, 0, m_frame.size.width, m_frame.size.height)];
     [m_notesBGView setAutoresizesSubviews: YES];
     [m_notesBGView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_notesBGView setUserInteractionEnabled:YES];
     [m_notesBGView setContentMode:UIViewContentModeTopLeft];
-    
+
+    //new
+    self.view = m_notesBGView;
+
     //    m_notesTitle = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, m_frame.size.width, kNotesTitleHeight)];
     //    [m_notesTitle setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
     //    [m_notesTitle setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
@@ -108,7 +121,7 @@ static const int kNotesTitleHeight = 24;
     //    UIButton *scriptBrowseButton = [UIButton buttonWithType: UIButtonTypeDetailDisclosure];
     //    [m_notesView addSubview: scriptBrowseButton];
     
-    [m_scrollView addSubview: m_notesBGView];
+//qqq    [m_scrollView addSubview: m_notesBGView];
     [m_notesBGView addSubview: m_notesView];
 }
 
@@ -173,7 +186,7 @@ static const int kNotesTitleHeight = 24;
     [m_notesTitle setWidth: 0 forSegmentAtIndex:0];
     [m_notesTitle setWidth: 20 forSegmentAtIndex:1];
     [m_notesTitle sizeToFit];
-    m_notesTitle.center = CGPointMake(self.view.frame.size.width/2, m_notesTitle.frame.size.height/2);
+    m_notesTitle.center = CGPointMake(m_scrollView.frame.size.width/2, m_notesTitle.frame.size.height/2);
 }
 
 -(NSString*)title {
@@ -247,7 +260,7 @@ static const int kNotesTitleHeight = 24;
 -(void) keyboardWillHide {
     CGRect notesFrame = [m_notesBGView frame];
     BOOL isVisible = [self isVisible];
-    notesFrame.size.height = self.view.frame.size.height;
+    notesFrame.size.height = m_scrollView.frame.size.height;
     
     if (isVisible) {
         [UIView beginAnimations: @"noteskbd" context: 0];
@@ -276,7 +289,7 @@ static const int kNotesTitleHeight = 24;
 }
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    CGRect frame = self.view.frame;
+    CGRect frame = m_scrollView.frame;
     frame.origin.x = frame.size.width*2; // make sure notes aren't temporarily visible during rotation
     [m_notesBGView  setFrame: frame];
     if ([m_scrollView contentOffset].x > 0)
@@ -284,7 +297,7 @@ static const int kNotesTitleHeight = 24;
 }
 
 - (void)autosize {
-    CGRect frame = self.view.frame;
+    CGRect frame = m_scrollView.frame;
     
     frame.origin.x = frame.size.width;
     [m_notesBGView  setFrame: frame];

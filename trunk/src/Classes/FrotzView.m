@@ -55,15 +55,17 @@
 		scale, scale), x*(scale-1.0)/scale, /*was height*/ y *(scale-1.0)/scale);
 	    if (phase == UITouchPhaseBegan) {
 	    
-		UIImageView *img = [[UIImageView alloc] initWithImage: [UIImage imageNamed:
-		    view.superview.frame.size.width > 320 ? @"glarels.png" : @"glare.png"]];
-		if (img) {
-		    [img setTag: 1];
-		    [img setAlpha: 0.50];
-		    [view setAlpha: 1.0];
-		    [[view superview] addSubview: img];
-		    [img release];
-		}
+            UIImageView *img = [[UIImageView alloc] initWithImage:
+                                [UIImage imageNamed:
+                                 view.superview.frame.size.width >= 568 ? @"glarels5.png" :
+                                 view.superview.frame.size.width > 320 ? @"glarels.png" : @"glare.png"]];
+            if (img) {
+                [img setTag: 1];
+                [img setAlpha: 0.50];
+                [view setAlpha: 1.0];
+                [[view superview] addSubview: img];
+                [img release];
+            }
 	    }
 	    [view setTransform: scaled];
 

@@ -32,6 +32,7 @@
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
 -(UIView*) inputHelperView;
--(void) setClearButtonMode;
+-(void)setClearButtonMode;
+-(void)setTextKeepCompletion:(NSString*)text;
 @end
 

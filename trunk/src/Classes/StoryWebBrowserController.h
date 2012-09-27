@@ -25,7 +25,7 @@
 typedef enum { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory } SWBDownloadState;
 
 @interface StoryWebBrowserController : UIViewController <UIWebViewDelegate, KeyboardOwner, URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
-    UIScrollView *m_background; // UIView
+    UIView *m_background; // UIView
     UIWebView *m_webView;
     UIScrollView *m_scrollView;
     StoryBrowser *m_storyBrowser;

@@ -370,7 +370,7 @@ enum ControlTableSections
 	return 4;
     } else if (section == kFrotzResetSection)
 	return 1;
-#ifdef FROTZ_DB_CONSUMER_KEY
+#ifdef FROTZ_DB_APP_KEY
     return 7;
 #else
     return 6;
@@ -473,7 +473,7 @@ enum ControlTableSections
 		    ((DisplayCell*)cell).nameLabel.text = @"Story Info Editing";
 		    ((DisplayCell*)cell).view = m_switchCtl2;
 		    break;
-#ifdef FROTZ_DB_CONSUMER_KEY
+#ifdef FROTZ_DB_APP_KEY
 		case 6:
 		    cell.text = @"Dropbox Settings";
 		    break;
@@ -545,7 +545,7 @@ enum ControlTableSections
 	    } else if (row==2) {
 		[m_fontPicker setFixedFontsOnly: false];
 		viewController = m_fontPicker;
-#ifdef FROTZ_DB_CONSUMER_KEY
+#ifdef FROTZ_DB_APP_KEY
 	    }
 	     else if (row==6) {
 		viewController = m_frotzDB;
