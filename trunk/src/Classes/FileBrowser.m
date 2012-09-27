@@ -105,7 +105,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     }
 
     m_backgroundView = [[UIView alloc] initWithFrame: origFrame]; // CGRectMake(0, 0, origFrame.size.width, origFrame.size.height)]; //34)];
-    [m_backgroundView setBackgroundColor: [UIColor whiteColor]];
+    [m_backgroundView setBackgroundColor: [UIColor blackColor]];
     [m_backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleBottomMargin];
     [m_backgroundView setAutoresizesSubviews: YES];
     self.view = m_backgroundView;
@@ -115,7 +115,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height /*28*/,
                                           origFrame.size.width, origFrame.size.height-m_textField.bounds.size.height - (gUseSplitVC ? 70: 216))];
         [m_textField setReturnKeyType: UIReturnKeyDone];
-        [m_textField setBackgroundColor: [UIColor darkGrayColor]];
+        [m_textField setBackgroundColor: [UIColor whiteColor]];
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_textField setPlaceholder: @"filename"];
         [m_textField setDelegate: self];
