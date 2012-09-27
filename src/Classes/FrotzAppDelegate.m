@@ -12,8 +12,7 @@
 #import "StatusLine.h"
 #import "StoryInputLine.h"
 #import "StoryView.h"
-
-#import "DBSession.h"
+#import <DropboxSDK/DropboxSDK.h>
 
 @interface FrotzWindow : UIWindow
 {
@@ -120,29 +119,35 @@ bool gUseSplitVC;
 
     Class SplitVCClass = NSClassFromString(@"UISplitViewController");
     if (!SplitVCClass)
-	gUseSplitVC = NO;
+        gUseSplitVC = NO;
 
     if (gUseSplitVC) {
-	UISplitViewController* splitVC = [[SplitVCClass alloc] init];
+        UISplitViewController* splitVC = [[SplitVCClass alloc] initWithNibName:nil bundle:nil];
 
-	m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-	[m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
+        m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
+        [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
 
-	UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
-	[navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
+        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
+        [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
-	splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
-	[splitVC setDelegate: m_browser];
+        splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
+        [splitVC setDelegate: m_browser];
 
-	[m_window addSubview: splitVC.view];
+        if ([m_window respondsToSelector:@selector(setRootViewController:)])
+            [m_window setRootViewController: splitVC];
+        else
+            [m_window addSubview: splitVC.view];
     } else {
-	m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-	[m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
-	[m_window addSubview:[m_navigationController view]];
-	if (m_transitionView) {
-	    [m_window addSubview: m_transitionView];
-	    [m_window bringSubviewToFront: m_transitionView];
-	}
+        m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
+        [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+        if ([m_window respondsToSelector:@selector(setRootViewController:)])
+            [m_window setRootViewController: m_navigationController];
+        else
+            [m_window addSubview:[m_navigationController view]];
+        if (m_transitionView) {
+            [m_window addSubview: m_transitionView];
+            [m_window bringSubviewToFront: m_transitionView];
+        }
     }
 
     [[m_browser storyMainViewController] initializeDropbox];
@@ -151,7 +156,7 @@ bool gUseSplitVC;
     [self performSelector: @selector(fadeSplashScreen) withObject: nil afterDelay: 0.01];
 
     if (launchURL)
-	[self application:application handleOpenURL: launchURL];
+        [self application:application handleOpenURL: launchURL];
     return YES;
 }
 
@@ -182,21 +187,35 @@ bool gUseSplitVC;
 
 - (BOOL)application: (UIApplication*)application handleOpenURL: (NSURL*)launchURL {
     NSLog(@"handleOpenURL %@", launchURL);
-    if (launchURL && [launchURL isFileURL]) {
-	NSString *launchPath = [launchURL path];
+    if ([[DBSession sharedSession] handleOpenURL:launchURL]) {
+        if ([[DBSession sharedSession] isLinked]) {
+            if ([[launchURL path] hasSuffix: @"/cancel"])
+                return YES;
+            NSLog(@"DB App linked successfully!");
+            [[m_browser storyMainViewController] dropboxDidLinkAccount];
+            // At this point you can start making API calls
+        }
+        return YES;
+    }
 
-	[m_browser setLaunchPath: launchPath];
-	if ((launchPath = [m_browser launchPath])) { // nil if file couldn't be accessed
-	    [m_browser addRecentStory: launchPath];
-	    [m_browser launchStory: launchPath];
-	}
+    if (launchURL && [launchURL isFileURL]) {
+        NSString *launchPath = [launchURL path];
+
+        [m_browser setLaunchPath: launchPath];
+        if ((launchPath = [m_browser launchPath])) { // nil if file couldn't be accessed
+            [m_browser addRecentStory: launchPath];
+            StoryInfo *si = [[StoryInfo alloc] initWithPath: launchPath];
+            [m_browser setStoryDetails: si];
+            [si release];
+            [m_browser performSelector:@selector(launchStory:) withObject:launchPath afterDelay:0.05];
+        }
     } else {
-	NSLog(@"Frotz launched w/unknown URL: %@", launchURL);
-	UIAlertView *alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot handle URL"
-			message: [NSString stringWithFormat:@"%@", launchURL]
-			delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	[alert show];
-	[alert release];
+        NSLog(@"Frotz launched w/unknown URL: %@", launchURL);
+        UIAlertView *alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot handle URL"
+                message: [NSString stringWithFormat:@"%@", launchURL]
+                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        [alert show];
+        [alert release];
     }
 
     return NO;
@@ -208,5 +227,6 @@ bool gUseSplitVC;
     [m_window release];
     [super dealloc];
 }
+
 
 @end

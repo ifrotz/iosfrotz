@@ -123,10 +123,10 @@
 
 -(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
     if (range.location==0 && ![string hasPrefix: @"/"])
-	return NO;
+        return NO;
     
     if (range.location > 0 && [[textField.text substringWithRange:NSMakeRange(range.location-1, 1)] isEqualToString: @"/"] && [string hasPrefix: @"/"])
-	return NO;
+        return NO;
     return YES;
 }
 
@@ -136,20 +136,20 @@
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (m_isUnlinking) {
-	m_isUnlinking = NO;
+        m_isUnlinking = NO;
 
-	if (buttonIndex == 1) {
-	    [[DBSession sharedSession] unlink];
-	    [[self tableView] reloadData];
-	}
-    } else { // change DB folder
-	StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
-	if (buttonIndex == 1) {
-	    if (![[smvc dbTopPath] isEqualToString: m_textField.text]) {
-		[smvc setDBTopPath: m_textField.text];		
-	    }
-	} 
-	m_textField.text = [smvc dbTopPath];
+        if (buttonIndex == 1) {
+            [[DBSession sharedSession] unlinkAll];
+            [[self tableView] reloadData];
+        }
+        } else { // change DB folder
+            StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
+            if (buttonIndex == 1) {
+                if (![[smvc dbTopPath] isEqualToString: m_textField.text]) {
+                [smvc setDBTopPath: m_textField.text];		
+                }
+        } 
+        m_textField.text = [smvc dbTopPath];
     }
 }
 
@@ -296,7 +296,7 @@
     cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
 	
     if (cell == nil) {
-	cell = [[[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID] autorelease];
+        cell = [[[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID] autorelease];
     }
     cell.textAlignment = UITextAlignmentLeft;
     cell.textLabel.text = nil;
@@ -318,22 +318,22 @@
     switch (indexPath.section)
     {
 	case 0:
-	{
-	    if (row == 0) {
-            cell.textLabel.text = isLinked ? @"Relink to Dropbox Account..." : @"Link to Dropbox Account...";
-		}
-	    else if (row == 1) {
-		cell.textLabel.text = @"Unlink Account";
-		cell.textLabel.enabled = isLinked;		
-	    }
-	    break;
-	}
+        {
+            if (row == 0) {
+                cell.textLabel.text = isLinked ? @"Relink to Dropbox Account..." : @"Link to Dropbox Account...";
+            }
+            else if (row == 1) {
+            cell.textLabel.text = @"Unlink Account";
+            cell.textLabel.enabled = isLinked;		
+            }
+            break;
+        }
 	case 1:
-	{
-	    cell.nameLabel.text = @"Sync Folder";
-	    cell.view = m_textField;
-	    break;
-	}
+        {
+            cell.nameLabel.text = @"Sync Folder";
+            cell.view = m_textField;
+            break;
+        }
     }
     
     return cell;
@@ -352,19 +352,22 @@
 	    [m_textField resignFirstResponder];
 	    switch (row) {
 		case 0: {
+            [[DBSession sharedSession] linkFromController:self];
+#if 0
 		    DBLoginController *dbController = [[DBLoginController new] autorelease];
 		    dbController.delegate = m_delegate;
 		    [dbController presentFromController:self];
 		    dbController.navigationController.navigationBar.barStyle = UIBarStyleBlack;
+#endif
 		    break;
 		    }
 		case 1: {
 		    if ([[DBSession sharedSession] isLinked]) {
-			m_isUnlinking = YES;
-			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
-				    message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
-				    delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
-			[alert show];
+                m_isUnlinking = YES;
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
+                        message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
+                        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
+                [alert show];
 			[alert release];
 		    }
 		    break;

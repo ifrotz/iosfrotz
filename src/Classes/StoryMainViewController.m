@@ -29,8 +29,7 @@
 #import "GlkView.h"
 
 #import "FileBrowser.h"
-
-#import "DropboxSDK.h"
+#import <DropboxSDK/DropboxSDK.h>
 
 #import "ui_utils.h"
 
@@ -1279,6 +1278,8 @@ extern void gli_iphone_set_focus(window_t *winNum);
 -(void)viewWillAppear:(BOOL)animated {
     [m_frotzInfoController setKeyboardOwner: self];    
     disable_complete = !m_completionEnabled;
+    refresh_savedir = 1;
+
     if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
         m_landscape = YES;
     }
@@ -1402,17 +1403,20 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     frame.size.height -= navHeight;
     
     //notes page support
-#if 1
     if (!m_notesController) {
         m_notesController = [[NotesViewController alloc] initWithFrame: frame];
         [m_notesController setDelegate: self];
+        
+        if ([self respondsToSelector:@selector(automaticallyForwardAppearanceAndRotationMethodsToChildViewControllers:)])
+            [self addChildViewController:m_notesController]; // this was private but worked in 4.3, so check for another method added in 5.0
+        // (Yes, this is hacky, but not as hacky as doing string compares on systemVersion)
     }
-    m_background = [m_notesController.view retain];
-#else
-    m_background = [[UIView alloc] initWithFrame: frame];
-#endif
+    m_background = [m_notesController containerScrollView];
+    [m_background addSubview: m_notesController.view];
+
     [m_background setBackgroundColor: m_defaultBGColor];
     self.view = m_background;
+    [m_background addSubview: m_notesController.view];
     
     [m_background setAutoresizesSubviews: YES];
     [m_background setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|
@@ -2279,8 +2283,10 @@ static int iphone_top_win_height = 1;
                 [view clear];
                 return;
             }		
-            else
-                [buf appendFormat: @"%C", c];
+            else {
+                NSString *uniFmt = @"%C"; // moved out of line to suppress incorrect warning
+                [buf appendFormat: uniFmt, c];
+            }
             ++off;
         }
         if (h_screen_cols == maxCols) {
@@ -2689,10 +2695,7 @@ char *tempStatusLineScreenBuf() {
             if (cwin != lastInputWindow || (ipzAllowInput & kIPZNoEcho)) {
                 [m_inputLine setFont: (top_win_height > 0 && cursor_row <= top_win_height) ? [statusLine fixedFont] :
                  ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
-                //		[m_inputLine updatePosition];
-                [m_inputLine setText: @" "]; [m_inputLine setText: @""]; // *sigh* needed to force cursor to resize
-                // xxx [storyView markWaitForInput];
-                //movedbelow	[m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
+                NSString *t = m_inputLine.text; [m_inputLine setTextKeepCompletion: @" "]; [m_inputLine setTextKeepCompletion: t]; // *sigh* needed to force cursor to resize
                 lastInputWindow = cwin;
             }
             [storyView markWaitForInput];
@@ -3629,9 +3632,9 @@ static NSString *kDBTopPath = @"topPath";
 static NSString *kDefaultDBTopPath = @"/Frotz";
 
 -(void) initializeDropbox {
-#ifdef FROTZ_DB_CONSUMER_KEY
-    DBSession* session = 
-    [[DBSession alloc] initWithConsumerKey:@FROTZ_DB_CONSUMER_KEY consumerSecret:@FROTZ_DB_CONSUMER_SECRET];
+#ifdef FROTZ_DB_APP_KEY
+    DBSession* session = [[DBSession alloc] initWithAppKey:@FROTZ_DB_APP_KEY  appSecret:@FROTZ_DB_APP_SECRET root:kDBRootDropbox];
+
     session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating
     [DBSession setSharedSession:session];
     [session release];
@@ -3649,6 +3652,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     }
 #endif
 }
+
 
 -(BOOL)dbIsActive {
     return m_dbActive;
@@ -3722,7 +3726,10 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 - (void)sessionDidReceiveAuthorizationFailure:(DBSession*)session {
 }
 
-- (void)loginControllerDidLogin:(DBLoginController*)controller {
+- (void)sessionDidReceiveAuthorizationFailure:(DBSession *)session userId:(NSString *)userId {
+}
+
+- (void)dropboxDidLinkAccount {
     if ([[DBSession sharedSession] isLinked]) {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
                                                         message: 
@@ -3738,8 +3745,6 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     }
 }
 
-- (void)loginControllerDidCancel:(DBLoginController*)controller {
-}
 
 -(NSString*)metadataSubPath:(NSString*)path {
     NSString *dbTopPathT = [self dbTopPathT];

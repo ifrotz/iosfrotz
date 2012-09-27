@@ -1,5 +1,10 @@
 TO DO:
 
+Check awakeFromNib usage, don't set geometry in viewdidload, useviewwillappear.  Check MVC violations.
+Check bounds/frame usage
+
+fix word wrap (zmachine matters , asparin[)]) 20 pt landscape
+
 clear richtext color array when screen cleared
 unload blorb resource map on game quit
 drawing glitch in About Frotz settings field on iPhone, switch disappears (???)

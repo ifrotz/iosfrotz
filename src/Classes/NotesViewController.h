@@ -33,6 +33,7 @@
 -(void)activateKeyboard;
 -(void)dismissKeyboard;
 -(void)toggleKeyboard;
+-(UIScrollView*)containerScrollView;
 -(void) keyboardWillShow:(CGRect)kbBounds;
 -(void) keyboardWillHide;
 -(BOOL)isVisible;
