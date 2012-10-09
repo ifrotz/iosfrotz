@@ -434,11 +434,11 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		multipartData = nil ;
 		requestContentLength = 0;
 		NSError *ferror = nil;
-		if ([fn hasSuffix: @".png"] || [fn hasSuffix:@".jpg"] || [fn hasSuffix: @".PNG"] || [fn hasSuffix:@"JPG"]) {
+		if ([fn hasSuffix: @".png"] || [fn hasSuffix:@".jpg"] || [fn hasSuffix: @".PNG"] || [fn hasSuffix:@".JPG"]) {
 		    NSString *ext = [[fn pathExtension] lowercaseString];
 		    NSString *rootPath = [[server documentRoot] path];
-		    NSString *oldPath = [NSString stringWithFormat:@"%@%@%@", rootPath, path, fn];
-		    NSString *story = [[[path lastPathComponent] stringByDeletingPathExtension] stringByDeletingPathExtension];
+		    NSString *oldPath = [NSString stringWithFormat:@"%@%@%@", rootPath, [path stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding], fn];
+            NSString *story = [[[[path lastPathComponent] stringByDeletingPathExtension] stringByDeletingPathExtension ]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		    StoryBrowser *sb = (StoryBrowser*)[server delegate];
 		    story = [sb canonicalStoryName:story];
 		    if (story) {
@@ -561,7 +561,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                     postDataLen = partEndOffset;
                 }
                 NSLog(@"process data write file docpath=%@ fn=%@ self=%@", [uri relativeString], [postInfoComponents lastObject], self);
-                NSString *destPath = [[[server documentRoot] path] stringByAppendingPathComponent: [uri relativeString]];
+                NSString *destPath = [[[server documentRoot] path] stringByAppendingPathComponent: [[uri relativeString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
                 BOOL isDir = NO;
                 if (![[NSFileManager defaultManager] fileExistsAtPath: destPath isDirectory: &isDir] && [destPath hasSuffix: @".d"])
                     [[NSFileManager defaultManager] createDirectoryAtPath: destPath attributes:nil];
