@@ -2939,7 +2939,8 @@ static UIColor *scanColor(NSString *colorStr) {
 
 -(void)rememberActiveStory {
     if (m_currentStory && [m_currentStory length] > 0) {
-        NSDictionary *storyLocDict  = [[NSDictionary alloc] initWithObjectsAndKeys: m_currentStory, @"storyPath", nil];
+        NSDictionary *storyLocDict  = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                       [self pathToAppRelativePath: m_currentStory], @"storyPath", nil];
         if (storyLocDict) {
             NSString *errString = nil;
             NSData *slData = [NSPropertyListSerialization dataFromPropertyList:storyLocDict format:NSPropertyListBinaryFormat_v1_0
@@ -2957,6 +2958,7 @@ static UIColor *scanColor(NSString *colorStr) {
         NSDictionary *storyLocDict  = [NSDictionary dictionaryWithContentsOfFile: activeStoryPath];
         if (storyLocDict) {
             storyPath = [storyLocDict objectForKey: @"storyPath"];
+            storyPath = [self relativePathToAppAbsolutePath: storyPath];
             [self setCurrentStory: storyPath];
             if (gUseSplitVC) {
                 StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath];
@@ -2976,6 +2978,7 @@ static UIColor *scanColor(NSString *colorStr) {
     	NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: storySIPPath] retain];
         if (dict) {
             storyPath = [dict objectForKey: @"storyPath"];
+            storyPath = [self relativePathToAppAbsolutePath: storyPath];
             [self setCurrentStory: storyPath];
             if (m_currentStory && [fileMgr fileExistsAtPath: m_currentStory]) {
                 m_autoRestoreDict = dict;
@@ -3149,6 +3152,7 @@ static void setScreenDims(char *storyNameBuf) {
             NSString *storyPath = m_currentStory;
             if (!storyPath) {
                 storyPath = [dict objectForKey: @"storyPath"];
+                storyPath = [self relativePathToAppAbsolutePath: storyPath];
                 [self setCurrentStory: storyPath];
             }
             if (m_currentStory) {
@@ -3188,6 +3192,7 @@ static void setScreenDims(char *storyNameBuf) {
                 
                 NSString *savedScriptname = [dict objectForKey: @"scriptname"];
                 if (savedScriptname) {
+                    savedScriptname = [self relativePathToAppAbsolutePath: savedScriptname];
                     iphone_start_script((char*)[savedScriptname UTF8String]);
                 } else
                     iphone_stop_script();
@@ -3499,6 +3504,21 @@ static void setScreenDims(char *storyNameBuf) {
     finished = 0;
 }
 
+-(NSString*)pathToAppRelativePath:(NSString*)path {
+    NSString *rootPath = [[self rootPath] stringByDeletingLastPathComponent];
+    if ([path hasPrefix: rootPath]) {
+        NSUInteger len = [rootPath length]+1;
+        path = [path substringWithRange: NSMakeRange(len, [path length]-len)];
+    }
+    return path;
+}
+
+-(NSString*)relativePathToAppAbsolutePath:(NSString*)path {
+    if (![path isAbsolutePath])
+        path = [[[self rootPath] stringByDeletingLastPathComponent] stringByAppendingPathComponent: path];
+    return path;
+}
+
 -(void) autoSaveStory {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
     
@@ -3509,15 +3529,17 @@ static void setScreenDims(char *storyNameBuf) {
     if (m_currentStory && ([m_currentStory length] > 0)) {
         NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
-        [dict setObject: m_currentStory forKey: @"storyPath"];
+        [dict setObject: [self pathToAppRelativePath: m_currentStory] forKey: @"storyPath"];
         [dict setObject: [NSNumber numberWithInt: iphone_top_win_height] forKey: @"statusWinHeight"];
         [dict setObject: [NSNumber numberWithInt: cwin] forKey: @"currentWindow"];
         [dict setObject: [NSNumber numberWithInt: cursor_row] forKey: @"cursorRow"];
         [dict setObject: [NSNumber numberWithInt: cursor_col] forKey: @"cursorCol"];
         [dict setObject: [NSNumber numberWithInt: frame_count] forKey: @"frameCount"];
         [dict setObject: [NSNumber numberWithInt: currColor] forKey: @"textColors"];
-        if (*iphone_scriptname)
-            [dict setObject: [NSString stringWithUTF8String: iphone_scriptname] forKey: @"scriptname"];
+        if (*iphone_scriptname) {
+            NSString *scriptPath = [self pathToAppRelativePath: [NSString stringWithUTF8String: iphone_scriptname]];
+            [dict setObject: scriptPath forKey: @"scriptname"];
+        }
         
         NSData *statusData = [NSData dataWithBytes: screen_data length: h_screen_rows * MAX_COLS * sizeof(*screen_data)];
         NSData *statusColors = [NSData dataWithBytes: screen_colors length: h_screen_rows * MAX_COLS * sizeof(*screen_colors)];

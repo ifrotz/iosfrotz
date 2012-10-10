@@ -116,6 +116,8 @@ extern StoryInputLine *theInputLine;
 -(NSString*) storyGamePath;
 -(NSString*) resourceGamePath;
 -(NSString*) rootPath;
+-(NSString*)pathToAppRelativePath:(NSString*)path;
+-(NSString*)relativePathToAppAbsolutePath:(NSString*)path;
 -(BOOL) isKBShown;
 -(StoryMainViewController*) init;
 -(void) loadView;
