@@ -46,8 +46,9 @@ void gli_initialize_events()
 }
 
 int mouseEvent = FALSE;
-window_t *mouseEventWin = NULL;
-int mouseEventX = 0, mouseEventY = 0;
+int hyperlinkEvent = FALSE;
+window_t *iosEventWin = NULL;
+int iosEventX = 0, iosEventY = 0;
 
 void glk_select(event_t *event)
 {
@@ -90,11 +91,18 @@ void glk_select(event_t *event)
         /* Check to see if the screen-size has changed. The 
          screen_size_changed flag is set by the SIGWINCH signal
          handler. */
+        if (hyperlinkEvent) {
+            hyperlinkEvent = FALSE;
+            gli_event_store(evtype_Hyperlink, iosEventWin, iosEventX, iosEventY);
+            iosEventWin = NULL;
+            iosEventX = iosEventY = 0;
+            continue;
+        }
         if (mouseEvent) {
             mouseEvent = FALSE;
-            gli_event_store(evtype_MouseInput, mouseEventWin, mouseEventX, mouseEventY);
-            mouseEventWin = NULL;
-            mouseEventX = mouseEventY = 0;
+            gli_event_store(evtype_MouseInput, iosEventWin, iosEventX, iosEventY);
+            iosEventWin = NULL;
+            iosEventX = iosEventY = 0;
             continue;
         }
         if (screen_size_changed) {
@@ -162,11 +170,18 @@ void glk_select_poll(event_t *event)
         /* Check to see if the screen-size has changed. The 
          screen_size_changed flag is set by the SIGWINCH signal
          handler. */
+        if (hyperlinkEvent) {
+            hyperlinkEvent = FALSE;
+            gli_event_store(evtype_Hyperlink, iosEventWin, iosEventX, iosEventY);
+            iosEventWin = NULL;
+            iosEventX = iosEventY = 0;
+            continue;
+        }
         if (mouseEvent) {
             mouseEvent = FALSE;
-            gli_event_store(evtype_MouseInput, mouseEventWin, mouseEventX, mouseEventY);
-            mouseEventWin = NULL;
-            mouseEventX = mouseEventY = 0;
+            gli_event_store(evtype_MouseInput, iosEventWin, iosEventX, iosEventY);
+            iosEventWin = NULL;
+            iosEventX = iosEventY = 0;
             continue;
         }
         if (screen_size_changed) {

@@ -319,10 +319,7 @@ glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist)
             /* Grab the string. */
             proto = gidispatch_prototype(funcnum);
             if (!proto) {
-                if (funcnum >= 0x00F0 && funcnum <= 0x00FF)
-                    fatalError("\nUnknown Glk function.\n[Sound not currently supported; story should check for sound using gestalt before calling!]");
-                else
-                    fatalError("Unknown Glk function.");
+                fatalError("Unknown Glk function.");
                 return 0;
             }
             
@@ -1783,7 +1780,9 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
                     win->char_request = (req & kGlkReqChar) != 0;
                     win->mouse_request = (req & kGlkReqMouse) != 0;
                     win->hyper_request = (req & kGlkReqHyper) != 0;
-                    if (win->mouse_request && win->type == wintype_Graphics)
+                    if (win->mouse_request && (win->type == wintype_Graphics || win->type == wintype_TextGrid))
+                        iphone_enable_tap(win->iphone_glkViewNum);
+                    if (win->hyper_request && (win->type == wintype_TextGrid || win->type == wintype_TextBuffer))
                         iphone_enable_tap(win->iphone_glkViewNum);
                 }
 				if (foundwin->inbuf) {

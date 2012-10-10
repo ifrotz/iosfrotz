@@ -9,6 +9,7 @@ typedef struct tgline_struct {
     int size; /* this is the allocated size; only width is valid */
     wchar_t *chars;
     short *attrs; /* changed to short for compatibility with 'style' usage in gtw_bf.* */
+    int *hyperlink;
     int dirtybeg, dirtyend; /* characters [dirtybeg, dirtyend) need to be redrawn */
 } tgline_t;
 

@@ -94,8 +94,19 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
             if (val == wintype_Graphics)
                 return TRUE;
             return FALSE;
-            
-        case gestalt_Timer: 
+        case gestalt_Hyperlinks:
+#ifdef GLK_MODULE_HYPERLINKS
+            return TRUE;
+#else
+            return FALSE;
+#endif            
+        case gestalt_HyperlinkInput:
+#ifdef GLK_MODULE_HYPERLINKS
+            return val == wintype_TextGrid || val == wintype_TextBuffer;
+#else
+            return FALSE;
+#endif
+        case gestalt_Timer:
 #ifdef OPT_TIMED_INPUT
             return TRUE;
 #else /* !OPT_TIMED_INPUT */

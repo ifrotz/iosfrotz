@@ -111,6 +111,7 @@ local gzFile gz_open (path, mode, fd)
     s->stream.zalloc = (alloc_func)0;
     s->stream.zfree = (free_func)0;
     s->stream.opaque = (voidpf)0;
+    s->stream.state = NULL;
     s->stream.next_in = s->inbuf = Z_NULL;
     s->stream.next_out = s->outbuf = Z_NULL;
     s->stream.avail_in = s->stream.avail_out = 0;

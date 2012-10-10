@@ -546,10 +546,10 @@ int gli_get_key(glui32 *key, glui32 timeout)
 
     keycode = iphone_getchar(timeout ? timeout : -1);
     if (keycode == ZC_AUTOSAVE) {
-	do_autosave = 1;
-	status = -1;
+        do_autosave = 1;
+        status = -1;
     } else
-	status = keycode == -1 ? -1 : 0;
+        status = keycode == -1 ? -1 : 0;
     
     *key = gli_translate_key(status, keycode);
 
