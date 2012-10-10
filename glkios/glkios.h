@@ -65,6 +65,7 @@ struct glk_window_struct {
     int hyper_request;
 
     glui32 style;
+    glui32 hyperlink;
     
     // Save win open arguments for autosave, so window can be easily recreated
     glui32 size;
@@ -188,8 +189,9 @@ extern grect_t content_box;
 extern void (*gli_interrupt_handler)(void);
 
 extern int screen_size_changed;
-extern int mouseEvent, mouseEventX, mouseEventY;
-extern window_t *mouseEventWin;
+extern int mouseEvent, iosEventX, iosEventY;
+extern int hyperlinkEvent;
+extern window_t *iosEventWin;
 
 extern unsigned char char_printable_table[256];
 extern unsigned char char_typable_table[256];

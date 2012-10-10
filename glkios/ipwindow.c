@@ -9,10 +9,6 @@
 #include <stdlib.h>
 #include <wctype.h>
 
-#ifdef OPT_USE_SIGNALS
-#include <signal.h>
-#endif /* OPT_USE_SIGNALS */
-
 #include "glk.h"
 #include "glkios.h"
 #include "ipw_pair.h"
@@ -130,6 +126,7 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     win->mouse_request = FALSE;
     win->hyper_request = FALSE;
     win->style = style_Normal;
+    win->hyperlink = 0;
 
     win->str = gli_stream_open_window(win);
     win->echostr = NULL;
@@ -152,7 +149,7 @@ window_t *gli_new_window(glui32 type, glui32 rock)
 	win->iphone_glkViewNum = -1;
 
     if (!gli_focuswin) // bcs
-	gli_focuswin = win;
+        gli_focuswin = win;
 
     return win;
 }
@@ -161,11 +158,13 @@ void gli_delete_window(window_t *win)
 {
     window_t *prev, *next;
     
+    gli_focuswin = gli_rootwin;
+
     if (gli_unregister_obj)
         (*gli_unregister_obj)(win, gidisp_Class_Window, win->disprock);
 
     if (win->type != wintype_Pair && win->type != wintype_Blank)
-	iphone_destroy_glk_view(win->iphone_glkViewNum);
+        iphone_destroy_glk_view(win->iphone_glkViewNum);
 
     win->magicnum = 0;
     
@@ -820,7 +819,7 @@ void gli_window_rearrange(window_t *win, grect_t *box)
             break;
     }
     if (win->iphone_glkViewNum >= 0) {
-	iphone_glk_view_rearrange(win->iphone_glkViewNum, win);
+        iphone_glk_view_rearrange(win->iphone_glkViewNum, win);
     }
 }
 
@@ -1149,7 +1148,9 @@ void glk_cancel_mouse_event(window_t *win)
     }
     switch (win->type) {
         case wintype_Graphics:
-            iphone_disable_tap(win->iphone_glkViewNum);
+        case wintype_TextGrid:
+            if (!win->hyper_request)
+                iphone_disable_tap(win->iphone_glkViewNum);
             break;
         default:
             /* do nothing */
@@ -1201,7 +1202,7 @@ void glk_window_clear(window_t *win)
             win_textgrid_clear(win);
             break;
         case wintype_Graphics:
-	    iphone_glk_window_erase_rect(win->iphone_glkViewNum, win->bbox.left, win->bbox.top,
+            iphone_glk_window_erase_rect(win->iphone_glkViewNum, win->bbox.left, win->bbox.top,
 					 win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
             break;
     }
@@ -1225,17 +1226,6 @@ void glk_window_move_cursor(window_t *win, glui32 xpos, glui32 ypos)
 }
 
 void gli_iphone_set_focus(window_t *win) {
-#if 0
-    window_t *win = NULL;
-    
-    while (win == NULL || win->iphone_glkViewNum != winNum || win->type == wintype_Pair) {
-        win = gli_window_iterate_treeorder(win);
-	if (win == NULL)
-	    return;
-	if (win->iphone_glkViewNum == winNum)
-	    break;
-    }
-#endif
     gli_focuswin = win;
     gli_windows_place_cursor();    
 }
@@ -1260,24 +1250,60 @@ void gcmd_win_refresh(window_t *win, glui32 arg)
 }
 #ifdef GLK_MODULE_HYPERLINKS
 
-void glk_set_hyperlink(glui32 linkval)
-{
-    gli_strict_warning(L"set_hyperlink: hyperlinks not supported.");
-}
-
 void glk_set_hyperlink_stream(strid_t str, glui32 linkval)
 {
-    gli_strict_warning(L"set_hyperlink_stream: hyperlinks not supported.");
+    if (!str || !str->writable || !str->win)
+        return;
+        
+    switch (str->type) {
+        case strtype_Window:
+            str->win->hyperlink = linkval;
+            if (str->win->type == wintype_TextGrid || str->win->type == wintype_TextBuffer) {
+                iphone_set_hyperlink_value(str->win->iphone_glkViewNum, linkval, TRUE);
+            }
+            if (str->win->echostr && str->win->echostr != str)
+                glk_set_hyperlink_stream(str->win->echostr, linkval);
+            break;
+    }
 }
 
 void glk_request_hyperlink_event(winid_t win)
 {
-    gli_strict_warning(L"request_hyperlink_event: hyperlinks not supported.");
+    if (!win) {
+        gli_strict_warning(L"request_mouse_event: invalid ref");
+        return;
+    }
+    switch (win->type)
+    {
+        case wintype_TextGrid:
+        case wintype_TextBuffer:
+            iphone_enable_tap(win->iphone_glkViewNum);
+            win->hyper_request = TRUE;
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+    return;
 }
 
 void glk_cancel_hyperlink_event(winid_t win)
 {
-    gli_strict_warning(L"cancel_hyperlink_event: hyperlinks not supported.");
+    if (!win) {
+        gli_strict_warning(L"cancel_mouse_event: invalid ref");
+        return;
+    }
+    switch (win->type) {
+        case wintype_TextBuffer:
+        case wintype_TextGrid:
+            if (!win->mouse_request)
+                iphone_disable_tap(win->iphone_glkViewNum);
+            break;
+        default:
+            /* do nothing */
+            break;
+    }
+    win->hyper_request  = FALSE;
 }
 
 #endif /* GLK_MODULE_HYPERLINKS */

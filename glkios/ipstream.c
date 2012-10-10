@@ -733,11 +733,11 @@ static void gli_set_style(stream_t *str, glui32 val)
                 
                 unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
                 unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
-                //if (textColor != BAD_STYLE || bgColor != BAD_STYLE)
+
                 iphone_glk_set_text_colors(str->win->iphone_glkViewNum, textColor, bgColor);
                 //printf("stc v %d style %d text %x bg %x\n", str->win->iphone_glkViewNum, val, textColor, bgColor);
             }
-            if (str->win->echostr)
+            if (str->win->echostr && str->win->echostr != str)
                 gli_set_style(str->win->echostr, val);
             break;
     }
@@ -1334,4 +1334,12 @@ glui32 glk_get_buffer_stream(stream_t *str, char *buf, glui32 len)
     }
     return gli_get_buffer(str, buf, NULL, len);
 }
+
+#ifdef GLK_MODULE_HYPERLINKS
+void glk_set_hyperlink(glui32 linkval)
+{
+    glk_set_hyperlink_stream(gli_currentstr, linkval);
+}
+#endif
+
 

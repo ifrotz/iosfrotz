@@ -150,13 +150,15 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
                                                ln->size * sizeof(wchar_t));
                 ln->attrs = (short *)realloc(ln->attrs, 
                                              ln->size * sizeof(short));
-                if (!ln->chars || !ln->attrs) {
+                ln->hyperlink = (int *)realloc(ln->hyperlink, ln->size * sizeof(int));
+                if (!ln->chars || !ln->attrs || !ln->hyperlink) {
                     dwin->lines = NULL;
                     return;
                 }
                 for (ix=oldval; ix<ln->size; ix++) {
                     ln->chars[ix] = L' ';
                     ln->attrs[ix] = style_Normal;
+                    ln->hyperlink[ix] = 0;
                 }
             }
         }
@@ -180,6 +182,7 @@ static void init_lines(window_textgrid_t *dwin, int beg, int end, int linewid)
         ln->dirtyend = -1;
         ln->chars = (wchar_t *)malloc(ln->size * sizeof(wchar_t));
         ln->attrs = (short *)malloc(ln->size * sizeof(short));
+        ln->hyperlink = (int *)malloc(ln->size * sizeof(int));
         if (!ln->chars || !ln->size) {
             dwin->lines = NULL;
             return;
@@ -187,6 +190,7 @@ static void init_lines(window_textgrid_t *dwin, int beg, int end, int linewid)
         for (ix=0; ix<ln->size; ix++) {
             ln->chars[ix] = L' ';
             ln->attrs[ix] = style_Normal;
+            ln->hyperlink[ix] = 0;
         }
     }
 }
@@ -205,6 +209,10 @@ static void final_lines(window_textgrid_t *dwin)
             free(ln->attrs);
             ln->attrs = NULL;
         }
+        if (ln->hyperlink) {
+            free(ln->hyperlink);
+            ln->hyperlink = NULL;
+        }
     }
     
     free(dwin->lines);
@@ -216,6 +224,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
     int ix, jx, beg;
     int orgx, orgy;
     short curattr;
+    int curhyper;
     drawall = 1; // bcs
     if (drawall) {
         dwin->dirtybeg = 0;
@@ -257,10 +266,13 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
             wchar_t *ucx;
             beg = ix;
             curattr = ln->attrs[lnoffset(ln, beg)];
+            curhyper = ln->hyperlink[lnoffset(ln, beg)];
             ucx = ln->chars;
             wchar_t wch = ucx[lnoffset(ln,ix)];
             *(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
-            for (ix+=wcwidth(ln->chars[lnoffset(ln, ix)]); ix<ln->dirtyend && ln->attrs[lnoffset(ln, ix)] == curattr; ix+=wcwidth(ln->chars[lnoffset(ln, ix)])) {	    
+            for (ix+=wcwidth(ln->chars[lnoffset(ln, ix)]);
+                 ix<ln->dirtyend && ln->attrs[lnoffset(ln, ix)] == curattr && ln->hyperlink[lnoffset(ln, ix)] == curhyper;
+                 ix+=wcwidth(ln->chars[lnoffset(ln, ix)])) {
                 if (ix >= ipGrid->nCols)
                     break;
                 wch = ucx[lnoffset(ln,ix)];
@@ -388,6 +400,7 @@ void win_textgrid_putchar(window_t *win, wchar_t ch)
     
     ln->chars[curx_offset] = ch;
     ln->attrs[curx_offset] = win->style;
+    ln->hyperlink[curx_offset] = win->hyperlink;
     setposdirty(dwin, ln, dwin->curx, dwin->cury);
     if ( ch_width > 1 )
         setposdirty(dwin, ln, dwin->curx + 1, dwin->cury);
@@ -408,6 +421,7 @@ void win_textgrid_clear(window_t *win)
         for (ix=0; ix<dwin->width; ix++) {
             ln->chars[ix] = L' ';
             ln->attrs[ix] = style_Normal;
+            ln->hyperlink[ix] = 0;
         }
         ln->dirtybeg = 0;
         ln->dirtyend = dwin->width;
@@ -564,6 +578,7 @@ static void import_input_line(tgline_t *ln, int offset, void *buf,
             char ch = ((char *)buf)[ix];
             ln->attrs[offset+ix] = style_Input;
             ln->chars[offset+ix] = UCS(ch);
+            ln->hyperlink[offset+ix] = 0;
         }
     }
     else {
@@ -571,6 +586,7 @@ static void import_input_line(tgline_t *ln, int offset, void *buf,
             glui32 kval = ((glui32 *)buf)[ix];
             ln->attrs[offset+ix] = style_Input;
             ln->chars[offset+ix] = kval;
+            ln->hyperlink[offset+ix] = 0;
         }
     }
 }
@@ -668,6 +684,7 @@ void gcmd_grid_insert_key(window_t *win, glui32 arg)
         ln->chars[lnoffset(ln, dwin->inorgx)+ix] = ln->chars[lnoffset(ln, dwin->inorgx)+ix-1];
     ln->attrs[lnoffset(ln, dwin->inorgx)+dwin->inlen] = style_Input;
     ln->chars[lnoffset(ln, dwin->inorgx)+dwin->incurs] = glui32_to_wchar(arg);
+    ln->hyperlink[lnoffset(ln, dwin->inorgx)+dwin->inlen] = 0;
     
     setposdirty(dwin, ln, wcswidth(ln->chars, lnoffset(ln, dwin->inorgx)+dwin->incurs), dwin->inorgy);
     if (dwin->incurs != dwin->inlen) {

@@ -97,7 +97,7 @@ void win_textbuffer_update(window_t *win)
 void win_textbuffer_putchar(window_t *win, wchar_t ch)
 {
     if (win->iphone_glkViewNum != -1)
-	iphone_win_putchar(win->iphone_glkViewNum, ch);
+        iphone_win_putchar(win->iphone_glkViewNum, ch);
 #if 0
     window_textbuffer_t *dwin = win->data;
     long lx;
@@ -118,9 +118,10 @@ void win_textbuffer_putchar(window_t *win, wchar_t ch)
 /* This assumes that the text is all within the final style run. 
     Convenient, but true, since this is only used by editing in the
     input text. */
-static void put_text(window_textbuffer_t *dwin, wchar_t *buf, long len, 
+static void put_text(window_textbuffer_t *dwin, wchar_t *buf, long len,
     long pos, long oldlen)
 {
+
     long diff = len - oldlen;
 
     if (dwin->numchars + diff > dwin->charssize) {
@@ -145,7 +146,6 @@ static void put_text(window_textbuffer_t *dwin, wchar_t *buf, long len,
         else if (dwin->incurs >= pos)
             dwin->incurs = pos+len;
     }
-
 }
 
 void win_textbuffer_clear(window_t *win)
@@ -370,12 +370,13 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
     inarrayrock = dwin->inarrayrock;
     inunicode = dwin->inunicode;
 
-    len = dwin->numchars - dwin->infence;
+    len = dwin->charssize - dwin->infence;
 
     /* Store in event buffer. */
         
     if (len > inmax)
         len = inmax;
+    len = iphone_peek_inputline(&dwin->chars[dwin->infence], len);
         
     export_input_line(inbuf, inunicode, len, &dwin->chars[dwin->infence]);
 
@@ -396,7 +397,8 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
     win->line_request = FALSE;
     dwin->inbuf = NULL;
     dwin->inmax = 0;
-    win_textbuffer_putchar(win, L'\n');
+    
+    //win_textbuffer_putchar(win, L'\n');
 
     if (gli_unregister_arr) {
         char *typedesc = (inunicode ? "&+#!Iu" : "&+#!Cn");
@@ -410,15 +412,20 @@ static void import_input_line(window_textbuffer_t *dwin, void *buf,
     /* len will be nonzero. */
 
     if (unicode) {
-        put_text(dwin, buf, len, dwin->incurs, 0);
+        if (dwin->owner->iphone_glkViewNum != -1)
+            iphone_set_input_line(buf, len);
+        //put_text(dwin, buf, len, dwin->incurs, 0);
     }
     else {
         int ix;
-        wchar_t *cx = (wchar_t *)malloc(len * sizeof(wchar_t));
+        wchar_t *cx = (wchar_t *)malloc((len+1) * sizeof(wchar_t));
         for (ix=0; ix<len; ix++) {
             cx[ix] = UCS(((char *)buf)[ix]);
         }
-        put_text(dwin, cx, len, dwin->incurs, 0);
+        cx[ix] = 0;
+        if (dwin->owner->iphone_glkViewNum != -1)
+            iphone_set_input_line(cx, len);
+        //put_text(dwin, cx, len, dwin->incurs, 0);
         free(cx);
     }
 }
