@@ -46,6 +46,7 @@ const CGFloat kHistoryLineHeight = 20.0;
     [tableView setBackgroundColor: [UIColor darkGrayColor]];
     [tableView setAlpha: 0.9];
     [tableView setUserInteractionEnabled: YES];
+    [tableView setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
     
     NSArray* nibViews =  [[NSBundle mainBundle] loadNibNamed:@"FrotzWordPicker" owner:self options:nil];
     m_wordPicker = [nibViews objectAtIndex: 0];
@@ -138,7 +139,8 @@ const CGFloat kHistoryLineHeight = 20.0;
             pt.y -= frame.size.height;
             frame.origin = pt;
             [tableView setFrame: frame];
-            
+            [tableView setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
+
             int scrollTo = m_mode == FrotzInputHelperModeMoreWords ? m_lastCommonWordPicked : [self historyCount] - 1;
             if (scrollTo >= 0)
                 [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow: scrollTo inSection:0] 
@@ -246,31 +248,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     }
 }
 
-/*
- - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
- 
- if (editingStyle == UITableViewCellEditingStyleDelete) {
- }
- if (editingStyle == UITableViewCellEditingStyleInsert) {
- }
- }
- */
-/*
- - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
- return YES;
- }
- */
-/*
- - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
- }
- */
-/*
- - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
- return YES;
- }
- */
-
-
 - (void)dealloc {
     [m_history release];
     [m_commonCommands release];
@@ -289,8 +266,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     
     [super viewWillAppear:animated];
     [[self tableView] reloadData];
-    if (m_delegate && [m_delegate respondsToSelector: @selector(historyItem)]) {
-    }
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
