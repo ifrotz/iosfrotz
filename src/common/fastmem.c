@@ -446,27 +446,27 @@ int init_memory (void)
 void init_undo (void)
 {
     void far *reserved;
-
+    
     reserved = NULL;	/* makes compilers shut up */
-
+    
     if (reserve_mem != 0) {
-	if ((reserved = malloc (reserve_mem)) == NULL)
-	    return;
+        if ((reserved = malloc (reserve_mem)) == NULL)
+            return;
     }
-
+    
     /* Allocate h_dynamic_size bytes for previous dynamic zmp state
-       + 1.5 h_dynamic_size for Quetzal diff + 2. */
+     + 1.5 h_dynamic_size for Quetzal diff + 2. */
     undo_mem = malloc ((h_dynamic_size * 5) / 2 + 2);
     if (undo_mem != NULL) {
-	prev_zmp = undo_mem;
-	undo_diff = undo_mem + h_dynamic_size;
-	memcpy (prev_zmp, zmp, h_dynamic_size);
+        prev_zmp = undo_mem;
+        undo_diff = undo_mem + h_dynamic_size;
+        memcpy (prev_zmp, zmp, h_dynamic_size);
     } else
-	f_setup.undo_slots = 0;
-
+        f_setup.undo_slots = 0;
+    
     if (reserve_mem != 0)
-	free (reserved);
-
+        free (reserved);
+    
 }/* init_undo */
 
 /*

@@ -35,8 +35,9 @@ extern int ipzAllowInput;
 extern int lastVisibleYPos[];
 extern BOOL cursorVisible;
 
-extern void iphone_clear_input(NSString *initStr);
-extern void iphone_feed_input(NSString *str);
+void iphone_clear_input(NSString *initStr);
+void iphone_feed_input(NSString *str);
+void iphone_feed_input_line(NSString *str);
 
 @protocol InputHelperDelegate
 -(void)hideInputHelper;
@@ -171,7 +172,7 @@ extern StoryInputLine *theInputLine;
 -(void)focusGlkView:(UIView*)view;
 -(FrotzView*)glkView:(int)viewNum;
 -(BOOL)glkViewTypeIsGrid:(int)viewNum;
--(void)tapInView:(UIView*)view atPoint:(CGPoint)pt;
+-(BOOL)tapInView:(UIView*)view atPoint:(CGPoint)pt;
 -(void)enableTaps:(NSNumber*)viewNum;
 -(void)disableTaps:(NSNumber*)viewNum;
 

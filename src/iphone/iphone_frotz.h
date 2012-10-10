@@ -53,8 +53,11 @@ void os_set_default_file_names(char *basename);
 bool is_terminator (zchar);
 
 int iphone_getchar(int timeout);
+int iphone_peek_inputline(const wchar_t *buf, int maxlen);
+void iphone_set_input_line(wchar_t *s, int len);
 void iphone_puts(char *s);
 void iphone_win_puts(int winNum, char *s);
+void iphone_win_putwcs(int winNum, wchar_t *s, int len);
 void iphone_enable_input();
 void iphone_enable_single_key_input();
 void iphone_disable_input();
@@ -74,6 +77,7 @@ void iphone_mark_recent_save();
 void iphone_more_prompt();
 void iphone_set_text_attribs(int viewNum, int style, int color, bool lock);
 void iphone_put_image(int viewNum, int imageNum, int imageAlign, bool lock);
+void iphone_set_hyperlink_value(int viewNum, int val, bool lock);
 int iphone_prompt_file_name (char *file_name, const char *default_name, int flag);
 int iphone_read_file_name(char *file_name, const char *default_name, int flag);
 void iphone_start_script(char *scriptName);
@@ -129,8 +133,8 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSavePListFile "FrotzSIP.plist"
 #define kFrotzAutoSaveActiveFile "Current.plist"
 
-#define IPHONE_FROTZ_VERS "1.6b1"
-#define FROTZ_BETA 1
+#define IPHONE_FROTZ_VERS "1.6b2"
+#define FROTZ_BETA 0
 
 #define APPLE_FASCISM (!FROTZ_BETA)
 

@@ -24,26 +24,26 @@
 - (void)sendEvent:(UIEvent *)event {
     static UIView *prevView;
     for (UITouch *touch in [event allTouches]) {
-	UIView *view = [touch view];
-	UITouchPhase phase = [touch phase];
+        UIView *view = [touch view];
+        UITouchPhase phase = [touch phase];
 
-	if (!view && phase != UITouchPhaseBegan)
-	    view = prevView; // for some reason sometomes view is nil and we lose the phase ended event!
-	if ([touch tapCount]>=1 || phase == UITouchPhaseEnded) {
-	    if ([view isDescendantOfView: theInputLine]) {
-		prevView = view;
-		if (![theInputLine handleTouch: touch withEvent: event])
-		    return;
-	    } else if ([view isDescendantOfView: theStoryView]) {
-		prevView = view;
-		if (![theStoryView handleTouch: touch withEvent: event])
-		    return;
-	    } else if ([view isDescendantOfView: theStatusLine]) {
-		prevView = view;
-		if (![theStatusLine handleTouch: touch withEvent: event])
-		    return;
-	    }
-	}
+        if (!view && phase != UITouchPhaseBegan)
+            view = prevView; // for some reason sometomes view is nil and we lose the phase ended event!
+        if ([touch tapCount]>=1 || phase == UITouchPhaseEnded) {
+            if ([view isDescendantOfView: theInputLine]) {
+                prevView = view;
+                if (![theInputLine handleTouch: touch withEvent: event])
+                    return;
+            } else if ([view isDescendantOfView: theStoryView]) {
+                prevView = view;
+                if (![theStoryView handleTouch: touch withEvent: event])
+                    return;
+                } else if ([view isDescendantOfView: theStatusLine]) {
+                    prevView = view;
+                    if (![theStatusLine handleTouch: touch withEvent: event])
+                        return;
+                }
+        }
     }
     [super sendEvent: event];
 }

@@ -122,13 +122,13 @@ enum ControlTableSections
 
 - (id)init
 {
-    self = [super init];
-    if (self)
+    if ((self = [super init]))
     {
-	m_colorPicker = [[ColorPicker alloc] init];
-	[m_colorPicker setDelegate: self];
-	m_fontPicker = [[FontPicker alloc] init];
-	m_frotzDB = [[FrotzDBController alloc] init];
+        m_colorPicker = [[ColorPicker alloc] init];
+        [m_colorPicker setDelegate: self];
+        m_fontPicker = [[FontPicker alloc] init];
+        m_frotzDB = [[FrotzDBController alloc] init];
+        m_releaseNotes = [[ReleaseNotes alloc] init];
     }
     return self;
 }
@@ -270,18 +270,13 @@ enum ControlTableSections
     
     m_gettingStarted = [[GettingStarted alloc] init];
     m_aboutFrotz = [[AboutFrotz alloc] init];
-    m_releaseNotes = [[ReleaseNotes alloc] init];
+    if (!m_releaseNotes)
+        m_releaseNotes = [[ReleaseNotes alloc] init];
     m_fileTransferInfo = [[FileTransferInfo alloc] initWithController: m_storyDelegate];	
     
     [self create_UISwitch];
     [self create_UISlider];
-    
-#if 0
-    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
-    self.navigationItem.hidesBackButton = YES;
-    self.navigationItem.rightBarButtonItem = doneItem;
-    [doneItem release];
-#endif
+
 }
 
 -(void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color {

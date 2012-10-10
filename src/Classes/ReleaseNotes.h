@@ -17,6 +17,7 @@
     NSString *m_relNotesPath;
 }
 - (id)init;
-- (void)updateReleaseNotes;
+- (void)updateReleaseNotes:(BOOL)force;
+- (void)updateReleaseNotesAuto;
 - (void)showReleaseNotes;
 @end

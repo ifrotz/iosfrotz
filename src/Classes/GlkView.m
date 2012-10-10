@@ -10,7 +10,7 @@
 #include <stdlib.h>
 @implementation GlkView
 
-@synthesize tapInputEnabled;
+@synthesize tapInputEnabled = m_tapInputEnabled;
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
@@ -67,9 +67,9 @@
         if (tapCount >= 2)
             [delegate abortToBrowser];
     } else if (tapCount >= 1) {
-        if (tapInputEnabled && tapCount==1) {
-            [delegate tapInView: self atPoint: [touch locationInView:self]];
-            return YES;
+        if (m_tapInputEnabled && tapCount==1) {
+            if ([delegate tapInView: self atPoint: [touch locationInView:self]])
+                return YES;
         }
         if ([delegate isKBShown]) {
             [self setSelectionDisabled: NO];

@@ -36,13 +36,6 @@ static BOOL hasAccessibility;
 @end
 @implementation  UIAccessibilityElement
 @end
-#else
-// This allows the UIAccessibility support in this file to load on pre-3.0 devices, since it is
-// lazily allocated.  Also need to link with -Wl,-flat_namepace,-undefined,dynamic_lookup.
-__asm__(".weak_reference _OBJC_CLASS_$_UIAccessibilityElement\n");
-__asm__(".weak_reference _OBJC_METACLASS_$_UIAccessibilityElement\n");
-__asm__(".weak_reference _UIAccessibilityScreenChangedNotification\n");
-
 #endif
 
 void removeAnim(UIView *view);
@@ -121,6 +114,25 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 -(RichTextStyle)textStyle {
     return m_currentTextStyle;
 }
+
+-(void)setHyperlinkIndex:(int)hyperlinkIndex {
+    if (m_hyperlinkIndex != hyperlinkIndex) {
+        m_hyperlinkIndex = hyperlinkIndex;
+        m_prevLineNotTerminated = NO;
+    }
+}
+
+-(int)hyperlinkIndex {
+    return m_hyperlinkIndex;
+}
+
+-(void)populateZeroHyperlinks {
+    if (!m_hyperlinks)
+        m_hyperlinks = [[NSMutableArray alloc] initWithCapacity:1000];
+    for (NSObject *o in m_textRuns)
+        [m_hyperlinks addObject: [NSNumber numberWithInt:0]];
+}
+
 -(void)setTextColorIndex:(unsigned int)index {
     if (index==1) index=0;
     if (index > [m_colorArray count])
@@ -130,9 +142,11 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_prevLineNotTerminated = NO;
     }
 }
+
 -(unsigned int)textColorIndex {
     return m_currentTextColorIndex;
 }
+
 -(void)setBgColorIndex:(unsigned int)index {
     if (index==1) index=0;
     if (index > [m_colorArray count])
@@ -398,6 +412,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_textStyles = [[NSMutableArray alloc] initWithCapacity: 1000];
         m_colorIndex = [[NSMutableArray alloc] initWithCapacity: 1000];
         m_textLineNum = [[NSMutableArray alloc] initWithCapacity: 1000];
+        m_hyperlinks = nil;
+
 
         m_lineYPos = [[NSMutableArray alloc] initWithCapacity: 1000];
         m_lineWidth = [[NSMutableArray alloc] initWithCapacity: 1000];
@@ -457,6 +473,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_richDataGetImageCallback = nil;
     }
     return self;
+}
+
+- (CGSize) fixedFontSize {
+    CGSize sz;
+    sz.width = m_fixedFontWidth ? m_fixedFontWidth : 1;
+    sz.height = m_fixedFontHeight ? m_fixedFontHeight : 1;
+    return sz;
 }
 
 - (void)setNiceMargins:(BOOL)reflow {
@@ -532,6 +555,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     [m_textStyles release];
     [m_textLineNum release];
     [m_colorIndex release];
+    if (m_hyperlinks)
+        [m_hyperlinks release];
+
     [m_lineYPos release];
     [m_lineWidth release];
     [m_imageviews release];
@@ -544,6 +570,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     m_textStyles = nil;
     m_textLineNum = nil;
     m_colorIndex = nil;
+    m_hyperlinks = nil;
     m_lineYPos = nil;
     m_lineWidth = nil;
     m_imageviews = nil;
@@ -591,7 +618,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     [m_textStyles removeAllObjects];
     [m_textLineNum removeAllObjects];
     [m_colorIndex removeAllObjects];
-    
+    if (m_hyperlinks)
+        [m_hyperlinks removeAllObjects];
+
     [m_lineYPos removeAllObjects];
     [m_lineWidth removeAllObjects];
     for (UIImageView *iv in m_imageviews) 
@@ -712,6 +741,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
             break;
         lastUniqPt = pt;
         RichTextStyle style = [[m_textStyles objectAtIndex: i] unsignedIntValue];
+        int hyperlink = m_hyperlinks ? [[m_hyperlinks objectAtIndex: i] intValue] : 0;
         if (style & kFTImage) {
             curImageIndex = (style >> kFTImageNumShift);
             if (curImageIndex < [m_imageviews count]) {
@@ -739,6 +769,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                 bgColor = [m_colorArray objectAtIndex: bgIndex-1];
                 useBGColor = YES;
             }
+        }
+        if (hyperlink) {
+            fgColor = [UIColor blueColor];
         }
         //	NSLog(@"i=%d pt=(%f,%f), fg=%@ bg=%@ usebg=%d s=%x t=[%@]", i, pt.x, pt.y, fgColor, bgColor, useBGColor, style, text);
         if (style & kFTReverse) {
@@ -1197,6 +1230,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                                  m_textStyles, @"textStyles",
                                  m_colorIndex, @"colorIndex",
                                  m_imageIDs, @"glkImageIDs",
+                                 m_hyperlinks, m_hyperlinks?@"hyperlinks":nil,
                                  nil ];
     
     NSMutableArray *savedColors = [NSMutableArray arrayWithCapacity: [m_colorArray count]];
@@ -1219,6 +1253,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     [m_textRuns release];
     [m_textStyles release];
     [m_colorIndex release];
+    if (m_hyperlinks)
+        [m_hyperlinks release];
     
     NSArray *savedTextRuns = [saveData objectForKey: @"textRuns"];
     m_textRuns = [savedTextRuns mutableCopy];
@@ -1226,7 +1262,13 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     m_textStyles = [savedStyles mutableCopy];
     NSArray *savedColorIndex = [saveData objectForKey: @"colorIndex"];
     m_colorIndex = [savedColorIndex mutableCopy];
-    
+
+    NSArray *savedHyperlinks = [saveData objectForKey: @"hyperlinks"];
+    if (savedHyperlinks)
+        m_hyperlinks = [savedHyperlinks mutableCopy];
+    else
+        m_hyperlinks = nil;
+
     int count = [m_textRuns count];
     const int kMaxSavedRuns = 80;
     if (count > kMaxSavedRuns) {
@@ -1240,6 +1282,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [m_textRuns removeObjectsInRange: NSMakeRange(0, i+1)];
         [m_textStyles removeObjectsInRange: NSMakeRange(0, i+1)];
         [m_colorIndex removeObjectsInRange: NSMakeRange(0, i+1)];
+        if (m_hyperlinks)
+            [m_hyperlinks removeObjectsInRange: NSMakeRange(0, i+1)];
     }
     
     NSArray *savedColorArray = [saveData objectForKey: @"colorArray"];
@@ -1286,7 +1330,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         while (maxColorIndex > [m_colorArray count])
             [m_colorArray addObject: [UIColor darkGrayColor]];
     }
-    [self reflowText];    
+
+    [self reflowText];
 }
 
 - (void)reloadImages {
@@ -1299,6 +1344,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             UIImage *image = m_richDataGetImageCallback(imageNum);
             UIImageView *imageView = [[UIImageView alloc] initWithImage: image];
             [m_imageviews addObject: imageView];
+            [imageView release];
         }
         [self reflowText];
         [self setFreezeDisplay:NO];
@@ -1339,10 +1385,16 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         if (m_topMargin+ m_lastPt.y > self.contentSize.height-m_fontHeight-m_extraLineSpacing-m_bottomMargin)
             [self setContentSize: CGSizeMake(self.contentSize.width, m_topMargin+ m_lastPt.y + m_bottomMargin)];
         [m_imageviews addObject: imageView];
+        [imageView release];
+
+        if (!m_hyperlinks && m_hyperlinkIndex)
+            [self populateZeroHyperlinks];
         [m_textRuns addObject: @""];
         [m_colorIndex addObject: [NSNumber numberWithInt: (m_currentBGColorIndex << 16) | m_currentTextColorIndex]];
         [m_textPos addObject: [NSValue valueWithCGPoint: m_prevPt]];
         [m_textStyles addObject: [NSNumber numberWithInt: imageAlign]];
+        if (m_hyperlinks)
+            [m_hyperlinks addObject: [NSNumber numberWithInt: m_hyperlinkIndex]];
         m_prevPt = m_lastPt;
     }
 }
@@ -1425,6 +1477,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
         [m_textRuns replaceObjectAtIndex: index withObject: [[newText copy] autorelease]];
     } else {
+        if (!m_hyperlinks && m_hyperlinkIndex)
+            [self populateZeroHyperlinks];
+
         [m_textLineNum addObject: [NSNumber numberWithInt: m_numLines]];
         [self wordWrapTextSize:text atPoint:&m_lastPt font:font style:m_currentTextStyle fgColor:nil bgColor:nil withRect:frame
                        lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
@@ -1432,6 +1487,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [m_colorIndex addObject: [NSNumber numberWithInt: (m_currentBGColorIndex << 16) | m_currentTextColorIndex]];
         [m_textPos addObject: [NSValue valueWithCGPoint: m_lastPt]];
         [m_textStyles addObject: style];
+        if (m_hyperlinks)
+            [m_hyperlinks addObject: [NSNumber numberWithInt: m_hyperlinkIndex]];
+        // if (m_hyperlinkIndex) NSLog(@"hyperlink %d %@", m_hyperlinkIndex, text);
     }
     m_prevPt = m_lastPt;
     m_lastPt = nextPoint;
@@ -2098,30 +2156,9 @@ static NSString *kCommand = @"Command";
     return m_textPos;
 }
 
-- (void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
-{
-    
-    
-    UITouch* touch = [touches anyObject];
-    CGPoint touchPoint = [touch locationInView: self], nextPos;
-    
-    int tapCount = [touch tapCount];
-    if (tapCount == 1 && [touch phase]==UITouchPhaseBegan && m_selectionView && [m_selectionView superview]) {
-        m_selectedRun = -1;
-        m_selectedColumnRange = NSMakeRange(0, 0);
-        if (m_selectionView) {
-            [m_selectionView setText: @""];
-            [m_selectionView removeFromSuperview];
-        }
-    }
-    if (m_selectionDisabled || tapCount != 2 || [self isDecelerating]) {
-        [super touchesBegan:touches withEvent:event];
-        return;
-    }
-    //    NSLog(@"rich text touches began pt=(%f,%f)", touchPoint.x, touchPoint.y);
-    
+-(int) getTextRunAtPoint:(CGPoint)touchPoint {
     int i, l = [m_textRuns count];
-    CGPoint lastUniqPt = CGPointMake(0,0), pt;
+    CGPoint lastUniqPt = CGPointMake(0,0), pt, nextPos;
     int lastUniqIndex = 0;
     for (i=0; i < l; ++i) {
         CGPoint pt = [[m_textPos objectAtIndex: i] CGPointValue];
@@ -2148,14 +2185,46 @@ static NSString *kCommand = @"Command";
         UIFont *font = [self fontForStyle: style];
         
         if ((found = [self wordWrapTextSize:text atPoint:&pt font:font style:style fgColor:nil bgColor:nil withRect:myRect
-                                    lineNumber:0 nextPos:&nextPos hotPoint:&touchPoint doDraw:NO]))
+                                 lineNumber:0 nextPos:&nextPos hotPoint:&touchPoint doDraw:NO]))
             break;
         i++; j++;
     }
-    m_selectedRun = -1;
-    if (found) {
-        m_selectedRun = i;
-    } else {
+    return found ? i : -1;
+}
+
+-(int)hyperlinkAtPoint:(CGPoint)point {
+    if (!m_hyperlinks)
+        return 0;
+    int i = [self getTextRunAtPoint: point];
+    if (i >= 0 && i < [m_hyperlinks count])
+        return [[m_hyperlinks objectAtIndex:i] intValue];
+    return 0;
+}
+
+- (void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
+{    
+    UITouch* touch = [touches anyObject];
+    CGPoint touchPoint = [touch locationInView: self];
+    
+    int tapCount = [touch tapCount];
+    if (tapCount == 1 && [touch phase]==UITouchPhaseBegan && m_selectionView && [m_selectionView superview]) {
+        m_selectedRun = -1;
+        m_selectedColumnRange = NSMakeRange(0, 0);
+        if (m_selectionView) {
+            [m_selectionView setText: @""];
+            [m_selectionView removeFromSuperview];
+        }
+    }
+    if (m_selectionDisabled || tapCount != 2 || [self isDecelerating]) {
+        [super touchesBegan:touches withEvent:event];
+        return;
+    }
+    //    NSLog(@"rich text touches began pt=(%f,%f)", touchPoint.x, touchPoint.y);
+    
+
+    m_selectedRun = [self getTextRunAtPoint: touchPoint];
+    
+    if (m_selectedRun == -1) {
         m_selectedColumnRange = NSMakeRange(0, 0);
         [m_selectionView setText: @""];
         [m_selectionView removeFromSuperview];

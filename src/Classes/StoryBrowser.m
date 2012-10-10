@@ -307,7 +307,6 @@ void removeOldPngSplash(const char *filename) {
                 [titleDict setObject:hhFix forKey:@"hitchhiker"];
                 [titleDict setObject:@"The Dreamhold" forKey:@"dreamhold"];
                 [titleDict setObject:@"Bureaucracy" forKey:@"bureaucracy"];
-                needMDDictUpdate = YES;
             }
 
             NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
@@ -355,6 +354,38 @@ void removeOldPngSplash(const char *filename) {
             [m_metaDict setObject: descriptDict forKey:kMDDescriptsKey];
             needMDDictUpdate = YES;
         }
+
+        [self refresh];
+
+        if (!vers || [vers compare: @"1.6"]==NSOrderedAscending) {
+            // Update thumbnails if device image scale > 1.0
+            CGFloat scale = 1.0;
+            if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
+                scale = [[UIScreen mainScreen] scale];
+            if (scale > 1.0) {
+                for (StoryInfo *si in m_storyNames) {
+                    NSString *storyFile = [[si path] lastPathComponent];
+                    NSString *story = [storyFile stringByDeletingPathExtension];
+                    NSString *pathExt = [storyFile pathExtension];
+                    BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
+                    NSData *data = nil;
+                    if (!isZblorb || !gLargeScreenDevice)
+                        data = [self splashDataForStory: story];
+                    if (!data && isZblorb)
+                        data = [imageDataFromBlorb([si path]) autorelease];
+                    if (data) {
+                        UIImage *timg = [[UIImage alloc] initWithData: data];
+                        UIImage *splashImage = scaledUIImage(timg, 0, 0);
+                        UIImage *thumb = scaledUIImage(splashImage, 40, 32);
+                        [timg release];
+                        if (thumb) {
+                            [self addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
+                            needMDDictUpdate = YES;
+                        }
+                    }
+                }
+            }
+        }
         if (!vers || ![vers isEqualToString: @IPHONE_FROTZ_VERS]) {
             [m_metaDict setObject: @IPHONE_FROTZ_VERS forKey: kMDFrotzVersionKey];
             needMDDictUpdate = YES;
@@ -364,7 +395,6 @@ void removeOldPngSplash(const char *filename) {
             if (dfltMetaData)
                 [dfltMetaData release];
         }
-        [self refresh];
     }
     return self;
 }
@@ -826,11 +856,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (NSData*)splashDataForStory: (NSString*)story {
-#if 0
-    NSMutableDictionary *splashDict = [m_metaDict objectForKey: kMDSplashesKey];
-    NSString *key = [self mapInfocom83Filename: [story lowercaseString]];    
-    return [splashDict objectForKey: key];
-#endif
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSData *imgData = [NSData dataWithContentsOfFile: gameSplashPath];
     return imgData;
@@ -1043,7 +1068,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             [dialog release];
         } else {
 #else	
-            autosaveMsg = [self fullTitleForStory: [NSString stringWithFormat: @"Autosaving story \"%@\".\n", [self fullTitleForStory: [currStory stringByDeletingPathExtension]]]];
+            autosaveMsg = [NSString stringWithFormat: @"Autosaving story \"%@\". ", [self fullTitleForStory: [currStory stringByDeletingPathExtension]]];
             [m_storyMainViewController suspendStory];
         } {
 #endif
@@ -1484,17 +1509,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)didReceiveMemoryWarning {
-    //    NSMutableDictionary *thumbDict = [m_metaDict objectForKey: kMDThumbnailsKey];
-    //    [thumbDict removeAllObjects];
-    //    [m_tableView reloadData];
     [super didReceiveMemoryWarning];
-#if 0
-    if (!m_lowMemory) {
-        UIAlertView *memWarning = [[UIAlertView alloc] initWithTitle:@"Low memory" message:@"Frotz is disabling display of thumbnails and splash images to conserve memory." delegate:self cancelButtonTitle:@"Okay" otherButtonTitles:nil];
-        [memWarning show];
-        [memWarning release];
-    }
-#endif
     m_lowMemory = YES;
 }
 

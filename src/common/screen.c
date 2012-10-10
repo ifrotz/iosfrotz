@@ -653,49 +653,51 @@ void split_window (zword height)
     /* Calculate height of status line and upper window */
 
     if (h_version != V6)
-	height *= hi (wp[1].font_size);
-
+        height *= hi (wp[1].font_size);
+    
     if (h_version <= V3)
-	stat_height = hi (wp[7].font_size);
-
+        stat_height = hi (wp[7].font_size);
+    
+    if (height > h_screen_height)
+        height = h_screen_height;
     /* Cursor of upper window mustn't be swallowed by the lower window */
-
+    
     wp[1].y_cursor += wp[1].y_pos - 1 - stat_height;
-
+    
     wp[1].y_pos = 1 + stat_height;
     wp[1].y_size = height;
-
+    
 #if FROTZ_IOS_PORT
     os_split_win(height + stat_height);
 #endif
-
+    
     if ((short) wp[1].y_cursor > (short) wp[1].y_size)
-	reset_cursor (1);
-
+        reset_cursor (1);
+    
     /* Cursor of lower window mustn't be swallowed by the upper window */
-
+    
     wp[0].y_cursor += wp[0].y_pos - 1 - stat_height - height;
-
+    
     wp[0].y_pos = 1 + stat_height + height;
     wp[0].y_size = h_screen_height - stat_height - height;
-
+    
     if ((short) wp[0].y_cursor < 1)
-	reset_cursor (0);
-
+        reset_cursor (0);
+    
     /* Erase the upper window in V3 only */
-
+    
     if (h_version == V3 && height != 0
 #if FROTZ_IOS_PORT
-	&& !do_autosave
+        && !do_autosave
 #endif
-	)
-	erase_window (1);
-
+        )
+        erase_window (1);
+    
 #if FROTZ_IOS_PORT
     if (do_autosave)
-	wp[0].y_cursor = wp[0].y_size;
+        wp[0].y_cursor = wp[0].y_size;
 #endif
-
+    
 }/* split_window */
 
 /*
@@ -748,6 +750,30 @@ void resize_screen (void)
 
 /* #endif */
 
+void init_screen() {
+    /* Initialise window properties */
+    
+    mwin = 1;
+    for (cwp = wp; cwp < wp + 8; cwp++) {
+        cwp->y_pos = 1;
+        cwp->x_pos = 1;
+        cwp->y_size = 0;
+        cwp->x_size = 0;
+        cwp->y_cursor = 1;
+        cwp->x_cursor = 1;
+        cwp->left = 0;
+        cwp->right = 0;
+        cwp->nl_routine = 0;
+        cwp->nl_countdown = 0;
+        cwp->style = 0;
+        cwp->colour = (h_default_background << 8) | h_default_foreground;
+        cwp->font = TEXT_FONT;
+        cwp->font_size = (font_height << 8) | font_width;
+        cwp->attribute = 8;
+    }
+    cwp = wp;
+}
+
 /*
  * restart_screen
  *
@@ -772,28 +798,7 @@ void restart_screen (void)
 
     cursor = TRUE;
 
-    /* Initialise window properties */
-
-    mwin = 1;
-    for (cwp = wp; cwp < wp + 8; cwp++) {
-	cwp->y_pos = 1;
-	cwp->x_pos = 1;
-	cwp->y_size = 0;
-	cwp->x_size = 0;
-	cwp->y_cursor = 1;
-	cwp->x_cursor = 1;
-	cwp->left = 0;
-	cwp->right = 0;
-	cwp->nl_routine = 0;
-	cwp->nl_countdown = 0;
-	cwp->style = 0;
-	cwp->colour = (h_default_background << 8) | h_default_foreground;
-	cwp->font = TEXT_FONT;
-	cwp->font_size = (font_height << 8) | font_width;
-	cwp->attribute = 8;
-    }
-    cwp = wp;
-
+    init_screen();
     /* Prepare lower/upper windows and status line */
 
     wp[0].attribute = 15;

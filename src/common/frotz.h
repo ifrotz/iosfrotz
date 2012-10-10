@@ -631,7 +631,7 @@ void	os_start_script();
 void	os_stop_script();
 #endif
 
-extern void init_buffer(), init_interpreter(), init_sound(), init_undo(), split_window(zword), interpret(), reset_memory(), resize_screen();
+extern void init_buffer(), init_screen(), init_interpreter(), init_sound(), init_undo(), split_window(zword), interpret(), reset_memory(), resize_screen();
 extern int init_memory();
 
 #include "setup.h"

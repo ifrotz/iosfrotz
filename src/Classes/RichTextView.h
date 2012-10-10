@@ -29,6 +29,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     NSMutableArray *m_textRuns;   // text fragments
     NSMutableArray *m_textStyles; // bit set, bold, italic, etc.
     NSMutableArray *m_colorIndex; // fg/bg color for run
+    NSMutableArray *m_hyperlinks;
 
     NSMutableArray *m_textPos;     // beginning point of each text run
     NSMutableArray *m_textLineNum; // which line (0..n) each run starts on
@@ -59,6 +60,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     
     RichTextStyle m_currentTextStyle;
     unsigned int m_currentTextColorIndex, m_currentBGColorIndex;
+    int m_hyperlinkIndex;
     
     NSMutableSet *m_reusableTiles;    
     UIView *m_tileContainerView;
@@ -92,6 +94,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) RichTextStyle textStyle;
 @property(nonatomic, assign) unsigned int textColorIndex;
 @property(nonatomic, assign) unsigned int bgColorIndex;
+@property(nonatomic, assign) int hyperlinkIndex;
 @property(nonatomic, assign) UIViewController<UIScrollViewDelegate>* controller;
 @property(nonatomic, assign) unsigned int topMargin;
 @property(nonatomic, assign) unsigned int leftMargin;
@@ -121,6 +124,9 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (void)appendText:(NSString*)text;
 - (void)appendImage:(int)imageNum withAlignment:(int)imageAlign;
 - (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint;
+- (int) getTextRunAtPoint:(CGPoint)touchPoint;
+- (int)hyperlinkAtPoint:(CGPoint)point;
+- (void)populateZeroHyperlinks;
 - (RichTextTile *)dequeueReusableTile;
 - (void)prepareForKeyboardShowHide;
 - (void)rememberTopLineForReflow;
@@ -141,6 +147,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (void)setFixedFont:(UIFont*)newFont;
 - (UIFont*)font;
 - (UIFont*)fixedFont;
+- (CGSize) fixedFontSize;
 - (BOOL)setFontFamily:(NSString*)fontFamily size:(int)newSize;
 - (BOOL)setFixedFontFamily:(NSString*)familyName size:(int)newSize;
 - (void)setTextColor:(UIColor*)color;

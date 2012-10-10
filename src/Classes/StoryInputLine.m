@@ -243,19 +243,25 @@ BOOL cursorVisible = YES;
             cursorVisible = NO;
     }
     
-    //  NSLog(@"udp cwin %d myFrame=%f %f %f %f", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height);
+//    NSLog(@"udp cwin %d myFrame=%f %f %f %f vis=%d", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height, cursorVisible);
     myFrame.size.width = frame.size.width - (myFrame.origin.x - frame.origin.x) - [curTextView rightMargin];
     myFrame.size.height = [[self font] leading];
+
     [self setFrame: myFrame];
     if (m_completionLabel) {
         CGRect labelFrame = [m_completionLabel frame];
         labelFrame.origin.y = myFrame.origin.y - myFrame.size.height-4;
         [m_completionLabel setOrigin: labelFrame.origin];
     }
-    [[self superview] bringSubviewToFront: self];
+
+
+    if (cursorVisible)
+        [[self superview] bringSubviewToFront: self];
+    else
+        [[self superview] sendSubviewToBack: self];
     [self setClearButtonMode];
-    
-    return cursorVisible;    
+   
+    return cursorVisible;
 }
 
 -(void) setClearButtonMode {
@@ -277,6 +283,8 @@ const int kCompletionViewTag = 21;
 
 -(void)setText:(NSString *)text {
     [super setText: text];
+    iphone_feed_input_line(text);
+
     if (m_completionLabel) {
         [m_completionLabel setText: nil];
         [m_completionLabel removeFromSuperview];
@@ -329,7 +337,9 @@ const int kCompletionViewTag = 21;
     
     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) //qqq
         return NO;
+
     BOOL result = (BOOL)[super keyboardInput:sender shouldInsertText:text isMarkedText:imt];
+
     if (![storyController isCompletionEnabled])
         return result;
     if (result) {
@@ -408,8 +418,9 @@ const int kCompletionViewTag = 21;
     }
     else
         return NO;
-    
+  
     return (BOOL)[super keyboardInputShouldDelete:sender];
     
 }
+
 @end
