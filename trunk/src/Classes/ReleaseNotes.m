@@ -11,6 +11,7 @@
 #import "iphone_frotz.h"
 #import "StoryMainViewController.h"
 #import "FrotzCommonWebView.h"
+#import "NetworkController.h"
 
 #define kRelNotesFilename "release_" IPHONE_FROTZ_VERS ".html"
 
@@ -26,6 +27,7 @@
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
         NSString *docPath = [array objectAtIndex: 0];
         m_relNotesPath = [[docPath stringByAppendingPathComponent: @kRelNotesFilename] retain];
+        [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:1.0];
     }
     return self;
 }
@@ -61,12 +63,29 @@
     [connection release];
 }
 
-- (void)updateReleaseNotes {
+- (void)updateReleaseNotesAuto {
+    [self updateReleaseNotes: NO];
+}
+
+- (void)updateReleaseNotes:(BOOL)force {
 #ifdef FROTZ_REL_URL
-    NSURL *myURL = [NSURL URLWithString: @FROTZ_REL_URL kRelNotesFilename];
-    m_request = [NSURLRequest requestWithURL: myURL];    
-    m_data = [[NSMutableData data] retain];
-    [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
+    if (force || [NetworkController localWifiIPAddress]!=nil) {
+#if !FROTZ_BETA
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSDictionary *fileAttributes = [ fileManager attributesOfItemAtPath:m_relNotesPath error:nil];
+        if (fileAttributes) {
+            NSDate *fileModified = [fileAttributes valueForKey:NSFileModificationDate];
+            NSTimeInterval interval =  [[NSDate date] timeIntervalSinceDate: fileModified];
+            if (interval < 5*60 || !force && interval < 24*60*60)
+                return;
+        }
+#endif
+        NSURL *myURL = [NSURL URLWithString: @FROTZ_REL_URL kRelNotesFilename];
+        m_request = [NSURLRequest requestWithURL: myURL];    
+        m_data = [[NSMutableData data] retain];
+        [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
+    } else
+        [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:60*60];
 #endif
 }
 
@@ -194,7 +213,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [self showReleaseNotes];
-    [self updateReleaseNotes];
+    [self updateReleaseNotes: YES];
 }
 
 - (void)dealloc {

@@ -31,9 +31,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 @implementation StoryWebBrowserController 
 
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb {
-    [self init];
-    if (self) {
-	m_storyBrowser = sb;
+    if ((self = [super init])) {
+        m_storyBrowser = sb;
     }
     return self;
 }
@@ -696,38 +695,38 @@ static bool bypassBundle = NO;
 #if APPLE_FASCISM
     NSString *urlPath = [[request mainDocumentURL] path];
     if (!bypassBundle && (!(iphone_ifrotz_verbose_debug & 4) ||
-	[urlPath rangeOfString: @"competition201"].length==0 && [urlPath rangeOfString: @"Comp"].length==0)) {
-	NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
-	NSString *storyFile;
-	if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
-	    storyFile = (NSString*)[m_expectedArchiveFiles objectAtIndex: 0];
-	else
-	    storyFile = [[[request mainDocumentURL] path] lastPathComponent];
-	NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
-	if (extractOneFileFromZIP(bundledGamesPath, gamePath, storyFile) == 0) {
-	    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List:"
-			message: [m_storyBrowser fullTitleForStory: storyFile]
-			delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	    [alert show];
-	    [alert release];
-	    [self browserDidPressBackButton];
-	} else {
-	    UIAlertView *alert;
-	    if (m_storyAlreadyInstalled)
-		alert = [[UIAlertView alloc] initWithTitle:@"Metadata installed" message:@"Refreshed metadata (title, authors, etc.) for previously installed unbundled story"
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	    else
-		alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Could not extract story from bundled archive"
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	    [alert show];
-	    [alert release];
-	}
-	if (m_expectedArchiveFiles) {
-	    [m_expectedArchiveFiles release];
-	    m_expectedArchiveFiles = nil;
-	}
-	[m_activityView stopAnimating];
-	return;
+                          [urlPath rangeOfString: @"competition201"].length==0 && [urlPath rangeOfString: @"Comp"].length==0)) {
+        NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
+        NSString *storyFile;
+        if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
+            storyFile = (NSString*)[m_expectedArchiveFiles objectAtIndex: 0];
+        else
+            storyFile = [[[request mainDocumentURL] path] lastPathComponent];
+        NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
+        if (extractOneFileFromZIP(bundledGamesPath, gamePath, storyFile) == 0) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List:"
+                                                            message: [m_storyBrowser fullTitleForStory: storyFile]
+                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            [alert show];
+            [alert release];
+            [self browserDidPressBackButton];
+        } else {
+            UIAlertView *alert;
+            if (m_storyAlreadyInstalled)
+                alert = [[UIAlertView alloc] initWithTitle:@"Metadata installed" message:@"Refreshed metadata (title, authors, etc.) for previously installed unbundled story"
+                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            else
+                alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Could not extract story from bundled archive"
+                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            [alert show];
+            [alert release];
+        }
+        if (m_expectedArchiveFiles) {
+            [m_expectedArchiveFiles release];
+            m_expectedArchiveFiles = nil;
+        }
+        [m_activityView stopAnimating];
+        return;
     }
 #endif
     m_storyAlreadyInstalled = NO;
@@ -735,17 +734,17 @@ static bool bypassBundle = NO;
     
     NSLog(@"Load %@", request);
     m_currentRequest = [request retain];
-//    NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
+    //    NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
     if (connection) {
-	m_receivedData = [[NSMutableData data] retain];
-	m_state = kSWBFetchingStory;
-//	[connection release];
+        m_receivedData = [[NSMutableData data] retain];
+        m_state = kSWBFetchingStory;
+        //	[connection release];
     } else {
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not retrieve file"
-						delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	[alert show];
-	[alert release];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not retrieve file"
+                                                       delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        [alert show];
+        [alert release];
     }
 }
 
@@ -753,14 +752,14 @@ static bool bypassBundle = NO;
 - (BOOL)IFDBContentExistsInBundle:(NSString*)filename {
     NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
     if (!bundledGamesPath || ![[NSFileManager defaultManager] fileExistsAtPath: bundledGamesPath])
-	return NO;
+        return NO;
     NSMutableArray *zList = listOfZFilesInZIP(bundledGamesPath);
     if (!zList || [zList count] == 0) 
-	return NO;
+        return NO;
     else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: [m_expectedArchiveFiles objectAtIndex: 0]] != NSNotFound)
-	return YES;
+        return YES;
     else if ([zList indexOfObject: filename] != NSNotFound)
-	return YES;
+        return YES;
     return NO;
 }
 #endif
@@ -784,88 +783,88 @@ static bool bypassBundle = NO;
         [ext isEqualToString: @"gblorb"] ||
         [ext isEqualToString: @"zblorb"]) {
 #if APPLE_FASCISM
-	NSFileManager *defaultManager = [NSFileManager defaultManager];
-	NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
-	if (![defaultManager fileExistsAtPath: bundledGamesListPath])
-	    bypassBundle = YES;
-	else
-	    bypassBundle = (iphone_ifrotz_verbose_debug & 2) != 0;
-	if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4) &&
-		([urlRelPath rangeOfString: @"competition201"].length>0 || [urlRelPath rangeOfString: @"ifcomp"].length>0))) {
-	    [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
-	    return NO;
-	}
-	if ([ext isEqualToString: @"zip"]) {
-	    NSURL *urlGame = nil;
-	    if (m_currentRequest)
-		urlGame = [m_currentRequest mainDocumentURL];
-	    else if ([self currentURL])
-		urlGame = [NSURL URLWithString:[self currentURL]];
-	    NSString *urlHost = [urlGame host];
-	    NSString *urlPath = [urlGame path];
-	    NSString *urlQuery = [urlGame query];
-	    if (m_expectedArchiveFiles) {
-		[m_expectedArchiveFiles release];
-		m_expectedArchiveFiles = nil;
-	    }	    
-	    if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
-		if ([urlQuery length]==19) {
-		    NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
-		    if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
-			NSString *bundledList = [NSString stringWithContentsOfFile: bundledGamesListPath];
-			NSString *gameID = [urlQuery substringFromIndex: 3];
-			NSString *searchString = [NSString stringWithFormat: @"%@\t%@\t", gameID, urlString];
-			NSInteger len = [bundledList length];
-			NSRange r = NSMakeRange(0, len), r2;
-			m_expectedArchiveFiles = [[NSMutableArray alloc] init];
-			while ((r2 = [bundledList rangeOfString: searchString options:0 range:r]).length > 0) {
-			    NSRange r3 = [bundledList rangeOfString: @"\n" options:0 range: NSMakeRange(r2.location, len-r2.location)];
-			    if (r3.length == 0)
-				break;
-			    NSRange r4 = [bundledList rangeOfString: @"\t\t" options:0 range: NSMakeRange(r2.location, r3.location-r2.location)];
-			    //NSLog(@"authors: %@", r4.length ? [bundledList substringWithRange: NSMakeRange(r4.location+2, r4.location-(r2.location+2))]:@"none");
-			    if (r4.length == 0)
-				r4.location = r3.location;
-			    NSString *match = [bundledList substringWithRange: NSMakeRange(r2.location + r2.length, r4.location - (r2.location+r2.length))];
-			    if ([match length] > 0) {
-				[m_expectedArchiveFiles addObject: match];
-			    }
-			    r.location = r3.location + 1;
-			    r.length = len - r.location;
-			}
-		    }
-		}
-	    }
-	}
-	urlString = [urlString stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-	if ([urlString isEqualToString:@"Bedtime.zip"]) { // IFDBentry has a zip in a zip for no reason; work around
-	    urlString = @"Bedtime story.z8";
-	    if (!m_expectedArchiveFiles)
-		m_expectedArchiveFiles = [[NSMutableArray alloc] init];
-	    [m_expectedArchiveFiles addObject: urlString];
-	}
-
-	m_storyAlreadyInstalled = [m_storyBrowser storyIsInstalled: urlString];
-	if (![self IFDBContentExistsInBundle: urlString]  // in bundled
-	    && !m_storyAlreadyInstalled) { // or they've already manually installed it; allow redownload to get title and artwork
-	    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Download unsupported"
-	        message:@"Sorry, this story is not bundled with Frotz and can't be downloaded.\n"
-		         "Visit the Frotz support page if you'd like to request it be bundled in a future update."
-		delegate:self cancelButtonTitle:@"OK" 
-			      otherButtonTitles: m_currentRequest && (iphone_ifrotz_verbose_debug & 4) ? @"View in Safari":nil, nil];
-	    [alert show];
-	    [alert release];
-	    return NO;
-	}
+        NSFileManager *defaultManager = [NSFileManager defaultManager];
+        NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
+        if (![defaultManager fileExistsAtPath: bundledGamesListPath])
+            bypassBundle = YES;
+        else
+            bypassBundle = (iphone_ifrotz_verbose_debug & 2) != 0;
+        if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4) &&
+                             ([urlRelPath rangeOfString: @"competition201"].length>0 || [urlRelPath rangeOfString: @"ifcomp"].length>0))) {
+            [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
+            return NO;
+        }
+        if ([ext isEqualToString: @"zip"]) {
+            NSURL *urlGame = nil;
+            if (m_currentRequest)
+                urlGame = [m_currentRequest mainDocumentURL];
+            else if ([self currentURL])
+                urlGame = [NSURL URLWithString:[self currentURL]];
+            NSString *urlHost = [urlGame host];
+            NSString *urlPath = [urlGame path];
+            NSString *urlQuery = [urlGame query];
+            if (m_expectedArchiveFiles) {
+                [m_expectedArchiveFiles release];
+                m_expectedArchiveFiles = nil;
+            }
+            if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+                if ([urlQuery length]==19) {
+                    NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
+                    if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
+                        NSString *bundledList = [NSString stringWithContentsOfFile: bundledGamesListPath];
+                        NSString *gameID = [urlQuery substringFromIndex: 3];
+                        NSString *searchString = [NSString stringWithFormat: @"%@\t%@\t", gameID, urlString];
+                        NSInteger len = [bundledList length];
+                        NSRange r = NSMakeRange(0, len), r2;
+                        m_expectedArchiveFiles = [[NSMutableArray alloc] init];
+                        while ((r2 = [bundledList rangeOfString: searchString options:0 range:r]).length > 0) {
+                            NSRange r3 = [bundledList rangeOfString: @"\n" options:0 range: NSMakeRange(r2.location, len-r2.location)];
+                            if (r3.length == 0)
+                                break;
+                            NSRange r4 = [bundledList rangeOfString: @"\t\t" options:0 range: NSMakeRange(r2.location, r3.location-r2.location)];
+                            //NSLog(@"authors: %@", r4.length ? [bundledList substringWithRange: NSMakeRange(r4.location+2, r4.location-(r2.location+2))]:@"none");
+                            if (r4.length == 0)
+                                r4.location = r3.location;
+                            NSString *match = [bundledList substringWithRange: NSMakeRange(r2.location + r2.length, r4.location - (r2.location+r2.length))];
+                            if ([match length] > 0) {
+                                [m_expectedArchiveFiles addObject: match];
+                            }
+                            r.location = r3.location + 1;
+                            r.length = len - r.location;
+                        }
+                    }
+                }
+            }
+        }
+        urlString = [urlString stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+        if ([urlString isEqualToString:@"Bedtime.zip"]) { // IFDBentry has a zip in a zip for no reason; work around
+            urlString = @"Bedtime story.z8";
+            if (!m_expectedArchiveFiles)
+                m_expectedArchiveFiles = [[NSMutableArray alloc] init];
+            [m_expectedArchiveFiles addObject: urlString];
+        }
+        
+        m_storyAlreadyInstalled = [m_storyBrowser storyIsInstalled: urlString];
+        if (![self IFDBContentExistsInBundle: urlString]  // in bundled
+            && !m_storyAlreadyInstalled) { // or they've already manually installed it; allow redownload to get title and artwork
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"In-App Download unsupported"
+                                                            message:@"Sorry, this story is not bundled and can't be downloaded by Frotz."
+                                  //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
+                                                           delegate:self cancelButtonTitle:@"Dismiss" 
+                                                  otherButtonTitles: m_currentRequest && (iphone_ifrotz_verbose_debug & 4) ? @"Open in Safari":nil, nil];
+            [alert show];
+            [alert release];
+            return NO;
+        }
 #endif
-	[self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
-	return NO;
+        [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
+        return NO;
     }
     [request retain];
     if (m_currentRequest)
-	[m_currentRequest release];
+        [m_currentRequest release];
     m_currentRequest = request;
-//    NSLog(@"m_currentRequest retain shouldStart %@", m_currentRequest);
+    //    NSLog(@"m_currentRequest retain shouldStart %@", m_currentRequest);
     [m_urlBarController setText: [[m_currentRequest mainDocumentURL] absoluteString]];
     m_state = kSWBIdle;
     return YES;
@@ -873,8 +872,8 @@ static bool bypassBundle = NO;
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 1) {
-	if (m_currentRequest)
-	    [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
+        if (m_currentRequest)
+            [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
     }
 }
 

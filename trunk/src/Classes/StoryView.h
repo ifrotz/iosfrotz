@@ -15,9 +15,12 @@
     BOOL m_isMagnifying;
     NSTimer *m_tapTimer;
     BOOL m_skipNextTap;
+    BOOL m_tapInputEnabled;
+
 }
 - (void)appendText:(NSString*)text;
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
 - (void)skipNextTap;
+@property (nonatomic, assign) BOOL tapInputEnabled;
 @end
 

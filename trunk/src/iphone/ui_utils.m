@@ -51,6 +51,14 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     if (origWidth==newWidth && origHeight==newHeight)
         return image;
 
+    CGFloat scale = 1.0;
+    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
+        scale = [[UIScreen mainScreen] scale];
+    
+    if (scale > 1.0) {
+        newWidth *= scale;
+        newHeight *= scale;
+    }
     // Create the bitmap context
     CGContextRef cgctx = CreateARGBBitmapContext(newWidth, newHeight);
     if (cgctx == NULL)     // error creating context
@@ -62,6 +70,8 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     // Draw the image to the bitmap context. Once we draw, the memory
     // allocated for the context for rendering will then contain the
     // raw image data in the specified color space.
+    CGContextSetRGBFillColor(cgctx, 1.0, 1.0, 1.0, 1.0);
+    CGContextFillRect(cgctx, rect);
     CGContextDrawImage(cgctx, rect, inImage);
     
     CGImageRef newRef = CGBitmapContextCreateImage(cgctx);
@@ -70,7 +80,11 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     
     // When finished, release the context
     CGContextRelease(cgctx);
-    img= [UIImage imageWithCGImage: newRef];
+    if (scale > 1.0)
+        img = [UIImage imageWithCGImage: newRef scale:scale orientation:UIImageOrientationUp];
+    else
+        img= [UIImage imageWithCGImage: newRef];
+
     CGImageRelease(newRef);
     // Free image data memory for the context
     if (data)
