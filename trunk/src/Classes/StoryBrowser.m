@@ -93,6 +93,7 @@ void removeOldPngSplash(const char *filename) {
 -(void)setRecentPaths:(NSArray*)paths {
     [m_recents removeAllObjects];
     for (NSString *path in paths) {
+        path = [m_storyMainViewController relativePathToAppAbsolutePath: path];
         [m_recents addObject: [[[StoryInfo alloc] initWithPath:path] autorelease]];
     }
 }
@@ -671,7 +672,11 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)saveRecents {
-    [m_storyInfoDict setObject: [self recentPaths] forKey: kSIRecentStories];
+    NSArray *recentPaths = [self recentPaths];
+    NSMutableArray *savedRecentPaths = [NSMutableArray arrayWithCapacity: [recentPaths count]];
+    for (NSString *path in recentPaths)
+        [savedRecentPaths addObject: [m_storyMainViewController pathToAppRelativePath: path]];
+    [m_storyInfoDict setObject: savedRecentPaths forKey: kSIRecentStories];
     [self saveStoryInfoDict];
 }
 
