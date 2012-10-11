@@ -192,7 +192,7 @@ BOOL isHiddenFile(NSString *file) {
             || [file isEqualToString: @"bookmarks.plist"]
             || [file isEqualToString: @kFrotzOldAutoSaveFile] || [file isEqualToString: @kFrotzAutoSavePListFile]
             || [file isEqualToString: @kFrotzAutoSaveActiveFile]
-            || [file isEqualToString:@"Splashes"] || [file hasPrefix: @"release_"]);
+            || [file isEqualToString:@"Splashes"] || [file isEqualToString: @"Inbox"] || [file hasPrefix: @"release_"]);
 }
 
 // given FTP path name, split it into volRefNum (card identifier) and 
