@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1046,6 +1046,7 @@
 				1D60588E0D05DD3D006BFB54 /* Sources */,
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
 				4431B76C0E204F52001E5DAD /* CopyFiles */,
+				44FD062B162667E5001E940A /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1065,7 +1066,7 @@
 				LastUpgradeCheck = 0440;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Frotz" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -1178,6 +1179,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
+		};
+		44FD062B162667E5001E940A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#\n# Script to add armv6 architecture to iOS executable built with Xcode 4.5\n#\n\n#################\n# Configuration #\n#################\n# Change this to the full path where Xcode 4.4 (or below) puts your armv6 output\ncase \"$BUILD_ROOT\" in\n  */BuildProductsPath)\n   export ARMV6_EXECUTABLE_PATH=\"`cd $BUILD_ROOT/../../../../Products/Release\\ armv6-iphoneos; pwd`/$EXECUTABLE_PATH\"\n   ;;\n  *)\n   export ARMV6_EXECUTABLE_PATH=\"$BUILD_ROOT/Release armv6-iphoneos/$EXECUTABLE_PATH\"\n   ;;\nesac\n# Your \"real\" minimum OS version since Xcode 4.5 wants to make it iOS 4.3\n# Must be 4.2 or below if you are supporting armv6...\nexport MINIMUM_OS=3.0\n#####################\n# End configuration #\n#####################\n\n\n# For debugging\necho BUILD_ROOT = $BUILD_ROOT\necho ARMV6_EXECUTABLE_PATH = $ARMV6_EXECUTABLE_PATH\necho CURRENT_ARCH = $CURRENT_ARCH\necho CONFIGURATION = $CONFIGURATION\n\n# Don't need to do this for armv6 (built in older Xcode), simulator (i386), or debug build\nif [ \"$CURRENT_ARCH\" = \"armv6\" ]; then\n    exit 0\nfi\nif  [ \"$CURRENT_ARCH\" = \"i386\" ]; then\n    exit 0\nfi\nif [ \"$CONFIGURATION\" != \"Release\" -a \"$CONFIGURATION\" != \"Distribution\"  -a \"$CONFIGURATION\" != \"Beta Test\" ]; then\n    exit 0\nfi\n\n# Paths\nexport LIPO_PATH=\"$CODESIGNING_FOLDER_PATH/${EXECUTABLE_NAME}.lipo\"\nexport FINAL_PATH=\"$CODESIGNING_FOLDER_PATH/$EXECUTABLE_NAME\"\nexport FULL_INFO_PLIST_PATH=\"$CONFIGURATION_BUILD_DIR/$INFOPLIST_PATH\"\n\n# Debug / sanity check\nlipo -info \"$FINAL_PATH\"\nls -l \"$ARMV6_EXECUTABLE_PATH\"\n\n# Make sure something exists at $LIPO_PATH even if the next command fails\ncp -pv \"$FINAL_PATH\" \"$LIPO_PATH\"\n\n# If rebuilding without cleaning first, old armv6 might already be there so remove it\n# If not, lipo won't output anything (thus the cp command just above)\nlipo -remove armv6 -output \"$LIPO_PATH\" \"$FINAL_PATH\"\n\n# Add armv6 to the fat binary, show that it worked for debugging, then remove temp file\nlipo -create -output \"$FINAL_PATH\" \"$ARMV6_EXECUTABLE_PATH\" \"$LIPO_PATH\"\nlipo -info \"$FINAL_PATH\"\nrm -f \"$LIPO_PATH\"\n\n# Change Info.plist to set minimum OS version to 4.2 (instead of 4.3 which Xcode 4.5 wants)\n/usr/libexec/PlistBuddy -c \"Set :MinimumOSVersion $MINIMUM_OS\" \"$FULL_INFO_PLIST_PATH\"\nplutil -convert binary1 \"$FULL_INFO_PLIST_PATH\"\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1334,6 +1348,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 3.2;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				PRODUCT_NAME = Frotz;
+				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Debug;
@@ -1355,6 +1370,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 3.2;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				PRODUCT_NAME = Frotz;
+				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Release;
@@ -1362,10 +1378,7 @@
 		44954F9E0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv6,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
@@ -1380,7 +1393,7 @@
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
@@ -1411,17 +1424,63 @@
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				PRODUCT_NAME = Frotz;
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Distribution;
 		};
+		44AD7CF516266575006E1688 /* Release armv6 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = armv6;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				FROTZ_BETA = 0;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"unix=1",
+					"COLOR_SUPPORT=1",
+					"FROTZ_IOS_PORT=1",
+				);
+				GCC_THUMB_SUPPORT = NO;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
+			};
+			name = "Release armv6";
+		};
+		44AD7CF616266575006E1688 /* Release armv6 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.2\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
+				GCC_THUMB_SUPPORT = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INFOPLIST_FILE = Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.2;
+				OTHER_CFLAGS = "-Wno-deprecated-declarations";
+				PRODUCT_NAME = Frotz;
+				VALID_ARCHS = armv6;
+				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
+			};
+			name = "Release armv6";
+		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv6,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FROTZ_BETA = 0;
@@ -1435,7 +1494,7 @@
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
@@ -1449,10 +1508,7 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					armv7,
-					armv6,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FROTZ_BETA = 0;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -1465,7 +1521,7 @@
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -1483,6 +1539,7 @@
 			buildConfigurations = (
 				1D6058940D05DD3E006BFB54 /* Debug */,
 				1D6058950D05DD3E006BFB54 /* Release */,
+				44AD7CF616266575006E1688 /* Release armv6 */,
 				44954F9F0E4AB0C00029C0F3 /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -1493,6 +1550,7 @@
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,
 				C01FCF5008A954540054247B /* Release */,
+				44AD7CF516266575006E1688 /* Release armv6 */,
 				44954F9E0E4AB0C00029C0F3 /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
