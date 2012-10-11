@@ -31,6 +31,8 @@ static char lastscriptname[BUFLEN] = "script.txt";
 static char lastcmdname[BUFLEN] = "commands.txt";
 static char lastdataname[BUFLEN] = "file.dat";
 
+extern char SAVE_PATH[];
+
 fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
 {
     fileref_t *fref = (fileref_t *)malloc(sizeof(fileref_t));
@@ -40,8 +42,13 @@ fileref_t *gli_new_fileref(char *filename, glui32 usage, glui32 rock)
     fref->magicnum = MAGIC_FILEREF_NUM;
     fref->rock = rock;
     
-    fref->filename = malloc(1 + strlen(filename));
-    strcpy(fref->filename, filename);
+    if (*filename=='/') {
+        fref->filename = malloc(1 + strlen(filename));
+        strcpy(fref->filename, filename);
+    } else {
+        fref->filename = malloc(2 + strlen(SAVE_PATH) + strlen(filename));
+        sprintf(fref->filename, "%s/%s", SAVE_PATH, filename);
+    }
     
     fref->textmode = ((usage & fileusage_TextMode) != 0);
     fref->filetype = (usage & fileusage_TypeMask);
