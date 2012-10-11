@@ -15,9 +15,12 @@
     NSURLRequest *m_request;
     NSMutableData *m_data;
     NSString *m_relNotesPath;
+    UIButton *m_rateButton;
 }
 - (id)init;
 - (void)updateReleaseNotes:(BOOL)force;
 - (void)updateReleaseNotesAuto;
 - (void)showReleaseNotes;
+- (void)loadView;
+- (void)rateFrotz;
 @end

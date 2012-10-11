@@ -32,6 +32,25 @@
     return self;
 }
 
+
+-(void)loadView {
+    if (!m_rateButton ) {
+        m_rateButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
+        [m_rateButton setTitle: @"Rate Frotz" forState:UIControlStateNormal];
+        [m_rateButton setTitleColor: [UIColor blackColor] forState:UIControlStateNormal];
+        [[m_rateButton layer] setOpacity:0.6];
+        [m_rateButton addTarget:self action:@selector(rateFrotz) forControlEvents: UIControlEventTouchUpInside];
+    }
+}
+
+-(void)rateFrotz {
+#if TARGET_IPHONE_SIMULATOR
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://itunes.apple.com/app/frotz/id287653015?mt=8"]];
+#else
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://itunes.com/apps/Frotz"]];
+#endif
+}
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     [m_data setLength: 0];
@@ -107,6 +126,7 @@
                            "<style type=\"text/css\">\n"
                            "h2 { font-size: %dpt; color:#cfcf00; }\n"
                            "p { font-size:%dpt; }\n"
+                           "em { bold; color:#af0000; }\n"
                            "* { color:#ffffff; background: #555555 }\n"
                            "ul { margin-left: 0.2em;\n"
                            "    padding-left: 1em; font-size:%dpt; }\n"
@@ -121,11 +141,14 @@
         "<hr/>\n"
         "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
         "<p><ul>\n"
-        "<li>Blah blah blah</li>\n"
+        "<li><b>Support for iPhone 5, iOS 6, and Retina Displays.</b></li>\n"
+        "<li><b>Hyperlinks</b>:  now supports hyperlinks in glulx games.</li>\n"
+        "<li><b>Dropbox</b>: updated to latest Dropbox API.</li>\n"
+        "<li><b>Lots of other minor bug fixes.</b></li>\n"
         "</ul>"
         "<hr>\n"
-        "<p>Author's note: If you've rated Frotz in the App Store before, I'd really appreciate it if you would rate the new version.  Or write  a review! Thanks!</p>"
-        "<p><small><i>Septermber 25, 2012</i><br>\n"
+        "<p>If you enjoy Frotz, please rate it in the App Store.  Or write  a review! Thanks!</p>"
+        "<p><small><i>Craig Smith, October 11, 2012</i><br>\n"
         "<hr>\n"
 #if 1 // 1.5.3
         "<p><i>Previous release notes</i></p>\n"
@@ -216,9 +239,25 @@
     [self updateReleaseNotes: YES];
 }
 
+-(void)viewDidAppear:(BOOL)animated {
+    UIWebView *view= (UIWebView*)self.view;
+    if ([view respondsToSelector: @selector(scrollView)]) {
+        [[view scrollView] addSubview: m_rateButton];
+        CGRect frame = self.view.frame;
+        [m_rateButton setFrame: CGRectMake(frame.size.width - 112 , 10, 100, 24)];
+    }    
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [m_rateButton removeFromSuperview];
+}
+
 - (void)dealloc {
     if (m_data)
         [m_data release];
+    if (m_rateButton)
+        [m_rateButton release];
+    m_rateButton = nil;
     m_data =  nil;
     [m_relNotesPath release];
     m_relNotesPath = nil;
