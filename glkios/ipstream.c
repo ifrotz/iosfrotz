@@ -224,7 +224,7 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     char modestr[16];
     FILE *fl;
     
-    if (!fref) {
+    if (!fref || !fref->filename || !fref->filename[0]) {
         gli_strict_warning(L"stream_open_file: invalid fileref ref.");
         return 0;
     }
