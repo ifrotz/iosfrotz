@@ -290,7 +290,9 @@ enum ControlTableSections
     return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate font] size:m_newFontSize] : nil;
 }
 
-- (void)viewWillAppear:(BOOL)a {
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
     m_settingsShown = YES;

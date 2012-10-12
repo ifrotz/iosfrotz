@@ -313,10 +313,12 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [self autosize];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [m_notesView resignFirstResponder];
 }
 

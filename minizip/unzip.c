@@ -60,9 +60,7 @@ woven in by Terry Thorsen 1/2003.
 
 
 #ifndef CASESENSITIVITYDEFAULT_NO
-#  if !defined(unix) && !defined(CASESENSITIVITYDEFAULT_YES)
 #    define CASESENSITIVITYDEFAULT_NO
-#  endif
 #endif
 
 

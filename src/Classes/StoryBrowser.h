@@ -111,8 +111,11 @@
 - (void)addThumbData: (NSData*)imageData forStory:(NSString*)story;
 - (void)addSplashData: (NSData*)imageData forStory:(NSString*)story;
 - (NSData*)splashDataForStory: (NSString*)story;
--(void)removeSplashDataForStory: (NSString*)story;
+- (void)removeSplashDataForStory: (NSString*)story;
 - (NSString*)splashPathForStory:(NSString*)story;
+- (NSString*)cacheSplashPathForBuiltinStory:(NSString*)story;
+- (NSString*)userSplashPathForStory:(NSString*)story;
+- (NSArray*)builtinSplashes;
 - (void)hideStory: (NSString*)story withState:(BOOL)hide;
 - (void)unHideAll;
 - (BOOL)isHidden: (NSString*)story;

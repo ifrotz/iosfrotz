@@ -31,8 +31,12 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
-    self.view = webView;
+    [webView removeFromSuperview];
+    [webView setFrame: self.view.frame];
+    [self.view addSubview: webView];
+
     [webView setAutoresizingMask: UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     webView.backgroundColor = [UIColor darkGrayColor];
     [webView loadHTMLString: [NSString stringWithFormat:@

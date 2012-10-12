@@ -204,13 +204,15 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 }
 
 
--(void)viewWillAppear:(BOOL)unused {
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
 // Convenient, but makes navigation feel inconsistent, and hides activity spinner.
 //    self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
     [m_frotzInfoController setKeyboardOwner: self];
 }
 
--(void)viewWillDisappear:(BOOL)unused {
+-(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
 
     if (m_backToStoryList) {
