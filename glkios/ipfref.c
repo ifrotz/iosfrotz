@@ -207,24 +207,29 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     char *cx;
     int ix, val;
     char *prompt, *prompt2, *lastbuf;
+    int ipflag = FILE_RESTORE;
 //    glui32 response;
     
     switch (usage & fileusage_TypeMask) {
         case fileusage_SavedGame:
             prompt = "Enter saved game";
+            ipflag = fmode == filemode_Read ? FILE_RESTORE : FILE_SAVE;
             lastbuf = lastsavename;
             break;
         case fileusage_Transcript:
             prompt = "Enter transcript file";
+            ipflag = FILE_SCRIPT;
             lastbuf = lastscriptname;
             break;
         case fileusage_InputRecord:
             prompt = "Enter command record file";
+            ipflag = fmode == filemode_Read ? FILE_PLAYBACK : FILE_RECORD;
             lastbuf = lastcmdname;
             break;
         case fileusage_Data:
         default:
             prompt = "Enter data file";
+            ipflag = fmode == filemode_Read ? FILE_LOAD_AUX : FILE_SAVE_AUX;
             lastbuf = lastdataname;
             break;
     }
@@ -236,7 +241,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     
     sprintf(newbuf, "%s %s: ", prompt, prompt2);
 
-    ix =  iphone_prompt_file_name(buf, "", fmode == filemode_Read ? 0 : 1 /*FILE_SAVE*/);
+    ix =  iphone_prompt_file_name(buf, "", ipflag);
 
     if (!ix) {
         /* The player cancelled input. */

@@ -628,7 +628,10 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                         if (thisval) {
                             opref = classes_get(*cx-'a', thisval);
                             if (!opref) {
-                                fatalError("Reference to nonexistent Glk object.");
+                                if (*cx=='b' || *cx=='c') /// stream; hack to make autorestore of saved game with active transcript (bug) not fatal
+                                    iphone_win_puts(0, "[Reference to nonexistent Glk stream or file.]\n");
+                                else
+                                    fatalError("Reference to nonexistent Glk object.");
                             }
                         }
                         else {
@@ -1320,7 +1323,7 @@ static void saveStream(stream_t *str, struct glk_stream_autosave *s) {
     s->rock = str->rock;
     
     s->type = str->type;
-    s->unicode = str->type;
+    s->unicode = str->unicode;
     
     s->readcount = str->readcount;
     s->writecount = str->writecount;

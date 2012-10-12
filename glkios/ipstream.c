@@ -270,6 +270,8 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
         gli_strict_warning(L"stream_open_file: unable to open file.");
         return 0;
     }
+    if (fref->textmode)
+        setlinebuf(fl);
     
     if (fmode == filemode_WriteAppend) {
         fseek(fl, 0, 2); /* ...to the end. */
