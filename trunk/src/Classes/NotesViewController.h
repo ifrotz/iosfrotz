@@ -47,4 +47,5 @@
 -(void)viewWillDisappear:(BOOL)animated;
 -(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected>*)delegate;
 -(UIViewController<TextFileBrowser,FileSelected>*)delegate;
+-(void)workaroundFirstResponderBug;
 @end

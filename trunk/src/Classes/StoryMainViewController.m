@@ -1396,6 +1396,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)activateKeyboard {
     [m_inputLine resetState];
+    [m_notesController workaroundFirstResponderBug]; // in iOS 6 on iPad, for some reason the notes controller keeps us from getting first responder after a modal dialog is dismissed (e.g. after 'restore' command)
     [self hideNotes];
     [m_inputLine becomeFirstResponder];
 }
