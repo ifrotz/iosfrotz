@@ -43,7 +43,7 @@ NSString *kSIStoryNotes = @"storyNotes";
 
 static BOOL abortLaunchCondition = NO;
 
-const long kMinimumRequiredSpaceFirstLaunch = 8; // MB
+const long kMinimumRequiredSpaceFirstLaunch = 20; // MB
 const long kMinimumRequiredSpace = 2;
 
 @implementation StoryInfo
@@ -204,8 +204,8 @@ void removeOldPngSplash(const char *filename) {
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
         
-        NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        NSString *docPath = [array objectAtIndex: 0];
+        NSString *docPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) objectAtIndex:0];
+        NSString *cachesPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true) objectAtIndex:0];
         NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
         NSString *siPath = [docPath stringByAppendingPathComponent: kSIFilename];
         NSString *splashPath = [docPath stringByAppendingPathComponent:	kSplashesDir];
@@ -265,18 +265,21 @@ void removeOldPngSplash(const char *filename) {
             needMDDictUpdate = YES;
         }
         
-        BOOL extractSplashes = NO;
+        //BOOL extractSplashes = NO;
         if (![defaultManager fileExistsAtPath: splashPath])
         {
-            [defaultManager createDirectoryAtPath:kSplashesDir withIntermediateDirectories:NO attributes:nil error:&error];
-            extractSplashes = YES;
-        } else if (!vers || [vers compare: @"1.5"]==NSOrderedAscending)
+            [defaultManager createDirectoryAtPath:splashPath withIntermediateDirectories:NO attributes:nil error:&error];
+            //extractSplashes = YES;
+        }
+#if 0 // splashes now extracted only when game file exists, to Library/Caches to be a better iCloud backup citizen
+        else if (!vers || [vers compare: @"1.5"]==NSOrderedAscending)
             extractSplashes = YES;
         if (extractSplashes) {
             if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
                 return self;
             extractAllFilesFromZIPWithCallback([[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"], splashPath, removeOldPngSplash);
         }
+#endif
         
         NSDictionary *dfltMetaData = nil;
         if (!vers || [vers compare: @"1.5"]==NSOrderedAscending) {
@@ -357,16 +360,36 @@ void removeOldPngSplash(const char *filename) {
         }
 
         [self refresh];
+    
+        NSString *cacheSplashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
 
         if (!vers || [vers compare: @"1.6"]==NSOrderedAscending) {
+            if (![defaultManager fileExistsAtPath: cacheSplashPath])
+                [defaultManager createDirectoryAtPath:cacheSplashPath withIntermediateDirectories:NO attributes:nil error:&error];
+            
+            if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
+                return self;
+            
+            NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
             // Update thumbnails if device image scale > 1.0
             CGFloat scale = 1.0;
             if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
                 scale = [[UIScreen mainScreen] scale];
-            if (scale > 1.0) {
-                for (StoryInfo *si in m_storyNames) {
-                    NSString *storyFile = [[si path] lastPathComponent];
-                    NSString *story = [storyFile stringByDeletingPathExtension];
+            for (StoryInfo *si in m_storyNames) {
+                NSString *storyFile = [[si path] lastPathComponent];
+                NSString *story = [storyFile stringByDeletingPathExtension];
+                if ([self shouldUseCachedBuiltinSplash: story]) {
+                    NSString *storyCacheSplashPath = [self cacheSplashPathForBuiltinStory: story];
+                    if (![defaultManager fileExistsAtPath: storyCacheSplashPath]) {
+                        NSString *userSplashPath = [self userSplashPathForStory: story];
+                        if ([defaultManager fileExistsAtPath: userSplashPath])
+                            [defaultManager moveItemAtPath:userSplashPath toPath:storyCacheSplashPath error:NULL];
+                        else
+                            extractOneFileFromZIP(splashesZipPath,[storyCacheSplashPath stringByDeletingLastPathComponent],[storyCacheSplashPath lastPathComponent]);
+                    }
+                }
+
+                if (scale > 1.0) {
                     NSString *pathExt = [storyFile pathExtension];
                     BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
                     NSData *data = nil;
@@ -385,6 +408,11 @@ void removeOldPngSplash(const char *filename) {
                         }
                     }
                 }
+            }
+            for (NSString *uninstalledStory in [self builtinSplashes]) {
+                NSString *userSplashPath = [self userSplashPathForStory: uninstalledStory];
+                if ([defaultManager fileExistsAtPath: userSplashPath])
+                    [defaultManager removeItemAtPath: userSplashPath error:&error];
             }
         }
         if (!vers || ![vers isEqualToString: @IPHONE_FROTZ_VERS]) {
@@ -795,8 +823,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [thumbDict setObject: imageData forKey: [story lowercaseString]];
 }
 
-- (NSString*)mapInfocom83Filename:(NSString*)story {
+- (NSString*)mapInfocom83Filename:(NSString*)aStory {
     static NSDictionary *map = nil;
+    NSString *story = [aStory lowercaseString];
     if (!map)
         map = [[NSDictionary dictionaryWithObjectsAndKeys: // map alternate/shortened filenames and common misspellings
                 @"beyondzork", @"beyondzo", @"borderzone", @"borderzo", @"bureaucracy", @"bureaucr", @"bureaucracy", @"bureau", @"cutthroats", @"cutthroa", @"enchanter", @"enchante",
@@ -823,11 +852,20 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return story;
 }
 
--(NSString*)splashPathForStory:(NSString*)story {
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = [array objectAtIndex: 0];
+-(NSString*)cacheSplashPathForBuiltinStory:(NSString*)story {
+    NSString *cachesPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true) objectAtIndex: 0];
+    NSString *splashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
+    NSString *basefile = [self mapInfocom83Filename: story];
+    NSString *gameSplashPath = [splashPath stringByAppendingPathComponent:basefile];
+    NSString *cacheGameSplashPathJPG = [gameSplashPath stringByAppendingPathExtension: @"jpg"];
+    return cacheGameSplashPathJPG;
+}
+
+-(NSString*)userSplashPathForStory:(NSString*)story {
+    NSString *docPath =  [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) objectAtIndex: 0];
+    
     NSString *splashPath = [docPath stringByAppendingPathComponent: kSplashesDir];
-    NSString *basefile = [self mapInfocom83Filename: [story lowercaseString]];    
+    NSString *basefile = [self mapInfocom83Filename: story];
     NSString *gameSplashPath = [splashPath stringByAppendingPathComponent:basefile];
     NSString *gameSplashPathPNG = [gameSplashPath stringByAppendingPathExtension: @"png"];
     NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -837,23 +875,45 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return gameSplashPathJPG;
 }
 
+-(NSString*)splashPathForStory:(NSString*)story {
+    NSString *userSplashPath = [self userSplashPathForStory:story];
+    NSFileManager *fileMgr = [NSFileManager defaultManager];
+    if ([fileMgr fileExistsAtPath: userSplashPath])
+        return userSplashPath;
+    NSString *cacheGameSplashPathJPG = [self cacheSplashPathForBuiltinStory:story];
+    if ([fileMgr fileExistsAtPath: cacheGameSplashPathJPG])
+        return cacheGameSplashPathJPG;
+    return userSplashPath;
+}
+
 -(void)addSplashData: (NSData*)imageData forStory:(NSString*)story {
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSError *error = NULL;
     [imageData writeToFile:gameSplashPath options:0 error:&error];
 }
 
+-(NSArray*)builtinSplashes {
+    NSArray *builtinSplashes = [NSArray arrayWithObjects:
+                        @"905",@"actofmurder",@"allroads",@"amfv",@"anchor",@"arthur",@"balances",@"ballyhoo",@"beyondzork",@"borderzone",
+                        @"bronze",@"bureaucracy",@"change",@"curses",@"cutthroats",@"deadline",@"dreamhold",@"enchanter",@"heroes",
+                        @"hitchhiker",@"hollywood",@"infidel",@"jigsaw",@"leather",@"lurking",@"minster",@"misdirection",@"moonmist",
+                        @"nordandbert",@"photopia",@"planetfall",@"plundered",@"risorg",@"seastalker",@"sherbet",@"sherlock",@"slouch",
+                        @"sorcerer",@"spellbreaker",@"starcross",@"stationfall",@"suspect",@"suspended",@"tangle",@"trinity",
+                        @"vespers",@"vgame",@"weapon",@"weather",@"wishbringer",@"witness",@"zdungeon",@"zork1",@"zork2",@"zork3", nil];
+    return builtinSplashes;
+}
+
+-(BOOL)shouldUseCachedBuiltinSplash:(NSString*)story {
+    NSString *basefile = [self mapInfocom83Filename: story];
+    NSArray *builtinSplashes = [self builtinSplashes];
+    return [builtinSplashes containsObject: basefile];    
+}
+
 -(void)removeSplashDataForStory: (NSString*)story {
-    static NSArray *infocomArr;
-    if (!infocomArr)
-        infocomArr = [[NSArray arrayWithObjects:
-                       @"amfv", @"arthur", @"ballyhoo", @"beyondzork", @"borderzone", @"cutthroats", @"deadline", @"enchanter", @"hitchhiker",
-                       @"hollywood", @"leather", @"lurking", @"moonmist", @"nordandbert", @"planetfall", @"plundered", @"seastalker",
-                       @"sherlock", @"sorceror", @"starcross", @"suspect", @"suspended", @"wishbringer", @"witness",
-                       @"zork1", @"zork2", @"zork3", @"zorkzero", nil] retain];
-    
-    if ([infocomArr indexOfObject: [self mapInfocom83Filename:story]] != NSNotFound)
-        return;
+// OK to delete now, will be reextracted from zip if needed
+//    NSArray *builtinStoryNames = [self builtinStories];
+//    if ([builtinStoryNames indexOfObject: [self mapInfocom83Filename:story]] != NSNotFound)
+//        return;
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSError *error = NULL;
     NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -929,7 +989,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
         if (gUseSplitVC) // delay push of story controller so views have time to be sized correctly
-            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.05];
+            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.2];
         else
             [self autoRestoreAndShowMainStoryController];
     } else
@@ -955,6 +1015,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [self reloadData];
     [self updateNavButton];
     [m_tableView scrollToNearestSelectedRowAtScrollPosition: UITableViewScrollPositionMiddle animated:YES];
@@ -965,6 +1026,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [self setEditing: NO animated: YES];
 }
 
@@ -1291,13 +1353,23 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         m_details.storyInfo = storyInfo;
         m_details.artwork = nil;
         m_details.willResume = storyPath && [storyPath length] > 0
-        && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
-            || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
+                                && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
+                                    || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
         NSString *storySplashPath = [self splashPathForStory: storyName];
+        NSFileManager *defaultManager = [NSFileManager defaultManager];
+
         NSString *ext = [storyPath pathExtension];
         BOOL isBlorb = ([ext isEqualToString:@"zblorb"] || [ext isEqualToString: @"gblorb"]);
-        if (storySplashPath && [[NSFileManager defaultManager] fileExistsAtPath:storySplashPath])
+        if (storySplashPath && [defaultManager fileExistsAtPath:storySplashPath])
             m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storySplashPath],0,0);
+        else if ([self shouldUseCachedBuiltinSplash: storyName]) {
+            NSString *storyCacheSplashPath = [self cacheSplashPathForBuiltinStory: storyName];
+            if (![defaultManager fileExistsAtPath: storyCacheSplashPath]) {
+                NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
+                extractOneFileFromZIP(splashesZipPath,[storyCacheSplashPath stringByDeletingLastPathComponent],[storyCacheSplashPath lastPathComponent]);
+                m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storyCacheSplashPath],0,0);
+            }
+        }
         else {
             if (isBlorb) {
                 NSData *data = imageDataFromBlorb(storyPath);
@@ -1344,6 +1416,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (storyInfo) {
         [storyInfo retain];
         [self addRecentStoryInfo: storyInfo];
+        [self setStoryDetails: storyInfo];
         [self launchStory: [storyInfo path]];
         [storyInfo release];
     }
@@ -1384,7 +1457,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(NSData*)thumbDataForStory:(NSString*)story {
-    NSString *key = [self mapInfocom83Filename: [story lowercaseString]];
+    NSString *key = [self mapInfocom83Filename: story];
     NSMutableDictionary *thumbDict = [m_metaDict objectForKey: kMDThumbnailsKey];
     NSData *imageData = [thumbDict objectForKey: key];
     return imageData;

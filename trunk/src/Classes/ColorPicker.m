@@ -680,6 +680,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     CGRect frame = self.view.frame;
     BOOL fullScreenLarge = (frame.size.width > 320.0);
 

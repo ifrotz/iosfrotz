@@ -62,20 +62,26 @@
 }
 
 - (void)loadView {
+    [super loadView];
+
     m_webView = [FrotzCommonWebViewController sharedWebView];
-    self.view = m_webView;
     
     m_startButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
     [m_startButton addTarget:self action:@selector(toggleServer) forControlEvents: UIControlEventTouchUpInside];
 }
 
 -(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [m_webView removeFromSuperview];
+    [m_webView setFrame: self.view.frame];
+    [self.view addSubview: m_webView];
     [self updateButtonLocation];
     [m_webView addSubview: m_startButton];
     [self stopServer];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [m_startButton removeFromSuperview];
 }
 

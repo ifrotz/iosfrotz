@@ -210,15 +210,23 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     if ([[m_textField text] length] > 0) {
         NSString *selFile = [self selectedFile];
         BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath: selFile];
-        if (!exists) {
-            exists = [[NSFileManager defaultManager] fileExistsAtPath: [selFile stringByAppendingString: kSaveExt]];
-            if (exists)
-                m_textField.text = [m_textField.text stringByAppendingString: kSaveExt];
-        }
-        if (!exists) {
-            exists = [[NSFileManager defaultManager] fileExistsAtPath: [selFile stringByAppendingString: kAltSaveExt]];
-            if (exists)
-                m_textField.text = [m_textField.text stringByAppendingString: kAltSaveExt];
+        if (m_dialogType==kFBDoShowScript) {
+            if (!exists) {
+                exists = [[NSFileManager defaultManager] fileExistsAtPath: [selFile stringByAppendingString: kSaveExt]];
+                if (exists)
+                    m_textField.text = [m_textField.text stringByAppendingString: @".txt"];
+            }
+        } else {
+            if (!exists) {
+                exists = [[NSFileManager defaultManager] fileExistsAtPath: [selFile stringByAppendingString: kSaveExt]];
+                if (exists)
+                    m_textField.text = [m_textField.text stringByAppendingString: kSaveExt];
+            }
+            if (!exists) {
+                exists = [[NSFileManager defaultManager] fileExistsAtPath: [selFile stringByAppendingString: kAltSaveExt]];
+                if (exists)
+                    m_textField.text = [m_textField.text stringByAppendingString: kAltSaveExt];
+            }
         }
         if (exists && m_dialogType != kFBDoShowScript) {
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
@@ -254,6 +262,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 -(void)viewWillDisappear:(BOOL)animated {
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
+    [super viewWillDisappear:animated];
     if (gUseSplitVC && animated && UIDeviceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts)
         [self.navigationController.view.superview setHidden: YES];
 }

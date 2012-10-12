@@ -34,6 +34,7 @@
 
 
 -(void)loadView {
+    [super loadView];
     if (!m_rateButton ) {
         m_rateButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
         [m_rateButton setTitle: @"Rate Frotz" forState:UIControlStateNormal];
@@ -60,7 +61,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    UIWebView *webView = (UIWebView*)self.view;
+    UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
     
     NSError *error;
     NSString *contents = [[NSString alloc] initWithBytes:[m_data bytes] length:[m_data length] encoding: NSUTF8StringEncoding];
@@ -117,7 +118,9 @@
 - (void)showReleaseNotes {
     NSError *error;
     UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
-    self.view = webView;
+    [webView removeFromSuperview];
+    [webView setFrame: self.view.frame];
+    [self.view addSubview: webView];
     [webView setAutoresizingMask: UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     webView.backgroundColor = [UIColor darkGrayColor];
     int baseFontSize = 11; // + (gLargeScreenDevice?3:0);
@@ -235,12 +238,13 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [self showReleaseNotes];
     [self updateReleaseNotes: YES];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
-    UIWebView *view= (UIWebView*)self.view;
+    UIWebView *view = [FrotzCommonWebViewController sharedWebView];
     if ([view respondsToSelector: @selector(scrollView)]) {
         [[view scrollView] addSubview: m_rateButton];
         CGRect frame = self.view.frame;
@@ -249,6 +253,7 @@
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
     [m_rateButton removeFromSuperview];
 }
 

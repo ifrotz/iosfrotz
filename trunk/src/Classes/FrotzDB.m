@@ -194,7 +194,8 @@
     m_hasAppeared = NO;
 }
 
-- (void)viewWillAppear:(BOOL)a {
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
 

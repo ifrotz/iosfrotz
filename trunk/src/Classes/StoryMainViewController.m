@@ -1357,6 +1357,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 
 -(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     [m_frotzInfoController setKeyboardOwner: self];    
     disable_complete = !m_completionEnabled;
     refresh_savedir = 1;
@@ -1375,7 +1376,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)viewWillDisappear:(BOOL)animated {
     disable_complete = YES;
-    
+    [super viewWillDisappear:animated];
     [[self view] setTransform: CGAffineTransformIdentity];
     
     [self.navigationItem.rightBarButtonItem setEnabled: YES];
