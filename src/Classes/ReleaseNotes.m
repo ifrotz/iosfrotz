@@ -100,7 +100,10 @@
                 return;
         }
 #endif
-        NSURL *myURL = [NSURL URLWithString: @FROTZ_REL_URL kRelNotesFilename];
+        NSString *devModel = [[[UIDevice currentDevice] localizedModel] stringByReplacingOccurrencesOfString:@" " withString:@"_"];
+        NSString *devVers = [[[UIDevice currentDevice] systemVersion] stringByReplacingOccurrencesOfString:@" " withString:@"_"];
+        NSURL *myURL = [NSURL URLWithString: [NSString stringWithFormat:@"%@?q=%@,%@", @FROTZ_REL_URL kRelNotesFilename,
+                                                devModel, devVers]];
         m_request = [NSURLRequest requestWithURL: myURL];    
         m_data = [[NSMutableData data] retain];
         [[NSURLConnection alloc] initWithRequest:m_request delegate:self];

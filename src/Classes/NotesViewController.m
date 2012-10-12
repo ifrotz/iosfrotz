@@ -277,6 +277,11 @@ static const int kNotesTitleHeight = 24;
     }
 }
 
+-(void)workaroundFirstResponderBug {
+    [m_notesView becomeFirstResponder];
+    [m_notesView resignFirstResponder];
+}
+
 -(void)dismissKeyboard {
     [m_notesView resignFirstResponder];
 }
