@@ -3516,6 +3516,17 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 -(NSString*)relativePathToAppAbsolutePath:(NSString*)path {
+    if ([path isAbsolutePath]) {
+        // mutate saved paths that should have been made relative when saved to relative paths
+        NSRange r = [path rangeOfString: @"/Documents/"];
+        if (r.length)
+            path = [path substringFromIndex: r.location+1];
+        else {
+            r = [path rangeOfString: @"/Frotz.app/"];
+            if (r.length)
+                path = [path substringFromIndex: r.location+1];
+        }
+    }
     if (![path isAbsolutePath])
         path = [[[self rootPath] stringByDeletingLastPathComponent] stringByAppendingPathComponent: path];
     return path;
