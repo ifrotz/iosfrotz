@@ -14,10 +14,18 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 ----
 
+*Update - Version 1.6 now available!*
+
+*10/22/2012*
+
+ * Support for iPhone 5, iOS 6, and Retina Displays.
+ * Hyperlink:  now supports hyperlinks in glulx games.
+ * Dropbox: updated to latest Dropbox API.
+ * Lots of other minor bug fixes.
 
 *Update - Version 1.5.3 now available!*
 
-*06/09/2011*
+06/09/2011
 
  * Readability: Wider margins and spacing for better readability on iPad. 
  * Unicode: Improved Unicode text support for games with non-Latin characters. 
