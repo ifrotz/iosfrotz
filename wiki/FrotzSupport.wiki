@@ -1,18 +1,13 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-*Update 06/09/2011*
+*Update 10/22/2012*
 
-*Frotz 1.5.3* is now available in the App Store with the following enhancements and bug fixes:
+*Frotz 1.6* is now available in the App Store with the following enhancements and bug fixes:
 
- * Readability: Wider margins and spacing for better readability on iPad. 
- * Unicode: Improved Unicode text support for games with non-Latin characters. 
- * Updated glulx support: Now conforms to standard spec 3.1.2. 
- * Graphics improvements: Performance and stability of games using glk graphics improved; Frotz now supports inline images in text. 
- * VoiceOver support: Fixed bug preventing automatic announcement of new output in glulx games
- * Keyboard: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen). 
- * Other bug fixes: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.
-
-Version 1.5.3 includes support for Glulx games.  This support is more complete and stable than when introduced in 1.5, but is still considered beta, so no Glulx games are yet bundled with Frotz.  If you want to play Glulx games, you can transfer them to Frotz from your computer using the built-in File Transfer server, or even navigate to the page on IFDB and launch Frotz via the .gblorb/.ulx download link.
+* Support for iPhone 5, iOS 6, and Retina Displays.
+* Hyperlinks</b>:  now supports hyperlinks in glulx games.
+* Dropbox</b>: updated to latest Dropbox API.
+* Lots of other minor bug fixes.
 
 ----
 
