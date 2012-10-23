@@ -4,10 +4,10 @@ This page contains frequently asked questions and miscellaneous help about using
 
 *Frotz 1.6* is now available in the App Store with the following enhancements and bug fixes:
 
-* Support for iPhone 5, iOS 6, and Retina Displays.
-* Hyperlink:  now supports hyperlinks in glulx games.
-* Dropbox: updated to latest Dropbox API.
-* Lots of other minor bug fixes.
+ * Support for iPhone 5, iOS 6, and Retina Displays.
+ * Hyperlink:  now supports hyperlinks in glulx games.
+ * Dropbox: updated to latest Dropbox API.
+ * Lots of other minor bug fixes.
 
 ----
 
