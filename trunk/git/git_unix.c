@@ -122,6 +122,7 @@ int pref_screenheight = 0;
 int pref_messageline = TRUE;
 int pref_reverse_textgrids = FALSE;
 int pref_window_borders = FALSE;
+int pref_override_window_borders = FALSE;
 int pref_precise_timing = FALSE;
 int pref_historylen = 20;
 int pref_prompt_defaults = TRUE;
