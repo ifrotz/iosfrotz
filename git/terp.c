@@ -235,6 +235,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
         if (fstr) {
             git_sint32 rstatus = restoreFromFileStr(base, fstr, protectPos, protectSize);
             gli_delete_stream(fstr);
+            gli_delete_fileref(fref);
             do_autosave = 0;
             glk_game_loaded();
 
@@ -244,7 +245,8 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
                 S1 = -1;
                 goto do_pop_call_stub;
             }
-        }
+        } else
+            gli_delete_fileref(fref);
         if (rstatus) {
             iphone_win_puts(0, "Autorestore failed.\n");
             finished = 1;
@@ -1375,7 +1377,8 @@ do_tailcall:
 
 	    S1 = saveToFileStrWithClasses (base, sp, fstr);
 	    gli_delete_stream(fstr);
-	    
+        gli_delete_fileref(fref);
+
 	    if (!S1)
 		os_mark_recent_save();
 	    do_autosave = 0; 
