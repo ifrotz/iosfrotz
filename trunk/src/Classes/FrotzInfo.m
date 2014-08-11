@@ -32,7 +32,6 @@
     
     m_titleTextView = [[UILabel alloc] initWithFrame: CGRectMake(20,0,54,44)];
     [m_titleTextView setText: @"Frotz"];
-    [m_titleTextView setTextColor: [UIColor whiteColor]];
     
     m_titleTextView.backgroundColor = [UIColor clearColor];
     m_titleTextView.font = [UIFont boldSystemFontOfSize: 20];
@@ -49,7 +48,23 @@
     [m_infoButton addTarget:self action:@selector(frotzInfo) forControlEvents: UIControlEventTouchUpInside];
     
     m_doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(frotzInfo)];
-    
+    [self updateTitle];
+
+}
+
+-(void)updateTitle {
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        UINavigationController *nc = nil;//self.navigationController;
+        if (!nc)
+            nc = m_navigationController;
+        UIColor *color = [nc.navigationBar tintColor];
+        [m_titleTextView setTextColor: color];  //[UIColor redColor]];
+        [m_infoButton setTintColor: color];
+    } else
+#endif
+        [m_titleTextView setTextColor: [UIColor whiteColor]];
+
 }
 
 -(void)updateAccessibility {
@@ -77,10 +92,26 @@
 -(void)setupFade {
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.5];
-    [UIView setAnimationTransition:([m_settings.view superview] ? UIViewAnimationTransitionFlipFromLeft : UIViewAnimationTransitionFlipFromRight)
-                           forView:[[[[m_navigationController topViewController] view] superview] superview]
-     //superview]
-                             cache:YES];
+    BOOL cache = YES;
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+        cache = NO;
+#endif
+
+    [UIView setAnimationTransition:
+     ([m_settings.view superview] ? UIViewAnimationTransitionFlipFromLeft : UIViewAnimationTransitionFlipFromRight)
+                           forView: m_navigationController.view
+     //[[[[[m_navigationController topViewController] view] superview] superview] superview]
+                             cache:cache];
+
+    [UIView commitAnimations];
+}
+
+-(void)dismissInfoModal {
+    UIViewController *svc = nil;
+    if (gUseSplitVC && (svc = m_navigationController /*.splitViewController*/)) {
+        [svc dismissModalViewControllerAnimated:YES];
+    }
 }
 
 -(void)dismissInfo {
@@ -91,7 +122,7 @@
             if ((nc = (UINavigationController*)svc.modalViewController)) {
                 if ([nc topViewController] != m_settings)
                     [nc popToViewController: m_settings animated:YES];
-                [svc dismissModalViewControllerAnimated: YES];
+                [self performSelector:@selector(dismissInfoModal) withObject: nil afterDelay: 0.2];
             }
         } else {
             [self setupFade];
@@ -135,7 +166,7 @@
         }
         else {
             [self setupFade];
-            [m_navigationController pushViewController: m_settings animated:NO];
+            [m_navigationController pushViewController:m_settings animated:NO];
             [UIView commitAnimations];
         }
     }

@@ -69,7 +69,14 @@
 
     m_textbar.placeholder = @"URL";
     m_textbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;
-    m_textbar.barStyle = UIBarStyleBlack;
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        m_textbar.barStyle = UIBarStyleDefault;    
+    } else
+#endif
+    {
+        m_textbar.barStyle = UIBarStyleBlack;
+    }
     m_textbar.autocapitalizationType = UITextAutocapitalizationTypeNone;
     m_textbar.autocorrectionType = UITextAutocorrectionTypeNo;
     m_textbar.delegate = self;

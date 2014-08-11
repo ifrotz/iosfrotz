@@ -41,4 +41,5 @@
 -(UINavigationController*)navController;
 -(UINavigationItem*)navItem;
 -(void)updateAccessibility;
+-(void)updateTitle;
 @end

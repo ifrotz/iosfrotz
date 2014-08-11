@@ -36,7 +36,8 @@
     if (m_startButton && m_webView) {
         [m_startButton setFrame:
          CGRectMake([m_webView frame].size.width/2 - (gLargeScreenDevice ? 130:130),
-                    gLargeScreenDevice ? 520:350, 260, 48)];
+                    gLargeScreenDevice ? 520:  [m_webView frame].size.height-64,
+                    260, 48)];
     }
 }
 
