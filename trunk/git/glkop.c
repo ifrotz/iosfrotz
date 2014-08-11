@@ -1175,8 +1175,10 @@ void glulxe_retained_unregister(void *array, glui32 len,
 
 #define FrotzGlkClassChunkVersionNumV1 0x01000001
 #define FrotzGlkClassChunkVersionNumV2 0x01000002
+#define FrotzGlkClassChunkVersionNumV3 0x01000003
+#define FrotzGlkClassChunkVersionNumCurrent FrotzGlkClassChunkVersionNumV3
 
-static glui32 kFrotzGlkClassChunkVersionNumForSave = FrotzGlkClassChunkVersionNumV2;
+static glui32 kFrotzGlkClassChunkVersionNumForSave = FrotzGlkClassChunkVersionNumCurrent;
 
 struct glk_window_autosave {
     glui32 magicnum;
@@ -2117,7 +2119,7 @@ git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize) {
     glk_get_buffer_stream (file, buffer, 4);
     int versionNum = read32(buffer);
     
-    if (versionNum == FrotzGlkClassChunkVersionNumV1 || versionNum == FrotzGlkClassChunkVersionNumV2) {
+    if (versionNum >= FrotzGlkClassChunkVersionNumV1 && versionNum <= FrotzGlkClassChunkVersionNumCurrent) {
         glk_get_buffer_stream (file, buffer, 4);
         int objects_count = read32(buffer);
         
