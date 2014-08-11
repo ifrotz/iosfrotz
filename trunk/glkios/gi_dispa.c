@@ -144,6 +144,8 @@ static gidispatch_intconst_t intconstant_table[] = {
     { "stylehint_just_RightFlush", (3) },
     { "winmethod_Above", (0x02)  },
     { "winmethod_Below", (0x03)  },
+    { "winmethod_Border", (0x000)  },
+    { "winmethod_BorderMask", (0x100)  },
     { "winmethod_DirMask", (0x0f) },
     { "winmethod_DivisionMask", (0xf0) },
     { "winmethod_Fixed", (0x10) },

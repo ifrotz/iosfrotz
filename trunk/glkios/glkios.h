@@ -70,7 +70,8 @@ struct glk_window_struct {
     // Save win open arguments for autosave, so window can be easily recreated
     glui32 size;
     glui32 method;
-    glui32 splitwin;
+    
+    intptr_t splitwin;
     int store;
 
     int iphone_glkViewNum;
@@ -98,7 +99,8 @@ struct glk_stream_struct {
     
     /* for strtype_File */
     FILE *file; 
-    
+    fileref_t *fileRef;
+
     /* for strtype_Memory. Separate pointers for one-byte and four-byte
        streams */
     unsigned char *buf;
@@ -212,6 +214,7 @@ extern int pref_screenheight;
 extern int pref_messageline;
 extern int pref_reverse_textgrids;
 extern int pref_window_borders;
+extern int pref_override_window_borders;
 extern int pref_precise_timing;
 extern int pref_historylen;
 extern int pref_prompt_defaults;

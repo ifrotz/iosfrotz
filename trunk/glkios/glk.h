@@ -134,6 +134,10 @@ typedef struct stream_result_struct {
 #define winmethod_Proportional (0x20)
 #define winmethod_DivisionMask (0xf0)
 
+#define winmethod_Border   (0x000)
+#define winmethod_NoBorder (0x100)
+#define winmethod_BorderMask (0x100)
+
 #define fileusage_Data (0x00)
 #define fileusage_SavedGame (0x01)
 #define fileusage_Transcript (0x02)

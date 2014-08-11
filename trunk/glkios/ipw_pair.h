@@ -19,7 +19,7 @@ typedef struct window_pair_struct {
     
     /* split info... */
     glui32 dir; /* winmethod_Left, Right, Above, or Below */
-    int vertical, backward; /* flags */
+    int vertical, backward, hasborder; /* flags */
     glui32 division; /* winmethod_Fixed or winmethod_Proportional */
     window_t *key; /* NULL or a leaf-descendant (not a Pair) */
     int keydamage; /* used as scratch space in window closing */
