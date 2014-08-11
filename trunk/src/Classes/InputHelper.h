@@ -11,6 +11,7 @@
 
 @protocol FrotzInputDelegate
 -(void)inputHelperString:(NSString*)string;
+-(BOOL)isFirstResponder;
 @end
 
 typedef enum {

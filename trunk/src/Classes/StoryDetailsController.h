@@ -31,6 +31,8 @@
     IBOutlet UITextField *m_authorField;
     IBOutlet UITextField *m_TUIDField;
     IBOutlet FrotzImageView *m_artworkView;
+    IBOutlet UIView *m_textFieldsView;
+    IBOutlet UIView *m_buttonsView;
     IBOutlet UIView *m_flipper;
     IBOutlet UIWebView *m_descriptionWebView;
     IBOutlet UIButton *m_infoButton;
@@ -55,6 +57,7 @@
 }
 
 -(IBAction) toggleArtDescript;
+-(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation;
 -(void)clear;
 -(void)refresh;
 -(void)updateSelectionInstructions:(BOOL)hasPopover;

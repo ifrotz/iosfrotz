@@ -149,6 +149,10 @@
 		<string>Icon-Small@2x</string>
 		<string>Icon@2x</string>
 		<string>Icon-72@2x</string>
+		<string>Icon-60</string>
+		<string>Icon-60@2x</string>
+		<string>Icon-76</string>
+		<string>Icon-76@2x</string>
 		<string>Default</string>
 		<string>Default-Portrait~ipad</string>
 		<string>Default-Landscape~ipad</string>
@@ -190,7 +194,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.6</string>
+	<string>1.7</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
@@ -203,7 +207,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1.6</string>
+	<string>1.7</string>
 	<key>LSRequiresIPhoneOS</key>
 	<string>YES</string>
 	<key>NSMainNibFile</key>
@@ -330,5 +334,7 @@
 			</dict>
 		</dict>
 	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 </dict>
 </plist>
