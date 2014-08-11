@@ -17,10 +17,10 @@ const CGFloat kHistoryLineHeight = 20.0;
     if ((self = [super initWithStyle:UITableViewStylePlain])) {
         m_history = [[NSMutableArray alloc] initWithCapacity: 2];
         m_commonCommands = [NSArray arrayWithObjects: 
-                            @"about ", @"all ", @"ask ", @"at ", @"attack ", @"behind ", @"but ", @"climb ", @"door ", @"down ", @"from ", @"give ", @"help ",
-                            @"in ",@"jump ", @"kick ", @"kill ", @"no", @"on ", @"push ", @"pull ", @"read ", @"remove ", @"say ", @"switch ",  @"take ", @"tell ",
-                            @"through ", @"throw ", @"tie ", @"touch ", @"turn", @"under ", @"untie ", @"up ", @"wait ", @"wear ",@"window ", @"with ", @"quit ", @"yes",
-                            @"brief", @"diagnose", @"save", @"score", @"restart", @"restore", @"undo", @"verbose ", nil];
+                            @"about ", @"all ", @"and ", @"ask ", @"at ", @"attack ", @"behind ", @"but ", @"cast ", @"climb ", @"door ", @"down ", @"from ", @"get ", @"give ", @"help ",
+                            @"in ",@"jump ", @"kick ", @"kill ", @"learn ", @"leave ", @"memorize ", @"no", @"off ", @"on ", @"push ", @"pull ", @"put ", @"read ", @"remove ", @"say ", @"search ", @"switch ",  @"take ", @"talk ", @"tell ", @"then ",
+                            @"through ", @"throw ", @"tie ", @"to ", @"touch ", @"turn", @"under ", @"untie ", @"up ", @"wait ", @"wear ",@"window ", @"with ", @"quit ", @"yes", @", ", @". ", @"\"",
+                            @"brief", @"diagnose", @"save", @"score", @"restart", @"restore", @"undo", @"verbose", nil];
         [m_commonCommands retain];
         m_mode = 0;
         m_lastCommonWordPicked = 0;
@@ -43,8 +43,8 @@ const CGFloat kHistoryLineHeight = 20.0;
     [tableView setFrame: CGRectMake(0.0, 0.0, 240.0, 72.0)];
     [tableView setShowsVerticalScrollIndicator: YES];
     [tableView setBounces: NO];
-    [tableView setBackgroundColor: [UIColor darkGrayColor]];
-    [tableView setAlpha: 0.9];
+    [tableView setBackgroundColor: [UIColor blackColor]]; //[UIColor darkGrayColor]];
+    [tableView setAlpha: 0.75];
     [tableView setUserInteractionEnabled: YES];
     [tableView setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
     
@@ -109,7 +109,10 @@ const CGFloat kHistoryLineHeight = 20.0;
     } else {
         CGRect frame = [tableView frame];
         int nLines;
-        int maxLines = gLargeScreenDevice ? 14 : 6;
+        BOOL isLandscape = UIInterfaceOrientationIsLandscape([self interfaceOrientation]);
+        int maxLines = gLargeScreenDevice ? (isLandscape ? 14 : 24) : (isLandscape ? 6 : 7);
+        if (![m_delegate isFirstResponder])
+            maxLines += gLargeScreenDevice ? 10 : 6;
         
         if (m_mode == FrotzInputHelperModeMoreWords)
             nLines = maxLines;
@@ -218,6 +221,19 @@ const CGFloat kHistoryLineHeight = 20.0;
     return m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands count] : [m_history count];
 }
 
+#if __IPHONE_5_1 < __IPHONE_OS_VERSION_MAX_ALLOWED
+
+// iOS 6 and later
+- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section
+{
+    // Background color
+    view.tintColor = [UIColor blackColor];
+    
+    // Text Color
+    UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
+    [header.textLabel setTextColor:[UIColor whiteColor]];
+}
+#endif
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
@@ -231,7 +247,7 @@ const CGFloat kHistoryLineHeight = 20.0;
     NSString *item = m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands objectAtIndex: indexPath.row] : [m_history objectAtIndex: indexPath.row];
     cell.text = item;
     cell.textColor = m_mode == FrotzInputHelperModeMoreWords && indexPath.row > [m_commonCommands count] - 9 ? [UIColor yellowColor] : [UIColor whiteColor];
-    cell.backgroundColor = [UIColor darkGrayColor];
+    cell.backgroundColor = [UIColor blackColor]; // [UIColor darkGrayColor];
     
     return cell;
 }
@@ -256,6 +272,12 @@ const CGFloat kHistoryLineHeight = 20.0;
 
 
 - (void)viewDidLoad {
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+        self.edgesForExtendedLayout=UIRectEdgeNone;
+    }
+#endif
     [super viewDidLoad];
 }
 

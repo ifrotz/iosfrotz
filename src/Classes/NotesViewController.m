@@ -49,6 +49,8 @@
 static const int kNotesTitleHeight = 24;
 
 -(UIScrollView*)containerScrollView {
+    if (!m_scrollView)
+        [self loadView];
     return m_scrollView;
 }
 
@@ -98,10 +100,23 @@ static const int kNotesTitleHeight = 24;
     m_notesTitle = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects: @"Notes", glyph, nil]];
     [m_notesTitle setWidth: 24 forSegmentAtIndex:1];
     [m_notesTitle setEnabled:FALSE forSegmentAtIndex:0];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+        [m_notesTitle setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIColor blackColor], UITextAttributeTextColor, nil] forState:UIControlStateDisabled];
+#endif
+
     [m_notesTitle setMomentary:YES];
     m_notesTitle.segmentedControlStyle = UISegmentedControlStyleBar;
     m_notesTitle.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin;
-    m_notesTitle.tintColor = [UIColor darkGrayColor];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+       m_notesTitle.tintColor = [UIColor blackColor];
+    } else
+#endif
+    {
+        m_notesTitle.tintColor = [UIColor darkGrayColor];
+    }
     m_notesTitle.center = CGPointMake(self.view.frame.size.width/2, m_notesTitle.frame.size.height/2);
     [m_notesTitle addTarget:self action:@selector(notesAction:) forControlEvents:UIControlEventValueChanged];
     
@@ -116,8 +131,19 @@ static const int kNotesTitleHeight = 24;
     [m_notesView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin];
     [m_notesView setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
     [m_notesView setFont: font];
+
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) {
+        m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
+    }
     [m_notesView setAutocapitalizationType:UITextAutocapitalizationTypeNone];
-    
+    if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 QuickType completion screws up notes
+        [m_notesView setAutocorrectionType: UITextAutocorrectionTypeNo];
+    }
+#else
+    m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
+#endif
+
     //    UIButton *scriptBrowseButton = [UIButton buttonWithType: UIButtonTypeDetailDisclosure];
     //    [m_notesView addSubview: scriptBrowseButton];
     
@@ -210,9 +236,9 @@ static const int kNotesTitleHeight = 24;
             if (m_chainResponder && [m_chainResponder isFirstResponder])
                 [m_notesView becomeFirstResponder];
         } else {
-            if (m_chainResponder && [m_notesView isFirstResponder]) {
+            if (m_chainResponder && [m_notesView isFirstResponder] && [m_chainResponder canBecomeFirstResponder]) {
                 [m_chainResponder becomeFirstResponder];
-                [scrollView setContentOffset:CGPointMake(0, 0)];
+                [scrollView setContentOffset:CGPointMake(scrollView.contentInset.left, scrollView.contentInset.top)];
             }
             else
                 [m_notesView resignFirstResponder];
@@ -223,6 +249,7 @@ static const int kNotesTitleHeight = 24;
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (scrollView == m_scrollView && decelerate) {
         if (m_chainResponder && [m_chainResponder isFirstResponder]) {
+            [m_notesView setEditable: YES];
             [m_notesView becomeFirstResponder];
         }
     }
@@ -236,11 +263,18 @@ static const int kNotesTitleHeight = 24;
 
 -(void)show {
     CGRect frame = [m_scrollView frame];
+    [m_notesView setEditable: YES];
     [m_scrollView setContentOffset:CGPointMake(frame.size.width, 0)];
 }
 
 -(void)hide {
     [m_scrollView setContentOffset:CGPointMake(0, 0)];
+}
+
+- (BOOL)textViewShouldBeginEditing:(UITextView *)textView {
+    if (m_chainResponder)
+        return [m_chainResponder canBecomeFirstResponder];
+    return YES;
 }
 
 -(void) keyboardWillShow:(CGRect)kbBounds {
@@ -274,12 +308,12 @@ static const int kNotesTitleHeight = 24;
 -(void)activateKeyboard {
     if ([self isVisible]) {
         [m_notesView becomeFirstResponder];
+        [m_notesView setEditable: YES];
     }
 }
 
 -(void)workaroundFirstResponderBug {
-    [m_notesView becomeFirstResponder];
-    [m_notesView resignFirstResponder];
+    [m_notesView setEditable: NO];
 }
 
 -(void)dismissKeyboard {
@@ -305,6 +339,7 @@ static const int kNotesTitleHeight = 24;
     CGRect frame = m_scrollView.frame;
     
     frame.origin.x = frame.size.width;
+    frame.origin.y = 0;
     [m_notesBGView  setFrame: frame];
     
     frame.size.width *= 2;

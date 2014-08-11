@@ -40,6 +40,7 @@
 -(void)show;
 -(void)hide;
 -(void)loadView;
+-(void)autosize;
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView;
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;

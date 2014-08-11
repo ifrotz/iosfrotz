@@ -95,6 +95,7 @@
 #include "gi_dispa.h"
 #include "glkios.h"
 #include "ipw_buf.h"
+#include "ipw_grid.h"
 #include "ipw_graphics.h"
 #include "iphone_frotz.h"
 
@@ -1219,9 +1220,6 @@ struct glk_stream_autosave {
     glui32 readcount, writecount;
     int readable, writable;
     
-    /* for strtype_Window */
-    //    intptr_t win;
-    
     unsigned char *buf;
     unsigned char *bufptr;
     unsigned char *bufend;
@@ -1236,10 +1234,12 @@ struct glk_stream_autosave {
 struct glk_fileref_autosave {
     glui32 magicnum;
     glui32 rock;
-    
-    //  char *filename; // ???
+
     int filetype;
     int textmode;
+    
+    char filename[48];
+
 };
 
 struct glk_winpair_autosave {
@@ -1282,6 +1282,8 @@ enum kGlkReqBits { kGlkReqLine=1, kGlkReqLineUni=2, kGlkReqChar=4, kGlkReqCharUn
 
 typedef struct glk_object_save glk_object_save_t;
 
+static int wingfxcount = 0;
+
 static void saveWin(window_t *win, struct glk_window_autosave *s) {
     s->magicnum = win->magicnum;
     s->rock = win->rock;
@@ -1314,6 +1316,9 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
     }
     s->style = win->style;
     s->size = win->size;
+    if (win->type == wintype_Graphics)
+        iphone_save_glk_win_graphics_img(wingfxcount++, win->iphone_glkViewNum);
+    //s->size = (win->type == wintype_TextGrid) ? ((window_textgrid_t*)win->data)->linessize : win->size;
     s->method = win->method;
     s->splitwin = win->splitwin;
 }
@@ -1321,7 +1326,7 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
 static void saveStream(stream_t *str, struct glk_stream_autosave *s) {
     s->magicnum = str->magicnum;
     s->rock = str->rock;
-    
+
     s->type = str->type;
     s->unicode = str->unicode;
     
@@ -1342,11 +1347,21 @@ static void saveStream(stream_t *str, struct glk_stream_autosave *s) {
     s->buflen = str->buflen;
 }
 
+extern char SAVE_PATH[];
 static void saveFRef(fileref_t *fref, struct glk_fileref_autosave *s) {
     s->magicnum = fref->magicnum;
     s->rock = fref->rock;
     s->filetype = fref->filetype;
     s->textmode = fref->textmode;
+    if (strstr(fref->filename, SAVE_PATH) == fref->filename || *fref->filename!='/') {
+        int n = strlen(SAVE_PATH);
+        char *p = fref->filename + n;
+        if (*p=='/')
+            ++p;
+        n = strlen(p);
+        if (n > 0 && n < sizeof(s->filename) && strcmp(p,kFrotzAutoSaveFile)!=0)
+            strcpy(s->filename, p);
+    }
 }
 
 static void saveWinPair(window_pair_t *wp, struct glk_winpair_autosave *s) {
@@ -1457,7 +1472,7 @@ static void classes_denormalize_pointers(glui32 objclass, void *obj)
 		if (str->ubufend)	str->ubufend += (glui32)gRam;
 		if (str->ubufeof)	str->ubufeof += (glui32)gRam;
 	} else if (objclass == gidisp_Class_Fileref) {
-		;
+        ;
 	} else if (objclass == gidisp_Class_Schannel) {
 		;
 	}
@@ -1740,7 +1755,6 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 			winct++;
 			foundwin = &cur->obj.win;
 			classes_denormalize_pointers(gidisp_Class_Window, foundwin);
-            
 			winid[winct-1].id = cur->id; // fill this in for a pair, too
             
 			if (foundwin->type != wintype_Pair) {
@@ -1799,6 +1813,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 				// read STREAM chunk
 				i++;
 				cur = objects + i;
+
 				if (cur->type != gidisp_Class_Stream) {
 					sprintf(errbuf, "\nUnexpected window stream type %d. Aborting restore.\n", cur->type);
 					iphone_win_puts(0, errbuf);
@@ -1834,6 +1849,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 				// read STYLE chunk
 				i++;
 				cur = objects + i;
+
 				if (cur->type != type_Style) {
 					sprintf(errbuf, "\nUnexpected stream type %d. Aborting restore.\n", cur->type);
 					iphone_win_puts(0, errbuf);
@@ -1851,6 +1867,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 					wgp->height = cur->obj.gfx.height;
 					wgp->backcolor = cur->obj.gfx.backcolor;
 					iphone_set_background_color(win->iphone_glkViewNum, wgp->backcolor);
+                    iphone_restore_glk_win_graphics_img(wingfxcount++, win->iphone_glkViewNum);
 				}
 			} else if (found && win->type == wintype_Pair) {
 				// this will never happen
@@ -1890,8 +1907,9 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 					}
 				}
 			}
-		}
-	}
+		} else if (cur->type == gidisp_Class_Fileref)
+            ;
+    }
 	// verify window count
 	if ((ctab = git_classes[gidisp_Class_Window])) {
 		for (j = 0; j < CLASSHASH_SIZE; j++) {
@@ -1925,7 +1943,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 					cref_id->id = cur->id; // auto-awarding should verify that an id has not been reused
 					classes_push_cref(gidisp_Class_Window, cref_id);
 				}
-				break;
+				 //break; // This incorrect break was in cellardoor impl --
 			} else {
 				iphone_win_puts(0, "\nCould not restore saved state. Sorry. Aborting restore.\n");
 				return FALSE;
@@ -1981,6 +1999,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 				}
 			}
 		} else if (cur->type == gidisp_Class_Stream) { // now do the streams
+#if 0 // this doesn't work and seems to corrupt autorestore, e.g. Counterfeit Monkey
 			stream_t *tempstr;
             
 			found = FALSE;
@@ -2033,8 +2052,21 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
                         (cur->type == strtype_Memory) ? "strtype_Memory" : "UNKNOWN", (int)cur->id);
 				iphone_win_puts(0, errbuf);
 			}
+#endif
 		} else if (cur->type == gidisp_Class_Fileref) {
-			iphone_win_puts(0, "\n[Autorestore warning: missing file stream]\n");
+//			iphone_win_puts(0, "\n[Autorestore warning: missing file stream]\n");
+            if (*cur->obj.fref.filename && strcmp(cur->obj.fref.filename, kFrotzAutoSaveFile)!=0) {
+                glui32 usage = (cur->obj.fref.textmode ? fileusage_TextMode : 0)
+                            | (cur->obj.fref.filetype & fileusage_TypeMask);
+
+                fileref_t *fref = gli_new_fileref(cur->obj.fref.filename, usage, cur->obj.fref.rock);
+                id = classes_find_id_for_object(gidisp_Class_Fileref, fref);
+                if (id != cur->id) {
+                    cref_id = classes_pop_cref(gidisp_Class_Fileref, id);
+                    cref_id->id = cur->id; // auto-awarding should verify that an id has not been reused
+                    classes_push_cref(gidisp_Class_Fileref, cref_id);
+                }
+            }
 		} else if (cur->type == type_Style) {
 			if (cur->id == STYLEHINT_TEXT_BUFFER) {
 				gli_window_set_stylehints((winid_t)STYLEHINT_TEXT_BUFFER, (GLK_STYLE_HINTS *)&cur->obj.style);
@@ -2070,6 +2102,7 @@ void saveObjectClasses(int objectCount, void * objectsP) {
 
 git_sint32 saveToFileStrWithClasses (git_sint32 * base, git_sint32 * sp, strid_t fstr) {
     glk_object_save_t *objects = NULL;
+    wingfxcount = 0;
     int objects_count = classes_iter(&objects);
     git_sint32 ret = saveToFileStrCore (base, sp, fstr, objects_count, objects, saveObjectClasses);
     free(objects);
@@ -2080,6 +2113,7 @@ git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize) {
     glk_object_save_t *objects;
     char buffer [4];
     
+    wingfxcount = 0;
     glk_get_buffer_stream (file, buffer, 4);
     int versionNum = read32(buffer);
     
@@ -2121,25 +2155,38 @@ static void git_shutdown2(gidispatch_rock_t objrock, int classid) {
 }
 
 void git_shutdown_dispatch() {
+    window_t *win = NULL;
+    stream_t *str = NULL;
+    fileref_t *fref = NULL;
     gidispatch_set_object_registry(0, 0);
     gidispatch_set_retained_registry(0, 0);
 
-    for (window_t *win = glk_window_iterate(NULL, NULL); 
+    for (win = glk_window_iterate(NULL, NULL);
          win;
          win = glk_window_iterate(win, NULL)) {
         classes_remove(gidisp_Class_Window, win);
     }
-    for (stream_t *str = glk_stream_iterate(NULL, NULL); 
+    for (str = glk_stream_iterate(NULL, NULL);
          str;
          str = glk_stream_iterate(str, NULL)) {
         classes_remove(gidisp_Class_Stream, str);
     }
-    for (fileref_t *fref = glk_fileref_iterate(NULL, NULL); 
+    for (fref = glk_fileref_iterate(NULL, NULL);
          fref;
          fref = glk_fileref_iterate(fref, NULL)) {
         classes_remove(gidisp_Class_Fileref, fref);
     }
-    
+
+    while ((win = glk_window_iterate(NULL, NULL))) {
+        gli_delete_window(win);
+    }
+    while ((str = glk_stream_iterate(NULL, NULL))) {
+        gli_delete_stream(str);
+    }
+    while ((fref = glk_fileref_iterate(NULL, NULL))) {
+        gli_delete_fileref(fref);
+    }
+
     for (int classid=0; classid<num_classes; classid++) {
         glulx_free(git_classes[classid]);
         git_classes[classid] = 0;

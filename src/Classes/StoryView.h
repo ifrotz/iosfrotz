@@ -21,6 +21,7 @@
 - (void)appendText:(NSString*)text;
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
 - (void)skipNextTap;
+- (NSString*)lookForTruncatedWord:(NSString*)word;
 @property (nonatomic, assign) BOOL tapInputEnabled;
 @end
 

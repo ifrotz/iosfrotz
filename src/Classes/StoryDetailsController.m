@@ -185,7 +185,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 //-(void)setFrame:(CGRect)frame {
-//    NSLog(@"view size %fx%f", frame.size.width, frame.size.height);
+//    NSLog(@"frotz image view size %f,%f +%fx%f", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
 //    [super setFrame: frame];
 //}
 
@@ -272,18 +272,20 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
           ] baseURL:nil];
     }
     
+    m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
     if (m_willResume) {
         if (gLargeScreenDevice) {
             [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
-            m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+            [m_playButton setNeedsDisplay];
         } else {
-            [m_playButton setTitle: @"Resume Story   " forState:UIControlStateNormal];
-            m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentRight;
+            m_playButton.titleEdgeInsets = UIEdgeInsetsMake(0, 24, 0, 0);
+            [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
+            [m_playButton setNeedsDisplay];
         }
         m_restartButton.hidden = NO;
     } else {
         [m_playButton setTitle: @"Play Story" forState:UIControlStateNormal];
-        m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+        m_playButton.titleEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
         m_restartButton.hidden = YES;
     }
     
@@ -295,10 +297,13 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [m_ifdbButton setEnabled: enable];
     [m_ifdbButton setAlpha: enable ? 1.0 : 0.5];
     [m_restartButton.superview bringSubviewToFront: m_restartButton];
+    CGRect playFrame = m_playButton.frame, restartFrame = m_restartButton.frame;
+    [m_restartButton setCenter: CGPointMake(playFrame.origin.x + restartFrame.size.width/2.0 + (gLargeScreenDevice?24:1),
+                                            playFrame.origin.y + restartFrame.size.height/2.0 + (gLargeScreenDevice?2:1))];
     
     if ((m_title && [m_title length] > 0 || m_storyInfo) //|| UIDeviceOrientationIsLandscape([self interfaceOrientation])
         ) {
-        if (!m_portraitCover.hidden && UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
+        if (/*!m_portraitCover.isHidden && */ UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
             if (m_artSizeLandscape.width != 0) {
                 CGRect bounds = m_artworkView.bounds;
                 bounds.size = m_artSizeLandscape;
@@ -327,6 +332,8 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             [m_artworkLabel setAlpha: 1.0];
         }
     }
+    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; // [[UIDevice currentDevice] orientation]];
+
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
@@ -365,8 +372,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     // For some reason in iOS 4.2 this doesn't work because the frame hasn't been scaled yet
     // in willAnimRotation...  so I'm initializing it here with a hardcoded scale of half.
     m_artSizeLandscape = m_artworkView.bounds.size;
-    m_artSizeLandscape.width *= 0.5;
-    m_artSizeLandscape.height *= 0.5;
+    CGFloat landscapeScale = gLargeScreenDevice ? 0.5 : 0.8;
+    m_artSizeLandscape.width *= landscapeScale;
+    m_artSizeLandscape.height *= landscapeScale;
     
     m_artworkView.detailsController = self;
     
@@ -386,20 +394,28 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_browser settings] navController:self.navigationController navItem:self.navigationItem];
         self.navigationItem.titleView = [m_frotzInfoController view];
     }
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+        self.edgesForExtendedLayout=UIRectEdgeNone;
+    }
+#endif
 }
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self updateSelectionInstructions: NO];
+
     [self refresh];
-    
+
     if (!gLargeScreenDevice) {
         [m_descriptionWebView removeFromSuperview];
         [m_descriptionWebView setHidden: YES];
     }
-    [m_flipper addSubview: m_artworkView];
-    [m_flipper addSubview: m_artworkLabel];
-    
+    if (m_flipper) {
+        [m_flipper addSubview: m_artworkView];
+        [m_flipper addSubview: m_artworkLabel];
+    }
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -414,7 +430,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     [m_artworkView magnifyImage:NO];
     
-    m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
+ //   m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
     
     if (m_title && [m_title length] > 0 || m_storyInfo) {
         m_portraitCover.hidden = YES;
@@ -423,22 +439,34 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     }
 }
 
--(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
-    CGRect artBounds = m_artworkView.bounds;
-    
-#if 0 // see comment by assignments in viewDidLoad:
-    if (UIDeviceOrientationIsLandscape(toInterfaceOrientation)) {
-        m_artSizeLandscape = artBounds.size;
-        if (m_artSizePortrait.width != 0 && m_artSizePortrait.width == m_artSizeLandscape.width) {
-            // In iOS 4.2 beta, for some reason the view hasn't been resized yet here, so we still have the portrait
-            // size.  Set the landscape size directly instead.
-            m_artSizeLandscape.width = m_artSizePortrait.width / 2;
-            m_artSizeLandscape.height = m_artSizePortrait.height / 2;
+-(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation {
+    if (m_flipper) {
+        CGRect textRect = m_textFieldsView.frame;
+        CGRect flipRect = m_flipper.frame;
+        CGRect butttonsRect = m_buttonsView.frame;
+        [m_textFieldsView.superview bringSubviewToFront:m_textFieldsView];
+        
+        if (UIDeviceOrientationIsLandscape(toInterfaceOrientation)) {
+            if ([m_descriptionWebView superview] && ![m_descriptionWebView isHidden])
+                [self toggleArtDescript];
+            flipRect.origin = CGPointMake(textRect.origin.x + butttonsRect.size.width - flipRect.size.width + 20, textRect.origin.y);
+            m_infoButton.hidden = YES;
+        } else {
+            m_flipper.transform = CGAffineTransformMakeScale(1.0, 1.0);
+            flipRect.origin = CGPointMake(0, textRect.origin.y + textRect.size.height);
+            m_infoButton.hidden = NO;
         }
+        flipRect.size.height = butttonsRect.origin.y - flipRect.origin.y;
+        UINavigationBar *b =  self.navigationController.navigationBar;
+        if (b && !b.superview) // work around iOS bug where we're not resized correctly when a search bar has taken over the nav bar
+            flipRect.size.height -= b.frame.size.height+20;
+        m_flipper.frame = flipRect;
+        CGRect webFrame = m_descriptionWebView.frame;
+        webFrame.size.height = flipRect.size.height;
+        m_descriptionWebView.frame = webFrame;
     }
-#endif
-    
+
+    CGRect artBounds = m_artworkView.bounds;
     if (m_title && [m_title length] > 0 || m_storyInfo) {
         m_portraitCover.hidden = YES;
         artBounds.size =  UIDeviceOrientationIsLandscape(toInterfaceOrientation) ? m_artSizeLandscape: m_artSizePortrait;
@@ -450,8 +478,22 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             m_artworkView.bounds = artBounds;
         }
     }
-    m_portraitCoverLabel.hidden = YES;
+
+//    m_portraitCoverLabel.hidden = YES;
+    if (gLargeScreenDevice) {
+        CGPoint center = [m_artworkView.superview center];
+        center.y = m_TUIDField.center.y + artBounds.size.height/2.0 + 20;
+        [m_artworkView setCenter: center];
+    }
     [m_artworkLabel setCenter: [m_artworkView center]];
+}
+
+-(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    [self repositionArtwork: toInterfaceOrientation];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
 }
 
 -(void)updateSelectionInstructions:(BOOL)hasPopover {
@@ -466,7 +508,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
+    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
+
+ //   m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
     [self updateSelectionInstructions: NO];
     m_portraitCoverLabel.hidden = NO;
     [self refresh];
@@ -616,6 +660,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             [m_artworkView removeFromSuperview];
             [m_artworkLabel removeFromSuperview];
             [m_descriptionWebView setHidden: NO];
+            m_flipper.autoresizesSubviews = YES;
             [m_flipper addSubview: m_descriptionWebView];
             [m_flipper bringSubviewToFront: m_descriptionWebView];
         }

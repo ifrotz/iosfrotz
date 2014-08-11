@@ -23,7 +23,6 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @interface RichTextView : UIScrollView <UIScrollViewDelegate> {
     NSMutableString *m_text;
     CGFloat m_fontSize, m_fixedFontSize;
-    CGSize m_lastSize;
     CGSize m_tileSize;
     int m_numLines;
     NSMutableArray *m_textRuns;   // text fragments
@@ -35,7 +34,8 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     NSMutableArray *m_textLineNum; // which line (0..n) each run starts on
 
     NSMutableArray *m_lineYPos;    // Y position of each line; indexed by line number, not run
-    NSMutableArray *m_lineWidth;   // width of each text line    
+    NSMutableArray *m_lineWidth;    // width of each text line
+    NSMutableArray *m_lineDescent;  // height of line below text origin
 
     NSMutableArray *m_imageviews;  // inline image views container
     NSMutableArray *m_imageIDs;
@@ -78,6 +78,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     NSRange m_selectedColumnRange;
     UILabelWA *m_selectionView;
     BOOL m_selectionDisabled;
+    BOOL m_hyperlinkTest;
     
     NSObject<RTSelected>* m_selectionDelegate;
     
@@ -118,12 +119,13 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (BOOL)findHotText:(NSString *)text charOffset:(int)charsDone pos:(CGPoint)pos minX:(CGFloat)minXPos hotPoint:(CGPoint*)hotPoint font:(UIFont*)font fontHeight:(CGFloat)fontHeight
  width:(CGFloat) width;
 - (void)updateLine:(int)lineNum withYPos:(CGFloat)yPos;
+- (void)updateLine:(int)lineNum withDescent:(CGFloat)desent;
 - (void)updateLine:(int)lineNum width:(CGFloat)width;
 - (BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)pos font:(UIFont*)font style:(RichTextStyle)style fgColor:(UIColor*)fgColor
    bgColor:(UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(int)lineNum nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
 - (void)appendText:(NSString*)text;
 - (void)appendImage:(int)imageNum withAlignment:(int)imageAlign;
-- (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint;
+- (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint inDraw:(BOOL)inDraw textStyle:(RichTextStyle)textStyle;
 - (int) getTextRunAtPoint:(CGPoint)touchPoint;
 - (int)hyperlinkAtPoint:(CGPoint)point;
 - (void)populateZeroHyperlinks;

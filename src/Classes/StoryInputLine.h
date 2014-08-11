@@ -12,13 +12,15 @@
 @interface StoryInputLine: UITextField <FrotzInputDelegate> {
     StoryView *m_storyView;
     StatusLine *m_statusLine;
-    BOOL  m_firstKeyPressed;
+    UIView *m_enterAndClearView;
     FrotzInputHelper *m_inputHelper;
     UITouchPhase m_lastTouchPhaseSeen;
     NSTimeInterval m_lastTouchTimestamp;
     CGPoint m_touchBeganPosition;
-    BOOL m_justHidHelper;
     CompletionLabel *m_completionLabel;
+    BOOL m_firstKeyPressed, m_lastCharDeleted;
+    BOOL m_justHidHelper;
+    BOOL m_completionAmbiguous;
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame;
 -(StoryView*) storyView;
@@ -33,6 +35,8 @@
 -(void)hideInputHelper;
 -(UIView*) inputHelperView;
 -(void)setClearButtonMode;
+-(void)maybeShowEnterKey;
+-(void)hideEnterKey;
 -(void)setTextKeepCompletion:(NSString*)text;
 @end
 

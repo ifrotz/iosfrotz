@@ -78,13 +78,13 @@ plvzam05bmz3enh8	curses.z5	curses.z5		Graham Nelson
 plvzam05bmz3enh8	curses.z3	curses.z3		Graham Nelson
 2103dabhxzxsraal	Damnatio-Memoriae.zblorb	Damnatio-Memoriae.zblorb		Emily Short
 ov7wpv4l1fth1tro	curves.z8	curves.z8		Irene Callaci
-ppsrh9i9i76zg186	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		 Eggerich von Eggermond
+ppsrh9i9i76zg186	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		 Eggerich von Eggermond
 wqrlx3wvtmkjds9q	lotech.zip	stormy.z5		Emily Short
-sb2ynig6ia3mx66o	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Andrew Schultz
+sb2ynig6ia3mx66o	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Andrew Schultz
 v0zwe4xy6thtqz0s	dastardly.z5	dastardly.z5		Andy Chase
 7yiyxcnrlwejoffd	Sushi.zblorb	Sushi.zblorb		Emily Short
 aktys788a52fac96	softfood.z5	softfood.z5		Tod Levi
-gjvqzy2pjuwxru2	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Taleslinger
+gjvqzy2pjuwxru2	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Taleslinger
 weac28l51hiqfzxz	baron.zip	baron_EN.z8		Victor Gijsbers
 p976o7x5ies9ltdh	deadlineinv.z5	deadlineinv.z5		Marc Blank
 9wozfe2gm3oui7hq	deadlineenchanter.z5	deadlineenchanter.z5		Alan DeNiro
@@ -103,14 +103,12 @@ zu3xhhd3l9y6r177	djinni.z5	djinni.z5		J. D. Berry
 4ipti3pkye3wkucz	tokyo.z5	tokyo.z5		John Kean
 s261gocee0qwv4rs	dumont.z5	dumont.z5		Muffy Berlyn, Michael Berlyn
 oh8wpldas9q1wcv4	Kong 2.zip	Dr- Kong in- Exploding Poodle I.gblorb		A W
-sjiyffz8n5patu8l	dragon.zip	Dragon.z5		William Stott
 disk8jhpff89uh4s	DragonFliesLike.zblorb	DragonFliesLike.zblorb		Troy Jones III
 disk8jhpff89uh4s	dragonflieslike.zip	Dragon Flies Like Labradorite.zblorb		Troy Jones III
 hah6uisf46qqqvxx	Dreadwine.zblorb	Dreadwine.zblorb		Eric Eve
 nlb5cxhdabfkn0zz	dreamtrap.zip	Dream Trap of Zzar.z8		S. John Ross
 3myqnrs64nbtwdaz	dreamhold.z8	dreamhold.z8		Andrew Plotkin
 xfezh9wz188ihlel	Dual.zblorb	Dual.zblorb		Andrew Plotkin
-xfezh9wz188ihlel	DualTransform.zblorb	DualTransform.zblorb		Andrew Plotkin
 7kzcppjg6rrr8dr0	duel.z8	duel.z8		Utkonos
 82f6px0qqdtrghrx	DDIV.z5	DDIV.z5		Harry Hol
 xtlhfet0vixthar5	eas.zip	Eas.z5		Paul O'Brian
@@ -141,7 +139,7 @@ zt66jzjxkd8ptin4	Apollo18+20.zip	fingertips I don't understand you v 2.z5		Matt 
 8tta72493k4nvec	Apollo18+20.zip	i found a new friend.z8		Adri
 jwe1v7bh1evehrq	Apollo18+20.zip	fingertips_im_having_a_heart_attack.zblorb		Andrew Schultz
 bl5mt8ug8i6uquh3	Apollo18+20.zip	please pass the milk please.z8		Adri
-h2j4m8rzqzrksen	Apollo18+20.zip	Dig My Grave.zblorb	My Evil Twin.zblorb	Mammal.z5	The Statue Got Me High.zblorb	Spider.zblorb	The Guitar.zblorb	Dinner Bell.zblorb	Hall of Heads.zblorb	see the constellation.zblorb	If I Wasn't Shy.z8	Hypnotist of Ladies.z5	Everything Is Catching On Fire.zblorb	Fingertips- Fingertips.zblorb	Fingertips - Hey Now Everybody.z5	Fingertips - Who Is That Standing Out The Window.z5	i found a new friend.z8	Fingertips - Come On and Wreck My Car.z8	Fingertips- ArentYouTheGuy.zblorb	please pass the milk please.z8	Fingertips- Leave Me Alone.zblorb	Fingertips - Who Is Knocking On The Wall.z5	Fingertips - All Alone.z5	fingertips- what's that blue th.zblorb	Fingertips - Something Grabbed Ahold Of My Hand.z5	fingertips I don't understand you v 2.z5	I Heard a Sound.z5	The Day That Love Came To Play.z8	fingertips_im_having_a_heart_attack.zblorb	Fingertips - Fingertips Reprise.z5	darkened corridors.zblorb	Space Suit.zblorb		Ruth Alfasso
+h2j4m8rzqzrksen	Apollo18+20.zip	Dig My Grave.zblorb	She's Actual Size.gblorb	My Evil Twin.zblorb	Mammal.z5	The Statue Got Me High.zblorb	Spider.zblorb	The Guitar.zblorb	Dinner Bell.zblorb	Hall of Heads.zblorb	see the constellation.zblorb	If I Wasn't Shy.z8	turn_around.gblorb	Hypnotist of Ladies.z5	Everything Is Catching On Fire.zblorb	Fingertips- Fingertips.zblorb	windblow.gblorb	Fingertips - Hey Now Everybody.z5	Fingertips - Who Is That Standing Out The Window.z5	i found a new friend.z8	Fingertips - Come On and Wreck My Car.z8	Fingertips- ArentYouTheGuy.zblorb	please pass the milk please.z8	Fingertips- Leave Me Alone.zblorb	Fingertips - Who Is Knocking On The Wall.z5	Fingertips - All Alone.z5	fingertips- what's that blue th.zblorb	Fingertips - Something Grabbed Ahold Of My Hand.z5	fingertips I don't understand you v 2.z5	I Heard a Sound.z5	Fingertips- Mysterious Whispers.gblorb	The Day That Love Came To Play.z8	fingertips_im_having_a_heart_attack.zblorb	Fingertips - Fingertips Reprise.z5	darkened corridors.zblorb	Space Suit.zblorb		Ruth Alfasso
 fcm1ikz9ttr6i99a	firetower.z8	firetower.z8		Jacqueline A. Lott
 on31jw8n1l9ozb1x	flatfeet.zip	flatfeet.z8		Joel Ray Holveck
 m92r7ml5ozfix62	Lea-Albaugh--Memento-Moratori.ZIP	moratori.zblorb		Lea Albaugh
@@ -300,7 +298,7 @@ spsnevz1br6f2z3v	pytho.z8	pytho.z8		Emily Short
 spsnevz1br6f2z3v	smoochie.zip	pytho.z8		Emily Short
 mh87fd6w0cfku7sr	queen.z5	queen.z5		Jessica Knoch
 fefl7lv3sdoawkhc	mhpquest.z5	mhpquest.z5		Adam G. Crutchlow
-g6h1glu4zeds6sec	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Admiral Jota
+g6h1glu4zeds6sec	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Admiral Jota
 1iqmpkn009h9gbug	yomomma.zblorb	yomomma.zblorb		Juhana Leinonen
 og54uzaryp1nh1jh	Ralph.z5	Ralph.z5		Miron Schmidt
 og54uzaryp1nh1jh	ralph.z5	ralph.z5		Miron Schmidt
@@ -316,7 +314,6 @@ t0pidhghzbo91i12	risorg.z8	risorg.z8		Michael J. Coyne
 kxvfs295b8adixqu	kitten.z5	kitten.z5		David Griffith, Leonard Richardson
 6lkbwncfsvp77c8y	The-Rocket-Man-from-the-Sea.gblorb.zip	The Rocket Man from the Sea.gblorb		Janos Honkonen
 7rt7gxoc2nf1muao	Roofed.zblorb	Roofed.zblorb		Jim Munroe
-7rt7gxoc2nf1muao	Roofed.z8	Roofed.z8		Jim Munroe
 mhs27ei693lx31rq	rox.z5	rox.z5		L. Ross Raszewski
 mhs27ei693lx31rq	arcade.zip	asteroids.z5		L. Ross Raszewski
 p0cizeb3kiwzlm2p	Savoir-Faire.zblorb	Savoir-Faire.zblorb		Emily Short
@@ -325,7 +322,6 @@ hsfc7fnl40k4a30q	shade.z5	shade.z5		Andrew Plotkin
 km1xagfje83xzkbp	spring.z8	spring.z8		Brent VanFossen
 82mn545s8bt3csa4	shrapnel.z5	shrapnel.z5		Adam Cadre
 n8c9whn8wjp1y422	mimesis.z5	mimesis.z5		Adam Thornton
-kbd990q5fp7pythi	Six.zip	Six.gblorb		Wade Clarke
 032krqe6bjn5au78	slouch.z5	slouch.z5		Star Foster, Daniel Ravipinto
 yr3y8s9k8e40hl5q	Snack Time!.zblorb	Snack Time!.zblorb		Hardy the Bulldog, Renee Choba
 1bm5jh53n072w1wm	2-snowman.z5	2-snowman.z5		Jessica Knoch
@@ -337,14 +333,13 @@ egtt6j8vif0plzrc	sutwin.z5	sutwin.z5		Andrew Plotkin
 2xyccw3pe0uovfad	Tangle.z5	Tangle.z5		Andrew Plotkin
 tqpowvmdoemtooqf	spirit.z5	spirit.z5		D. S. Yu
 r0tn6id0wlaat4o0	Splashdown.z5	Splashdown.z5		Paul J. Furio
-13saf297yzgx9byz	Spring Cleaning.zblorb	Spring Cleaning.zblorb		Roger Carbol
 s6wxiamavjs9ykja	starcity.z8	starcity.z8		Mark Sachs
 xxzy1f49yw1n6ghj	Starborn.zblorb	Starborn.zblorb		Juhana Leinonen
 5ce2utm21pedxj2f	wasp.z5	wasp.z5		Jason Devlin
 2djonx9h7ifzpk1p	stinkorswim.z8	stinkorswim.z8		Renee Choba
 s2s2nda0r0qoe4a6	stopnight.z5	stopnight.z5		Joe Mason
 8j5ppbu0pkapiaby	geometries.z8	geometries.z8		Phillip Chambers
-mziqfn78iaytu5uf	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Troy Jones III 
+mziqfn78iaytu5uf	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Troy Jones III 
 kmoymj14weszx5a1	Suicide.z8	Suicide.z8		Dan Doyle III
 xkai23ry99qdxce3	suvehnux.z5	suvehnux.z5		David Fisher
 xkai23ry99qdxce3	orgc2007.zip	suvehnux.z5		David Fisher
@@ -360,7 +355,7 @@ c8q1g0ivr5gne0e6	bathtub.z5	bathtub.z5		Edward Griffiths
 2k171zs82dpkinbz	tac.z5	tac.z5		Robert Hall, Roy Main
 b87eumakxhjmhcif	thorn.z5	thorn.z5		Eric Mayer
 8ff0n6c5kt5hcs7	threemore.z5	threemore.z5		Paul Stanley
-8ff0n6c5kt5hcs7	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Paul Stanley
+8ff0n6c5kt5hcs7	SpeedIF_Penultimate.zip	Being the Ending of the Beginni.zblorb	Birth of Mind.zblorb	Danse Nocturne.gblorb	Dash Slapney, Patrol Leader.zblorb	Post-Christmas Letdown.zblorb	The Day I saved Elvis.z5	The Silence of the Gods.zblorb	ragnarok.z5	stupidcreek.z8	threemor.z5		Paul Stanley
 b4sjbco0i9cyuxwc	alice3.z5	alice3.z5		Gareth Rees
 rsjzz9w60k6o6od4	ats.z8	ats.z8		Quim K. Holland
 thq10p0o23bngmp0	tookie.z5	tookie.z5		Jessica Knoch

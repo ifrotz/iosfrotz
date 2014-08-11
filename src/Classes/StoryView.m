@@ -170,8 +170,47 @@
     m_skipNextTap = NO;
 }
 
+- (NSString*)lookForTruncatedWord:(NSString*)word {
+    for (NSString *text in m_textRuns) {
+        NSUInteger len = [text length];
+        NSRange r = [text rangeOfString:word options:NSCaseInsensitiveSearch];
+        if (r.length) {
+            NSUInteger index = r.location;
+            if (index > 0 && isalnum([text characterAtIndex:index-1]))
+                continue;
+            index += r.length;
+            while (index < len) {
+                unichar c = [text characterAtIndex: index];
+                if (!isalnum(c) && c!='\'')
+                    break;
+                ++index;
+            }
+            return [text substringWithRange:NSMakeRange(r.location, index - r.location)];
+        }
+    }
+
+    return nil;
+    
+}
+
+
+#include <execinfo.h>
+
 -(void)setFrame:(CGRect)frame {
-    //    NSLog(@"sv setFrame: (%f,%f,%f,%f)", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+
+    //NSLog(@"sv setFrame: (%f,%f,%f,%f)", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
+#if 0
+    void* callstack[128];
+    char outbuf[16384];
+    *outbuf = 0;
+    int i, frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (i = 0; i < frames; ++i) {
+        sprintf(outbuf,"%s%s\n", outbuf,strs[i]);
+    }
+    NSLog(@"%s", outbuf);
+    free(strs);
+#endif
     [super setFrame: frame];
 }
 

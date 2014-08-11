@@ -90,6 +90,8 @@ void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 w
 void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height);
 void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned int bgColor);
 void iphone_set_background_color(int viewNum, glui32 color);
+void iphone_save_glk_win_graphics_img(int ordNum, int viewNum);
+void iphone_restore_glk_win_graphics_img(int ordNum, int viewNum);
 
 #define kMaxGlkViews 64
 
@@ -132,8 +134,9 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSaveFile "autosave.sav"
 #define kFrotzAutoSavePListFile "FrotzSIP.plist"
 #define kFrotzAutoSaveActiveFile "Current.plist"
+#define kFrotzAutoSaveGlkImgPrefix "glkwingfx"
 
-#define IPHONE_FROTZ_VERS "1.6"
+#define IPHONE_FROTZ_VERS "1.7"
 #define FROTZ_BETA 0
 
 #define APPLE_FASCISM (!FROTZ_BETA)
