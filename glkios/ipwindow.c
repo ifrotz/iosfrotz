@@ -127,6 +127,8 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     win->hyper_request = FALSE;
     win->style = style_Normal;
     win->hyperlink = 0;
+    win->store = 0;
+    win->splitwin = 0;
 
     win->str = gli_stream_open_window(win);
     win->echostr = NULL;
@@ -143,10 +145,7 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     if (gli_register_obj)
         win->disprock = (*gli_register_obj)(win, gidisp_Class_Window);
     
-    if (type == wintype_TextGrid || type == wintype_TextBuffer || type == wintype_Graphics)
-	win->iphone_glkViewNum = iphone_new_glk_view(win);
-    else
-	win->iphone_glkViewNum = -1;
+    win->iphone_glkViewNum = -1;
 
     if (!gli_focuswin) // bcs
         gli_focuswin = win;
@@ -279,6 +278,9 @@ winid_t glk_window_open(winid_t splitwin, glui32 method, glui32 size,
     
     if (!splitwin) {
         gli_rootwin = newwin;
+        if (wintype == wintype_TextGrid || wintype == wintype_TextBuffer || wintype == wintype_Graphics)
+            newwin->iphone_glkViewNum = iphone_new_glk_view(newwin);
+
         gli_window_rearrange(newwin, &box);
         /* redraw everything, which is just the new first window */
         gli_windows_redraw();
@@ -306,7 +308,9 @@ winid_t glk_window_open(winid_t splitwin, glui32 method, glui32 size,
         else {
             gli_rootwin = pairwin;
         }
-        
+        if (wintype == wintype_TextGrid || wintype == wintype_TextBuffer || wintype == wintype_Graphics)
+            newwin->iphone_glkViewNum = iphone_new_glk_view(newwin);
+
         gli_window_rearrange(pairwin, &box);
         /* redraw the new pairwin and all its contents */
         gli_window_redraw(pairwin);
@@ -488,7 +492,9 @@ void glk_window_get_arrangement(window_t *win, glui32 *method, glui32 *size,
     dwin = win->data;
     
     val = dwin->dir | dwin->division;
-    
+    if (!dwin->hasborder)
+        val |= winmethod_NoBorder;
+
     if (size)
         *size = dwin->size;
     if (keywin) {
@@ -896,7 +902,7 @@ void gli_windows_size_change()
         gli_window_rearrange(gli_rootwin, &content_box);
     }
     gli_windows_redraw();
-    
+
     gli_event_store(evtype_Arrange, NULL, 0, 0);
 }
 

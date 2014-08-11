@@ -40,7 +40,10 @@ stream_t *gli_new_stream(int type, int readable, int writable,
     str->unicode = FALSE;
     
     str->win = NULL;
+
     str->file = NULL;
+    str->fileRef = NULL;
+    
     str->buf = NULL;
     str->bufptr = NULL;
     str->bufend = NULL;
@@ -55,6 +58,8 @@ stream_t *gli_new_stream(int type, int readable, int writable,
     str->writecount = 0;
     str->readable = readable;
     str->writable = writable;
+    str->arrayrock.ptr = NULL;
+    str->store = 0;
     
     str->prev = NULL;
     str->next = gli_streamlist;
@@ -288,6 +293,7 @@ strid_t glk_stream_open_file(fileref_t *fref, glui32 fmode,
     }
     
     str->file = fl;
+    str->fileRef = fref;
     
     return str;
 }
@@ -717,14 +723,19 @@ static void gli_set_style(stream_t *str, glui32 val)
     switch (str->type) {
         case strtype_Window:
             str->win->style = val;
-            
-            if (val == style_Emphasized || val == style_Note)
-                istyle |=  kFTItalic;
+            unsigned int weight = gli_stylehint_get(str->win, val, stylehint_Weight);
+            unsigned int oblique = gli_stylehint_get(str->win, val, stylehint_Oblique);
+            unsigned int proportional = gli_stylehint_get(str->win, val, stylehint_Proportional);
+
+            if (oblique || val == style_Emphasized || val == style_Note)
+                istyle |= kFTItalic;
             if (val == style_Alert)
-                istyle |=  kFTReverse;
-            if (val == style_Header || val == style_Subheader || val == style_Input)
-                istyle |=  kFTBold;
-            
+                istyle |= kFTReverse;
+            if (weight || val == style_Header || val == style_Subheader || val == style_Input)
+                istyle |= kFTBold;
+            if (!proportional || val == style_Preformatted) // || val == style_BlockQuote)
+                istyle |= kFTFixedWidth;
+
             if (str->win->type == wintype_TextBuffer) {
                 unsigned int just = gli_stylehint_get(str->win, val, stylehint_Justification);
                 if (just == stylehint_just_Centered)
