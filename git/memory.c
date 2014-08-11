@@ -177,3 +177,80 @@ void memWriteError (git_uint32 address)
 {
     fatalError ("Out-of-bounds memory access");
 }
+
+int gitDictWordCmp(const void *a, const void *b) {
+    const char *k = (const char*)a;
+    int l = strlen(k);
+    if (l > 9)
+        l = 9;
+    return strncmp(k, (const char*)b, l);
+}
+
+// Glulx doesn't store the location of the dictionary in the header, but Inform 6 always stores it at
+// the end of memory, in a well known format that hasn't ever changed, so try to detect it.
+// Dict entries are 16 bytes, beginning with 0x60, followed by 9 byte word, 2 byte flags, 4 bytes padding.
+// An int32 number of entries is stored before the first entry.  After the last entry, which is the last
+// non-padding data in the game file, the game is padded with zeroes up to a multiple of 256 bytes.
+int gitCompleteWord(const char *word, char *result) {
+    int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
+    *result = '\0';
+    if (!word || !word[0] || !word[1])
+        return status;
+    if (gRom && gOriginalEndMem) {
+        const git_uint8 *endMem = gRom + gOriginalEndMem-1, *p = endMem;
+        const git_uint8 *barrier = endMem - 256 - 16;
+        const git_uint8 *stringTable = gRom + memRead32(28);
+        int dictWordCount = 0;
+
+        if (barrier < stringTable)
+            barrier = stringTable;
+        while (p > barrier) {
+            if (*p == 0x60 && p[-1]==0x00)
+                break;
+            --p;
+        }
+        if (p <= barrier)
+            return status;
+        
+        barrier = stringTable;
+        while (*p == 0x60) {
+            p -= 16;
+            ++dictWordCount;
+        }
+        p += 12;
+        git_uint32 nEntries = memRead32(p-gRom);
+        if (nEntries != dictWordCount)
+            return status; // something wrong; we're probably misinterpreting memory
+        //printf ("dict entries %d, word '%s'\n", nEntries, word);
+        p += 5;
+        const git_uint8 *dictStart = p;
+        p = bsearch(word, dictStart, nEntries, 16, gitDictWordCmp);
+        if (!p)
+            return status;
+        while (p >= dictStart && gitDictWordCmp(word, p)==0)
+            p -= 16;
+        p += 16;
+        const char *firstMatch = (const char*)p, *lastMatch = firstMatch;
+        int i = (p - dictStart) / 16;
+        for (; i < nEntries; ++i, p+=16) {
+            if (gitDictWordCmp(word, p)!=0)
+                break;
+            //printf ("word: %s flags %04x\n", p, memRead16(p+9-gRom));
+            lastMatch = (const char*)p;
+        }
+        if (firstMatch == lastMatch) {
+            strncpy(result, firstMatch, 9);
+            result[9] = 0;
+            status = 0;
+        }
+        else {
+            int l = 0;
+            while (l < 9 && firstMatch[l]==lastMatch[l])
+                l++;
+            strncpy(result, firstMatch, l);
+            result[l] = 0;
+            status = 1;
+        }
+    }
+    return status;
+}
