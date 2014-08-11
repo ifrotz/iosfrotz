@@ -794,11 +794,17 @@ void restart_screen (void)
     if (os_font_data (TEXT_FONT, &font_height, &font_width))
 	os_set_font (TEXT_FONT);
 
-    os_set_text_style (0);
-
     cursor = TRUE;
 
     init_screen();
+    
+#if FROTZ_IOS_PORT
+    if (do_autosave)
+        wp[0].style = currTextStyle;
+    else
+#endif
+        os_set_text_style (0);
+
     /* Prepare lower/upper windows and status line */
 
     wp[0].attribute = 15;
@@ -1577,11 +1583,10 @@ void z_set_text_style (void)
 {
     zword win = (h_version == V6) ? cwin : 0;
     zword style = zargs[0];
-
     wp[win].style |= style;
 
     if (style == 0)
-	wp[win].style = 0;
+        wp[win].style = 0;
 
     refresh_text_style ();
 
