@@ -164,6 +164,11 @@ static int unix_read_char(int extkeys)
 	    default: continue;	/* Ignore unknown combinations. */
 	    }
 	/* The standard function key block. */
+    case ZC_IP_ARROW_UP: return ZC_ARROW_UP;
+    case ZC_IP_ARROW_DOWN: return ZC_ARROW_DOWN;
+    case ZC_IP_ARROW_LEFT: return ZC_ARROW_LEFT;
+    case ZC_IP_ARROW_RIGHT: return ZC_ARROW_RIGHT;
+    case 0x1b: return ZC_ESCAPE;
 	//case KEY_UP: return ZC_ARROW_UP;
 	//case KEY_DOWN: return ZC_ARROW_DOWN;
 	//case KEY_LEFT: return ZC_ARROW_LEFT;

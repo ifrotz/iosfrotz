@@ -245,6 +245,15 @@ typedef unsigned char zchar;
 #define ZC_LATIN1_MIN 0xa0
 #define ZC_LATIN1_MAX 0xff
 
+#define ZC_IP_ARROW_UP 0x16
+#define ZC_IP_ARROW_DOWN 0x17
+#define ZC_IP_ARROW_LEFT 0x18
+#define ZC_IP_ARROW_RIGHT 0x19
+#define ZC_IPS_ARROW_UP "\x16"
+#define ZC_IPS_ARROW_DOWN "\x17"
+#define ZC_IPS_ARROW_LEFT "\x18"
+#define ZC_IPS_ARROW_RIGHT "\x19"
+
 /*** File types ***/
 
 #define FILE_RESTORE 0

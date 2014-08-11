@@ -1098,7 +1098,7 @@ int completion (const zchar *buffer, zchar *result)
     /* Merge second extension with "result" string */
     
     decode_text (VOCABULARY, maxaddr);
-    
+
     for (i = len, ptr = result; (c = decoded[i]) != 0; i++, ptr++)
         if (*ptr != c) break;
     *ptr = 0;
