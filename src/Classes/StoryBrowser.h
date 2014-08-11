@@ -25,30 +25,37 @@
 #define kBundledFileList "bundle/bundled.txt"
 
 @class StoryDetailsController;
+@class StoryBrowser;
 
 @interface StoryInfo : NSObject {
     NSString *path;
 }
--(id)initWithPath:(NSString*)storyPath;
+-(id)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)browser;
 -(BOOL)isEqual:(id)object;
 -(void)dealloc;
+-(NSString*)title;
 
 @property(nonatomic,copy) NSString *path;
+@property(nonatomic,assign) StoryBrowser *browser;
 @end
 
-@interface StoryBrowser : UITableViewController <UIActionSheetDelegate, UISplitViewControllerDelegate, UIPopoverControllerDelegate> {
+@interface StoryBrowser : UITableViewController <UIActionSheetDelegate, UISplitViewControllerDelegate, UIPopoverControllerDelegate,UISearchBarDelegate, UISearchDisplayDelegate> {
     NSMutableArray *m_paths;
 
     int m_numStories;
     NSMutableArray *m_storyNames;
     NSMutableArray *m_recents;
     NSMutableArray *m_unsupportedNames;
+    
+    NSArray *m_filteredNames;
 
     StoryMainViewController<FrotzFontDelegate> *m_storyMainViewController;
     StoryWebBrowserController *m_webBrowserController;
     StoryDetailsController *m_details;
     FrotzInfo *m_frotzInfoController;
     FrotzSettingsController *m_settings;
+
+    UISearchDisplayController *m_searchDisplayController;
 
     UIView *m_navTitleView;
 
@@ -139,14 +146,14 @@
 - (NSInteger)tableView:(UITableView*)tableView numberOfRowsInSection:(NSInteger)section;
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath;
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath;
-- (StoryInfo *)storyInfoForIndexPath:(NSIndexPath*)indexPath;
-- (NSString *)storyForIndexPath:(NSIndexPath*)indexPath;
+- (StoryInfo *)storyInfoForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView;
+- (NSString *)storyForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView;
 - (void)storyInfoChanged;
 - (void)updateAccessibility;
 
 @property(nonatomic,retain) UIPopoverController *popoverController;
 @property(nonatomic,retain) UIBarButtonItem *popoverBarButton;
-
+@property(nonatomic,retain) UISearchDisplayController *searchDisplayController;
 @end
 
 extern NSString *storyGamePath;

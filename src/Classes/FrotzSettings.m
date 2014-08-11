@@ -54,6 +54,7 @@ enum ControlTableSections
 	    
     [UIView setAnimationTransition:(UIViewAnimationTransitionFlipFromLeft)
 								forView:[[[self view] superview] superview] cache:YES];
+    [UIView commitAnimations];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -84,39 +85,39 @@ enum ControlTableSections
 
 -(void)donePressed {
     if (m_fileTransferInfo) {
-	if ([m_fileTransferInfo serverIsRunning]) {
-	    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"File server running"
-			    message: @"The file server will be disabled when you exit settings"
-			    delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
-	    [alert show];
-	    [alert release];
-	    return;
-	}
+        if ([m_fileTransferInfo serverIsRunning]) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"File server running"
+                                                            message: @"The file server will be disabled when you exit settings"
+                                                           delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
+            [alert show];
+            [alert release];
+            return;
+        }
     }
     if ([m_tableView superview]) {
-	m_selectedSection = m_selectedRow = -1;
+        m_selectedSection = m_selectedRow = -1;
     }
     if (m_infoDelegate && [m_infoDelegate respondsToSelector:@selector(dismissInfo)]) {
-	if (m_storyDelegate) {
-	    if (m_newFontSize != m_origFontSize)
-		[m_storyDelegate setFont: [m_storyDelegate font] withSize: m_newFontSize];
-	    [m_storyDelegate savePrefs];
-	}
-
-	[m_infoDelegate dismissInfo];
+        if (m_storyDelegate) {
+            if (m_newFontSize != m_origFontSize)
+                [m_storyDelegate setFont: [m_storyDelegate font] withSize: m_newFontSize];
+            [m_storyDelegate savePrefs];
+        }
+        
+        [m_infoDelegate dismissInfo];
     }
     else {
-	[self setupFade];
-	[[self navigationController] popViewControllerAnimated: NO];
-	[UIView commitAnimations];
+        [self setupFade];
+        [[self navigationController] popViewControllerAnimated: NO];
+        [UIView commitAnimations];
     }
-
+    
     m_settingsShown = NO;
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
     if (!m_subPagePushed)
-	m_settingsShown = NO;
+        m_settingsShown = NO;
     m_subPagePushed = NO;
 }
 
@@ -153,7 +154,7 @@ enum ControlTableSections
 
 - (NSString*)rootPath {
     if (m_storyDelegate)
-	return [m_storyDelegate rootPath];
+        return [m_storyDelegate rootPath];
     return nil;
 }
 
@@ -217,7 +218,7 @@ enum ControlTableSections
     m_sliderCtl.backgroundColor = [UIColor clearColor];
     
     m_sliderCtl.minimumValue = 8.0;
-    m_sliderCtl.maximumValue = 20.0 + (gLargeScreenDevice ? 12.0 : 0.0);
+    m_sliderCtl.maximumValue = 24.0 + (gLargeScreenDevice ? 8.0 : 0.0);
     m_sliderCtl.continuous = YES;
     m_origFontSize = (int)[m_storyDelegate fontSize];
     m_sliderCtl.value = (float)m_origFontSize;
@@ -281,9 +282,9 @@ enum ControlTableSections
 
 -(void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color {
     if ([picker isTextColorMode])
-	[m_storyDelegate setTextColor: color makeDefault:YES];
+        [m_storyDelegate setTextColor: color makeDefault:YES];
     else
-	[m_storyDelegate setBackgroundColor: color makeDefault:YES];
+        [m_storyDelegate setBackgroundColor: color makeDefault:YES];
 }	
 
 -(UIFont*)fontForColorDemo {
@@ -308,7 +309,7 @@ enum ControlTableSections
 
     self.title = NSLocalizedString(@"Settings", @"");
     if (m_storyDelegate)
-	m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
+        m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
     
 //    [self tableView: nil didSelectRowAtIndexPath: [NSIndexPath indexPathForRow: m_selectedRow inSection: m_selectedSection]];
 }

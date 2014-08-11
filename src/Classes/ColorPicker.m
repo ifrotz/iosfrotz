@@ -190,32 +190,32 @@ void RGBtoHSV(float r, float g, float b, float *h, float *s, float *v)
     float min, max, delta;
     min = r;
     if (g < min)
-	min = g;
+        min = g;
     if (b < min)
-	min = b;
+        min = b;
     max = r;
     if (g > max)
-	max = g;
-    if (b > max)    
-	max = b;
+        max = g;
+    if (b > max)
+        max = b;
     *v = max;				// v
     delta = max - min;
     if(max != 0.0f)
-	*s = delta / max;		// s
+        *s = delta / max;		// s
     else { // r,g,b= 0			// s = 0, v is undefined
-	*s = 0.0f;
-	*h = 0.0f; // really -1,
-	return;
+        *s = 0.0f;
+        *h = 0.0f; // really -1,
+        return;
     }
     if(r == max)
-	*h = (g - b) / delta;		// between yellow & magenta
+        *h = (g - b) / delta;		// between yellow & magenta
     else if(g == max)
-	*h = 2.0f + (b - r) / delta;	// between cyan & yellow
+        *h = 2.0f + (b - r) / delta;	// between cyan & yellow
     else
-	*h = 4.0f + (r - g) / delta;	// between magenta & cyan
+        *h = 4.0f + (r - g) / delta;	// between magenta & cyan
     *h /= 6.0f;				// 0 -> 1
     if(*h < 0.0f)
-	*h += 1.0f;
+        *h += 1.0f;
 }
 
 void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
@@ -619,6 +619,20 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
+
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+
+-(void)viewDidLoad {
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+        self.edgesForExtendedLayout=UIRectEdgeNone;
+    }
+#endif
+}
+
 - (void)loadView {
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
     BOOL fullScreenLarge = (frame.size.width > 320.0);
@@ -679,19 +693,28 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     [self updateAccessibility];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    CGRect frame = self.view.frame;
-    BOOL fullScreenLarge = (frame.size.width > 320.0);
+- (void)viewWillLayoutSubviews {
+    [self layoutViews];
+}
 
-    CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : 64.0f;
-    CGFloat leftMargin = fullScreenLarge ? 32.0f : 8.0f;
-    CGFloat hsvBaseYOrigin = colorTileHeight + (fullScreenLarge ? 48.0f : 64.0f);
-    CGRect colorTileFrame = CGRectMake(leftMargin, 32.0f, frame.size.width-(leftMargin-1)*2, colorTileHeight);
+-(void)layoutViews {
+    CGRect frame = self.view.frame;
+    BOOL fullScreenLarge = (frame.size.width >= 540.0 && frame.size.height >= 576.0);
+    BOOL isPortrait = (UIApplication.sharedApplication.statusBarOrientation==UIInterfaceOrientationPortrait
+                       || UIApplication.sharedApplication.statusBarOrientation==UIInterfaceOrientationPortraitUpsideDown);
+
+    CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : isPortrait ? 96.0f : 232.0f;
+    CGFloat leftMargin = fullScreenLarge ? 32.0f : isPortrait ? 4.0f : 16.0f;
+    CGFloat hsvBaseYOrigin = !isPortrait && !fullScreenLarge ? 24.0f : colorTileHeight + (fullScreenLarge ? 48.0f : 48.0f);
+    CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f,
+                                       isPortrait || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-328,
+                                       colorTileHeight);
+    if (!isPortrait && !fullScreenLarge)
+        leftMargin += frame.size.width-312;
     [m_colorTile setFrame: colorTileFrame];
     [m_tileBorder setFrame: CGRectInset(colorTileFrame, -1, -1)];
-
-    CGFloat radius = !fullScreenLarge ? 128.0f : frame.size.width/3;
+    
+    CGFloat radius = fullScreenLarge ? frame.size.width/3 : isPortrait ? 128.0f : 116.0f;
     if (fullScreenLarge) {
         [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
         [m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin, 96.0f, radius*2)];
@@ -701,12 +724,17 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
         [m_valuePicker setFrame: CGRectMake(leftMargin+radius*2, hsvBaseYOrigin, 56.0f, radius*2)];
         [m_valuePicker setBarWidth: 32];
     }
-
+    
     CGRect cursFrame = [m_valueCursor frame];
-//    cursFrame.size.width = m_valueCursor.image.size.width * (fullScreenLarge ? 2 : 1);
+    //    cursFrame.size.width = m_valueCursor.image.size.width * (fullScreenLarge ? 2 : 1);
     [m_valueCursor setFrame: cursFrame];
-
+    
     [self updateHSVCursors];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self layoutViews];
 }
 
 -(void)viewDidUnload {

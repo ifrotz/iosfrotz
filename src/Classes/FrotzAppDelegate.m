@@ -81,31 +81,31 @@ bool gUseSplitVC;
     BOOL useSplashTransition = NO;
 
     if (useSplashTransition && !gLargeScreenDevice) { // Fade splash screen gradually to story browser, but not on iPad; see comment below
-	m_transitionView = [[TransitionView alloc] initWithFrame: rect];
-	m_transitionView.backgroundColor = [UIColor clearColor];
-#if 1
-	UIImage *splashImage = [UIImage imageNamed: @"Default"];
-	if (!splashImage)
-	    splashImage = [UIImage imageNamed: @"Default.png"];
-	m_splash = [[UIImageView alloc] initWithImage: splashImage];	
-#else // Device orientation isn't yet correctly set when launched in landscape; this doesn't work, so we don't even try on iPad
-	if (!gLargeScreenDevice)
-	    m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default.png"]];
-	else if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]))
-	    m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Landscpe.png"]];
-	else
-	    m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Portrait.png"]];
-#endif
-	[m_transitionView setDelegate: self];
-	[m_transitionView addSubview: m_splash];
-	[m_transitionView bringSubviewToFront: m_splash];
-      
-	m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        m_transitionView = [[TransitionView alloc] initWithFrame: rect];
+        m_transitionView.backgroundColor = [UIColor clearColor];
+    #if 1
+        UIImage *splashImage = [UIImage imageNamed: @"Default"];
+        if (!splashImage)
+            splashImage = [UIImage imageNamed: @"Default.png"];
+        m_splash = [[UIImageView alloc] initWithImage: splashImage];	
+    #else // Device orientation isn't yet correctly set when launched in landscape; this doesn't work, so we don't even try on iPad
+        if (!gLargeScreenDevice)
+            m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default.png"]];
+        else if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]))
+            m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Landscpe.png"]];
+        else
+            m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Portrait.png"]];
+    #endif
+        [m_transitionView setDelegate: self];
+        [m_transitionView addSubview: m_splash];
+        [m_transitionView bringSubviewToFront: m_splash];
+          
+        m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
 
-	[m_activityView setFrame: CGRectMake(rect.size.width/2-10, rect.size.height - 80, 20, 20)];
-	[m_transitionView addSubview: m_activityView];
-	[m_transitionView bringSubviewToFront: m_activityView];
-	[m_activityView startAnimating];
+        [m_activityView setFrame: CGRectMake(rect.size.width/2-10, rect.size.height - 80, 20, 20)];
+        [m_transitionView addSubview: m_activityView];
+        [m_transitionView bringSubviewToFront: m_activityView];
+        [m_activityView startAnimating];
     }
 
     NSURL *launchURL = nil;
@@ -123,15 +123,22 @@ bool gUseSplitVC;
 
     if (gUseSplitVC) {
         UISplitViewController* splitVC = [[SplitVCClass alloc] initWithNibName:nil bundle:nil];
+        [splitVC setDelegate: m_browser];
 
         m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-        [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
+#ifdef NSFoundationVersionNumber_iOS_6_1
+        if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1)
+#endif
+
+            [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
         UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
-        [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+        if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1)
+#endif
+            [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
         splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
-        [splitVC setDelegate: m_browser];
 
         if ([m_window respondsToSelector:@selector(setRootViewController:)])
             [m_window setRootViewController: splitVC];
@@ -139,7 +146,10 @@ bool gUseSplitVC;
             [m_window addSubview: splitVC.view];
     } else {
         m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-        [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+        if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1)
+#endif
+            [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
         if ([m_window respondsToSelector:@selector(setRootViewController:)])
             [m_window setRootViewController: m_navigationController];
         else
@@ -149,6 +159,19 @@ bool gUseSplitVC;
             [m_window bringSubviewToFront: m_transitionView];
         }
     }
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        UIColor *textColor = [UIColor darkGrayColor]; // [UIColor whiteColor];
+        //[[UINavigationBar appearance] setBarTintColor: [UIColor darkGrayColor]];
+        [[UINavigationBar appearance] setBarTintColor: [UIColor whiteColor]];
+        
+        [[UIButton appearance] setTintColor: [UIColor whiteColor]];
+        [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor purpleColor]];
+        [[UIButton appearance] setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [[UIButton appearanceWhenContainedIn: [UINavigationBar class], nil] setTintColor: textColor];
+        [[UINavigationBar appearance] setTintColor:textColor];
+    }
+#endif
 
     [[m_browser storyMainViewController] initializeDropbox];
 
@@ -204,7 +227,7 @@ bool gUseSplitVC;
         [m_browser setLaunchPath: launchPath];
         if ((launchPath = [m_browser launchPath])) { // nil if file couldn't be accessed
             [m_browser addRecentStory: launchPath];
-            StoryInfo *si = [[StoryInfo alloc] initWithPath: launchPath];
+            StoryInfo *si = [[StoryInfo alloc] initWithPath: launchPath browser:m_browser];
             [m_browser setStoryDetails: si];
             [si release];
             [m_browser performSelector:@selector(launchStory:) withObject:launchPath afterDelay:0.05];

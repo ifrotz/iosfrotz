@@ -48,14 +48,20 @@ const long kMinimumRequiredSpace = 2;
 
 @implementation StoryInfo
 @synthesize path;
+@synthesize browser;
 
--(id)initWithPath:(NSString*)storyPath {
+-(id)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)abrowser {
     if ((self = [super init]) != nil) {
     	self.path = storyPath;
+        self.browser = abrowser;
     }
     return self;
 }
-
+-(NSString*)title {
+    NSString *storyName = [[[self path] lastPathComponent] stringByDeletingPathExtension];
+    NSString *title = [self.browser fullTitleForStory: storyName];
+    return title;
+}
 -(BOOL)isEqual:(id)object {
     return [path isEqualToString: [object path]];
 }
@@ -80,6 +86,7 @@ void removeOldPngSplash(const char *filename) {
 
 @synthesize popoverController = m_popoverController;
 @synthesize popoverBarButton = m_popoverBarButton;
+@synthesize searchDisplayController = m_searchDisplayController;
 
 -(NSArray*)recentPaths {
     int count = [m_recents count];
@@ -94,7 +101,7 @@ void removeOldPngSplash(const char *filename) {
     [m_recents removeAllObjects];
     for (NSString *path in paths) {
         path = [m_storyMainViewController relativePathToAppAbsolutePath: path];
-        [m_recents addObject: [[[StoryInfo alloc] initWithPath:path] autorelease]];
+        [m_recents addObject: [[[StoryInfo alloc] initWithPath:path browser:self] autorelease]];
     }
 }
 
@@ -192,14 +199,24 @@ void removeOldPngSplash(const char *filename) {
         [browserButtonItem release];
         
         m_nowPlayingButtonView = [UIButton buttonWithType: UIButtonTypeCustom];
-        UIImage *img = [UIImage imageNamed: @"nowplaying.png"];
-        [m_nowPlayingButtonView setImage: img forState: UIControlStateNormal];
-        [m_nowPlayingButtonView setFrame: CGRectMake(0,0,[img size].width, [img size].height)];
-        [m_nowPlayingButtonView addTarget:self action:@selector(resumeStory) forControlEvents: UIControlEventTouchDown];
-        m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_nowPlayingButtonView];
-        [m_nowPlayingButtonItem setCustomView: m_nowPlayingButtonView];
-        if ([m_nowPlayingButtonView respondsToSelector: @selector(setAccessibilityLabel:)])
-            [m_nowPlayingButtonView setAccessibilityLabel: NSLocalizedString(@"Now playing",nil)];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+            [m_nowPlayingButtonView setTitle:@"Resume" forState: UIControlStateNormal];
+            [m_nowPlayingButtonView setFrame: CGRectMake(0, 0, 100, 36)];
+            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
+            
+        } else
+#endif
+        {
+            UIImage *img = [UIImage imageNamed: @"nowplaying.png"];
+            [m_nowPlayingButtonView setImage: img forState: UIControlStateNormal];
+            [m_nowPlayingButtonView setFrame: CGRectMake(0,0,[img size].width, [img size].height)];
+            [m_nowPlayingButtonView addTarget:self action:@selector(resumeStory) forControlEvents: UIControlEventTouchDown];
+            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_nowPlayingButtonView];
+            [m_nowPlayingButtonItem setCustomView: m_nowPlayingButtonView];
+            if ([m_nowPlayingButtonView respondsToSelector: @selector(setAccessibilityLabel:)])
+                [m_nowPlayingButtonView setAccessibilityLabel: NSLocalizedString(@"Now playing",nil)];
+        }
         
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
@@ -489,7 +506,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (NSString*)fullTitleForStory:(NSString*)story {
     NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
-    story = [story lowercaseString];
+    story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     NSString *title = [titleDict objectForKey: story];
     if (!title) {
         story = [story stringByDeletingPathExtension];
@@ -513,7 +530,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (NSString*)tuidForStory:(NSString*)story {
     NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
-    story = [story lowercaseString];
+    story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     NSString *tuid = [tuidDict objectForKey: story];
     if (!tuid) {
         story = [self mapInfocom83Filename: story];
@@ -524,7 +541,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (NSString*)authorsForStory:(NSString*)story {
     NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
-    story = [story lowercaseString];
+    story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     NSString *authors = [authorDict objectForKey: story];
     if (!authors) {
         story = [self mapInfocom83Filename: story];
@@ -535,7 +552,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (NSString*)descriptForStory:(NSString*)story {
     NSMutableDictionary *descriptDict = [m_metaDict objectForKey: kMDDescriptsKey];
-    story = [story lowercaseString];
+    story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
     NSString *descript = [descriptDict objectForKey: story];
     if (!descript) {
         story = [self mapInfocom83Filename: story];
@@ -555,17 +572,19 @@ static int articlePrefix(NSString *str) {
     return len;
 }
 
+static NSString *prettyStoryName(StoryBrowser *sb, StoryInfo *si) {
+    int art = 0;
+    NSString *str = [sb fullTitleForStory: [[[si path] lastPathComponent] stringByDeletingPathExtension]];
+    art = articlePrefix(str);
+    if (art)
+        str = [str stringByReplacingCharactersInRange: NSMakeRange(0, art) withString: @""];
+    return str;
+}
+
 static NSInteger sortPathsByFilename(id a, id b, void *context) {
     StoryBrowser *sb = (StoryBrowser*)context;
-    int art1 = 0, art2 = 0;
-    NSString *str1 = [sb fullTitleForStory: [[[a path] lastPathComponent] stringByDeletingPathExtension]];
-    NSString *str2 = [sb fullTitleForStory: [[[b path] lastPathComponent] stringByDeletingPathExtension]];
-    art1 = articlePrefix(str1);
-    art2 = articlePrefix(str2);
-    if (art1)
-        str1 = [str1 stringByReplacingCharactersInRange: NSMakeRange(0, art1) withString: @""];
-    if (art2)
-        str2 = [str2 stringByReplacingCharactersInRange: NSMakeRange(0, art2) withString: @""];
+    NSString *str1 = prettyStoryName(sb, a);
+    NSString *str2 = prettyStoryName(sb, b);
     return [str1 caseInsensitiveCompare: str2];
 }
 
@@ -585,7 +604,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (NSString*)canonicalStoryName:(NSString*)story {
     story = [self mapInfocom83Filename: story];
     for (StoryInfo *si in m_storyNames)
-        if ([[[[si path] lastPathComponent] stringByDeletingPathExtension] isEqualToString: story])
+        if ([[[[si path] lastPathComponent] stringByDeletingPathExtension] caseInsensitiveCompare: story] == NSOrderedSame)
             return story;
     return nil;
 }
@@ -642,7 +661,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                         if (j < [m_paths count])
                             continue;
                     }
-                    StoryInfo *storyInfo = [[[StoryInfo alloc] initWithPath: [path stringByAppendingPathComponent: story]] autorelease];
+                    StoryInfo *storyInfo = [[[StoryInfo alloc] initWithPath: [path stringByAppendingPathComponent: story] browser: self] autorelease];
                     [m_storyNames addObject: storyInfo];
                     m_numStories++;
                 } else {
@@ -653,6 +672,11 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         ++idx;
     }
     [m_storyNames sortUsingFunction: sortPathsByFilename context: self];
+
+//    NSArray *sectionTitles = [self sectionIndexTitlesForTableView: [self tableView]];
+//    for (StoryInfo *storyInfo in m_storyNames) {
+//        NSString *name = [prettyStoryName(self, storyInfo) capitalizedString];
+//    }
 }
 
 -(void)reloadData {
@@ -692,7 +716,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.8];
-    [UIView setAnimationTransition: UIViewAnimationTransitionCurlUp forView:[[[self view] superview] superview] cache:NO];
+    [UIView setAnimationTransition: UIViewAnimationTransitionCurlUp
+                           forView: self.navigationController.view
+     //[[[[[self view] superview] superview] superview] superview]
+                                    cache:NO];
     
     [self.navigationController pushViewController: m_webBrowserController animated: NO];
     
@@ -971,7 +998,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)autoRestoreAndShowMainStoryController {
     if ([m_storyMainViewController currentStory] && [[m_storyMainViewController currentStory] length] > 0) {
-        StoryInfo *si = [[StoryInfo alloc] initWithPath: [m_storyMainViewController currentStory]];
+        StoryInfo *si = [[StoryInfo alloc] initWithPath: [m_storyMainViewController currentStory] browser: self];
         [self setStoryDetails: si];
         [si release];
         [self showMainStoryController];
@@ -980,11 +1007,52 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     }
 }
 
+- (void)filterContentForSearchText:(NSString*)searchText scope:(NSString*)scope
+{
+    NSPredicate *resultPredicate = [NSPredicate predicateWithFormat:@"title contains[c] %@", searchText];
+    if (m_filteredNames)
+        [m_filteredNames release];
+    m_filteredNames = [[m_storyNames filteredArrayUsingPredicate:resultPredicate] retain];
+}
+
+- (BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchString:(NSString *)searchString
+{
+    [self filterContentForSearchText:searchString
+                               scope:[[self.searchDisplayController.searchBar scopeButtonTitles]
+                                      objectAtIndex:[self.searchDisplayController.searchBar
+                                                     selectedScopeButtonIndex]]];
+    
+    return YES;
+}
+- (void)searchDisplayControllerDidBeginSearch:(UISearchDisplayController *)controller {
+    [self.searchDisplayController.searchResultsTableView setDelegate: self];
+    [self.searchDisplayController.searchResultsTableView setDataSource: self];
+}
+
+
 - (void)viewDidLoad {
+    [super viewDidLoad];
     if (!gUseSplitVC)
         self.navigationItem.titleView = [m_frotzInfoController view];
     [self updateNavButton];
     
+    UISearchBar *searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width, 0)];
+    searchBar.delegate = self;
+    [searchBar sizeToFit];
+    
+    self.tableView.tableHeaderView = searchBar;
+    CGRect newBounds = self.tableView.bounds;
+    newBounds.origin.y += searchBar.frame.size.height;
+    self.tableView.bounds = newBounds;
+    
+    UISearchDisplayController *searchDisplayController = [[UISearchDisplayController alloc] initWithSearchBar:searchBar contentsController:self];
+    [self setSearchDisplayController: searchDisplayController];
+    
+    [searchDisplayController setDelegate:self];
+    [searchDisplayController setSearchResultsDataSource:self];
+    
+    [searchBar release];
+
     if (m_postLaunch || m_launchPath)
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
@@ -1000,7 +1068,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)updateNavButton {
     //    NSLog(@"updatenav: %@ %d", self.navigationController.navigationBar, [self.navigationController.navigationBar barStyle]);
     
-    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+//    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
     
     if (!gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
         self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
@@ -1018,6 +1086,14 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [super viewWillAppear:animated];
     [self reloadData];
     [self updateNavButton];
+
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+        [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
+        [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
+    }
+    [m_frotzInfoController updateTitle];
+
     [m_tableView scrollToNearestSelectedRowAtScrollPosition: UITableViewScrollPositionMiddle animated:YES];
 }
 
@@ -1123,45 +1199,31 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         [self resumeStory];
     else {
         if ([currStory length] > 0 && [m_storyMainViewController possibleUnsavedProgress]) {
-#if 0
-            if (islower([storyName characterAtIndex: 0]))
-                storyName = [storyName capitalizedString];
-            storyName = [storyName stringByReplacingOccurrencesOfString:@"_" withString:@" "];
-            NSString *message = [NSString stringWithFormat:
-                                 @"Abandon Story\n\nYou are currently playing \"%@\".\nDo you want to quit the current story\nand start a new one?",
-                                 storyName];
-            UIActionSheet *dialog = [[UIActionSheet alloc] initWithTitle:message delegate:self cancelButtonTitle:@"Keep Current Story" destructiveButtonTitle: @"Start New Story" otherButtonTitles:nil];
-            [dialog showInView: [self view]];
-            [dialog release];
-        } else {
-#else	
             autosaveMsg = [NSString stringWithFormat: @"Autosaving story \"%@\". ", [self fullTitleForStory: [currStory stringByDeletingPathExtension]]];
             [m_storyMainViewController suspendStory];
-        } {
-#endif
-            [m_storyMainViewController abandonStory:NO];
-            [m_storyMainViewController setCurrentStory: storyPath];
-            
-            if ([m_storyMainViewController currentStory]) {
-                if ([m_storyMainViewController willAutoRestoreSession: NO]) {
-                    
-                    autosaveMsg = [NSString stringWithFormat: @"%@Restoring story \"%@\".\n(If you wish to start over, use the 'restart' command.)",
-                                   (autosaveMsg ? autosaveMsg : @""),
-                                   [self fullTitleForStory: [[storyPath lastPathComponent] stringByDeletingPathExtension]]];
-                    [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
-                    //self.view.userInteractionEnabled = NO;
-                    [self autoRestoreAndShowMainStoryController];
-                    
-                } else if ([m_storyMainViewController currentStory]) { // (check again in case of error detected in willAutoRestoreSession)
-                    
-                    autosaveMsg = [NSString stringWithFormat: @"%@Beginning story \"%@\"...\n",
-                                   (autosaveMsg ? autosaveMsg : @""),
-                                   [self fullTitleForStory: [[[m_storyMainViewController currentStory] lastPathComponent] stringByDeletingPathExtension]]];
-                    [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
-                    [self showMainStoryController];
-                    [m_storyMainViewController launchStory];
-                    
-                }
+        }
+        [m_storyMainViewController abandonStory:NO];
+        [m_storyMainViewController setCurrentStory: storyPath];
+        
+        if ([m_storyMainViewController currentStory]) {
+            if ([m_storyMainViewController willAutoRestoreSession: NO]) {
+                
+                autosaveMsg = [NSString stringWithFormat: @"%@Restoring story \"%@\".\n(If you wish to start over, use the 'restart' command.)",
+                               (autosaveMsg ? autosaveMsg : @""),
+                               [self fullTitleForStory: [[storyPath lastPathComponent] stringByDeletingPathExtension]]];
+                [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
+                //self.view.userInteractionEnabled = NO;
+                [self autoRestoreAndShowMainStoryController];
+                
+            } else if ([m_storyMainViewController currentStory]) { // (check again in case of error detected in willAutoRestoreSession)
+                
+                autosaveMsg = [NSString stringWithFormat: @"%@Beginning story \"%@\"...\n",
+                               (autosaveMsg ? autosaveMsg : @""),
+                               [self fullTitleForStory: [[[m_storyMainViewController currentStory] lastPathComponent] stringByDeletingPathExtension]]];
+                [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
+                [self showMainStoryController];
+                [m_storyMainViewController launchStory];
+                
             }
         }
     }
@@ -1176,7 +1238,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (buttonIndex == 0) {
         [m_storyMainViewController abandonStory: YES];
         NSIndexPath *indexPath = [[self tableView] indexPathForSelectedRow];
-        NSString *story = [self storyForIndexPath: indexPath];
+        NSString *story = [self storyForIndexPath: indexPath tableView:[self tableView]];
         if (story)
             [self launchStory: story];
     }
@@ -1200,7 +1262,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 - (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section {
     int nRecents = [m_recents count];
-    if (section == 0 && (m_isDeleting || nRecents > 0))
+    if (tableView == self.searchDisplayController.searchResultsTableView) {
+        if (m_filteredNames)
+            return [m_filteredNames count];
+        else
+            return 0;
+    } else if (section == 0 && (m_isDeleting || nRecents > 0))
         return nRecents;
     if (section > 1)
         return 0;
@@ -1208,6 +1275,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (NSString*)tableView:(UITableView*)tableView titleForHeaderInSection:(NSInteger)section {
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+        return @"Story List";
     if (section == 0 && (m_isDeleting || [m_recents count] > 0)) {
         return @"Recently Played";
     } else if (section <= 1) {
@@ -1221,11 +1290,15 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView  {
     if (abortLaunchCondition)
         return 0;
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+        return 1;
     return m_isDeleting ? 2 :  1 + ([m_recents count] > 0);
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
     NSInteger row = indexPath.row;
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+        return NO;
     if (indexPath.section == 0 && [m_recents count] > 0)
         return NO;
     if (row < [m_storyNames count]) {
@@ -1300,7 +1373,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)addRecentStory:(NSString*)storyPath {
     if (storyPath && [storyPath length] > 0) {
-        StoryInfo *si = [[StoryInfo alloc] initWithPath:storyPath];
+        StoryInfo *si = [[StoryInfo alloc] initWithPath:storyPath browser: self];
         [self addRecentStoryInfo: si];
         [si release];
     }
@@ -1342,7 +1415,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath {
-    StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath];
+    StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     [self showStoryDetails: storyInfo];
 }
 
@@ -1440,7 +1513,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     } else
         lastRow = indexPath.row;
     
-    StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath];
+    StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
         if (gUseSplitVC && (!secondTap || (self.popoverController!=nil)))
             [self showStoryDetails: storyInfo];
@@ -1493,6 +1566,18 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return row;
 }
 
+#if 0
+- (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
+//    return [NSArray arrayWithObjects:@"#",@"A",@"B",@"C",@"D",@"E",@"F",@"G",@"H",@"I",@"J",@"K",@"L",@"M",@"N",@"O",    @"P",@"Q",@"R",@"S",@"T",@"U",@"V",@"W",@"X",@"Y",@"Z",(id)nil];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView sectionForSectionIndexTitle:(NSString *)title atIndex:(NSInteger)index {
+ // tell table which section corresponds to section title/index (e.g. "B",1))
+    NSLog(@"ssit %@ %d", title, index);
+    return 1;
+}
+#endif
+
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"storyCell"];
     if (cell == nil) {
@@ -1501,8 +1586,13 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     cell.image = nil;
     cell.text = @"";
     NSInteger row = indexPath.row;
-    
-    if (indexPath.section == 0 && row < [m_recents count])
+    if (tableView == self.searchDisplayController.searchResultsTableView) {
+        if (m_filteredNames && row < [m_filteredNames count])
+            row = [self indexRowFromStoryInfo: [m_filteredNames objectAtIndex: row]];
+        else
+            row = -1;
+    }
+    else if (indexPath.section == 0 && row < [m_recents count])
         row = [self indexRowFromStoryInfo: [m_recents objectAtIndex: row]];
     
     if (gUseSplitVC)
@@ -1515,7 +1605,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (indexPath.section > 1) {
         return cell;
     }
-    if (row >= 0 && row < m_numStories) {
+    if (row >= 0 && row < [m_storyNames count]) {
         NSString *storyName = [[[[m_storyNames objectAtIndex: row] path] lastPathComponent] stringByDeletingPathExtension];
         NSString *title = [self fullTitleForStory: storyName];
         UIImage *image;
@@ -1568,18 +1658,27 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return (row > 0 && row < [m_storyNames count]);
 }
 
-- (StoryInfo *)storyInfoForIndexPath:(NSIndexPath*)indexPath {
+- (StoryInfo *)storyInfoForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView {
+    if (!indexPath)
+        return nil;
     int row = indexPath.row;
-    if (indexPath.section == 0 && [m_recents count] > 0)
+    if (tableView == self.searchDisplayController.searchResultsTableView) {
+        if (m_filteredNames && row < [m_filteredNames count])
+            row = [self indexRowFromStoryInfo: [m_filteredNames objectAtIndex: row]];
+        else
+            row = -1;
+    } else if (indexPath.section == 0 && [m_recents count] > 0)
         return [m_recents objectAtIndex: row];
-    if (indexPath == nil || indexPath.section > 1 || indexPath.row == -1 || row >= [m_storyNames count])
+    if (row < 0)
+        return nil;
+    if (indexPath.section > 1 || indexPath.row == -1 || row >= [m_storyNames count])
         return nil;
 	
     return [m_storyNames objectAtIndex: row];
 }
 
-- (NSString *)storyForIndexPath:(NSIndexPath*)indexPath {
-    return [[self storyInfoForIndexPath: indexPath] path];
+- (NSString *)storyForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView{
+    return [[self storyInfoForIndexPath: indexPath tableView:(UITableView*)tableView] path];
 }
 
 - (BOOL)lowMemory {

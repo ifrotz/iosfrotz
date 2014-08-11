@@ -88,7 +88,7 @@
     m_tableView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin |
             UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 //    m_tableView.backgroundColor = [UIColor darkGrayColor];
-    m_tableView.scrollEnabled = NO;
+    m_tableView.scrollEnabled = YES;
 
     self.view = m_tableView;
 

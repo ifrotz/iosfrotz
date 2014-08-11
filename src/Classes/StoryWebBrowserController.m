@@ -98,7 +98,12 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
     [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
 
-    [m_toolBar setBarStyle: UIBarStyleBlackOpaque];
+    [m_toolBar setBarStyle: UIBarStyleBlack];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        [m_toolBar setTintColor: [UIColor whiteColor]];
+    }
+#endif
     
     m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack.png"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
@@ -147,6 +152,12 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(browserDidPressBackButton)];
     self.navigationItem.leftBarButtonItem = backItem;
     [backItem release];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+        self.edgesForExtendedLayout=UIRectEdgeNone;
+    }
+#endif
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -209,26 +220,42 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 // Convenient, but makes navigation feel inconsistent, and hides activity spinner.
 //    self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
     [m_frotzInfoController setKeyboardOwner: self];
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
+        [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
+    }
+#endif
+
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
-
+    
     if (m_backToStoryList) {
-	if (!gUseSplitVC) {
-	    [UIView beginAnimations:nil context:NULL];
-	    [UIView setAnimationDuration:0.8];
-	    [UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView:[[[self view] superview] superview] cache:YES];
-	    [UIView commitAnimations];
-	}
+        BOOL cache = YES;
+#ifdef NSFoundationVersionNumber_iOS_6_1
+        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+            cache = NO;
+#endif
+        if (!gUseSplitVC) {
+            [UIView beginAnimations:nil context:NULL];
+            [UIView setAnimationDuration:0.8];
+            [UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView:[
+             [[[self view] superview] superview]
+                                    superview]
+                                     cache:cache];
+            [UIView commitAnimations];
+        }
     } else {
-	CATransition *animation = [CATransition animation];
-	[animation setType:kCATransitionReveal];
-	[animation setSubtype: kCATransitionFromTop];
-	[animation setDuration: 0.4];
-	[animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];	
-	[[[[self view] superview] layer] addAnimation:animation forKey:@"browseBack"];
+        CATransition *animation = [CATransition animation];
+        [animation setType:kCATransitionReveal];
+        [animation setSubtype: kCATransitionFromTop];
+        [animation setDuration: 0.4];
+        [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+        [[[[self view] superview] layer] addAnimation:animation forKey:@"browseBack"];
     }
     m_backToStoryList = NO;
 //    [m_frotzInfoController dismissInfo];
@@ -278,11 +305,13 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 }
 
 -(void)setupFade {
+#if 1
     CATransition *animation = [CATransition animation];
     [animation setType:kCATransitionFade];
     [animation setDuration: 0.3];
     [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];	
     [[[self view] layer] addAnimation:animation forKey:@"fadebar"];
+#endif
 }
 
 -(void)promptURL {
@@ -432,13 +461,13 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     tempbuf[0] = 0;
     [m_receivedData getBytes: tempbuf length:4];
     if (tempbuf[0]=='<' && tempbuf[1]=='!') {
-	NSString *str = [[NSString alloc] initWithData: m_receivedData encoding:NSUTF8StringEncoding];
-	[m_webView loadHTMLString: str baseURL:nil];
-	[str release];
-	isBadLoad = YES;
+        NSString *str = [[NSString alloc] initWithData: m_receivedData encoding:NSUTF8StringEncoding];
+        [m_webView loadHTMLString: str baseURL:nil];
+        [str release];
+        isBadLoad = YES;
     }
     else
-	[m_receivedData writeToFile: outFile atomically: NO];
+        [m_receivedData writeToFile: outFile atomically: NO];
     [connection release];
     [m_receivedData release];
     m_receivedData = nil;
@@ -446,10 +475,10 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     m_currentRequest = nil;
     UIAlertView *alert = nil;
     if (isBadLoad) {
-	alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
-						    message:@"The web server returned an error page instead of the expected file"
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	stay = YES;
+        alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
+                                message:@"The web server returned an error page instead of the expected file"
+                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
 	NSMutableArray *zList = listOfZFilesInZIP(outFile);
@@ -477,8 +506,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
 							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
-	[alert show];
-	[alert release];
+        [alert show];
+        [alert release];
     }
 
     [m_activityView stopAnimating];
@@ -486,7 +515,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     m_state = kSWBIdle;
 
     if (!stay)
-	[self browserDidPressBackButton];
+        [self browserDidPressBackButton];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
@@ -771,8 +800,9 @@ static bool bypassBundle = NO;
     NSString *urlRelPath = [url relativeString];
     NSString *urlString = [urlRelPath lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
+    NSLog(@"ShouldStartLoad: %@", request);
     if ([urlString isEqualToString: @"http:"]) // null url
-	return NO;
+        return NO;
     if ([ext isEqualToString: @"z3"] ||
         [ext isEqualToString: @"z4"]||
         [ext isEqualToString: @"z5"] ||
@@ -793,7 +823,7 @@ static bool bypassBundle = NO;
             bypassBundle = (iphone_ifrotz_verbose_debug & 2) != 0;
         if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4) &&
                              ([urlRelPath rangeOfString: @"competition201"].length>0 || [urlRelPath rangeOfString: @"ifcomp"].length>0))) {
-            [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
+            [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.25];
             return NO;
         }
         if ([ext isEqualToString: @"zip"]) {
@@ -859,7 +889,7 @@ static bool bypassBundle = NO;
             return NO;
         }
 #endif
-        [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.01];
+        [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.25];
         return NO;
     }
     [request retain];

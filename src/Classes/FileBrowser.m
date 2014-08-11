@@ -248,6 +248,15 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     	[m_delegate fileBrowser:self fileSelected:nil];
 }
 
+-(void)viewDidLoad {
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
+    {
+        self.edgesForExtendedLayout=UIRectEdgeNone;
+    }
+#endif
+}
+
 -(void)viewDidAppear:(BOOL)animated {
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(didPressCancel:)];
     self.navigationItem.leftBarButtonItem = backItem;
@@ -356,7 +365,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         BOOL isDir;
         NSString *path = [m_path stringByAppendingPathComponent: file];
         if ([fileManager fileExistsAtPath: path isDirectory: &isDir] && !isDir) {
-            const char *fn = [file cStringUsingEncoding: NSASCIIStringEncoding];
+            const char *fn = [file cStringUsingEncoding: NSUTF8StringEncoding];
             if (fn && strcasecmp(fn, kFrotzAutoSaveFile) != 0 && strcasecmp(fn, kFrotzAutoSavePListFile) != 0) {
                 if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts) {
                     if (([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]))
