@@ -725,7 +725,7 @@ static bool bypassBundle = NO;
 - (void)loadZFile:(NSURLRequest*)request {
 #if APPLE_FASCISM
     NSString *urlPath = [[request mainDocumentURL] path];
-    if (!bypassBundle && (!(iphone_ifrotz_verbose_debug & 4) ||
+    if (!bypassBundle && ((iphone_ifrotz_verbose_debug & 4)==0 ||
                           [urlPath rangeOfString: @"competition201"].length==0 && [urlPath rangeOfString: @"Comp"].length==0)) {
         NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
         NSString *storyFile;
@@ -821,7 +821,7 @@ static bool bypassBundle = NO;
             bypassBundle = YES;
         else
             bypassBundle = (iphone_ifrotz_verbose_debug & 2) != 0;
-        if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4) &&
+        if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4)!=0 &&
                              ([urlRelPath rangeOfString: @"competition201"].length>0 || [urlRelPath rangeOfString: @"ifcomp"].length>0))) {
             [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.25];
             return NO;
@@ -883,7 +883,7 @@ static bool bypassBundle = NO;
                                                             message:@"Sorry, this story is not bundled and can't be downloaded by Frotz."
                                   //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
                                                            delegate:self cancelButtonTitle:@"Dismiss" 
-                                                  otherButtonTitles: m_currentRequest && (iphone_ifrotz_verbose_debug & 4) ? @"Open in Safari":nil, nil];
+                                                  otherButtonTitles: m_currentRequest && (iphone_ifrotz_verbose_debug & 8)==0 ? @"Open in Safari":nil, nil];
             [alert show];
             [alert release];
             return NO;
