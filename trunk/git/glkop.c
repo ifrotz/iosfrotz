@@ -67,6 +67,13 @@
     if ((addr) == 0xffffffff) \
     { StkW4(gStackPointer, (val)); gStackPointer += 1;} \
 	else memWrite32((addr), (val))
+
+// Keep these, because captured arrays aren't compatible with autosave/restore -- bcs
+#define AddressOfArray(addr)  \
+      ((addr) < gRamStart ? (gRom + (addr)) : (gRam + (addr)))
+#define AddressOfIArray(addr)  \
+      ((addr) < gRamStart ? (gRom + (addr)) : (gRam + (addr)))
+
 #define CaptureCArray(addr, len, passin)  \
     (grab_temp_c_array(addr, len, passin))
 #define ReleaseCArray(ptr, addr, len, passout)  \
@@ -636,8 +643,8 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                          treat this case as a fatal error. */
                         if (varglist[ix+1] > gEndMem || varglist[ix]+varglist[ix+1] > gEndMem)
                             varglist[ix+1] = gEndMem - varglist[ix];
-                        
-                        garglist[gargnum].array = (void*) CaptureCArray(varglist[ix], varglist[ix+1], passin);
+                        garglist[gargnum].array = (void*) AddressOfArray(varglist[ix]);
+                        //garglist[gargnum].array = (void*) CaptureCArray(varglist[ix], varglist[ix+1], passin);
                         gargnum++;
                         ix++;
                         garglist[gargnum].uint = varglist[ix];
@@ -852,7 +859,7 @@ static void unparse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                 
                 switch (typeclass) {
                     case 'C':
-                        ReleaseCArray(garglist[gargnum].array, varglist[ix], varglist[ix+1], passout);
+                        //ReleaseCArray(garglist[gargnum].array, varglist[ix], varglist[ix+1], passout);
                         gargnum++;
                         ix++;
                         gargnum++;
@@ -1399,6 +1406,12 @@ static gidispatch_rock_t glulxe_retained_register(void *array, glui32 len, char 
     arrayref_t *arref = NULL;
     arrayref_t **aptr;
     int elemsize = 0;
+
+    if (typecode[4] != 'I' || array == NULL) { // -bcs, for autosave
+        /* We only retain integer arrays. */
+        rock.ptr = NULL;
+        return rock;
+    }
 
     if (typecode[4] == 'C')
         elemsize = 1;
