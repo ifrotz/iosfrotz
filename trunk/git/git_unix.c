@@ -26,7 +26,7 @@ glkunix_argumentlist_t glkunix_arguments[] =
 };
 
 #define CACHE_SIZE (256 * 1024L)
-#define UNDO_SIZE (512 * 1024L)
+#define UNDO_SIZE (2 * 1024 * 1024L)
 
 void fatalError (const char * s)
 {
