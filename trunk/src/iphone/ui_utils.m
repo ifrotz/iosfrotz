@@ -426,7 +426,7 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
                 }
                 free(buf);
             } else
-                printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
+                ;//printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
             pos += chunkSize;
             fseek (fp, pos, SEEK_SET);
         }
@@ -511,7 +511,7 @@ NSData *imageDataFromBlorb(NSString *blorbFile) {
                     free(buf);
                 break;
             } else
-                printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
+                ; //printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
             pos += chunkSize;
             fseek (fp, pos, SEEK_SET);
         }

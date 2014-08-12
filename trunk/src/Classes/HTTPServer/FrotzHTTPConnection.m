@@ -627,7 +627,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
     if ([control isEqualToString: @"title"]) {
         if (filename) {
             if (value && [value length] > 0 && [value rangeOfString: @"/"].length == 0) {
-                NSString *story = [[filename lastPathComponent] stringByDeletingPathExtension];
+                NSString *story = [filename storyKey];
                 [[server delegate] addTitle: value forStory: story];
             }
         }

@@ -1503,7 +1503,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             length -= r.location+1;
         }
     }
-    
+ //   NSLog(@"rt appendtext: %@", text);
     if (m_origY > m_lastPt.y)
         m_origY = m_lastPt.y;
     BOOL lineNotTerminated = [text characterAtIndex: length-1] != '\n';

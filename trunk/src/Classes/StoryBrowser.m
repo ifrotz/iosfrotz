@@ -58,7 +58,7 @@ const long kMinimumRequiredSpace = 2;
     return self;
 }
 -(NSString*)title {
-    NSString *storyName = [[[self path] lastPathComponent] stringByDeletingPathExtension];
+    NSString *storyName = [[self path] storyKey];
     NSString *title = [self.browser fullTitleForStory: storyName];
     return title;
 }
@@ -357,7 +357,7 @@ void removeOldPngSplash(const char *filename) {
                             NSString *storyKey = [bundledList  substringWithRange: NSMakeRange(r3.location+1, r4.location-(r3.location+1))];
                             NSString *authors = r4.length ? [bundledList substringWithRange: NSMakeRange(r4.location+2, r2.location-(r4.location+2))]:@"";
                             if (storyKey) {
-                                storyKey = [[[storyKey lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+                                storyKey = [storyKey storyKey];
                                 if (tuid && authors) {
                                     [tuidDict setObject:tuid forKey:storyKey];
                                     [authorDict setObject: authors forKey:storyKey];
@@ -506,7 +506,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (NSString*)fullTitleForStory:(NSString*)story {
     NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
-    story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+    story = [story storyKey];
     NSString *title = [titleDict objectForKey: story];
     if (!title) {
         story = [story stringByDeletingPathExtension];
@@ -574,7 +574,7 @@ static int articlePrefix(NSString *str) {
 
 static NSString *prettyStoryName(StoryBrowser *sb, StoryInfo *si) {
     int art = 0;
-    NSString *str = [sb fullTitleForStory: [[[si path] lastPathComponent] stringByDeletingPathExtension]];
+    NSString *str = [sb fullTitleForStory: [[si path] storyKey]];
     art = articlePrefix(str);
     if (art)
         str = [str stringByReplacingCharactersInRange: NSMakeRange(0, art) withString: @""];
@@ -1210,7 +1210,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 
                 autosaveMsg = [NSString stringWithFormat: @"%@Restoring story \"%@\".\n(If you wish to start over, use the 'restart' command.)",
                                (autosaveMsg ? autosaveMsg : @""),
-                               [self fullTitleForStory: [[storyPath lastPathComponent] stringByDeletingPathExtension]]];
+                               [self fullTitleForStory: storyPath]];
                 [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
                 //self.view.userInteractionEnabled = NO;
                 [self autoRestoreAndShowMainStoryController];
@@ -1219,7 +1219,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 
                 autosaveMsg = [NSString stringWithFormat: @"%@Beginning story \"%@\"...\n",
                                (autosaveMsg ? autosaveMsg : @""),
-                               [self fullTitleForStory: [[[m_storyMainViewController currentStory] lastPathComponent] stringByDeletingPathExtension]]];
+                               [self fullTitleForStory: [m_storyMainViewController currentStory]]];
                 [m_storyMainViewController setLaunchMessage: autosaveMsg clear:YES];
                 [self showMainStoryController];
                 [m_storyMainViewController launchStory];
@@ -1386,7 +1386,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     NSString *storyPath = [[m_details storyInfo] path];
     BOOL update = NO;
     if (storyPath) {
-        NSString *storyName = [[[storyPath lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+        NSString *storyName = [storyPath storyKey];
         
         if (newTitle && ![newTitle isEqual: [self fullTitleForStory: storyName]]) {
             NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
@@ -1422,7 +1422,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)setStoryDetails:(StoryInfo*)storyInfo {
     if (storyInfo) {
         NSString *storyPath = [storyInfo path];
-        NSString *storyName = [[storyPath lastPathComponent] stringByDeletingPathExtension];
+        NSString *storyName = [storyPath storyKey];
         m_details.storyInfo = storyInfo;
         m_details.artwork = nil;
         m_details.willResume = storyPath && [storyPath length] > 0
@@ -1456,7 +1456,16 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         NSString *titleBlorb = nil, *authorBlorb = nil, *descriptBlorb = nil, *tuidBlorb = nil;
         if (isBlorb)
             metaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
-
+        if (titleBlorb) {
+            if (![titleBlorb isEqual: [self fullTitleForStory: storyName]]) {
+                NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
+                if (titleDict) {
+                    [titleDict setObject: titleBlorb forKey: storyName];
+                    [self saveMetaData];
+                    [self refresh];
+                }
+            }
+        }
         m_details.storyTitle = titleBlorb ? titleBlorb : [self fullTitleForStory: storyName];
         m_details.author = authorBlorb ? authorBlorb : [self authorsForStory: storyName];
         m_details.tuid = tuidBlorb ? tuidBlorb : [self tuidForStory: storyName];
@@ -1606,7 +1615,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         return cell;
     }
     if (row >= 0 && row < [m_storyNames count]) {
-        NSString *storyName = [[[[m_storyNames objectAtIndex: row] path] lastPathComponent] stringByDeletingPathExtension];
+        NSString *storyName = [[[m_storyNames objectAtIndex: row] path] storyKey];
         NSString *title = [self fullTitleForStory: storyName];
         UIImage *image;
         cell.textLabel.text = title;
@@ -1715,5 +1724,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [m_details updateSelectionInstructions: NO];
 }
 
+@end
+
+@implementation NSString (storyKey)
+-(NSString*)storyKey {
+    NSString *storyKey = [[[[self lastPathComponent] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding] stringByDeletingPathExtension] lowercaseString];
+    return storyKey;
+}
 @end
 

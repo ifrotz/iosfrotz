@@ -346,6 +346,25 @@ static int string_to_bool(char *str)
     return -1;
 }
 
+/* This opens a file for reading or writing. (You cannot open a file
+   for appending using this call.)
+
+   This should be used only by glkunix_startup_code(). 
+*/
+strid_t glkunix_stream_open_pathname_gen(char *pathname, glui32 writemode,
+    glui32 textmode, glui32 rock)
+{
+    if (!inittime)
+        return 0;
+    return gli_stream_open_pathname(pathname, (writemode != 0), (textmode != 0), rock);
+}
+
+/* This opens a file for reading. It is a less-general form of 
+   glkunix_stream_open_pathname_gen(), preserved for backwards 
+   compatibility.
+
+   This should be used only by glkunix_startup_code().
+*/
 strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
     glui32 rock)
 {

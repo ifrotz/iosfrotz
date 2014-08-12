@@ -17,7 +17,6 @@ typedef struct tbword_struct {
     short style;
     long pos; /* Position in the chars array. */
     long len; /* This is zero for wd_EndLine and wd_EndPage. */
-    long width; /* Number of spaces word takes up on display */
 } tbword_t;
 
 /* One style run */
@@ -51,9 +50,11 @@ typedef struct window_textbuffer_struct {
 
 //    int width, height;
 
-    /* for line input */
+    /* The following are meaningful only for the current line input request. */
     void *inbuf; /* char* or glui32*, depending on inunicode. */
     int inunicode;
+    int inecho;
+    glui32 intermkeys;
     int inmax;
     long infence;
     long incurs;

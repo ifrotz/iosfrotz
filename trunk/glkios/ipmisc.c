@@ -132,6 +132,15 @@ gidispatch_rock_t gidispatch_get_objrock(void *obj, glui32 objclass)
     }
 }
 
+void gidispatch_set_autorestore_registry(
+    long (*locatearr)(void *array, glui32 len, char *typecode,
+        gidispatch_rock_t objrock, int *elemsizeref),
+    gidispatch_rock_t (*restorearr)(long bufkey, glui32 len,
+        char *typecode, void **arrayref))
+{
+    /* glkios has its own autorestore system (which probably doesn't handle arrayrefs correctly) */
+}
+
 unsigned char glk_char_to_lower(unsigned char ch)
 {
     return char_tolower_table[ch];

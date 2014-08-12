@@ -291,6 +291,10 @@ BOOL cursorVisible = YES;
 }
 
 -(BOOL)updatePosition {
+    static BOOL insideUpdatePosition;
+    if (insideUpdatePosition) // prevent recursive update (setText: can cause htis)
+        return NO;
+    insideUpdatePosition = YES;
     CGRect myFrame = [self frame];
     FrotzView *curTextView = m_storyView;
     StoryMainViewController *controller = (StoryMainViewController*)[self delegate];
@@ -371,6 +375,7 @@ BOOL cursorVisible = YES;
     else
         [[self superview] sendSubviewToBack: self];
     [self setClearButtonMode];
+    insideUpdatePosition = NO;
    
     return cursorVisible;
 }

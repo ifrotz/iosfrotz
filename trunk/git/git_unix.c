@@ -127,13 +127,10 @@ int pref_precise_timing = FALSE;
 int pref_historylen = 20;
 int pref_prompt_defaults = TRUE;
 
-extern strid_t gli_stream_open_pathname(char *pathname, int textmode, 
-    glui32 rock);
-
 strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
     glui32 rock)
 {
-    return gli_stream_open_pathname(pathname, (textmode != 0), rock);
+    return gli_stream_open_pathname(pathname, FALSE, (textmode != 0), rock);
 }
 
 
