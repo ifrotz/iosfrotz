@@ -7551,6 +7551,7 @@ switch ((glui32)(ch1) >> 8) {  \
 }  \
 return 0;
 
+#ifdef GLK_MODULE_UNICODE_NORM
 static glui32 unigen_decomp_data[3247] = {
 0x41, 0x300, 0x41, 0x301, 0x41, 0x302, 0x41, 0x303,
 0x41, 0x308, 0x41, 0x30a, 0x43, 0x327, 0x45, 0x300,
@@ -11894,6 +11895,7 @@ switch ((glui32)(ch) >> 8) {  \
     default:  \
         *blockptr = NULL;  \
 }
+#endif /*GLK_MODULE_UNICODE_NORM*/
 
 #define GET_DECOMP_SPECIAL(ch, countptr, posptr)  \
 switch (ch) {  \
