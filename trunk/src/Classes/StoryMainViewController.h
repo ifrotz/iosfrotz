@@ -122,6 +122,8 @@ extern StoryInputLine *theInputLine;
 -(NSString*)relativePathToAppAbsolutePath:(NSString*)path;
 -(BOOL) isKBShown;
 -(BOOL) isKBLocked;
+-(void) showKeyboardLockState:(UIView*)kbdToggleItemView;
+-(void) addKeyBoardLockGesture;
 -(StoryMainViewController*) init;
 -(void) loadView;
 -(StoryView*) storyView;

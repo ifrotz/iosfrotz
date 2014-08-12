@@ -137,7 +137,7 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSaveGlkImgPrefix "glkwingfx"
 
 #define IPHONE_FROTZ_VERS "1.7"
-#define FROTZ_BETA 1
+#define FROTZ_BETA 0
 
 #define APPLE_FASCISM (!FROTZ_BETA)
 

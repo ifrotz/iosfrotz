@@ -90,8 +90,6 @@ const int kDefaultPadFontSize = 18;
 NSString *kFixedWidthFontName = @"Courier New";
 NSString *kVariableWidthFontName = @"Helvetica";
 
-#define KBD_LOCKED_TINT redColor
-
 char SAVE_PATH[MAX_FILE_NAME], AUTOSAVE_FILE[MAX_FILE_NAME];
 
 static enum { kZStory, kGlxStory } gStoryInterp;
@@ -1456,6 +1454,15 @@ extern void gli_iphone_set_focus(window_t *winNum);
     }
 }
 
+-(void)showKeyboardLockState:(UIView*)kbdToggleItemView {
+    if (m_kbLocked)
+        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked.png"]];
+    else
+        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
+    if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
+        [kbdToggleItemView setTintColor: m_kbLocked ? [UIColor colorWithRed:0.75 green:0.25 blue:0.5 alpha:1.0] : nil];
+}
+
 -(void)addKeyBoardLockGesture {
     [self view];
     UIBarButtonItem *kbdToggleItem = m_kbdToggleItem;
@@ -1469,8 +1476,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
             //Broken because there is no customView in a UIBarButtonSystemItemUndo item
             [kbdToggleItemView addGestureRecognizer:longPressGesture];
             [longPressGesture release];
-            if (m_kbLocked && [kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-                [kbdToggleItemView setTintColor: [UIColor KBD_LOCKED_TINT]];
+            [self showKeyboardLockState: kbdToggleItemView];
         }
     }
 
@@ -1563,6 +1569,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
 -(void)unlockKeyboard {
     if (m_kbLocked) {
         UIView *kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
+        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
         if (kbdToggleItemView && [kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
             [kbdToggleItemView setTintColor: nil];
     }
@@ -1587,8 +1594,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
 - (void) toggleKeyboardLongPress:(UILongPressGestureRecognizer*)sender {
     if ([sender respondsToSelector:@selector(view)]) {
         UIView *view = [sender view];
-        if ([view respondsToSelector: @selector(setTintColor:)])
-            [view setTintColor: [UIColor KBD_LOCKED_TINT]];
+        [self showKeyboardLockState: view];
     }
     if (m_notesController) {
         if ([m_notesController isVisible]) {
