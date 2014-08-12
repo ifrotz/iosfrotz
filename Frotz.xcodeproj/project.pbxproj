@@ -226,6 +226,8 @@
 		44FB3BA50E6390DC00142D85 /* hsv-crosshair.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FB3BA30E6390DC00142D85 /* hsv-crosshair.png */; };
 		44FB3BA60E6390DC00142D85 /* val-crosshair.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FB3BA40E6390DC00142D85 /* val-crosshair.png */; };
 		44FC54D41120006400CF11E9 /* url.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FC54D31120006400CF11E9 /* url.png */; };
+		44FDFBAA1999D02D00B44B03 /* icon-keyboard-locked.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */; };
+		44FDFBAB1999D02D00B44B03 /* icon-keyboard-locked@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -589,6 +591,8 @@
 		44FB3BA30E6390DC00142D85 /* hsv-crosshair.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "hsv-crosshair.png"; path = "resources/hsv-crosshair.png"; sourceTree = "<group>"; };
 		44FB3BA40E6390DC00142D85 /* val-crosshair.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "val-crosshair.png"; path = "resources/val-crosshair.png"; sourceTree = "<group>"; };
 		44FC54D31120006400CF11E9 /* url.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = url.png; path = resources/url.png; sourceTree = "<group>"; };
+		44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked.png"; path = "resources/icon-keyboard-locked.png"; sourceTree = "<group>"; };
+		44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked@2x.png"; path = "resources/icon-keyboard-locked@2x.png"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.info-plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -746,6 +750,8 @@
 				44D71CE319882F5300F4AD9A /* Frotz-152x152.png */,
 				44D71CE419882F5300F4AD9A /* icon-keyboard.png */,
 				44D71CE519882F5300F4AD9A /* icon-keyboard@2x.png */,
+				44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */,
+				44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */,
 				445FFBB715E9ED3F00ECB161 /* Icon-72.png */,
 				445FFBB815E9ED3F00ECB161 /* Icon-72@2x.png */,
 				445FFBB915E9ED3F00ECB161 /* Icon.png */,
@@ -1160,6 +1166,7 @@
 				4409C8F01985DD2B003869C2 /* glyph-input-clear@2x.png in Resources */,
 				4414E2D9104CDA0B008C3F56 /* FrotzWordPicker.xib in Resources */,
 				449A51D51052DA34001B884B /* glare.png in Resources */,
+				44FDFBAA1999D02D00B44B03 /* icon-keyboard-locked.png in Resources */,
 				449A528710530749001B884B /* glarels.png in Resources */,
 				4490621E111FA698004E3E33 /* save.png in Resources */,
 				44FC54D41120006400CF11E9 /* url.png in Resources */,
@@ -1238,6 +1245,7 @@
 				44C48A8215F6E5C20037EDF9 /* val-crosshair-ipad.png in Resources */,
 				44619B9E160FB0D400B70223 /* refresh-small.png in Resources */,
 				44619BA0160FB36500B70223 /* refresh.png in Resources */,
+				44FDFBAB1999D02D00B44B03 /* icon-keyboard-locked@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
