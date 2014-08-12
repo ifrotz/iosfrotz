@@ -180,7 +180,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [self.detailsController refresh];
         NSData *data = UIImageJPEGRepresentation(img, 0.8);
         if (data)
-            [m_detailsController.storyBrowser addSplashData:data forStory: [[m_detailsController.storyInfo.path lastPathComponent] stringByDeletingPathExtension]];
+            [m_detailsController.storyBrowser addSplashData:data forStory: [m_detailsController.storyInfo.path storyKey]];
     }
 }
 

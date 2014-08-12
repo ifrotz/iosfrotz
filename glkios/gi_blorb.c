@@ -1,9 +1,9 @@
 /* gi_blorb.c: Blorb library layer for Glk API.
-    gi_blorb version 1.4.
+    gi_blorb version 1.5.1.
     Designed by Andrew Plotkin <erkyrath@eblong.com>
-    http://www.eblong.com/zarf/glk/index.html
+    http://eblong.com/zarf/glk/
 
-    This file is copyright 1998-2000 by Andrew Plotkin. You may copy,
+    This file is copyright 1998-2012 by Andrew Plotkin. You may copy,
     distribute, and incorporate it into your own programs, by any means
     and under any conditions, as long as you do not modify it. You may
     also modify this file, incorporate it into your own programs,
@@ -142,8 +142,10 @@ giblorb_err_t giblorb_create_map(strid_t file, giblorb_map_t **newmap)
         glk_stream_set_position(file, nextpos, seekmode_Start);
         
         readlen = glk_get_buffer_stream(file, buffer, 8);
-        if (readlen != 8)
+        if (readlen != 8) {
+            giblorb_free(chunks);
             return giblorb_err_Read;
+        }
         
         type = giblorb_native4(buffer+0);
         len = giblorb_native4(buffer+4);
@@ -175,8 +177,10 @@ giblorb_err_t giblorb_create_map(strid_t file, giblorb_map_t **newmap)
         if (nextpos & 1)
             nextpos++;
             
-        if (nextpos > totallength)
+        if (nextpos > totallength) {
+            giblorb_free(chunks);
             return giblorb_err_Format;
+        }
     }
     
     /* The basic IFF structure seems to be ok, and we have a list of
@@ -252,18 +256,23 @@ static giblorb_err_t giblorb_initialize_map(giblorb_map_t *map)
 
                 if (numres) {
                     int ix2;
-                    giblorb_resdesc_t *resources;
-                    giblorb_resdesc_t **ressorted;
+                    giblorb_resdesc_t *resources = NULL;
+                    giblorb_resdesc_t **ressorted = NULL;
                     
                     if (len != numres*12+4)
                         return giblorb_err_Format; /* bad length field */
                     
                     resources = (giblorb_resdesc_t *)giblorb_malloc(numres 
                         * sizeof(giblorb_resdesc_t));
+                    if (!resources) {
+                        return giblorb_err_Alloc;
+                    }
                     ressorted = (giblorb_resdesc_t **)giblorb_malloc(numres 
                         * sizeof(giblorb_resdesc_t *));
-                    if (!ressorted || !resources)
+                    if (!ressorted) {
+                        giblorb_free(resources);
                         return giblorb_err_Alloc;
+                    }
                     
                     ix2 = 0;
                     for (jx=0; jx<numres; jx++) {
@@ -279,9 +288,12 @@ static giblorb_err_t giblorb_initialize_map(giblorb_map_t *map)
                             ix2++;
                         
                         if (ix2 >= map->numchunks 
-                            || map->chunks[ix2].startpos != respos)
-                            return giblorb_err_Format; /* start pos does  
-                                not match a real chunk */
+                            || map->chunks[ix2].startpos != respos) {
+                            /* start pos does not match a real chunk */
+                            giblorb_free(resources);
+                            giblorb_free(ressorted);
+                            return giblorb_err_Format;
+                        }
                         
                         res->chunknum = ix2;
                         

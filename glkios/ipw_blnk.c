@@ -13,10 +13,6 @@
 #include "glkios.h"
 #include "ipw_blnk.h"
 
-/* This code is just as simple as you think. A blank window is filled with
-    ':' characters on the screen, except for the corners, which are marked
-    with slashes just so you can see where they are. */
-
 window_blank_t *win_blank_create(window_t *win)
 {
     window_blank_t *dwin = (window_blank_t *)malloc(sizeof(window_blank_t));

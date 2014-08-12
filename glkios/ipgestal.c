@@ -27,7 +27,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
     switch (id) {
         
         case gestalt_Version:
-            return 0x00000700;
+            return 0x00000704;
         
         case gestalt_LineInput:
             /*
@@ -36,8 +36,8 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
              * never a nonprintable Latin-1 character (0 to 31, 127 to 159)
              */
             return ! ((gli_bad_latin_key(val) || gli_untypable(val)) || (val >=0x100 && iswprint(glui32_to_wchar(val))));
-                
-        case gestalt_CharInput: 
+            
+        case gestalt_CharInput:
             /*
              * basic text API, the character code which is returned can be any value from 0 to 255
              * Keycodes (starting backwards from(0xFFFFFFFF) 
@@ -56,7 +56,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
              */
          return ! ((gli_bad_latin_key(val) || gli_untypable(val)) || (val >=0x100 && ! (gli_legal_keycode(val) || iswprint(glui32_to_wchar(val)))));
 
-        case gestalt_CharOutput: 
+        case gestalt_CharOutput:
         /* Rules
          * In Latin mode:
          * can print 32 to 126, 160 to 255 and 10.
@@ -87,8 +87,7 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
                        arr[0] = 0;
                    return gestalt_CharOutput_CannotPrint;
             }
-            
-        case gestalt_MouseInput: 
+        case gestalt_MouseInput:
             if (val == wintype_TextGrid)
                 return TRUE;
             if (val == wintype_Graphics)
@@ -129,13 +128,50 @@ glui32 glk_gestalt_ext(glui32 id, glui32 val, glui32 *arr, glui32 arrlen)
 #else
             return FALSE;
 #endif /* GLK_MODULE_UNICODE */
-            
+        case gestalt_UnicodeNorm:
+#ifdef GLK_MODULE_UNICODE_NORM
+            return TRUE;
+#else
+            return FALSE;
+#endif /* GLK_MODULE_UNICODE_NORM */
+
         case gestalt_Sound:
         case gestalt_SoundVolume:
         case gestalt_SoundNotify: 
         case gestalt_SoundMusic:
             return FALSE;
+        case gestalt_LineInputEcho:
+            return TRUE;
   
+        case gestalt_LineTerminators:
+#ifdef GLK_MODULE_LINE_TERMINATORS
+            return TRUE;
+#else
+            return FALSE;
+#endif
+        case gestalt_LineTerminatorKey:
+            /* GlkTerm never uses the escape or function keys for anything,
+               so we'll allow them to be line terminators. */
+            if (val == keycode_Escape)
+                return TRUE;
+            if (val >= keycode_Func12 && val <= keycode_Func1)
+                return TRUE;
+            return FALSE;
+  
+        case gestalt_DateTime:
+#ifdef GLK_MODULE_DATETIME
+            return TRUE;
+#else
+            return FALSE;
+#endif
+
+        case gestalt_ResourceStream:
+#ifdef GLK_MODULE_RESOURCE_STREAM
+            return TRUE;
+#else
+            return FALSE;
+#endif
+
         default:
             return 0;
 

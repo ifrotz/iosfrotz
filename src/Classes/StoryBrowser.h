@@ -157,3 +157,7 @@
 @end
 
 extern NSString *storyGamePath;
+
+@interface NSString (storyKey)
+-(NSString*)storyKey;
+@end

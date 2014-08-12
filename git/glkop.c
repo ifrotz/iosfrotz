@@ -1280,7 +1280,7 @@ struct glk_object_save {
 #define type_Pair      0xFFFFFFFE
 #define type_Graphics  0xFFFFFFFD
 
-enum kGlkReqBits { kGlkReqLine=1, kGlkReqLineUni=2, kGlkReqChar=4, kGlkReqCharUni=8, kGlkReqMouse=16, kGlkReqHyper=32 };
+enum kGlkReqBits { kGlkReqLine=1, kGlkReqLineUni=2, kGlkReqChar=4, kGlkReqCharUni=8, kGlkReqMouse=16, kGlkReqHyper=32, kGlkReqNoEchoLine=64 };
 
 typedef struct glk_object_save glk_object_save_t;
 
@@ -1305,7 +1305,8 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
         if (win->char_request) s->requ.v2.reqFlags |= kGlkReqChar;
         if (win->char_request_uni) s->requ.v2.reqFlags |= kGlkReqCharUni;
         if (win->mouse_request) s->requ.v2.reqFlags |= kGlkReqMouse;
-        if (win->hyper_request) s->requ.v2.reqFlags |= kGlkReqHyper;        
+        if (win->hyper_request) s->requ.v2.reqFlags |= kGlkReqHyper;
+        if (!win->echo_line_input) s->requ.v2.reqFlags |= kGlkReqNoEchoLine;
         s->requ.v2.pad1 = s->requ.v2.pad2 = s->requ.v2.pad3 = 0;
     }
     if (win->type == wintype_TextBuffer) {
@@ -1799,6 +1800,11 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
                     win->char_request = (req & kGlkReqChar) != 0;
                     win->mouse_request = (req & kGlkReqMouse) != 0;
                     win->hyper_request = (req & kGlkReqHyper) != 0;
+                    win->echo_line_input = (req & kGlkReqNoEchoLine) == 0;
+                    if (win->type == wintype_TextBuffer) {
+                        window_textbuffer_t *wtb = (window_textbuffer_t*)win->data;
+                        wtb->inecho = win->echo_line_input;
+                    }
                     if (win->mouse_request && (win->type == wintype_Graphics || win->type == wintype_TextGrid))
                         iphone_enable_tap(win->iphone_glkViewNum);
                     if (win->hyper_request && (win->type == wintype_TextGrid || win->type == wintype_TextBuffer))

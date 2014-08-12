@@ -67,7 +67,7 @@
 		4423590E1261894100BFB245 /* cgunicod.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590A1261894100BFB245 /* cgunicod.c */; };
 		4423590F1261894100BFB245 /* gi_blorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590B1261894100BFB245 /* gi_blorb.c */; };
 		442359111261894B00BFB245 /* gi_dispa.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358BC1261882100BFB245 /* gi_dispa.c */; };
-		442359131261894D00BFB245 /* giblorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C21261882100BFB245 /* giblorb.c */; };
+		442359131261894D00BFB245 /* ipblorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C21261882100BFB245 /* ipblorb.c */; };
 		443149C50E3B0077007A075F /* NavBack.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149C40E3B0077007A075F /* NavBack.png */; };
 		443149D80E3B0154007A075F /* NavForward.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149D70E3B0154007A075F /* NavForward.png */; };
 		443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */ = {isa = PBXBuildFile; fileRef = 443A64AD114F5EDB0093B4B2 /* splashes.zip */; };
@@ -178,6 +178,7 @@
 		44A0FA9615EC7700005FF570 /* nowplaying@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A0FA9515EC7700005FF570 /* nowplaying@2x.png */; };
 		44A2E7B911228B0900E35CCC /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44A2E7B811228B0900E35CCC /* Entitlements.plist */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
+		44B583BA1998A7700046F661 /* cgdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 44B583B81998A7700046F661 /* cgdate.c */; };
 		44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */; };
 		44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44C28D041238C41C00EE9FA3 /* URLPromptController.m */; };
 		44C48A7B15EDD7E20037EDF9 /* colorflipbg@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44C48A7915EDD7E20037EDF9 /* colorflipbg@2x.png */; };
@@ -325,7 +326,7 @@
 		442358BE1261882100BFB245 /* glk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glk.h; sourceTree = "<group>"; };
 		442358C01261882100BFB245 /* glkstart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glkstart.h; sourceTree = "<group>"; };
 		442358C11261882100BFB245 /* glkios.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glkios.h; sourceTree = "<group>"; };
-		442358C21261882100BFB245 /* giblorb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = giblorb.c; sourceTree = "<group>"; };
+		442358C21261882100BFB245 /* ipblorb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipblorb.c; sourceTree = "<group>"; };
 		442358C31261882100BFB245 /* ipevent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipevent.c; sourceTree = "<group>"; };
 		442358C41261882100BFB245 /* ipfref.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipfref.c; sourceTree = "<group>"; };
 		442358C51261882100BFB245 /* ipgestal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipgestal.c; sourceTree = "<group>"; };
@@ -512,6 +513,7 @@
 		44A0FA9515EC7700005FF570 /* nowplaying@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "nowplaying@2x.png"; path = "resources/nowplaying@2x.png"; sourceTree = "<group>"; };
 		44A2E7B811228B0900E35CCC /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; name = locale; path = resources/locale; sourceTree = "<group>"; };
+		44B583B81998A7700046F661 /* cgdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cgdate.c; sourceTree = "<group>"; };
 		44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileTransferInfo.h; sourceTree = "<group>"; };
 		44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileTransferInfo.m; sourceTree = "<group>"; };
 		44C28D011238C41C00EE9FA3 /* DisplayCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayCell.h; sourceTree = "<group>"; };
@@ -913,6 +915,7 @@
 		442358B9126187E500BFB245 /* glkios */ = {
 			isa = PBXGroup;
 			children = (
+				44B583B81998A7700046F661 /* cgdate.c */,
 				4423590A1261894100BFB245 /* cgunicod.c */,
 				4423590B1261894100BFB245 /* gi_blorb.c */,
 				4423590C1261894100BFB245 /* gi_blorb.h */,
@@ -921,7 +924,7 @@
 				442358BE1261882100BFB245 /* glk.h */,
 				442358C01261882100BFB245 /* glkstart.h */,
 				442358C11261882100BFB245 /* glkios.h */,
-				442358C21261882100BFB245 /* giblorb.c */,
+				442358C21261882100BFB245 /* ipblorb.c */,
 				442358C31261882100BFB245 /* ipevent.c */,
 				442358C41261882100BFB245 /* ipfref.c */,
 				442358C51261882100BFB245 /* ipgestal.c */,
@@ -1312,6 +1315,7 @@
 				44951EA50E31B79A00FEC2B0 /* infback.c in Sources */,
 				44951EA60E31B79A00FEC2B0 /* inffast.c in Sources */,
 				44951EA70E31B79A00FEC2B0 /* inflate.c in Sources */,
+				44B583BA1998A7700046F661 /* cgdate.c in Sources */,
 				44951EA80E31B79A00FEC2B0 /* inftrees.c in Sources */,
 				44951EA90E31B79A00FEC2B0 /* trees.c in Sources */,
 				44951EAA0E31B79A00FEC2B0 /* uncompr.c in Sources */,
@@ -1374,7 +1378,7 @@
 				4423590E1261894100BFB245 /* cgunicod.c in Sources */,
 				4423590F1261894100BFB245 /* gi_blorb.c in Sources */,
 				442359111261894B00BFB245 /* gi_dispa.c in Sources */,
-				442359131261894D00BFB245 /* giblorb.c in Sources */,
+				442359131261894D00BFB245 /* ipblorb.c in Sources */,
 				449127E312643AA10013AD7C /* GlkView.m in Sources */,
 				446902E21265567300B283FF /* test-multiwin.c in Sources */,
 				44690D3A126A402400B283FF /* accel.c in Sources */,

@@ -123,12 +123,14 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     win->line_request = FALSE;
     win->line_request_uni = FALSE;
     win->char_request_uni = FALSE;
+    win->echo_line_input = TRUE;
     win->mouse_request = FALSE;
     win->hyper_request = FALSE;
     win->style = style_Normal;
     win->hyperlink = 0;
     win->store = 0;
     win->splitwin = 0;
+    win->terminate_line_input = 0;
 
     win->str = gli_stream_open_window(win);
     win->echostr = NULL;
@@ -576,7 +578,8 @@ void glk_window_set_arrangement(window_t *win, glui32 method, glui32 size,
     dwin->division = method & winmethod_DivisionMask;
     dwin->key = key;
     dwin->size = size;
-    
+    dwin->hasborder = ((method & winmethod_BorderMask) == winmethod_Border);
+
     dwin->vertical = (dwin->dir == winmethod_Left || dwin->dir == winmethod_Right);
     dwin->backward = (dwin->dir == winmethod_Left || dwin->dir == winmethod_Above);
     
@@ -1231,10 +1234,59 @@ void glk_window_move_cursor(window_t *win, glui32 xpos, glui32 ypos)
     }
 }
 
+#ifdef GLK_MODULE_LINE_ECHO
+
+void glk_set_echo_line_event(window_t *win, glui32 val)
+{
+    if (!win) {
+        gli_strict_warning(L"set_echo_line_event: invalid ref");
+        return;
+    }
+    
+    win->echo_line_input = (val != 0);
+}
+
+#endif /* GLK_MODULE_LINE_ECHO */
+
+#ifdef GLK_MODULE_LINE_TERMINATORS
+
+void glk_set_terminators_line_event(window_t *win, glui32 *keycodes,
+    glui32 count)
+{
+    int ix;
+    glui32 res, val;
+
+    if (!win) {
+        gli_strict_warning(L"set_terminators_line_event: invalid ref");
+        return;
+    }
+
+    /* We only allow escape and the function keys as line input terminators.
+       We encode those in a bitmask. */
+    res = 0;
+    if (keycodes) {
+        for (ix=0; ix<count; ix++) {
+            if (keycodes[ix] == keycode_Escape) {
+                res |= 0x10000;
+            }
+            else {
+                val = keycode_Func1 + 1 - keycodes[ix];
+                if (val >= 1 && val <= 12)
+                    res |= (1 << val);
+            }
+        }
+    }
+
+    win->terminate_line_input = res;
+}
+
+#endif /* GLK_MODULE_LINE_TERMINATORS */
+
 void gli_iphone_set_focus(window_t *win) {
     gli_focuswin = win;
     gli_windows_place_cursor();    
 }
+
 
 /* Keybinding functions. */
 
@@ -1254,6 +1306,9 @@ void gcmd_win_refresh(window_t *win, glui32 arg)
 {
     gli_windows_redraw();
 }
+
+
+
 #ifdef GLK_MODULE_HYPERLINKS
 
 void glk_set_hyperlink_stream(strid_t str, glui32 linkval)

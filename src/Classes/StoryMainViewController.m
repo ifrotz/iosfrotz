@@ -2416,7 +2416,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
     m_statusFixedFontWidth = !gLargeScreenDevice ? 5 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4;
-    m_statusFixedFontPixelHeight = !gLargeScreenDevice ? 10 : [fixedFont leading];    
+    m_statusFixedFontPixelHeight = !gLargeScreenDevice ? 9 : [fixedFont leading];
     
     if (gStoryInterp == kGlxStory) {
         int c = [m_glkViews count];
@@ -2761,7 +2761,7 @@ char *tempStatusLineScreenBuf() {
         else
             grewStatus = 0;
         fast=YES;
-        topWinSize = top_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
+        topWinSize = top_win_height * (m_statusFixedFontPixelHeight) + 0; // was 3 in 1.3, was 6 in 1.2
         
         if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
             [self setupFadeWithDuration: 0.08];
@@ -3427,7 +3427,7 @@ static void setScreenDims(char *storyNameBuf) {
                 [self setCurrentStory: storyPath];
             }
             if (m_currentStory) {
-                NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+                NSString *story = [m_currentStory storyKey];
                 if (m_notesController) {
                     NSString *notesText = [m_storyBrowser getNotesForStory:story];
                     [m_notesController setTitle: [m_storyBrowser fullTitleForStory: story]];
@@ -3628,7 +3628,7 @@ static void setScreenDims(char *storyNameBuf) {
     // Make sure pending performSelector calls are cancelled
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
     
-    NSString *story = [[[[self currentStory] lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+    NSString *story = [[self currentStory] storyKey];
     StoryBrowser *storyBrowser = [self storyBrowser];
     
     if (m_notesController) {
@@ -3824,7 +3824,7 @@ static void setScreenDims(char *storyNameBuf) {
     iphone_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
     
     if (m_currentStory && ([m_currentStory length] > 0)) {
-        NSString *story = [[[m_currentStory lastPathComponent] stringByDeletingPathExtension] lowercaseString];
+        NSString *story = [m_currentStory storyKey];
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
         [dict setObject: [self pathToAppRelativePath: m_currentStory] forKey: @"storyPath"];
         [dict setObject: [NSNumber numberWithInt: iphone_top_win_height] forKey: @"statusWinHeight"];
@@ -3966,7 +3966,8 @@ static void setScreenDims(char *storyNameBuf) {
     XYZZY();
     CGSize sz1 = [textView contentSize];
     CGPoint contentOffset = [textView contentOffset];
-    [textView appendText: inputText];
+    if (!(gStoryInterp == kGlxStory && !glkGridArray[cwin].win->echo_line_input))
+        [textView appendText: inputText];
     ++inputsSinceSaveRestore;
     [textField setText: @""];
     
@@ -4050,7 +4051,7 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 -(int)statusFixedFontPixelHeight {
-    return m_statusFixedFontPixelHeight;
+    return m_statusFixedFontPixelHeight+1;
 }
 
 

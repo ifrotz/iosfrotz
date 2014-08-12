@@ -279,24 +279,24 @@ int init_memory (void)
 	pos = 12;
 	while (pos < fileSize) {
 	    if (fread(zblorbbuf, 1, 8, story_fp) != 8)
-		break;
+            break;
 	    pos += 8;
 	    z = zblorbbuf+4;
 	    chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
 	    if (chunkSize % 1 == 1)
-		chunkSize++;
+            chunkSize++;
 	    z = zblorbbuf;
 	    if (z[0]=='Z' && z[1]=='C' && z[2]=='O' && z[3]=='D') {
-		printf("Found ZCOD chunk of size %d at pos %d\n", chunkSize, pos);
-		isZBlorb = TRUE;
-		fileZCodeOffset = pos;
-		break;
+            //printf("Found ZCOD chunk of size %d at pos %d\n", chunkSize, pos);
+            isZBlorb = TRUE;
+            fileZCodeOffset = pos;
+            break;
 	    } else
-		printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
+            ;//printf("Skipping chunk '%c%c%c%c'\n", z[0],z[1],z[2],z[3]);
 	    pos += chunkSize;
 	    fseek (story_fp, pos, SEEK_SET);
 	}
-	break;
+        break;
     }
 
     if (!isZBlorb)

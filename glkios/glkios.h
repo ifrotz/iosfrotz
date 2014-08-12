@@ -64,6 +64,9 @@ struct glk_window_struct {
     int mouse_request;
     int hyper_request;
 
+    int echo_line_input; /* applies to future line inputs, not the current */
+    glui32 terminate_line_input; /* ditto; this is a bitmask of flags */
+
     glui32 style;
     glui32 hyperlink;
     
@@ -83,6 +86,7 @@ struct glk_window_struct {
 #define strtype_File (1)
 #define strtype_Window (2)
 #define strtype_Memory (3)
+#define strtype_Resource (4)
 
 struct glk_stream_struct {
     glui32 magicnum;
@@ -100,8 +104,12 @@ struct glk_stream_struct {
     /* for strtype_File */
     FILE *file; 
     fileref_t *fileRef;
+    glui32 lastop; /* 0, filemode_Write, or filemode_Read */
 
-    /* for strtype_Memory. Separate pointers for one-byte and four-byte
+    /* for strtype_Resource */
+    int isbinary;
+
+    /* for strtype_Memory and strtype_Resource. Separate pointers for one-byte and four-byte
        streams */
     unsigned char *buf;
     unsigned char *bufptr;
@@ -190,6 +198,21 @@ extern window_t *gli_focuswin;
 extern grect_t content_box;
 extern void (*gli_interrupt_handler)(void);
 
+/* The following typedefs are copied from cheapglk.h. They support the
+   tables declared in cgunigen.c. */
+
+typedef glui32 gli_case_block_t[2]; /* upper, lower */
+/* If both are 0xFFFFFFFF, you have to look at the special-case table */
+
+typedef glui32 gli_case_special_t[3]; /* upper, lower, title */
+/* Each of these points to a subarray of the unigen_special_array
+   (in cgunicode.c). In that subarray, element zero is the length,
+   and that's followed by length unicode values. */
+
+typedef glui32 gli_decomp_block_t[2]; /* count, position */
+/* The position points to a subarray of the unigen_decomp_array.
+   If the count is zero, there is no decomposition. */
+
 extern int screen_size_changed;
 extern int mouseEvent, iosEventX, iosEventY;
 extern int hyperlinkEvent;
@@ -213,8 +236,8 @@ extern int pref_screenwidth;
 extern int pref_screenheight;
 extern int pref_messageline;
 extern int pref_reverse_textgrids;
-extern int pref_window_borders;
 extern int pref_override_window_borders;
+extern int pref_window_borders;
 extern int pref_precise_timing;
 extern int pref_historylen;
 extern int pref_prompt_defaults;
@@ -222,7 +245,6 @@ extern int pref_prompt_defaults;
 /* Declarations of library internal functions. */
 
 extern void gli_initialize_misc(void);
-extern char *gli_ascii_equivalent(unsigned char ch);
 
 extern void gli_initialize_events(void);
 extern void gli_event_store(glui32 type, window_t *win, glui32 val1, glui32 val2);
@@ -259,8 +281,8 @@ extern stream_t *gli_new_stream(int type, int readable, int writable,
     glui32 rock);
 extern void gli_delete_stream(stream_t *str);
 extern stream_t *gli_stream_open_window(window_t *win);
-extern strid_t gli_stream_open_pathname(char *pathname, int textmode, 
-    glui32 rock);
+extern strid_t gli_stream_open_pathname(char *pathname, int writemode,
+                                        int textmode, glui32 rock);
 extern void gli_stream_set_current(stream_t *str);
 extern void gli_stream_fill_result(stream_t *str, 
     stream_result_t *result);

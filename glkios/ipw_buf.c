@@ -42,6 +42,9 @@ window_textbuffer_t *win_textbuffer_create(window_t *win)
 
     dwin->inbuf = NULL;
     dwin->inunicode = FALSE;
+    dwin->inecho = win->echo_line_input; 
+    dwin->intermkeys = 0;
+
     dwin->incurs = 0;
     dwin->infence = 0;
     dwin->inmax = 1;
@@ -339,6 +342,8 @@ void win_textbuffer_init_line(window_t *win, void *buf, int unicode,
     dwin->infence = dwin->numchars;
     dwin->incurs = dwin->numchars;
     dwin->origstyle = win->style;
+    dwin->inecho = win->echo_line_input;
+    dwin->intermkeys = win->terminate_line_input;
 #if 0
     set_last_run(dwin, win->style);
     dwin->historypos = dwin->historypresent;
@@ -358,7 +363,7 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
 {
     long len;
     void *inbuf;
-    int inmax, inunicode;
+    int inmax, inunicode, inecho;
     gidispatch_rock_t inarrayrock;
     window_textbuffer_t *dwin = win->data;
 
@@ -369,8 +374,15 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
     inmax = dwin->inmax;
     inarrayrock = dwin->inarrayrock;
     inunicode = dwin->inunicode;
+    inecho = dwin->inecho;
 
     len = dwin->charssize - dwin->infence;
+    if (inecho && win->echostr)  {
+        if ( inunicode )
+            gli_stream_echo_line_uni(win->echostr, inbuf, len);
+        else
+            gli_stream_echo_line(win->echostr, inbuf, len);
+    }
 
     /* Store in event buffer. */
         
@@ -380,13 +392,11 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
         
     export_input_line(inbuf, inunicode, len, &dwin->chars[dwin->infence]);
 
-    if (win->echostr) {
-        if ( inunicode )
-            gli_stream_echo_line_uni(win->echostr, inbuf, len);
-        else
-            gli_stream_echo_line(win->echostr, inbuf, len);
-    }
-        
+//    if (!inecho) { // not necessary; text is in separate view on ios
+//        /* Wipe the typed text from the buffer. */
+//        put_text(dwin, "", 0, dwin->infence,  dwin->numchars - dwin->infence);
+//    }
+    
     win->style = dwin->origstyle;
 //    set_last_run(dwin, win->style);
 
@@ -397,7 +407,9 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
     win->line_request = FALSE;
     dwin->inbuf = NULL;
     dwin->inmax = 0;
-    
+    dwin->inecho = FALSE;
+    dwin->intermkeys = 0;
+
     //win_textbuffer_putchar(win, L'\n');
 
     if (gli_unregister_arr) {
@@ -465,7 +477,8 @@ void gcmd_buffer_accept_line(window_t *win, glui32 arg)
     long len;
 //    wchar_t *cx;
     void *inbuf;
-    int inmax, inunicode;
+    int inmax, inunicode, inecho;
+    glui32 termkey = 0;
     gidispatch_rock_t inarrayrock;
     window_textbuffer_t *dwin = win->data;
 
@@ -476,6 +489,7 @@ void gcmd_buffer_accept_line(window_t *win, glui32 arg)
     inmax = dwin->inmax;
     inarrayrock = dwin->inarrayrock;
     inunicode = dwin->inunicode;
+    inecho = dwin->inecho;
 
     len = dwin->numchars - dwin->infence;
 
@@ -483,25 +497,34 @@ void gcmd_buffer_accept_line(window_t *win, glui32 arg)
         
     if (len > inmax)
         len = inmax;
-        
-    export_input_line(inbuf, inunicode, len, &dwin->chars[dwin->infence]);
-
-    if (win->echostr) {
+    if (inecho && win->echostr) {
         if ( inunicode )
             gli_stream_echo_line_uni(win->echostr, inbuf, len);
         else
             gli_stream_echo_line(win->echostr, inbuf, len);
     }
-    
+
+    export_input_line(inbuf, inunicode, len, &dwin->chars[dwin->infence]);
+
+    if (!inecho) {
+        // no need to clear, ios input in sep view
+    }
     win->style = dwin->origstyle;
 //    set_last_run(dwin, win->style);
+    if (arg)
+        termkey = gli_input_from_native(arg);
+    else
+        termkey = 0;
 
-    gli_event_store(evtype_LineInput, win, len, 0);
+    gli_event_store(evtype_LineInput, win, len, termkey);
     win->line_request = FALSE;
     dwin->inbuf = NULL;
     dwin->inmax = 0;
-        
-    win_textbuffer_putchar(win, L'\n');
+    dwin->inecho = FALSE;
+    dwin->intermkeys = 0;
+
+    if (inecho)
+        win_textbuffer_putchar(win, L'\n');
 
     if (gli_unregister_arr) {
         char *typedesc = (inunicode ? "&+#!Iu" : "&+#!Cn");
