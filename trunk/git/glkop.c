@@ -1407,7 +1407,7 @@ static gidispatch_rock_t glulxe_retained_register(void *array, glui32 len, char 
     arrayref_t **aptr;
     int elemsize = 0;
 
-    if (typecode[4] != 'I' || array == NULL) { // -bcs, for autosave
+    if (typecode[4] != 'I' || array == NULL) { // -bcs, until autosave is modified to serialize/deserialize retained arrays
         /* We only retain integer arrays. */
         rock.ptr = NULL;
         return rock;
@@ -1419,7 +1419,6 @@ static gidispatch_rock_t glulxe_retained_register(void *array, glui32 len, char 
         elemsize = 4;
     
     if (!elemsize || array == NULL) {
-        /* We only retain integer arrays. */
         rock.ptr = NULL;
         return rock;
     }
