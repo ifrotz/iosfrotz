@@ -980,6 +980,10 @@ static void setColorTable(RichTextView *v) {
         [self loadPrefs];
         
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        
+//       [center addObserver:self selector:@selector(allNotif:) name:nil object:nil];
+//       [center addObserver:self selector:@selector(keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
+
         [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
         [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
         [center addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
@@ -1460,7 +1464,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
     else
         [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
     if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-        [kbdToggleItemView setTintColor: m_kbLocked ? [UIColor colorWithRed:0.75 green:0.25 blue:0.5 alpha:1.0] : nil];
+        [kbdToggleItemView setTintColor: m_kbLocked ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
 }
 
 -(void)addKeyBoardLockGesture {
@@ -2081,7 +2085,18 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     return frame;
 }
 
+//-(void) allNotif:(NSNotification*)notif  {
+//    NSString *name = [notif name];
+//    if (![name hasPrefix:@"UIViewAnim"])
+//        NSLog(@"Notification %@", notif);
+//}
+
+//-(void) keyboardWillChangeFrame:(NSNotification*)notif  {
+//    NSLog(@"kb will change frame %@", notif);
+//}
+
 -(void) keyboardDidShow:(NSNotification*)notif {
+//    NSLog(@"kb did show: %@", notif);
     // Even though we already did this in keyboardWillShow, we do it again here
     // so the animation of the storyview resizing will sync up with the keyboard
     // appearing, to make sure the size is correct for whether the
@@ -2101,7 +2116,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         NSValue *frameUserInfoValue = [userInfo objectForKey: UIKeyboardFrameEndUserInfoKey];
         if (frameUserInfoValue) {
             CGRect frameEnd = [frameUserInfoValue CGRectValue];
-            if (frameEnd.size.height <= 216) {
+            CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
+            if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
                 if (m_kbShown) // do our own hide notification
                     [self keyboardWillHide:notif];
                 return;

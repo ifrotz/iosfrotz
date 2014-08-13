@@ -317,24 +317,24 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 -(void)promptURL {
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
-//	[self setupFade];
-
-	CGRect webFrame = [m_webView frame];
-	webFrame.origin.y += kSearchBarHeight;
-	webFrame.size.height -= kSearchBarHeight;
-
-	[urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
-	UIView *v = [self view];
-	[v addSubview: urlView];
-
-	[UIView beginAnimations: @"srchshow" context: 0];
-	[m_webView setFrame: webFrame];
-
-	[urlView setFrame: CGRectMake(0, 0, webFrame.size.width, kSearchBarHeight)];
-	[v bringSubviewToFront: urlView];
-	[UIView commitAnimations];
+        //	[self setupFade];
+        
+        CGRect webFrame = [m_webView frame];
+        webFrame.origin.y += kSearchBarHeight;
+        webFrame.size.height -= kSearchBarHeight;
+        
+        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        UIView *v = [self view];
+        [v addSubview: urlView];
+        
+        [UIView beginAnimations: @"srchshow" context: 0];
+        [m_webView setFrame: webFrame];
+        
+        [urlView setFrame: CGRectMake(0, 0, webFrame.size.width, kSearchBarHeight)];
+        [v bringSubviewToFront: urlView];
+        [UIView commitAnimations];
     } else {
-	[self dismissURLPrompt];
+        [self dismissURLPrompt];
     }
 }
 
@@ -344,12 +344,12 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     [self dismissURLPrompt];
     
     if ([url rangeOfString: @"://" ].length > 0)
-	myURL = [NSURL URLWithString: url];
+        myURL = [NSURL URLWithString: url];
     else if ([url hasPrefix: @"//" ])
-	myURL = [NSURL URLWithString: [@"http:" stringByAppendingString: url]];
+        myURL = [NSURL URLWithString: [@"http:" stringByAppendingString: url]];
     else
-	myURL = [NSURL URLWithString: [@"http://" stringByAppendingString: url]];
-
+        myURL = [NSURL URLWithString: [@"http://" stringByAppendingString: url]];
+    
     (void)[self view]; // make sure view is loaded
     NSURLRequest *request = [NSURLRequest requestWithURL: myURL];
     [m_webView performSelector: @selector(loadRequest:) withObject:request afterDelay:1.0];
@@ -366,42 +366,42 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     UIView *urlView = [m_urlBarController view];
 
     if ([urlView superview]) {
-//	[self setupFade];
-	CGRect webFrame = [m_webView frame];
-	webFrame.origin.y -= kSearchBarHeight;
-	webFrame.size.height += kSearchBarHeight;
-	[UIView beginAnimations: @"srchshow" context: 0];
-	[m_webView setFrame: webFrame];
-	[urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
-	if ([[m_bookmarkListController view] superview]) {
-	    [self setupFade];
-	    [[m_bookmarkListController view] removeFromSuperview];
-	}
-	[UIView setAnimationDelegate: self];
-	[UIView setAnimationDidStopSelector: @selector(animationDidFinish:finished:context:)];
-	[UIView commitAnimations];
+        //	[self setupFade];
+        CGRect webFrame = [m_webView frame];
+        webFrame.origin.y -= kSearchBarHeight;
+        webFrame.size.height += kSearchBarHeight;
+        [UIView beginAnimations: @"srchshow" context: 0];
+        [m_webView setFrame: webFrame];
+        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        if ([[m_bookmarkListController view] superview]) {
+            [self setupFade];
+            [[m_bookmarkListController view] removeFromSuperview];
+        }
+        [UIView setAnimationDelegate: self];
+        [UIView setAnimationDidStopSelector: @selector(animationDidFinish:finished:context:)];
+        [UIView commitAnimations];
 //	[urlView removeFromSuperview];
     }
 }
 
 -(void)hideBookmarks {
     if ([[m_bookmarkListController view] superview]) {
-	[self setupFade];
-	[[m_bookmarkListController view] removeFromSuperview];
+        [self setupFade];
+        [[m_bookmarkListController view] removeFromSuperview];
     }
 }
 
 -(void)showBookmarks {
     [self setupFade];
     if ([[m_bookmarkListController view] superview])
-	[[m_bookmarkListController view] removeFromSuperview];
+        [[m_bookmarkListController view] removeFromSuperview];
     else {
-	CGRect webFrame = [m_webView frame];
-	UIView *bmView = [m_bookmarkListController view];
-	[bmView setFrame: CGRectMake(0, 40, webFrame.size.width, webFrame.size.height+44)];
-//	[m_webView addSubview: bmView];
-	[m_background addSubview: bmView];
-	[m_webView layoutSubviews];
+        CGRect webFrame = [m_webView frame];
+        UIView *bmView = [m_bookmarkListController view];
+        [bmView setFrame: CGRectMake(0, 40, webFrame.size.width, webFrame.size.height+44)];
+        //	[m_webView addSubview: bmView];
+        [m_background addSubview: bmView];
+        [m_webView layoutSubviews];
     }
 }
 
@@ -924,18 +924,18 @@ static bool bypassBundle = NO;
     m_state = kSWBIdle;
     
     if (m_currentRequest) {
-//    	NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
-
-	NSURL *url = [m_currentRequest mainDocumentURL];
-
-	NSString *urlHost = [url host];
-	NSString *urlPath = [url path];
-	NSString *urlQuery = [url query];
-
-	if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
-	    if ([urlQuery hasPrefix: @"coverart&"])
-		[self snarfMetaData: m_currentRequest loadRequest:nil forStory: nil];
-	}
+        //    	NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
+        
+        NSURL *url = [m_currentRequest mainDocumentURL];
+        
+        NSString *urlHost = [url host];
+        NSString *urlPath = [url path];
+        NSString *urlQuery = [url query];
+        
+        if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+            if ([urlQuery hasPrefix: @"coverart&"])
+                [self snarfMetaData: m_currentRequest loadRequest:nil forStory: nil];
+        }
     }
 }
 
@@ -956,21 +956,21 @@ static bool bypassBundle = NO;
     [m_backButtonItem setEnabled: [webView canGoBack]];
     [m_forwardButtonItem setEnabled: [webView canGoForward]];
     [m_cancelButtonItem setEnabled: [webView isLoading]];
-
+    
     if ([error code]==102) { //WebKitErrorDomain, no header in SDK?
-	alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
-	//"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
-							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
+                 //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
+                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     } else if ([error code] != NSURLErrorCancelled) {
-	alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
-							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
+                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     }
     if (alert) {
-	[alert show];
-	[alert release];
+        [alert show];
+        [alert release];
     }
-//    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
-
+    //    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
+    
     [m_currentRequest release];
     m_currentRequest = nil;
 }
