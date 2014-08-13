@@ -7,6 +7,7 @@
 //
 
 #import "URLPromptController.h"
+#include "iphone_frotz.h"
 
 @implementation URLPromptController
 
@@ -92,8 +93,16 @@
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
     [m_textbar resignFirstResponder];
+    if (!(iphone_ifrotz_verbose_debug & 4)) {
+        NSString *text = [m_textbar text];
+        if ([text rangeOfString:@"://"].length==0)
+            text = [@"http://" stringByAppendingString: text];
+        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text]];
+        return;
+    }
+
     if (m_delegate)
-	[m_delegate enterURL: [m_textbar text]];
+        [m_delegate enterURL: [m_textbar text]];
 }
 
 // called when cancel button pressed
