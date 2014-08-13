@@ -1750,8 +1750,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     
     m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     [self loadPrefs];
-    if (!m_fontname) // loadPrefs didn't set font
-        [self setFont: kVariableWidthFontName withSize: m_fontSize];
     
     [m_storyView setAutoresizingMask: /*UIViewAutoresizingFlexibleTopMargin|*/UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin|
      UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
@@ -2084,7 +2082,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void) keyboardDidShow:(NSNotification*)notif {
-    
     // Even though we already did this in keyboardWillShow, we do it again here
     // so the animation of the storyview resizing will sync up with the keyboard
     // appearing, to make sure the size is correct for whether the
@@ -2097,6 +2094,21 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (!boundsValue) // sometimes nil in ios 8???
         return;
     CGRect bounds = [boundsValue CGRectValue];
+
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 doesn't sent hide notifications for undocked kbd
+        // and instead sends another show notification with smaller frame height
+        NSValue *frameUserInfoValue = [userInfo objectForKey: UIKeyboardFrameEndUserInfoKey];
+        if (frameUserInfoValue) {
+            CGRect frameEnd = [frameUserInfoValue CGRectValue];
+            if (frameEnd.size.height <= 216) {
+                if (m_kbShown) // do our own hide notification
+                    [self keyboardWillHide:notif];
+                return;
+            }
+        }
+    }
+#endif
     m_kbShown = YES;
     
     // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
@@ -3184,9 +3196,14 @@ static UIColor *scanColor(NSString *colorStr) {
     if (dict) {
         NSString *fontname =  [dict objectForKey: @"font"];
         int fontSize= [[dict objectForKey: @"fontSize"] longValue];
+        if (!fontSize)
+            fontSize = m_fontSize;
         iphone_ifrotz_verbose_debug = [[dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ] longValue];
-        if (fontname && fontSize)
+        if (fontname)
             [self setFont: fontname withSize: fontSize];
+        else
+            [self setFont: kVariableWidthFontName withSize: fontSize];
+
         NSString *textColorStr = [dict objectForKey: @"textColor"];
         NSString *bgColorStr = [dict objectForKey: @"backgroundColor"];
         UIColor *textColor = scanColor(textColorStr);
