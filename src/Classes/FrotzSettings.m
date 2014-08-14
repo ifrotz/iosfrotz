@@ -298,7 +298,12 @@ enum ControlTableSections
     m_tableView.dataSource = self;
     m_settingsShown = YES;
     m_subPagePushed = NO;
-    
+    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+        [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
+        [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
+    }
+
     [[self.navigationItem backBarButtonItem] setEnabled: NO];
     [[self.navigationItem leftBarButtonItem] setEnabled: NO];
     [self.navigationItem setHidesBackButton: YES animated:YES];

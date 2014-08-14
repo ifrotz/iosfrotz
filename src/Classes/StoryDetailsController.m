@@ -261,7 +261,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
          [NSString stringWithFormat:
           @"<html><body><style type=\"text/css\">\n"
           "h2 { font-size: 12pt; color:#cfcf00; } h3 { font-size: 11pt; color:#cfcf00; } p { font-size:10pt; }\n"
-          "* { color:#ffffff; background: #888888 } ul { margin-left: 0.2em; padding-left: 1em; margin-right: 0.2em;}\n</style>\n"
+          "* { color:#ffffff; background: #666666 } ul { margin-left: 0.2em; padding-left: 1em; margin-right: 0.2em;}\n</style>\n"
           "%@\n<br>%@<br>\n"
           "</body></html\n",
           ([m_descriptionHTML length] > 0

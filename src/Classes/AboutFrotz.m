@@ -33,6 +33,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+
     UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];

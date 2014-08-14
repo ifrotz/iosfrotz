@@ -97,7 +97,9 @@
         NSString *text = [m_textbar text];
         if ([text rangeOfString:@"://"].length==0)
             text = [@"http://" stringByAppendingString: text];
+        m_textbar.text = @"";
         [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text]];
+        [m_delegate dismissURLPrompt];
         return;
     }
 
@@ -110,13 +112,13 @@
 {
     [m_textbar resignFirstResponder];
     if (m_delegate)
-	[m_delegate dismissURLPrompt];
+        [m_delegate dismissURLPrompt];
 }
 
 - (void)searchBarBookmarkButtonClicked:(UISearchBar *)searchBar {
     [m_textbar resignFirstResponder];
     if (m_delegate)
-	[m_delegate showBookmarks];
+        [m_delegate showBookmarks];
 }
 
 @end
