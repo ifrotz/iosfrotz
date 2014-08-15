@@ -2,7 +2,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 *Update 08/15/2014*
 
-*Frotz 1.7* has been submitted to the App Store for review and should be available soon.  It has the following enhancements and bug fixes:
+*Frotz 1.7* has been submitted to the App Store for review and should be available within a week or so.  It has the following enhancements and bug fixes:
 
  * UI makeover with support for iOS 7/8
  * New Search Bar in Story List.
