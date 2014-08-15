@@ -1,6 +1,6 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-*Update 10/22/2012*
+*Update 08/15/2014*
 
 *Frotz 1.7* has been submitted to the App Store for review and should be available soon.  It has the following enhancements and bug fixes:
 
@@ -27,6 +27,10 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
 
 * FAQ *
 
+ * *Why isn't Frotz free anymore?   Will it be again?*
+
+ My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price is to make back the annual iTunes Dev Program fee and provide an incentive for me to persevere through Apple's painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there's a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies.
+
 <wiki:comment>
   * *Free, $0.99, Free... make up your mind!*
     * *Update 9/19/09* - As promised, since 1.3 has finally been approved, I've just updated Frotz's price to be *FREE* again.   My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price for the past few weeks was to make back the annual iTunes Dev Program fees and provide an incentive for me to persevere through Apple's painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there's a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies.
@@ -50,7 +54,7 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
   If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
       * Starting in Frotz 1.5, you can launch Frotz from a story file mail attachment, or from a generic file management program such as Good Reader or Dropbox.
       * If the file is available on the Internet, although Frotz cannot (read: is not allowed to) download the file directly, you can browser to it in Mobile Safari, and then launch Frotz via the "Open In..." dialog which comes up when tapping a download link.
-      * Frotz includes a built-in File Transfer server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over Edge or 3G.  You can then connect to Frotz using either a web browser or ftp client over the local network.  The web interface is much easier to use than ftp and is recommended.
+      * Frotz includes a built-in File Transfer server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over cellular.  You can then connect to Frotz using either a web browser or ftp client over the local network.  The web interface is much easier to use than ftp and is recommended.
       * Note that Frotz will not look for stories in ZIP files if you transfer them; you should transfer the files individually and make sure they end in a standard suffix such as .z8 or .zblorb.
 <wiki:comment>
      * If you have your files on a web server, you can access them using the built-in web interface:
@@ -60,12 +64,10 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
        * Frotz can also handle ZIP downloads.  If you click on a ZIP file, Frotz will download it, extract files with the playable extensions and add them to the story list, and then delete the ZIP file.  Again, this doesn't work with FTP, but I plan to add that in a future version.
 </wiki:comment>
 
-  * *I'm having problems transferring files with FTP in 1.5*
-  There seems to be an issue in the latest update that is causing FTP to hang when finishing a transfer, even a directory listing, in the latest release.  I will fix this in the next update.  In any case, I highly recommend using the new web interface for File Transfer instead of FTP, as it is easier to use and more tolerant of local network issues.
-
   * *What device/OS versions is Frotz compatible with?*
    
-   Frotz 1.5 works on iPhone or iPod Touch with OS versions 3.0 and later. 
+   Frotz 1.7 works on iPhone, iPad and iPod Touch with OS versions 3.0 and later. 
+(Version 1.6 had a bug which caused it to crash on 1st generation/armv6 devices, but this is fixed in 1.7.)
 
 <wiki:comment>
   Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I've gotten a lot of enjoyment playing these games over the years, and since I'm not a very good writer, this is my way of giving back.
