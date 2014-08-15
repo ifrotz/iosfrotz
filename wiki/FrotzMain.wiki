@@ -14,9 +14,23 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 ----
 
+*Update - Version 1.7 under review, available soon*
+
+*08/15/2014*
+
+ * UI makeover with support for iOS 7/8
+ * New Search Bar in Story List.
+ * Word auto-completion now uses the current game's vocabulary/dictionary.
+ * Fixed issues with accented characters/Unicode support.
+ * Improved support for graphics windows, inline images, and hyperlinks in glulx games.
+ * Fixed problem where VoiceOver wouldn't read new text right after the game clears the screen.
+ * Ability to long-press keyboard toggle button to hide and lock keyboard (for menu-only command input).
+ * Update to glk spec 0.7.4, git interpreter 1.3.3.
+ * Lots of other minor bug fixes.
+
 *Update - Version 1.6 now available!*
 
-*10/22/2012*
+10/22/2012
 
  * Support for iPhone 5, iOS 6, and Retina Displays.
  * Hyperlink:  now supports hyperlinks in glulx games.
