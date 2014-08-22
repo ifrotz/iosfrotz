@@ -1,8 +1,8 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-*Update 08/15/2014*
+*Update 08/21/2014*
 
-*Frotz 1.7* has been submitted to the App Store for review and should be available within a week or so.  It has the following enhancements and bug fixes:
+*Frotz 1.7* now available, with following enhancements and bug fixes:
 
  * UI makeover with support for iOS 7/8
  * New Search Bar in Story List.
@@ -27,10 +27,11 @@ To report a *bug or usability issue* with Frotz, please click [http://code.googl
 
 * FAQ *
 
+<wiki:comment>
  * *Why isn't Frotz free anymore?   Will it be again?*
 
  My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price is to make back the annual iTunes Dev Program fee and provide an incentive for me to persevere through Apple's painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there's a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies. Frotz will be made free again soon after the new version is approved.
-
+</wiki:comment>
 <wiki:comment>
   * *Free, $0.99, Free... make up your mind!*
     * *Update 9/19/09* - As promised, since 1.3 has finally been approved, I've just updated Frotz's price to be *FREE* again.   My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price for the past few weeks was to make back the annual iTunes Dev Program fees and provide an incentive for me to persevere through Apple's painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there's a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies.
