@@ -1,0 +1,18 @@
+Investigate stalls on large transfers
+Discover why Internet Explorer wont transfer ==> turned out to be a problem with Async shutting a connection. fixed.
+
+Add in additional FTP Commands
+
+
+Check that directory delimiters are fine  as / for windows
+
+
+following methods in FtpConnection are just stubs at the moment
+- (Boolean)accessibleFilePath:(NSString*)filePath	
+- (Boolean)validNewFilePath:(NSString*)filePath
+
+Need to find a neater way of checking files/paths are in chroot sandbox
+
+Fix if currentDir is in a directory that has been deleted.
+
+
