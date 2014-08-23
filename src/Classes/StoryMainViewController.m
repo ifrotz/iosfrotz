@@ -1506,6 +1506,10 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+  
+    if (!m_frotzInfoController)
+        m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
+    
     [m_frotzInfoController setKeyboardOwner: self];
 
     disable_complete = !m_completionEnabled;
@@ -1783,7 +1787,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     
-    m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
+    // Allocate in viewWillAppear instead
+    //m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
     
     theSMVC = self;
     theStoryView = m_storyView;
@@ -2114,7 +2119,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 doesn't sent hide notifications for undocked kbd
         // and instead sends another show notification with smaller frame height
         NSValue *frameUserInfoValue = [userInfo objectForKey: UIKeyboardFrameEndUserInfoKey];
-        if (frameUserInfoValue) {
+        if (gLargeScreenDevice && frameUserInfoValue) {
             CGRect frameEnd = [frameUserInfoValue CGRectValue];
             CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
             if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
