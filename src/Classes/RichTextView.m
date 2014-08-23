@@ -2125,8 +2125,6 @@ static NSString *kCommand = @"Command";
     }
     if (!hadAE)
         m_lastAEIndexAnnounced = aeIndex;
-    else
-        NSLog(@"ff");
     m_lastAEIndexAccessed = 0;
 }
 
