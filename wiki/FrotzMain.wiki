@@ -14,9 +14,9 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 ----
 
-*Update - Version 1.7 under review, available soon*
+*Update - Version 1.7 available*
 
-*08/15/2014*
+*08/21/2014*
 
  * UI makeover with support for iOS 7/8
  * New Search Bar in Story List.
