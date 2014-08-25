@@ -131,8 +131,13 @@
 
 -(void)inputHelperString:(NSString*)string {
     [self hideInputHelper];
-    NSString *newText = self.text ? [self.text stringByAppendingString: string] : string;
-    [self setText: newText];
+    int len = [self.text length];
+    if (len > 0) {
+        if ([self.text characterAtIndex:len-1]!=' ' && !ispunct([self.text characterAtIndex:len-1]))
+            string = [@" " stringByAppendingString: string];
+        string = [self.text stringByAppendingString: string];
+    }
+    [self setText: string];
 }
 
 -(CGPoint)helperLaunchPosition {
