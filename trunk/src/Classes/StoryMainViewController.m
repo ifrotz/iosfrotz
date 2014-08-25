@@ -641,6 +641,8 @@ void iphone_stop_script() {
 
 
 void iphone_recompute_screensize() {
+    if (!theSMVC)
+        return;
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
     UIView *parentView = [storyView superview];
