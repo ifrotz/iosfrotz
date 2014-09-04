@@ -21,7 +21,7 @@
 #import <UIKit/UIKit.h>
 
 
-typedef enum  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowScript, kFBDoShowViewScripts  } FileBrowserState;
+typedef enum  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowScript, kFBDoShowViewScripts, kFBDoShowRecord, kFBDoShowPlayback  } FileBrowserState;
 
 @protocol TextFileBrowser
 -(NSString*)textFileBrowserPath;
