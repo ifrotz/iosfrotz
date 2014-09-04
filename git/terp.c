@@ -162,6 +162,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
     Block pc; // Program counter (pointer into dynamically generated code)
 
     git_sint32 L1=0, L2=0, L3=0, L4=0, L5=0, L6=0, L7=0;
+    git_sint32 shortLocalCount = 0;
 #define S1 L1
 #define S2 L2
     git_float F1=0.0f, F2=0.0f, F3=0.0f, F4=0.0f;
@@ -264,7 +265,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
 next:
     ++runCounter;
     if (finished)
-	goto finished;
+        goto finished;
     switch (*pc++)
     {
 #define LABEL(foo) case label_ ## foo: goto do_ ## foo;
@@ -279,17 +280,19 @@ do_debug_step:
     glulxPC = READ_PC;     // Glulx program counter.
     glulxOpcode = READ_PC; // Glulx opcode number.
 
+#if 0
     if (glulxOpcode == op_glk) {
-//	setupAutosave();
+        //	setupAutosave();
     }
-
+    
     if (gDebug) {
-	fprintf (stdout, "\nPC: 0x%08x\nOpcode: 0x%04x\n", glulxPC, glulxOpcode);
-	fprintf (stdout, "Stack:");
-	for (L7 = 0 ; L7 < (sp - base) ; ++L7)
-	    fprintf (stdout," 0x%x", base[L7]);
-	fprintf (stdout, "\n");
+        fprintf (stdout, "\nPC: 0x%08x\nOpcode: 0x%04x\n", glulxPC, glulxOpcode);
+        fprintf (stdout, "Stack:");
+        for (L7 = 0 ; L7 < (sp - base) ; ++L7)
+            fprintf (stdout," 0x%x", base[L7]);
+        fprintf (stdout, "\n");
     }
+#endif
     NEXT;
 
 #define LOAD_INSTRUCTIONS(reg)                                  \
@@ -362,17 +365,28 @@ do_enter_function_L1: // Arg count is in L2.
     L7 = memRead8(L1++);
     // Parse the local variables descriptor.
     L6 = L5 = L4 = 0;
+    shortLocalCount = 0;
     do
     {
         L6 = memRead8(L1++); // LocalType
         L5 = memRead8(L1++); // LocalCount
         if (L6 != 4 && L6 != 0) // We only support 4-byte locals.
         {
-            if (L6 == 1 || L6 == 2)
-                fatalError("Short local variables are not supported, use Glulxe");
+            if (L6 == 1 || L6 == 2) {
+                // hack to support 1- or 2-byte locals if they are the last ones pushed,
+                // so the addresses of other variables aren't affected.  Turns out superglús
+                // seems to generate usage like this, so we can sort of support it.
+                // We still bail if we detect non-4-byte locals that aren't pushed last,
+                // or more than one of them.
+                shortLocalCount++;
+                if (shortLocalCount > 1)
+                    fatalError("Multiple short local variables are not supported");
+                //fprintf(stderr, "[%d byte local at 0x%x L5=%d]\n", L6, L1-2, L5);
+            }
             else
                 fatalError("Local variable wasn't 4 bytes wide");
-        }
+        } else if (L5 && shortLocalCount)
+            fatalError("Non-trailing short local variables are not supported");
         L4 += L5; // Cumulative local count.
     }
     while (L5 != 0);
