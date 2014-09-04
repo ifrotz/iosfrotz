@@ -100,11 +100,9 @@ static void compute_content_box()
     
     content_box.left = 0;
     content_box.top = 0;
-    content_box.right = width;
-    content_box.bottom = height;
-    
-//    if (pref_messageline && height > 0)
-//        content_box.bottom--; /* allow a message line */
+    content_box.right = width * kIOSGlkScaleFactor;
+    content_box.bottom = height * kIOSGlkScaleFactor;
+
 }
 
 window_t *gli_new_window(glui32 type, glui32 rock)
@@ -378,10 +376,7 @@ static void gli_window_close(window_t *win, int recurse)
 
 void glk_window_close(window_t *win, stream_result_t *result)
 {
-    if (!win) {
-        win = gli_rootwin;
-    }
-    if (!win)
+    if (!win) // we'll silently ignore this, it seems a lot of games do it
         return;
         
     if (win == gli_rootwin || win->parent == NULL) {
@@ -737,12 +732,12 @@ void glk_window_get_size(window_t *win, glui32 *width, glui32 *height)
         case wintype_TextBuffer:
             wid = win->bbox.right - win->bbox.left;
             hgt = win->bbox.bottom - win->bbox.top;
-	    wid /= iphone_fixed_font_width; hgt /= iphone_fixed_font_height;
+            wid /= iphone_fixed_font_width * kIOSGlkScaleFactor;
+            hgt /= iphone_fixed_font_height * kIOSGlkScaleFactor;
             break;
         case wintype_Graphics:
             wid = win->bbox.right - win->bbox.left;
             hgt = win->bbox.bottom - win->bbox.top;
-//	    wid*= 10; hgt *= 10;
 	    break;
     }
 
@@ -1380,16 +1375,16 @@ void gli_stylehint_set(glui32 wintype, glui32 styl, glui32 hint, glsi32 val)
     switch (wintype) {
         case wintype_TextBuffer:
             win_textbuffer_stylehint_set(styl, hint, val);
-        break;
+            break;
         case wintype_TextGrid:
-            win_textgrid_stylehint_set(styl, hint, val);        
-        break;
+            win_textgrid_stylehint_set(styl, hint, val);
+            break;
         case wintype_AllTypes:
             win_textbuffer_stylehint_set(styl, hint, val);
-            win_textgrid_stylehint_set(styl, hint, val);        
-        break;
+            win_textgrid_stylehint_set(styl, hint, val);
+            break;
         default:
-        break;
+            break;
     }
     has_stylehints = TRUE;
 }
@@ -1397,16 +1392,17 @@ void gli_stylehint_set(glui32 wintype, glui32 styl, glui32 hint, glsi32 val)
 
 glsi32 gli_stylehint_get(window_t *win, glui32 styl, glui32 hint)
 {
-    switch (win->type) {
-        case wintype_TextBuffer:
-            return win_textbuffer_stylehint_get(win, styl, hint);
-        break;
-        case wintype_TextGrid:
-            return win_textgrid_stylehint_get(win, styl, hint);        
-        break;
-        default:
-        break;
-    }
+    if (win)
+        switch (win->type) {
+            case wintype_TextBuffer:
+                return win_textbuffer_stylehint_get(win, styl, hint);
+                break;
+            case wintype_TextGrid:
+                return win_textgrid_stylehint_get(win, styl, hint);
+                break;
+            default:
+                break;
+        }
     return BAD_STYLE;
 }
 
@@ -1415,16 +1411,16 @@ void gli_stylehint_clear(glui32 wintype, glui32 styl, glui32 hint)
     switch (wintype) {
         case wintype_TextBuffer:
             win_textbuffer_stylehint_clear(styl, hint);
-        break;
+            break;
         case wintype_TextGrid:
-            win_textgrid_stylehint_clear(styl, hint);        
-        break;
+            win_textgrid_stylehint_clear(styl, hint);
+            break;
         case wintype_AllTypes:
             win_textbuffer_stylehint_clear(styl, hint);
-            win_textgrid_stylehint_clear(styl, hint);        
-        break;
+            win_textgrid_stylehint_clear(styl, hint);
+            break;
         default:
-        break;
+            break;
     }
 }
 

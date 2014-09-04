@@ -881,7 +881,7 @@ static void gli_set_style(stream_t *str, glui32 val)
             if (oblique || val == style_Emphasized || val == style_Note)
                 istyle |= kFTItalic;
             if (val == style_Alert)
-                istyle |= kFTReverse;
+                istyle |= kFTBold; // kFTReverse;
             if (weight || val == style_Header || val == style_Subheader || val == style_Input)
                 istyle |= kFTBold;
             if (!proportional || val == style_Preformatted) // || val == style_BlockQuote)
