@@ -338,10 +338,10 @@ static void translate_special_chars(char *s)
     switch(*src++) {
     default: *dest++ = src[-1]; break;
     case '\n': *dest++ = ZC_RETURN; break;
-    case '\\':   
+    case '~':
       switch (*src++) {
-      case '\n': *dest++ = ZC_RETURN; break;
-      case '\\': *dest++ = '\\'; break;
+//      case '\n': *dest++ = ZC_RETURN; break;
+      case '~': *dest++ = '~'; break;
       case '?': *dest++ = ZC_BACKSPACE; break;
       case '[': *dest++ = ZC_ESCAPE; break;
       case '_': *dest++ = ZC_RETURN; break;
@@ -534,10 +534,10 @@ int iphone_prompt_file_name (char *file_name, const char *default_name, int flag
   strcpy(buffer, SAVE_PATH);
   strcat(buffer, "/");
   buf = buffer + strlen(buffer);
-  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_SCRIPT) {
+  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_PLAYBACK || flag == FILE_SCRIPT) {
     buf[0] = '\0';
     if (!iphone_read_file_name (buf, dflt, flag))
-	return FALSE;
+        return FALSE;
     if (!buf[0])
 	strcpy(buf, dflt);
     if (!buf[0])
@@ -551,6 +551,7 @@ int iphone_prompt_file_name (char *file_name, const char *default_name, int flag
 	    ext = ".aux";
 	    break;
 	case FILE_RECORD:
+    case FILE_PLAYBACK:
 	    ext = ".rec";
 	    break;
 	case FILE_SCRIPT:
