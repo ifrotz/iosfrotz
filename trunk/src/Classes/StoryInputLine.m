@@ -317,7 +317,7 @@ BOOL cursorVisible = YES;
     cursorVisible = YES;
     if (!(ipzAllowInput & kIPZRequestInput)) {
         myFrame.origin.x = 0;
-        myFrame.origin.y = frame.size.height;
+        myFrame.origin.y = frame.size.height + 1024; // make sure offscreen, not under kb
     }
     else if (isGrid) {
         //  NSLog(@"udp bounds=%f %f %f %f", bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
@@ -362,7 +362,7 @@ BOOL cursorVisible = YES;
             cursorVisible = NO;
     }
     
-//    NSLog(@"udp cwin %d myFrame=%f %f %f %f vis=%d", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height, cursorVisible);
+    //NSLog(@"udp cwin %d myFrame=%f %f %f %f vis=%d", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height, cursorVisible);
     myFrame.size.width = frame.size.width - (myFrame.origin.x - frame.origin.x) - [curTextView rightMargin];
     int pad = 2;
     myFrame.size.height = [[self font] leading]+pad;

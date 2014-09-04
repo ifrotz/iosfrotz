@@ -218,7 +218,12 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(CGPoint) cursorPoint {
-    return CGPointMake(m_lastPt.x, m_topMargin+m_lastPt.y);
+    CGPoint pt;
+    if (m_lastPt.x < m_tempLeftMargin)
+        pt = CGPointMake(m_tempLeftMargin, m_topMargin+m_lastPt.y);
+    else
+        pt = CGPointMake(m_lastPt.x, m_topMargin+m_lastPt.y);
+    return pt;
 }
 
 -(BOOL)setFontFamily:(NSString*)familyName size:(int)newSize {
@@ -496,6 +501,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         CGFloat origLeft = m_leftMargin, origRight = m_rightMargin;
         unsigned int origSpacing = m_extraLineSpacing;
         CGRect frame = self.frame;
+        CGFloat origTempLeft = m_tempLeftMargin - m_leftMargin, origTempRight = m_tempRightMargin - m_rightMargin;
+
         if (frame.size.width > 480) {
             if (frame.origin.x < 5.0) {
                 float marginPerc = 0.10;
@@ -518,6 +525,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
             m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;            
             m_extraLineSpacing = 0;
         }
+        m_tempLeftMargin += origTempLeft;
+        m_tempRightMargin += origTempRight;
         if (reflow && (m_leftMargin != origLeft || m_rightMargin != origRight || m_extraLineSpacing != origSpacing))
             [self reflowText];
     }
@@ -1064,11 +1073,16 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 if (textWidth > 0 && textWidth < width-pos.x && textSize.height <= fontHeight || noWrap) {
                     if (doDraw) {
                         if (bgColor) {
-                            [bgColor set];
-                            if (pos.x <= m_leftMargin)
-                                CGContextFillRect(context, CGRectMake(minXPos, pos.y, textWidth+m_leftMargin + 2, curLineHeight));
-                            else
-                                CGContextFillRect(context, CGRectMake(minXPos+ pos.x - 2, pos.y, textWidth+2, curLineHeight));
+                            if (pos.x <= m_leftMargin) {
+                                [m_currBgColor set];
+                                CGContextFillRect(context, CGRectMake(minXPos, pos.y, m_leftMargin, curLineHeight));
+                                [bgColor set];
+                                CGContextFillRect(context, CGRectMake(minXPos+m_leftMargin, pos.y, textWidth/*+m_leftMargin*/, curLineHeight));
+                            }
+                            else {
+                                [bgColor set];
+                                CGContextFillRect(context, CGRectMake(minXPos+ pos.x, pos.y, textWidth, curLineHeight));
+                            }
                             [fgColor set];
                         }
                         if (!isFixed)
