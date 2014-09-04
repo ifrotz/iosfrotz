@@ -64,18 +64,18 @@ static bool hot_key_debugging (void)
 
 static bool hot_key_help (void) {
 
-    print_string ("Help\n");
+    print_string ("[Help]\n");
 
     print_string (
 	"\n"
-	"Alt-D  debugging options\n"
-	"Alt-H  help\n"
-	"Alt-N  new game\n"
-	"Alt-P  playback on\n"
-	"Alt-R  recording on/off\n"
-	"Alt-S  seed random numbers\n"
-	"Alt-U  undo one turn\n"
-	"Alt-X  exit game\n");
+	"~D  debugging options\n"
+	"~H  help\n"
+	"~N  new game\n"
+	"~P  playback on\n"
+	"~R  recording on/off\n"
+	"~S  seed random numbers\n"
+	"~U  undo one turn\n"
+	"~X  exit game\n");
 
     return FALSE;
 
@@ -91,7 +91,7 @@ static bool hot_key_help (void) {
 static bool hot_key_playback (void)
 {
 
-    print_string ("Playback on\n");
+    print_string ("[Playback on]\n");
 
     if (!istream_replay)
 	replay_open ();
@@ -111,13 +111,13 @@ static bool hot_key_recording (void)
 {
 
     if (istream_replay) {
-	print_string ("Playback off\n");
+	print_string ("[Playback finished]\n");
 	replay_close ();
     } else if (ostream_record) {
-	print_string ("Recording off\n");
+	print_string ("[Recording off]\n");
 	record_close ();
     } else {
-	print_string ("Recording on\n");
+	print_string ("[Recording on]n");
 	record_open ();
     }
 
@@ -135,7 +135,7 @@ static bool hot_key_recording (void)
 static bool hot_key_seed (void)
 {
 
-    print_string ("Seed random numbers\n");
+    print_string ("[Seed random numbers]\n");
 
     print_string ("Enter seed value (or return to randomize): ");
     seed_random (read_number ());
@@ -154,7 +154,7 @@ static bool hot_key_seed (void)
 static bool hot_key_undo (void)
 {
 
-    print_string ("Undo one turn\n");
+    print_string ("[Undo one turn]\n");
 
     if (restore_undo ()) {
 
@@ -184,7 +184,7 @@ static bool hot_key_undo (void)
 static bool hot_key_restart (void)
 {
 
-    print_string ("New game\n");
+    print_string ("[New game]\n");
 
     if (read_yes_or_no ("Do you wish to restart")) {
 
@@ -205,7 +205,7 @@ static bool hot_key_restart (void)
 static bool hot_key_quit (void)
 {
 
-    print_string ("Exit game\n");
+    print_string ("[Exit game]\n");
 
     if (read_yes_or_no ("Do you wish to quit")) {
 
@@ -233,7 +233,7 @@ bool handle_hot_key (zchar key)
 
 	aborting = FALSE;
 
-	print_string ("\nHot key -- ");
+	print_string ("\n");
 
 	switch (key) {
 	    case ZC_HKEY_RECORD: aborting = hot_key_recording (); break;
@@ -249,7 +249,7 @@ bool handle_hot_key (zchar key)
 	if (aborting)
 	    return TRUE;
 
-	print_string ("\nContinue input...\n");
+	print_string ("\n> ");
 
     }
 

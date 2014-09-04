@@ -78,11 +78,18 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
             case kFBDoShowViewScripts:
                 title = @"View Transcript";
                 break;
+            case kFBDoShowRecord:
+                title = @"Save Recording";
+                break;
+            case kFBDoShowPlayback:
+                title = @"Playback Recording";
+                break;
             default:
                 break;
         }
         if (title)
             self.title = NSLocalizedString(title, @"");
+
         m_extensions = [[NSMutableArray alloc] init];
         m_files = [[NSMutableArray alloc] initWithCapacity: 32];
         m_rowCount = 0;
@@ -109,7 +116,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [m_backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleBottomMargin];
     [m_backgroundView setAutoresizesSubviews: YES];
     self.view = m_backgroundView;
-    if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts) {
+    if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
         m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width - (ShowSaveButton ? 56: 0), 30)];
         
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height /*28*/,
@@ -156,7 +163,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 }
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts) {
+    if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
         BOOL isLandscape = UIDeviceOrientationIsLandscape(toInterfaceOrientation);
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           m_backgroundView.frame.size.width,
@@ -266,13 +273,24 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [editItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = editItem;
     [editItem setEnabled: (m_rowCount > 0)];
+    
+#ifdef NSFoundationVersionNumber_iOS_6_1
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
+        if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
+            [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+            [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
+            [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
+        }
+    }
+#endif
+
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
     [super viewWillDisappear:animated];
-    if (gUseSplitVC && animated && UIDeviceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts)
+    if (gUseSplitVC && animated && UIDeviceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
         [self.navigationController.view.superview setHidden: YES];
 }
 
@@ -367,7 +385,12 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         if ([fileManager fileExistsAtPath: path isDirectory: &isDir] && !isDir) {
             const char *fn = [file cStringUsingEncoding: NSUTF8StringEncoding];
             if (fn && strcasecmp(fn, kFrotzAutoSaveFile) != 0 && strcasecmp(fn, kFrotzAutoSavePListFile) != 0) {
-                if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts) {
+                if ([file hasSuffix: @".png"] || [file hasSuffix: @".jpg"])
+                    continue;
+                if (m_dialogType==kFBDoShowRecord || m_dialogType==kFBDoShowPlayback) {
+                    if (![file hasSuffix:@".rec"])
+                        continue;
+                } if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts) {
                     if (([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]))
                         continue;
                     ++m_textFileCount;
@@ -390,7 +413,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 }
 
 - (NSString*)tableView:(UITableView*)tableView titleForHeaderInSection:(NSInteger)section {
-    if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts)
+    if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts || m_dialogType==kFBDoShowRecord || m_dialogType == kFBDoShowPlayback)
         return nil;
     if (section == 0 && m_rowCount > 0)
         return @"Previously saved games";

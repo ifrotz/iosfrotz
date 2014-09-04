@@ -173,6 +173,7 @@ glui32 gli_window_style_distinguish(winid_t win, glui32 styl1, glui32 styl2);
 
 #include "ipw_pair.h"
 
+#define kIOSGlkScaleFactor 1.0
 
 /* Arguments to keybindings */
 

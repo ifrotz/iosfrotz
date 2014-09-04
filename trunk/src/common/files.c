@@ -448,7 +448,7 @@ void replay_open (void)
 
 	if ((pfp = fopen (new_name, "rt")) != NULL) {
 
-	    set_more_prompts (read_yes_or_no ("Do you want MORE prompts"));
+	    //set_more_prompts (read_yes_or_no ("Do you want MORE prompts"));
 
 	    istream_replay = TRUE;
 
