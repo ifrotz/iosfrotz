@@ -1155,6 +1155,7 @@ static void classes_remove(int classid, void *obj)
     gidispatch_rock_t objrock;
     if (classid < 0 || classid >= num_classes)
         return;
+
     ctab = git_classes[classid];
     objrock = gidispatch_get_objrock(obj, classid);
     cref = objrock.ptr;
@@ -1811,6 +1812,15 @@ static void classes_push_cref(int classid, classref_t *cref)
 	ctab->bucket[bucknum] = cref;
     if (cref->id > ctab->lastid)
         ctab->lastid = cref->id+1;
+
+    if (classid == gidisp_Class_Window) {
+        cref = cref->next;
+        while (cref) {
+            if (ctab->bucket[bucknum]->id == cref->id)
+                fprintf(stderr, "push_dref: Duplicate window_id during restore\n");
+            cref = cref->next;
+        }
+    }
 }
 
 static void classes_denormalize_pointers(glui32 objclass, void *obj)
@@ -2106,8 +2116,15 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 		winid[i].win = NULL;
 		winid[i].id = 0;
 	}
-    
-	for (i = 0; i < objects_count; i++) { 
+    int winLastId = git_classes[gidisp_Class_Window]->lastid;
+    for (i = 0; i < objects_count; i++) {
+		cur = objects + i;
+        if (cur->type == gidisp_Class_Window && cur->id+1 > winLastId)
+            winLastId = cur->id+1;
+    }
+    git_classes[gidisp_Class_Window]->lastid = winLastId; // make sure ids of new windows don't overlap orig ids
+
+	for (i = 0; i < objects_count; i++) {
 		found = FALSE;
 		// windows come first, in the correct order, alternated with their streams/hints
 		cur = objects + i;
@@ -2289,7 +2306,7 @@ static git_sint32 classes_restore(glk_object_save_t *objects, glui32 objects_cou
 		sprintf(errbuf, "\n[Autorestore warning: window count mismatch %d!=%d]\n", winct, winct2);
 		iphone_win_puts(0, errbuf);		
 	}
-    
+
 	// freakin' great, so let's re-iterate, simultaneously doing an iteration and compare
     
 	// start over, verify all window ids, including pairs
