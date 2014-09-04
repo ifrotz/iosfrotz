@@ -137,7 +137,7 @@ GIT_INLINE void memWrite32 (git_uint32 address, git_uint32 val)
 {
 	if (address >= gRamStart && address <= (gEndMem - 4))
 		write32 (gRam + address, val);
-	else
+	else if (address) // silently avoid common superglus bug
         memWriteError (address);
 }
 
