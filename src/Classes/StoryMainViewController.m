@@ -216,12 +216,15 @@ void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned in
     pthread_mutex_lock(&outputMutex);
     
     iphone_flush(NO);
+    BOOL isStatus;
+    NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
+
     if (textColor != BAD_STYLE)
-        [ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "t%06x", textColor & 0xffffff];
+        [bufferStr appendFormat: @kOutputEscCode kArbColorEscCode "t%06x", textColor & 0xffffff];
     else
-        [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", 0];
+        [bufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", 0];
     if (bgColor != BAD_STYLE)
-        [ipzBufferStr appendFormat: @kOutputEscCode kArbColorEscCode "b%06x", bgColor & 0xffffff];
+        [bufferStr appendFormat: @kOutputEscCode kArbColorEscCode "b%06x", bgColor & 0xffffff];
     
     pthread_mutex_unlock(&outputMutex);
 }
@@ -239,8 +242,9 @@ void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
     }
     if (color != -1 && color != currColor && gStoryInterp==kZStory) {
         iphone_flush(NO);
-    	if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
-            color = 0;
+        // Why was this here?
+    	//if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
+        //    color = 0;
         if (color != currColor) {
             [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", color & 0xff];
             currColor = color;
@@ -460,24 +464,26 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
     if (viewNum >= 0 && viewNum < numGlkViews) {
         if (win != glkGridArray[viewNum].win)
             abort();
-        pthread_mutex_lock(&outputMutex);
-        if (glkGridArray[viewNum].gridArray) {
-            wchar_t *ga = glkGridArray[viewNum].gridArray;
-            glkGridArray[viewNum].gridArray = nil;
-            free(ga);
-        }
         CGRect box = CGRectMake(win->bbox.left, win->bbox.top, win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
         NSArray *a = [NSArray arrayWithObjects: [NSNumber numberWithInt:viewNum], [NSValue valueWithCGRect:box], nil];
         
-        int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iphone_fixed_font_height; 
-        int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iphone_fixed_font_width;
-        if (nRows && nCols) {
-            glkGridArray[viewNum].gridArray = malloc(nRows*nCols*sizeof(wchar_t));
-            wchar_t sp = L' ';
-            memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
+        if (glkGridArray[viewNum].win->type == wintype_TextGrid) {
+            pthread_mutex_lock(&outputMutex);
+            if (glkGridArray[viewNum].gridArray) {
+                wchar_t *ga = glkGridArray[viewNum].gridArray;
+                glkGridArray[viewNum].gridArray = nil;
+                free(ga);
+            }
+            int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iphone_fixed_font_height;
+            int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iphone_fixed_font_width;
+            if (nRows && nCols) {
+                glkGridArray[viewNum].gridArray = malloc(nRows*nCols*sizeof(wchar_t));
+                wchar_t sp = L' ';
+                memset_pattern4(glkGridArray[viewNum].gridArray, &sp, nRows*nCols*sizeof(wchar_t));
+            }
+            pthread_mutex_unlock(&outputMutex);
         }
 //        NSLog(@"glk_view_rearrange %d", viewNum);
-        pthread_mutex_unlock(&outputMutex);
 
         [theSMVC performSelectorOnMainThread:@selector(resizeGlkView:) withObject:a waitUntilDone:YES];
     }
@@ -592,6 +598,11 @@ int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
             break;
         case FILE_SCRIPT:
             do_filebrowser = kFBDoShowScript;
+            strcpy(iphone_filename, default_name);
+            break;
+        case FILE_RECORD:
+        case FILE_PLAYBACK:
+            do_filebrowser = flag == FILE_RECORD? kFBDoShowRecord : kFBDoShowPlayback;
             strcpy(iphone_filename, default_name);
             break;
         default:
@@ -714,8 +725,8 @@ void iphone_set_background_color(int viewNum, glui32 color) {
     if (viewNum > kMaxGlkViews)
         return;
     glkGridArray[viewNum].bgColor = color;
-    //NSLog(@"glk_set_bg_color %d", viewNum);
-
+    //NSLog(@"glk_set_bg_color %d %06x", viewNum, color);
+    
     [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
 }
 
@@ -1020,6 +1031,14 @@ static void setColorTable(RichTextView *v) {
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale { // scale between minimum and maximum. called after any 'bounce' animations
 }
 
+-(void)glkGraphicsWinTap:(UITapGestureRecognizer *) recognizer {
+    CGPoint pt = [recognizer locationInView: [recognizer view]];
+    if (![self tapInView:[recognizer view] atPoint: pt]) {
+        if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) { // single key input
+            iphone_feed_input(@" "); // press 'space'
+        }
+    }
+}
 
 -(void)newGlkViewWithWin:(NSValue*)winVal {
     window_t *win = [winVal pointerValue];
@@ -1049,18 +1068,28 @@ static void setColorTable(RichTextView *v) {
             newView.tapInputEnabled = NO;
             if (winType == wintype_Graphics) {
                 [newView setBackgroundColor: [UIColor whiteColor]];
-                /// experimental!!! xxx
+                
+                UIView *gfxView = [[UIView alloc] initWithFrame: CGRectZero];
+                [gfxView setTag: kGlkImageViewTag];
+
+                /// scrollable/zoomable glk graphics windows support, #if 0 to disable
+#if 1
                 UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame: CGRectZero];
                 [scrollView setDelegate: self];
                 [scrollView setMinimumZoomScale: 1.0];
                 [scrollView setMaximumZoomScale: 2.0];
                 [scrollView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
-                UIView *gfxView = [[UIView alloc] initWithFrame: CGRectZero];
-                [gfxView setTag: kGlkImageViewTag];
                 
-//                [newView addSubview: gfxView];
+                if (isOS32) {
+                    UITapGestureRecognizer *tap = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(glkGraphicsWinTap:)] autorelease];
+                    tap.numberOfTapsRequired = 1;
+                    [newView addGestureRecognizer:tap];
+                }
                 [scrollView addSubview: gfxView];
                 [newView addSubview: scrollView];
+#else
+                [newView addSubview: gfxView];
+#endif
                 [newView setAutoresizesSubviews:YES];
 
                 [newView setAutoresizingMask: 0];
@@ -1113,6 +1142,10 @@ static void setColorTable(RichTextView *v) {
     RichTextView *v = [m_glkViews objectAtIndex: viewNum];
     //NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
     if (v) {
+        r.origin.x /= kIOSGlkScaleFactor;
+        r.origin.y /= kIOSGlkScaleFactor;
+        r.size.width /= kIOSGlkScaleFactor;
+        r.size.height /= kIOSGlkScaleFactor;
         if (viewNum > 0) {
             if (glkGridArray[viewNum].win->type == wintype_Graphics) {
                 window_t *parent = glkGridArray[viewNum].win->parent;
@@ -1137,6 +1170,12 @@ static void setColorTable(RichTextView *v) {
                         [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
                     }
                 }
+            }
+            if (glkGridArray[viewNum].win->type == wintype_TextBuffer) {
+                if (r.size.height > 64)
+                    [v resetMargins];
+                else
+                    [v setNoMargins];
             }
             [v setFrame: r];
         } else if (viewNum == 0) {
@@ -1233,14 +1272,17 @@ static void setColorTable(RichTextView *v) {
     glui32 color = args->color;
     glsi32 left = args->left, top = args->top;
     glui32 width = args->width, height = args->height;
-    
+    left /= kIOSGlkScaleFactor;
+    top /= kIOSGlkScaleFactor;
+    width /= kIOSGlkScaleFactor;
+    height /= kIOSGlkScaleFactor;
     UIView *v = [theSMVC glkView: viewNum];
     if (v) {
         if (!glkViewImageCache)
             glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
         CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
         if (!cgctx)
-            cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
+            cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width/kIOSGlkScaleFactor, v.bounds.size.height/kIOSGlkScaleFactor);
         drawRectInCGContext(cgctx, color, left, top, width, height);
         [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
     }
@@ -1271,6 +1313,7 @@ static void setColorTable(RichTextView *v) {
         
         if (data) {
             img = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            //img = [UIImage imageWithData: data];
             [glkImageCache setObject: img forKey: imgKey];
         }
     }
@@ -1284,7 +1327,11 @@ static void setColorTable(RichTextView *v) {
                 width = img.size.width;
             if (!height)
                 height = img.size.height;
-            //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
+            val1 /= kIOSGlkScaleFactor;
+            val2 /= kIOSGlkScaleFactor;
+            width /= kIOSGlkScaleFactor;
+            height /= kIOSGlkScaleFactor;
+           //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
             if (!glkViewImageCache)
                 glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
             CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
@@ -2342,6 +2389,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             [self.navigationController setNavigationBarHidden:NO animated:YES];
         [self.navigationController pushViewController: fileBrowser animated: YES];
     }
+    
     [fileBrowser release];
 }
 
@@ -2753,6 +2801,7 @@ char *tempStatusLineScreenBuf() {
     pthread_mutex_lock(&winSizeMutex);
     
     int viewNum = 0;
+    BOOL glkViewIsGrid = NO;
     if (gStoryInterp == kGlxStory && [m_glkViews count] > 1) {
         int glkInputsCount = glkInputs ? [glkInputs count] : 0;
         
@@ -2765,6 +2814,7 @@ char *tempStatusLineScreenBuf() {
             else if (!statusLine && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextGrid && [[glkInputs objectAtIndex:vn] length] > 0) {
                 statusLine = v;
                 inputStatusStr = [glkInputs objectAtIndex:vn];
+                glkViewIsGrid = YES;
             }
             else if (!storyView && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextBuffer && [[glkInputs objectAtIndex:vn] length] > 0) {
                 storyView = v;
@@ -2873,6 +2923,7 @@ char *tempStatusLineScreenBuf() {
                             [storyView setBgColorIndex: colIndex];
                         else {
                             [storyView setTextColorIndex: colIndex];
+                            [m_inputLine setTextColor: color];
                         }
                         skip += [scanner scanLocation];
                     }
@@ -2899,7 +2950,7 @@ char *tempStatusLineScreenBuf() {
                             [statusLine setBgColorIndex: col[i]];
                         }
                     }
-                    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+4]];
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+4]];
                 } else if ([subEscCode hasPrefix: @ kImageEscCode])  {
                     NSString *imageNumStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,3)];
                     int imageNum = atoi([imageNumStr UTF8String]);
@@ -2924,7 +2975,7 @@ char *tempStatusLineScreenBuf() {
                             break;
                     }
                     [storyView appendImage: imageNum withAlignment: rtImageAlign];
-                    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+6]];
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+6]];
 
                 } else if ([subEscCode hasPrefix: @ kHyperlinkEscCode]) {
                     int val = 0;
@@ -2938,7 +2989,7 @@ char *tempStatusLineScreenBuf() {
                             val = val*16 + (c - 'A'+10);
                     }
                     [storyView setHyperlinkIndex: val];
-                    [inputBufferStr setString: [ipzBufferStr substringFromIndex: escCodeRange.location+10]];
+                    [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+10]];
                 }
                 escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             }
@@ -3062,24 +3113,30 @@ char *tempStatusLineScreenBuf() {
                 if (viewNum >= 0 && viewNum < [m_glkViews count] ) {
                     glui32 bgColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_BackColor);
                     glui32 textColor = gli_stylehint_get(glkGridArray[viewNum].win, style_Normal, stylehint_TextColor);
+
                     if (bgColor != BAD_STYLE) {
                         UIColor *bcolor = UIColorFromInt(bgColor);
-                        [storyView setBackgroundColor: bcolor];
-                        [self setBackgroundColor: bcolor makeDefault:NO];
-                        [statusLine setBackgroundColor: bcolor];
+                        if (viewNum == 0)
+                            [self setBackgroundColor: bcolor makeDefault:NO];
+                        if (glkViewIsGrid)
+                            [statusLine setBackgroundColor: bcolor];
+                        else
+                            [storyView setBackgroundColor: bcolor];
                     }
                     if (textColor != BAD_STYLE) {
                         UIColor *tcolor = UIColorFromInt(textColor);
-                        [storyView setTextColor: tcolor];
-                        [statusLine setTextColor: tcolor];
-                        [m_inputLine setTextColor: tcolor];
+                        if (glkViewIsGrid)
+                            [statusLine setTextColor: tcolor];
+                        else {
+                            [storyView setTextColor: tcolor];
+                            [m_inputLine setTextColor: tcolor];
+                        }
                     }
                 }
             }
             if (clearStory || gStoryInterp != kGlxStory && !setDefColors) {
                 [storyView clear];
-                for (int k = 0; k < kMaxGlkViews; ++k)
-                    lastVisibleYPos[k] = 0;
+                lastVisibleYPos[viewNum] = 0;
             }
         } else {
             [statusLine setContentOffset: CGPointMake(0, 0) animated: NO];
@@ -3104,8 +3161,10 @@ char *tempStatusLineScreenBuf() {
                 if (visHeight > viewSz.height - topWinSize - m_fontSize)
                     visHeight = viewSz.height - topWinSize - m_fontSize;
                 CGRect visrect = CGRectMake(0, lastVisibleYPos[cwin], viewSz.width, visHeight);
-                if ([storyView contentOffset].y < lastVisibleYPos[cwin])
+                if ([storyView contentOffset].y < lastVisibleYPos[cwin]) {
+                    //NSLog(@"scrrecttovis cwin=%d y=%d h=%f", cwin, lastVisibleYPos[cwin], visHeight);
                     [storyView scrollRectToVisible:visrect  animated:YES];
+                }
                 recentScrollToVisYPos[cwin] = lastVisibleYPos[cwin];
             }
         }
@@ -3123,7 +3182,7 @@ char *tempStatusLineScreenBuf() {
                 lastInputWindow = cwin;
             }
             [storyView markWaitForInput];
-            [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.01];
+            [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.08];
             ipzAllowInput |= kIPZAllowInput;
         }
     }
@@ -3997,7 +4056,7 @@ static void setScreenDims(char *storyNameBuf) {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
     
     FrotzView *textView = m_storyView;
-    if (gStoryInterp == kGlxStory)
+    if (gStoryInterp == kGlxStory && cwin >= 0)
         textView = [m_glkViews objectAtIndex:cwin];
     
     iphone_feed_input(inputText);
