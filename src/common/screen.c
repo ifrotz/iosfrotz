@@ -323,16 +323,14 @@ void screen_char (zchar c)
     if (c == ZC_INDENT && cwp->x_cursor != cwp->left + 1)
 	c = ' ';
 
-#if 1
     if (units_left () < (width = os_char_width (c))) {
 
 	if (!enable_wrapping)
-	    { cwp->x_cursor = cwp->x_size - cwp->right; return; }
-
-	screen_new_line (TRUE);
+	    { cwp->x_cursor = cwp->x_size - cwp->right; update_cursor(); }
+    else
+        screen_new_line (TRUE);
 
     }
-#endif
     os_display_char (c); cwp->x_cursor += width;
 
 }/* screen_char */
