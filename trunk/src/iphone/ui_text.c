@@ -211,13 +211,11 @@ static void iphone_set_cell(int row, int col, cell c)
         else
             color = (BLACK_COLOUR<<4)|(color & 0xf);
     }
-#if 0
-    if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
-        color = 0;
-#endif
+    if (row < 0)
+        row = 0;
     scr_row(row)[col] = c;
     scr_color(row)[col] = color;
-    
+
     if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << 8))) {
         while (++col < MAX_COLS) {
             scr_row(row)[col] = make_cell(REVERSE_STYLE, ' ');
@@ -250,10 +248,10 @@ void iphone_display_char(char c)
             top_win_height = cursor_row+1;
         
     }
-	
+
     iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c));
     iphone_putchar(c);
-    
+
     if (++cursor_col == h_screen_cols) {
         if (cursor_row == h_screen_rows - 1)
             cursor_col--;
@@ -425,7 +423,7 @@ void os_set_cursor (int row, int col)
 {
     //printf ("os_set_cursor %d %d\n", row, col);
     cursor_row = row - 1; cursor_col = col - 1;
-    if (cursor_row >= h_screen_rows)
+    if (cursor_row >= h_screen_rows && h_screen_rows > 0)
         cursor_row = h_screen_rows - 1;
     lastInputWindow = -1;
     
