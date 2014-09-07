@@ -69,7 +69,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     UIViewController<UIScrollViewDelegate> *m_controller;
     
     CGFloat m_origY;
-    BOOL m_prevReverse, m_prevLineNotTerminated;
+    BOOL m_prevLineNotTerminated;
     
     NSMutableArray *m_accessibilityElements;
     int m_lastAEIndexAccessed, m_lastAEIndexAnnounced;
