@@ -484,7 +484,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_richDataGetImageCallback = nil;
         CALayer *layer = self.layer;
         layer.borderColor = [[UIColor blackColor] CGColor];
-    
     }
     return self;
 }
@@ -665,7 +664,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     m_prevPt = m_lastPt = CGPointMake(m_leftMargin, 0);
     
     m_origY = 0;
-    m_prevReverse = NO;
     m_prevLineNotTerminated = NO;
     m_lastAEIndexAnnounced = 0;
     m_lastAEIndexAccessed = 0;
@@ -1075,13 +1073,13 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         if (bgColor) {
                             if (pos.x <= m_leftMargin) {
                                 [m_currBgColor set];
-                                CGContextFillRect(context, CGRectMake(minXPos, pos.y, m_leftMargin, curLineHeight));
+                                CGContextFillRect(context, CGRectMake(minXPos, pos.y, m_leftMargin, curLineHeight+1));
                                 [bgColor set];
-                                CGContextFillRect(context, CGRectMake(minXPos+m_leftMargin, pos.y, textWidth/*+m_leftMargin*/, curLineHeight));
+                                CGContextFillRect(context, CGRectMake(minXPos+m_leftMargin, pos.y, textWidth+1/*+m_leftMargin*/, curLineHeight+1));
                             }
                             else {
                                 [bgColor set];
-                                CGContextFillRect(context, CGRectMake(minXPos+ pos.x, pos.y, textWidth, curLineHeight));
+                                CGContextFillRect(context, CGRectMake(minXPos+ pos.x, pos.y, textWidth+1, curLineHeight+1));
                             }
                             [fgColor set];
                         }
@@ -1270,9 +1268,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         len = [text length];
     }
     nextPos->x += minXPos;
-    if (doDraw)
-        m_prevReverse = isFixed && (style & kFTReverse);
-    else
+    if (!doDraw)
         m_numLines += nLines;
     if (isFixed && !doDraw)
         UIGraphicsEndImageContext();
@@ -1750,7 +1746,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     m_lastPt = CGPointMake(m_leftMargin, 0);
     
     m_origY = 0;
-    m_prevReverse = NO;
     m_numLines = 0;
     
     CGPoint nextPoint;
