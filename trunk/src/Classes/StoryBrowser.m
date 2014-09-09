@@ -504,18 +504,21 @@ void removeOldPngSplash(const char *filename) {
     return [m_storyMainViewController canEditStoryInfo];
 }
 
-- (NSString*)fullTitleForStory:(NSString*)story {
+- (NSString*)customTitleForStory:(NSString*)story storyKey:(NSString**)storyKey {
     NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
     story = [story storyKey];
     NSString *title = [titleDict objectForKey: story];
     if (!title) {
-        story = [story stringByDeletingPathExtension];
-        title = [titleDict objectForKey: story];
-    }
-    if (!title) {
         story = [self mapInfocom83Filename: story];
         title = [titleDict objectForKey: story];
     }
+    if (storyKey)
+        *storyKey = story;
+    return title;
+}
+
+- (NSString*)fullTitleForStory:(NSString*)story {
+    NSString *title = [self customTitleForStory: story storyKey: &story];
     if (!title) {
         title = story;
         if ([title length] > 0) {
@@ -1391,21 +1394,30 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         if (newTitle && ![newTitle isEqual: [self fullTitleForStory: storyName]]) {
             NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
             if (titleDict) {
-                [titleDict setObject: newTitle forKey: storyName];
+                if (newTitle && [newTitle length] > 0)
+                    [titleDict setObject: newTitle forKey: storyName];
+                else
+                    [titleDict removeObjectForKey: storyName];
                 update = YES;
             }
         }
         if (newAuthors && ![newAuthors isEqual: [self authorsForStory: storyName]]) {
             NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
             if (authorDict) {
-                [authorDict setObject: newAuthors forKey: storyName];
+                if (newAuthors && [newAuthors length] > 0)
+                    [authorDict setObject: newAuthors forKey: storyName];
+                else
+                    [authorDict removeObjectForKey: storyName];
                 update = YES;
             }
         }
         if (newTUID && ![newTUID isEqual: [self tuidForStory: storyName]]) {
             NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
             if (tuidDict) {
-                [tuidDict setObject: newTUID forKey: storyName];
+                if (newTUID && [newTUID length] > 0)
+                    [tuidDict setObject: newTUID forKey: storyName];
+                else
+                    [tuidDict removeObjectForKey: storyName];
                 update = YES;
             }
         }
@@ -1432,7 +1444,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         NSFileManager *defaultManager = [NSFileManager defaultManager];
 
         NSString *ext = [storyPath pathExtension];
-        BOOL isBlorb = ([ext isEqualToString:@"zblorb"] || [ext isEqualToString: @"gblorb"]);
+        BOOL isBlorb = ([ext isEqualToString:@"zblorb"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"]);
         if (storySplashPath && [defaultManager fileExistsAtPath:storySplashPath])
             m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storySplashPath],0,0);
         else if ([self shouldUseCachedBuiltinSplash: storyName]) {
@@ -1456,8 +1468,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         NSString *titleBlorb = nil, *authorBlorb = nil, *descriptBlorb = nil, *tuidBlorb = nil;
         if (isBlorb)
             metaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
+        m_details.storyTitle = [self fullTitleForStory: storyName];
         if (titleBlorb) {
-            if (![titleBlorb isEqual: [self fullTitleForStory: storyName]]) {
+            if (!m_details.storyTitle || [m_details.storyTitle length]==0 ||
+                ![titleBlorb isEqual: [self fullTitleForStory: storyName]]
+                    && [self customTitleForStory: storyName storyKey:nil]==nil) {
+                m_details.storyTitle = titleBlorb;
                 NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
                 if (titleDict) {
                     [titleDict setObject: titleBlorb forKey: storyName];
@@ -1466,10 +1482,16 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 }
             }
         }
-        m_details.storyTitle = titleBlorb ? titleBlorb : [self fullTitleForStory: storyName];
-        m_details.author = authorBlorb ? authorBlorb : [self authorsForStory: storyName];
-        m_details.tuid = tuidBlorb ? tuidBlorb : [self tuidForStory: storyName];
-        m_details.descriptionHTML = descriptBlorb ? descriptBlorb : [self descriptForStory: storyName];
+        m_details.author = [self authorsForStory: storyName];
+        m_details.tuid = [self tuidForStory: storyName];
+        m_details.descriptionHTML = [self descriptForStory: storyName];
+
+        if ([m_details.author length] == 0 && authorBlorb)
+            m_details.author = authorBlorb;
+        if ([m_details.tuid length] == 0 && tuidBlorb)
+            m_details.tuid = tuidBlorb;
+        if ([m_details.descriptionHTML length] == 0 && descriptBlorb)
+            m_details.descriptionHTML = descriptBlorb;
     }
 }
 
@@ -1729,6 +1751,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 @implementation NSString (storyKey)
 -(NSString*)storyKey {
     NSString *storyKey = [[[[self lastPathComponent] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding] stringByDeletingPathExtension] lowercaseString];
+    if ([storyKey hasSuffix: @".gblorb"] || [storyKey hasSuffix: @".zblorb"]) // remove redundant ext, e.g., otto_scarabeekatana.gblorb.blb
+        storyKey = [storyKey stringByDeletingPathExtension];
     return storyKey;
 }
 @end

@@ -111,6 +111,7 @@
 - (void)addDescript: (NSString*)descript forStory:(NSString*)story;
 - (BOOL)canEditStoryInfo;
 - (NSString*)fullTitleForStory:(NSString*)story;
+- (NSString*)customTitleForStory:(NSString*)story storyKey:(NSString**)storyKey;
 - (NSString*)tuidForStory:(NSString*)story;
 - (NSString*)authorsForStory:(NSString*)story;
 - (NSString*)descriptForStory:(NSString*)story;
