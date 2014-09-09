@@ -237,19 +237,15 @@ int top_win_height = 1; // hack; for use by iphone frontend
 
 
 /* put a character in the cell at the cursor and advance the cursor.  */
-void iphone_display_char(char c)
+void iphone_display_char(unsigned int c)
 {
     // hack to make the status line/uppper window auto-grow for games like anchorhead which
     // don't resize it big enough for the menus they want to display
-    if (cwin == 1 && cursor_row >= top_win_height) {
-        if (1 ||!top_win_height)
-            iphone_set_top_win_height(cursor_row+1);
-        else
-            top_win_height = cursor_row+1;
-        
+    if (cwin == 1 && cursor_row >= top_win_height && cursor_row < h_screen_rows) {
+        iphone_set_top_win_height(cursor_row+1);
     }
 
-    iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c));
+    iphone_set_cell(cursor_row, cursor_col, make_cell(current_style, c <= 0xff ? c : '?'));
     iphone_putchar(c);
 
     if (++cursor_col == h_screen_cols) {
@@ -282,7 +278,7 @@ void iphone_backspace()
  *
  */
 
-void os_display_char (zchar c)
+void os_display_char (unsigned int c)
 {
     
     if (c >= ZC_LATIN1_MIN /*&& c <= ZC_LATIN1_MAX*/) {

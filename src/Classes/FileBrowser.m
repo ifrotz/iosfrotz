@@ -117,10 +117,14 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [m_backgroundView setAutoresizesSubviews: YES];
     self.view = m_backgroundView;
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
+        BOOL isLandscape = UIDeviceOrientationIsLandscape([self interfaceOrientation]);
+
         m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width - (ShowSaveButton ? 56: 0), 30)];
         
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height /*28*/,
-                                          origFrame.size.width, origFrame.size.height-m_textField.bounds.size.height - (gUseSplitVC ? 70: 216))];
+                                          origFrame.size.width,
+                                          origFrame.size.height-m_textField.bounds.size.height -
+                                          (gUseSplitVC ? 70: isLandscape ? 160 : 216))];
         [m_textField setReturnKeyType: UIReturnKeyDone];
         [m_textField setBackgroundColor: [UIColor whiteColor]];
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
@@ -167,7 +171,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         BOOL isLandscape = UIDeviceOrientationIsLandscape(toInterfaceOrientation);
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           m_backgroundView.frame.size.width,
-                                          m_backgroundView.frame.size.height-m_textField.bounds.size.height - (gUseSplitVC ? (isLandscape ? 220 : 70): 216))];
+                                          m_backgroundView.frame.size.height-m_textField.bounds.size.height - (gUseSplitVC ? (isLandscape ? 220 : 70): (isLandscape ? 160 : 216)))];
     }
 }
 
@@ -390,11 +394,11 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
                 if (m_dialogType==kFBDoShowRecord || m_dialogType==kFBDoShowPlayback) {
                     if (![file hasSuffix:@".rec"])
                         continue;
-                } if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts) {
+                } else if (m_dialogType==kFBDoShowScript || m_dialogType==kFBDoShowViewScripts) {
                     if (([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]))
                         continue;
                     ++m_textFileCount;
-                } else if ([file hasSuffix: @".scr"] || [file hasSuffix: @".txt"])
+                } else if ([file hasSuffix: @".scr"] || [file hasSuffix: @".txt"] || [file hasSuffix: @".rec"])
                     continue;
                 FileInfo *fi = [[FileInfo alloc] initWithPath: path];
                 [m_files addObject: fi];
@@ -475,7 +479,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         if( [m_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] ) {
             
             if (m_dialogType == kFBDoShowViewScripts) {
-                UITextView *textView = [[UITextView alloc] initWithFrame: self.view.frame];
+                UITextView *textView = [[UITextView alloc] initWithFrame: self.view.bounds];
                 NSString *text = [[NSString alloc] initWithData: [[NSFileManager defaultManager] contentsAtPath: [self selectedFile]] encoding:NSUTF8StringEncoding];
                 textView.text = text;
                 textView.editable = NO;
