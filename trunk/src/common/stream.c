@@ -24,11 +24,11 @@ extern bool handle_hot_key (zchar);
 
 extern bool validate_click (void);
 
-extern void replay_open (void);
+extern bool replay_open (void);
 extern void replay_close (void);
 extern void memory_open (zword, zword, bool);
 extern void memory_close (void);
-extern void record_open (void);
+extern bool record_open (void);
 extern void record_close (void);
 extern void script_open (void);
 extern void script_close (void);
@@ -44,7 +44,7 @@ extern void script_write_input (const zchar *, zchar);
 extern void script_erase_input (const zchar *);
 extern void script_mssg_on (void);
 extern void script_mssg_off (void);
-extern void screen_char (zchar);
+extern void screen_char (unsigned int);
 extern void screen_word (const zchar *);
 extern void screen_new_line (bool);
 extern void screen_write_input (const zchar *, zchar);
@@ -145,7 +145,7 @@ void z_output_stream (void)
  *
  */
 
-void stream_char (zchar c)
+void stream_char (unsigned int c)
 {
 
     if (ostream_screen)

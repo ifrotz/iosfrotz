@@ -21,7 +21,7 @@
 #include "frotz.h"
 #include <string.h>
 
-extern void stream_char (zchar);
+extern void stream_char (unsigned int);
 extern void stream_word (const zchar *);
 extern void stream_new_line (void);
 

@@ -9,6 +9,10 @@
 #import <UIKit/UIKit.h>
 #import "FileBrowser.h"
 
+@protocol LockableKeyboard
+-(void)showKeyboardLockState;
+@end
+
 @interface NotesViewController : UIViewController <UIScrollViewDelegate, UITextViewDelegate, FileSelected> {
     CGRect m_frame;
     
@@ -19,7 +23,7 @@
     UIImageView *m_notesBGView;
     UIResponder *m_chainResponder;
     
-    UIViewController<TextFileBrowser,FileSelected> *m_delegate;
+    UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> *m_delegate;
 }
 
 -(NotesViewController*)initWithFrame:(CGRect)frame;
@@ -46,7 +50,7 @@
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 -(void)viewWillAppear:(BOOL)animated;
 -(void)viewWillDisappear:(BOOL)animated;
--(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected>*)delegate;
+-(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>*)delegate;
 -(UIViewController<TextFileBrowser,FileSelected>*)delegate;
 -(void)workaroundFirstResponderBug;
 @end

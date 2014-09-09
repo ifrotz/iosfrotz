@@ -289,9 +289,12 @@ void iphone_win_putchar(int winNum, wchar_t c) {
     if (isStatus && c != ' ' && c != kClearEscChar)
         [bufferStr setString: @"\n\n"];
     else if (winNum == 0) {
-        if (outputBufferLen >= sizeof(outputBuffer)/sizeof(outputBuffer[0])-1)
+        if (c > 0xff || outputBufferLen >= sizeof(outputBuffer)/sizeof(outputBuffer[0])-1)
             iphone_flush(NO);
-        outputBuffer[outputBufferLen++] = c;
+        if (c <= 0xff)
+            outputBuffer[outputBufferLen++] = c;
+        else
+            [bufferStr appendFormat:@"%C", (unichar)c];
     }
     else
         [bufferStr appendFormat:@"%c", c];
@@ -1507,13 +1510,20 @@ extern void gli_iphone_set_focus(window_t *winNum);
     }
 }
 
--(void)showKeyboardLockState:(UIView*)kbdToggleItemView {
-    if (m_kbLocked)
+-(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
+    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
+        
+    if (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
         [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked.png"]];
     else
         [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
     if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-        [kbdToggleItemView setTintColor: m_kbLocked ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
+        [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
+}
+
+-(void)showKeyboardLockState {
+    UIView *kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
+    [self showKeyboardLockStateInView: kbdToggleItemView];
 }
 
 -(void)addKeyBoardLockGesture {
@@ -1529,7 +1539,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
             //Broken because there is no customView in a UIBarButtonSystemItemUndo item
             [kbdToggleItemView addGestureRecognizer:longPressGesture];
             [longPressGesture release];
-            [self showKeyboardLockState: kbdToggleItemView];
+            [self showKeyboardLockStateInView: kbdToggleItemView];
         }
     }
 
@@ -1600,10 +1610,10 @@ extern void gli_iphone_set_focus(window_t *winNum);
 - (id)dismissKeyboard
 {
     BOOL kbdWasShown = m_kbShown;
-    [self unlockKeyboard];
+//    [self unlockKeyboard]; // allow staying locked if hiding by triple-tap
     [m_inputLine resignFirstResponder];
+    [self showKeyboardLockState];
     return kbdWasShown ? m_inputLine : nil;
-    //    self.navigationItem.rightBarButtonItem = nil;	// this would remove the button
 }
 
 -(void)activateKeyboard {
@@ -1625,39 +1635,43 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)unlockKeyboard {
     if (m_kbLocked) {
-        UIView *kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
-        if (kbdToggleItemView && [kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-            [kbdToggleItemView setTintColor: nil];
+        m_kbLocked = NO;
+        [self showKeyboardLockState];
     }
-    m_kbLocked = NO;
 }
 
 - (void)toggleKeyboard
 {
-    [self unlockKeyboard];
     if (m_notesController) {
         if ([m_notesController isVisible]) {
             [m_notesController toggleKeyboard];
             return;
         }
     }
+    if (!m_kbShown)
+        [self unlockKeyboard];
     if (m_kbShown)
         [m_inputLine resignFirstResponder];
     else
         [m_inputLine becomeFirstResponder];
+    [self showKeyboardLockState];
+}
+
+- (void)forceToggleKeyboard {
+    BOOL wasLocked = m_kbLocked;
+    [self toggleKeyboard];
+    m_kbLocked = wasLocked;
+    [self showKeyboardLockState];
 }
 
 - (void) toggleKeyboardLongPress:(UILongPressGestureRecognizer*)sender {
     if ([sender respondsToSelector:@selector(view)]) {
         UIView *view = [sender view];
-        [self showKeyboardLockState: view];
+        [self showKeyboardLockStateInView: view];
     }
-    if (m_notesController) {
-        if ([m_notesController isVisible]) {
-            [m_notesController dismissKeyboard];
-        }
-    }
+    if (m_notesController && [m_notesController isVisible])
+        return;
+
     if (m_kbShown)
         [self dismissKeyboard];
     m_kbLocked = YES;
@@ -1855,6 +1869,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     
 }
+- (void) setIgnoreWordSelection:(BOOL)ignore {
+    m_ignoreWordSelection = ignore;
+}
 
 -(void)textSelectedAnimDidFinish:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
     NSString *origText = [m_inputLine text];
@@ -1862,7 +1879,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [UIView setAnimationDelegate: nil];
     m_animDuration = 0;
     //NSLog(@"textsel did fin: %@ %@", text, finished);
-//    if (finished && [finished boolValue]) {
+    if (!m_ignoreWordSelection) { // finished && [finished boolValue]) {
         if ([[m_inputLine text] length]) {
             if (![origText hasSuffix: @" "])
                 origText = [origText stringByAppendingString: @" "];
@@ -1870,12 +1887,14 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         }
         else
             [m_inputLine setText: text];
-//    }
+    }
+    m_ignoreWordSelection = NO;
     [text release];
     [m_storyView clearSelection];
 }
 
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
+    m_ignoreWordSelection = NO;
     if (/*m_kbShown && */!(ipzAllowInput & kIPZNoEcho)) {
         // m_kbShown commented out so this still works with paired hardware keyboards
         NSString *origText = [m_inputLine text];
@@ -2691,7 +2710,7 @@ static int iphone_top_win_height = 1;
                 }
                 color = 0;
             } else {
-                c = (char)screen_data[i * maxPossCols + j];
+                c = (unsigned char)screen_data[i * maxPossCols + j];
                 color = screen_colors[i * maxPossCols + j];
                 isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
                 if (currColor==0x22 || j >= h_screen_cols-1 && iphone_top_win_height <= 4 && firstColStyle) {

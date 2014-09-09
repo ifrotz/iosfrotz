@@ -601,7 +601,7 @@ void	storew (zword, zword);
 
 void 	os_beep (int);
 int  	os_char_width (zchar);
-void 	os_display_char (zchar);
+void 	os_display_char (unsigned int);
 void 	os_display_string (const zchar *);
 void 	os_draw_picture (int, int, int);
 void 	os_erase_area (int, int, int, int, int);

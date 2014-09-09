@@ -26,9 +26,9 @@ extern int read_number (void);
 
 extern bool read_yes_or_no (const char *);
 
-extern void replay_open (void);
+extern bool replay_open (void);
 extern void replay_close (void);
-extern void record_open (void);
+extern bool record_open (void);
 extern void record_close (void);
 
 extern void seed_random (int);
@@ -91,11 +91,13 @@ static bool hot_key_help (void) {
 static bool hot_key_playback (void)
 {
 
-    print_string ("[Playback on]\n");
 
-    if (!istream_replay)
-	replay_open ();
-
+    if (!istream_replay) {
+        if (replay_open())
+            print_string ("[Playback on]\n");
+        else
+            print_string ("[Playback canceled]\n");
+    }
     return FALSE;
 
 }/* hot_key_playback */
@@ -109,16 +111,18 @@ static bool hot_key_playback (void)
 
 static bool hot_key_recording (void)
 {
-
+    
     if (istream_replay) {
-	print_string ("[Playback finished]\n");
-	replay_close ();
+        print_string ("[Playback finished]\n");
+        replay_close ();
     } else if (ostream_record) {
-	print_string ("[Recording off]\n");
-	record_close ();
+        print_string ("[Recording off]\n");
+        record_close ();
     } else {
-	print_string ("[Recording on]n");
-	record_open ();
+        if (record_open ())
+            print_string ("[Recording on]");
+        else
+            print_string ("[Recording canceled]");
     }
 
     return FALSE;

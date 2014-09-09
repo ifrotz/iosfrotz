@@ -314,7 +314,7 @@ void screen_new_line (bool wrapping)
  *
  */
 
-void screen_char (zchar c)
+void screen_char (unsigned int c)
 {
     int width;
 

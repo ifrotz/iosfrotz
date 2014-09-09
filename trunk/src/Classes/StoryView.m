@@ -103,8 +103,9 @@
 #if UseRichTextView
                     removeAnim(self);
                     [self clearSelection];
-                    [[delegate inputLine] setText: @""];
+                    //[[delegate inputLine] setText: @""];
 #endif
+                    [delegate setIgnoreWordSelection:YES];
                     [delegate dismissKeyboard];
                 }
             }
@@ -122,6 +123,12 @@
                 [delegate activateKeyboard];
                 lastTimestamp = [touch timestamp];
                 m_skipNextTap = NO;
+            }
+            else if (tapCount == 3) {
+                removeAnim(self);
+                [self clearSelection];
+                [delegate setIgnoreWordSelection:YES];
+                [delegate forceToggleKeyboard];
             }
         }
     }

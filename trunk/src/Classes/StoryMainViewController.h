@@ -51,9 +51,9 @@ extern StoryView *theStoryView;
 extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
 
-@interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate, UIActionSheetDelegate, TransitionViewDelegate,
-				     KeyboardOwner, FrotzSettingsStoryDelegate,InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
-				     DBSessionDelegate, DBRestClientDelegate>
+@interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate, UIActionSheetDelegate,
+                TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,InputHelperDelegate, UIScrollViewDelegate,
+                RTSelected, FileSelected, TextFileBrowser, LockableKeyboard, DBSessionDelegate, DBRestClientDelegate>
 {
     StoryView *m_storyView;
     StatusLine *m_statusLine;
@@ -98,6 +98,7 @@ extern StoryInputLine *theInputLine;
     BOOL m_canEditStoryInfo;
     BOOL m_autoRestoreEnabled;
     BOOL m_kbLocked;
+    BOOL m_ignoreWordSelection;
 
     int m_statusFixedFontSize;
     int m_statusFixedFontWidth;
@@ -122,7 +123,8 @@ extern StoryInputLine *theInputLine;
 -(NSString*)relativePathToAppAbsolutePath:(NSString*)path;
 -(BOOL) isKBShown;
 -(BOOL) isKBLocked;
--(void) showKeyboardLockState:(UIView*)kbdToggleItemView;
+-(void) showKeyboardLockStateInView:(UIView*)kbdToggleItemView;
+-(void) showKeyboardLockState;
 -(void) addKeyBoardLockGesture;
 -(StoryMainViewController*) init;
 -(void) loadView;
@@ -135,7 +137,9 @@ extern StoryInputLine *theInputLine;
 -(void)setCanEditStoryInfo: (BOOL)on;
 - (void) activateKeyboard;
 - (void) toggleKeyboard;
+- (void) forceToggleKeyboard;
 - (id) dismissKeyboard;
+- (void) setIgnoreWordSelection:(BOOL)ignore;
 - (void) abortToBrowser;
 - (void)autosize;
 -(void) setCurrentStory: (NSString*)story;

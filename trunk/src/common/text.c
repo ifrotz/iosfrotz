@@ -757,11 +757,13 @@ void print_string (const char *s)
  * 	zargs[0] = Unicode
  *
  */
+extern void stream_char (unsigned int);
 
 void z_print_unicode (void)
 {
-    
-    print_char ((zargs[0] <= 0xff) ? zargs[0] : '?');
+    flush_buffer();
+    stream_char(zargs[0]);
+//    print_char ((zargs[0] <= 0xff) ? zargs[0] : '?');
     
 }/* z_print_unicode */
 

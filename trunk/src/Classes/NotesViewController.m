@@ -151,11 +151,11 @@ static const int kNotesTitleHeight = 24;
     [m_notesBGView addSubview: m_notesView];
 }
 
--(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected>*)delegate {
+-(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>*)delegate {
     m_delegate = delegate;
 }
 
--(UIViewController<TextFileBrowser,FileSelected>*)delegate {
+-(UIViewController<TextFileBrowser,FileSelected, LockableKeyboard>*)delegate {
     return m_delegate;
 }
 
@@ -243,15 +243,17 @@ static const int kNotesTitleHeight = 24;
             else
                 [m_notesView resignFirstResponder];
         }
+        [m_delegate showKeyboardLockState];
     }
 }
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (scrollView == m_scrollView && decelerate) {
+        [m_notesView setEditable: YES];
         if (m_chainResponder && [m_chainResponder isFirstResponder]) {
-            [m_notesView setEditable: YES];
             [m_notesView becomeFirstResponder];
         }
+        [m_delegate showKeyboardLockState];
     }
 }
 
@@ -271,11 +273,12 @@ static const int kNotesTitleHeight = 24;
     [m_scrollView setContentOffset:CGPointMake(0, 0)];
 }
 
+#if 0
 - (BOOL)textViewShouldBeginEditing:(UITextView *)textView {
-    if (m_chainResponder)
-        return [m_chainResponder canBecomeFirstResponder];
+//    if (m_chainResponder) return [m_chainResponder canBecomeFirstResponder];
     return YES;
 }
+#endif
 
 -(void) keyboardWillShow:(CGRect)kbBounds {
     CGRect notesFrame = [m_notesBGView frame];
