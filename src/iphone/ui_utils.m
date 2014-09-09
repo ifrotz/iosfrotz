@@ -363,7 +363,10 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
                 chunkSize++;
             z = zblorbbuf;
             if (z[0]=='I' && z[1]=='F' && z[2]=='m' && z[3]=='d') {
-                char *buf = malloc(chunkSize);
+                char *buf = malloc(chunkSize+1);
+                if (!buf)
+                    break;
+                buf[chunkSize] = 0;
                 if (fread(buf, 1, chunkSize, fp) != chunkSize) {
                     free(buf);
                     break;
