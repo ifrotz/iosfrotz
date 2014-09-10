@@ -27,7 +27,8 @@ typedef enum {
     NSObject<FrotzInputDelegate> *m_delegate;
     FrotzWordPicker *m_wordPicker;
     FrotzInputHelperMode m_mode;
-    int m_lastCommonWordPicked;    
+    int m_lastCommonWordPicked;
+    int m_currHistoryItem;
 }
 - (id)init;
 - (void)setDelegate:(NSObject<FrotzInputDelegate>*)delegate;
@@ -37,6 +38,8 @@ typedef enum {
 - (int)menuCount;
 - (NSString*)historyItem:(int)item;
 - (int)addHistoryItem:(NSString*)historyItem;
+- (NSString*)getNextHistoryItem;
+- (NSString*)getPrevHistoryItem;
 - (UIView*)helperView;
 - (FrotzInputHelperMode)mode;
 -(void)showInputHelperInView:(UIView*)parentView atPoint:(CGPoint)pt withMode:(FrotzInputHelperMode)mode;

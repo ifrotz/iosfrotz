@@ -594,19 +594,35 @@ const int kCompletionViewTag = 21;
         UIKeyCommand *leftArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputLeftArrow modifierFlags: 0 action: @selector(leftArrow:)];
         UIKeyCommand *rightArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputRightArrow modifierFlags: 0 action: @selector(rightArrow:)];
         UIKeyCommand *escapeKey = [UIKeyCommand keyCommandWithInput: UIKeyInputEscape modifierFlags: 0 action: @selector(escapeKey:)];
-        return [[NSArray alloc] initWithObjects: upArrow, downArrow, leftArrow, rightArrow, escapeKey, nil];
+        UIKeyCommand *ctrlP = [UIKeyCommand keyCommandWithInput: @"p" modifierFlags: UIKeyModifierControl action: @selector(upArrow:)];
+        UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
+        UIKeyCommand *ctrlB = [UIKeyCommand keyCommandWithInput: @"b" modifierFlags: UIKeyModifierControl action: @selector(leftArrow:)];
+        UIKeyCommand *ctrlF = [UIKeyCommand keyCommandWithInput: @"f" modifierFlags: UIKeyModifierControl action: @selector(rightArrow:)];
+        return [[NSArray alloc] initWithObjects: upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF, nil];
+    } else {
+        UIKeyCommand *upArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputUpArrow modifierFlags: 0 action: @selector(upArrow:)];
+        UIKeyCommand *downArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputDownArrow modifierFlags: 0 action: @selector(downArrow:)];
+        UIKeyCommand *ctrlP = [UIKeyCommand keyCommandWithInput: @"p" modifierFlags: UIKeyModifierControl action: @selector(upArrow:)];
+        UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
+        return [[NSArray alloc] initWithObjects: upArrow, downArrow, ctrlP, ctrlN, nil];
     }
     return nil;
 }
 
 - (void) upArrow: (UIKeyCommand *) keyCommand
 {
-    iphone_feed_input(@ZC_IPS_ARROW_UP);
+    if ((ipzAllowInput & kIPZNoEcho))
+        iphone_feed_input(@ZC_IPS_ARROW_UP);
+    else
+        self.text = [m_inputHelper getPrevHistoryItem];
 }
 
 - (void) downArrow: (UIKeyCommand *) keyCommand
 {
-    iphone_feed_input(@ZC_IPS_ARROW_DOWN);
+    if ((ipzAllowInput & kIPZNoEcho))
+        iphone_feed_input(@ZC_IPS_ARROW_DOWN);
+    else
+        self.text = [m_inputHelper getNextHistoryItem];
 }
 
 - (void) leftArrow: (UIKeyCommand *) keyCommand
