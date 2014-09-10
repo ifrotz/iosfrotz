@@ -38,8 +38,8 @@
     if (!m_rateButton ) {
         m_rateButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
         [m_rateButton setTitle: @"Rate Frotz" forState:UIControlStateNormal];
-        [m_rateButton setTitleColor: [UIColor blackColor] forState:UIControlStateNormal];
-        [[m_rateButton layer] setOpacity:0.6];
+        [m_rateButton setTitleColor: [UIColor cyanColor] forState:UIControlStateNormal];
+        [[m_rateButton layer] setOpacity:0.8];
         [m_rateButton addTarget:self action:@selector(rateFrotz) forControlEvents: UIControlEventTouchUpInside];
     }
 }
@@ -147,7 +147,11 @@
         "<hr/>\n"
         "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
         "<hr>\n"
-        
+        "<p><ul>"
+        "<li><b>Fixed bug printing accented characters in status window.</b></li>\n"
+        "<li><b>Several minor bug fixes in glk game support.</b></li>\n"
+        "</ul>"
+        "<p>New in Version 1.7:</p>\n"
         "<p><ul>\n"
         "<li><b>UI makeover with support for iOS 7/8.</b></li>\n"
         "<li><b>New Search Bar in Story List.</b></li>\n"
@@ -161,7 +165,7 @@
         "</ul>"
 
         "<p>If you enjoy Frotz, please rate it in the App Store.  Or write  a review! Thanks!</p>"
-        "<p><small><i>Craig Smith, August 12, 2014</i><br>\n"
+        "<p><small><i>Craig Smith, September 9, 2014</i><br>\n"
         "<hr>\n"
         "<p><i>Previous release notes</i></p>\n"
         "\n"

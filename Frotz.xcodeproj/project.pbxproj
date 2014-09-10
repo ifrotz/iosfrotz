@@ -353,6 +353,7 @@
 		443149C40E3B0077007A075F /* NavBack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavBack.png; path = resources/NavBack.png; sourceTree = "<group>"; };
 		443149D70E3B0154007A075F /* NavForward.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavForward.png; path = resources/NavForward.png; sourceTree = "<group>"; };
 		44320C7717E9874700549CBD /* Reveal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Reveal.framework; path = "../Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework"; sourceTree = "<group>"; };
+		4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = buildnumber.xcconfig; sourceTree = "<group>"; };
 		443A64AD114F5EDB0093B4B2 /* splashes.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; name = splashes.zip; path = resources/splashes.zip; sourceTree = "<group>"; };
 		443A7C32115094E00093B4B2 /* FrotzCommonWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzCommonWebView.h; sourceTree = "<group>"; };
 		443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzCommonWebView.m; sourceTree = "<group>"; };
@@ -703,6 +704,7 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
+				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
 				445E9395160FFF420098DBE7 /* DropboxSDK.framework */,
 				44550A7E1277B39300CDEA97 /* TO-DO.txt */,
 				447036B1123335C400E15D5B /* Settings.bundle */,
@@ -1109,6 +1111,7 @@
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
 				4431B76C0E204F52001E5DAD /* CopyFiles */,
 				44FD062B162667E5001E940A /* ShellScript */,
+				4433A76919BF54B200EC8D98 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -1252,6 +1255,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4433A76919BF54B200EC8D98 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo Build Number $CONFIGURATION\ntail -1 buildnumber.xcconfig\nif [ \"$CONFIGURATION\" = \"Distribution\" ]; then    # AdHoc_Distribution\n    /usr/bin/perl -pe 's/(BUILD_NUMBER = )(\\d+)/$1.($2+1)/eg' -i buildnumber.xcconfig\nfi";
+		};
 		44A2E71F11227AA000E35CCC /* Copy bundled stories */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1447,6 +1463,7 @@
 		};
 		1D6058950D05DD3E006BFB54 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1474,6 +1491,7 @@
 		};
 		44954F9E0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_ENTITLEMENTS = "";
@@ -1506,6 +1524,7 @@
 		};
 		44954F9F0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1629,6 +1648,7 @@
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
