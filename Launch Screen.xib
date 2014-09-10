@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6245" systemVersion="13E28" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Frotz-1024x1024.png" translatesAutoresizingMaskIntoConstraints="NO" id="9wP-4t-w2h">
+                    <rect key="frame" x="8" y="0.0" width="398" height="736"/>
+                </imageView>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="9wP-4t-w2h" firstAttribute="trailing" secondItem="iN0-l3-epB" secondAttribute="trailingMargin" id="054-8Y-SdR"/>
+                <constraint firstAttribute="bottomMargin" secondItem="9wP-4t-w2h" secondAttribute="bottom" id="O74-iu-88O"/>
+                <constraint firstAttribute="bottom" secondItem="9wP-4t-w2h" secondAttribute="bottom" id="Zue-UC-nVL"/>
+                <constraint firstItem="9wP-4t-w2h" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="topMargin" id="aGh-43-t3a"/>
+                <constraint firstItem="9wP-4t-w2h" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="iZU-yb-eCm"/>
+                <constraint firstItem="9wP-4t-w2h" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leadingMargin" id="txl-HQ-Z7k"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina55"/>
+            <variation key="default">
+                <mask key="constraints">
+                    <exclude reference="O74-iu-88O"/>
+                    <exclude reference="aGh-43-t3a"/>
+                </mask>
+            </variation>
+            <point key="canvasLocation" x="423.5" y="944"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="Frotz-1024x1024.png" width="1024" height="1024"/>
+    </resources>
+</document>
