@@ -537,6 +537,8 @@ int gli_legal_keycode(glui32 key)
 glui32 gli_input_from_native(glui32 key)
 {
     /* This is where illegal values get filtered out from character input */
+    if (key >= keycode_Func12 && key <= keycode_Unknown)
+        return key;
     if ( gli_bad_latin_key(key) || (key >= 0x100 && ! (gli_legal_keycode(key) || iswprint(glui32_to_wchar(key)))) )
         return keycode_Unknown;
     else
@@ -562,6 +564,18 @@ glui32 gli_translate_key(wint_t key)
             case L'\012': /* ctrl-J */
             case L'\015': /* ctrl-M */
                 arg = keycode_Return;
+                break;
+            case ZC_IP_ARROW_UP:
+                arg = keycode_Up;
+                break;
+            case ZC_IP_ARROW_DOWN:
+                arg = keycode_Down;
+                break;
+            case ZC_IP_ARROW_LEFT:
+                arg = keycode_Left;
+                break;
+            case ZC_IP_ARROW_RIGHT:
+                arg = keycode_Right;
                 break;
             default:
                 if ( key > 0x100 && ! iswprint(key) ) {

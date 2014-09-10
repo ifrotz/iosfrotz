@@ -24,6 +24,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         [m_commonCommands retain];
         m_mode = 0;
         m_lastCommonWordPicked = 0;
+        m_currHistoryItem = 0;
     }
     return self;
 }
@@ -164,6 +165,7 @@ const CGFloat kHistoryLineHeight = 20.0;
 
 - (void)clearHistory {
     [m_history removeAllObjects];
+    m_currHistoryItem = 0;
 }
 
 - (int)historyCount {
@@ -202,8 +204,34 @@ const CGFloat kHistoryLineHeight = 20.0;
     
     [m_history addObject: hItem];
     [[self tableView] reloadData];
+    m_currHistoryItem = [m_history count];
     return [m_history count]-1;
 }
+
+- (NSString*)getNextHistoryItem {
+    int count = [m_history count];
+    if (!count)
+        return @"";
+    if (m_currHistoryItem < count-1) {
+        ++m_currHistoryItem;
+        return [m_history objectAtIndex: m_currHistoryItem];
+    } else
+        m_currHistoryItem = count;
+    return @"";
+}
+
+- (NSString*)getPrevHistoryItem {
+    int count = [m_history count];
+    if (!count)
+        return @"";
+    if (m_currHistoryItem > 0) {
+        --m_currHistoryItem;
+        return [m_history objectAtIndex: m_currHistoryItem];
+    } else
+        m_currHistoryItem = -1;
+    return @"";
+}
+
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
