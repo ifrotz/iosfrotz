@@ -2111,6 +2111,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
     [self autosize];
+	[m_inputLine updatePosition];
     [self addKeyBoardLockGesture];
     [[m_storyBrowser detailsController] refresh];
 }
@@ -2122,6 +2123,11 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 -(CGRect) storyViewFullFrame {
     CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
     CGRect frame = CGRectMake(0, 0, 0, 0);
+	if (applicationFrame.size.height < applicationFrame.size.width) { // iOS 8, AppFrame is rotated in landscape mode, detect and undo
+		CGFloat t = applicationFrame.size.height;
+		applicationFrame.size.height = applicationFrame.size.width;
+		applicationFrame.size.width = t;
+	}
     float navHeight = [self.navigationController.navigationBar bounds].size.height;
 #if UseRichTextView
     float statusHeight = 0;

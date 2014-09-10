@@ -214,6 +214,8 @@
 	<string></string>
 	<key>UIFileSharingEnabled</key>
 	<false/>
+	<key>UILaunchStoryboardName</key>
+	<string>Launch Screen</string>
 	<key>UIPrerenderedIcon</key>
 	<false/>
 	<key>UIStatusBarStyle</key>

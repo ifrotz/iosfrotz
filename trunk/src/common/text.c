@@ -1063,7 +1063,9 @@ int completion (const zchar *buffer, zchar *result)
     int i;
     
     *result = 0;
-    
+	
+	if (!buffer)
+		return 2;
     /* Copy last word to "decoded" string */
     
     len = 0;
