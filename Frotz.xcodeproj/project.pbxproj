@@ -195,8 +195,8 @@
 		44D013AD1372707D00B7F616 /* NetworkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A61372707D00B7F616 /* NetworkController.m */; };
 		44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D013AE1372787E00B7F616 /* SystemConfiguration.framework */; };
 		44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44D013B01372799D00B7F616 /* ftp_commands.plist */; };
-		44D70B1B19C0F2B200D0F154 /* Frotz-1024x1024.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA420D15E987A1007F61DA /* Frotz-1024x1024.png */; };
-		44D70B1E19C0FB5100D0F154 /* Frotz-1536x2008.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA41FC15E980BA007F61DA /* Frotz-1536x2008.png */; };
+		44D3F4D919C147BB00BFF014 /* Frotz-2048x2048B.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */; };
+		44D3F4DA19C147BB00BFF014 /* Frotz-2048x2048F.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */; };
 		44D71CE719882F5300F4AD9A /* Frotz-60x60.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE019882F5300F4AD9A /* Frotz-60x60.png */; };
 		44D71CE819882F5300F4AD9A /* Frotz-76x76.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE119882F5300F4AD9A /* Frotz-76x76.png */; };
 		44D71CE919882F5300F4AD9A /* Frotz-120x120.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE219882F5300F4AD9A /* Frotz-120x120.png */; };
@@ -546,6 +546,8 @@
 		44D013A61372707D00B7F616 /* NetworkController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkController.m; sourceTree = "<group>"; };
 		44D013AE1372787E00B7F616 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		44D013B01372799D00B7F616 /* ftp_commands.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ftp_commands.plist; path = resources/ftp_commands.plist; sourceTree = "<group>"; };
+		44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-2048x2048B.png"; path = "resources/Frotz-2048x2048B.png"; sourceTree = "<group>"; };
+		44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-2048x2048F.png"; path = "resources/Frotz-2048x2048F.png"; sourceTree = "<group>"; };
 		44D71CE019882F5300F4AD9A /* Frotz-60x60.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-60x60.png"; path = "resources/Frotz-60x60.png"; sourceTree = "<group>"; };
 		44D71CE119882F5300F4AD9A /* Frotz-76x76.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-76x76.png"; path = "resources/Frotz-76x76.png"; sourceTree = "<group>"; };
 		44D71CE219882F5300F4AD9A /* Frotz-120x120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-120x120.png"; path = "resources/Frotz-120x120.png"; sourceTree = "<group>"; };
@@ -742,6 +744,8 @@
 			isa = PBXGroup;
 			children = (
 				44F69CFF19C118E000ECADD0 /* Launch Screen.xib */,
+				44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */,
+				44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */,
 				44AF586A19491BB900E3EF8A /* locale */,
 				446B9D960E2059E3002BDD65 /* Games */,
 				8D1107310486CEB800E47090 /* Info.plist */,
@@ -1165,8 +1169,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44D70B1E19C0FB5100D0F154 /* Frotz-1536x2008.png in Resources */,
-				44D70B1B19C0F2B200D0F154 /* Frotz-1024x1024.png in Resources */,
 				446B9DA00E2059E3002BDD65 /* Games in Resources */,
 				443149C50E3B0077007A075F /* NavBack.png in Resources */,
 				443149D80E3B0154007A075F /* NavForward.png in Resources */,
@@ -1219,8 +1221,10 @@
 				44D71CEC19882F5300F4AD9A /* icon-keyboard@2x.png in Resources */,
 				4485D052196E4F33005A19AD /* Icon-76.png in Resources */,
 				44D71CE719882F5300F4AD9A /* Frotz-60x60.png in Resources */,
+				44D3F4D919C147BB00BFF014 /* Frotz-2048x2048B.png in Resources */,
 				4485D053196E4F33005A19AD /* Icon-76@2x.png in Resources */,
 				44DA423015E9D44A007F61DA /* Icon-Small-50.png in Resources */,
+				44D3F4DA19C147BB00BFF014 /* Frotz-2048x2048F.png in Resources */,
 				44D71CEB19882F5300F4AD9A /* icon-keyboard.png in Resources */,
 				44DA423115E9D44A007F61DA /* Icon-Small-50@2x.png in Resources */,
 				44DA423215E9D44A007F61DA /* Icon-Small.png in Resources */,
