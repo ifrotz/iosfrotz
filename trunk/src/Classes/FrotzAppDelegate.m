@@ -63,6 +63,7 @@
 }
 
 bool gLargeScreenDevice;
+int gLargeScreenPhone = 0;
 bool gUseSplitVC;
 
 //CGImageRef UIGetScreenImage(void);
@@ -73,6 +74,7 @@ bool gUseSplitVC;
     CGRect rect = [[UIScreen mainScreen] bounds];
 
     gLargeScreenDevice = ((UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad) || (rect.size.width >= 760));
+	gLargeScreenPhone = (rect.size.height >= 375 && rect.size.width >= 375) + (rect.size.height >= 414 && rect.size.width >= 414);
     gUseSplitVC = gLargeScreenDevice;
     //Create a full-screen window
     m_window = [[FrotzWindow alloc] initWithFrame:rect];

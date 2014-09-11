@@ -125,6 +125,7 @@ void iphone_recompute_screensize();
 extern int iphone_ifrotz_verbose_debug;
 
 extern bool gLargeScreenDevice;
+extern int gLargeScreenPhone;
 extern bool gUseSplitVC;
 
 #define kFrotzGameDir "Games"
