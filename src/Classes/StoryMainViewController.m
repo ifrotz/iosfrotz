@@ -46,7 +46,7 @@
 #include <stdlib.h>
 
 #define kDefaultTextViewMinWidth 65
-#define kDefaultTextViewWidth (gLargeScreenDevice ? 80 : kDefaultTextViewMinWidth)
+#define kDefaultTextViewWidth ((gLargeScreenDevice || gLargeScreenPhone) ? 80 : kDefaultTextViewMinWidth)
 #define kDefaultTextViewHeight 60
 
 
@@ -2520,17 +2520,18 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
+	bool normalSizeFixedFont = gLargeScreenDevice || gLargeScreenPhone>1;
     [m_storyView setFontFamily: [font familyName] size: m_fontSize];
-    int fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
+    int fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
     
-    m_statusFixedFontSize = gLargeScreenDevice ? 15 : 8;
+	m_statusFixedFontSize = gLargeScreenDevice ? 15 : normalSizeFixedFont ? 9 : 8;
     NSString *statusFixedFontFamily = [[m_statusLine fixedFont] familyName];
     [m_statusLine setFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
-    m_statusFixedFontWidth = !gLargeScreenDevice ? 5 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4;
-    m_statusFixedFontPixelHeight = !gLargeScreenDevice ? 9 : [fixedFont leading];
+    m_statusFixedFontWidth = !normalSizeFixedFont ? 5 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4;
+    m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont leading];
     
     if (gStoryInterp == kGlxStory) {
         int c = [m_glkViews count];
