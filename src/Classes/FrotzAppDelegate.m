@@ -72,7 +72,7 @@ bool gUseSplitVC;
     // Configure and show the window
     CGRect rect = [[UIScreen mainScreen] bounds];
 
-    gLargeScreenDevice = ((UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad) || (rect.size.width > 480));
+    gLargeScreenDevice = ((UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad) || (rect.size.width >= 760));
     gUseSplitVC = gLargeScreenDevice;
     //Create a full-screen window
     m_window = [[FrotzWindow alloc] initWithFrame:rect];
