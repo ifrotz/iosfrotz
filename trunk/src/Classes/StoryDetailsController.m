@@ -441,19 +441,25 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation {
     if (m_flipper) {
+		CGPoint center = m_textFieldsView.superview.center;
         CGRect textRect = m_textFieldsView.frame;
         CGRect flipRect = m_flipper.frame;
         CGRect butttonsRect = m_buttonsView.frame;
         [m_textFieldsView.superview bringSubviewToFront:m_textFieldsView];
-        
+
         if (UIDeviceOrientationIsLandscape(toInterfaceOrientation)) {
             if ([m_descriptionWebView superview] && ![m_descriptionWebView isHidden])
                 [self toggleArtDescript];
-            flipRect.origin = CGPointMake(textRect.origin.x + butttonsRect.size.width - flipRect.size.width + 20, textRect.origin.y);
+//			flipRect.origin = CGPointMake(textRect.origin.x + butttonsRect.size.width - flipRect.size.width + 20, textRect.origin.y);
+            flipRect.origin = CGPointMake(center.x, textRect.origin.y);
+			m_artworkView.center = CGPointMake(flipRect.size.width/2, m_artworkView.center.y);
             m_infoButton.hidden = YES;
         } else {
+			flipRect.size.width = butttonsRect.size.width;
+			m_textFieldsView.center = CGPointMake(center.x, m_textFieldsView.center.y);
             m_flipper.transform = CGAffineTransformMakeScale(1.0, 1.0);
-            flipRect.origin = CGPointMake(0, textRect.origin.y + textRect.size.height);
+			CGFloat flipX = m_flipper.superview.bounds.size.width/2-flipRect.size.width/2;
+            flipRect.origin = CGPointMake(flipX, textRect.origin.y + textRect.size.height);
             m_infoButton.hidden = NO;
         }
         flipRect.size.height = butttonsRect.origin.y - flipRect.origin.y;
@@ -463,6 +469,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         m_flipper.frame = flipRect;
         CGRect webFrame = m_descriptionWebView.frame;
         webFrame.size.height = flipRect.size.height;
+		webFrame.size.width = flipRect.size.width - webFrame.origin.x*2;
         m_descriptionWebView.frame = webFrame;
     }
 
@@ -481,10 +488,10 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 //    m_portraitCoverLabel.hidden = YES;
     if (gLargeScreenDevice) {
-        CGPoint center = [m_artworkView.superview center];
+		CGPoint center = [m_artworkView.superview center];
         center.y = m_TUIDField.center.y + artBounds.size.height/2.0 + 20;
         [m_artworkView setCenter: center];
-    }
+	}
     [m_artworkLabel setCenter: [m_artworkView center]];
 }
 

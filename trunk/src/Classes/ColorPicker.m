@@ -277,9 +277,11 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 }
 
 -(void)mousePositionToValue:(CGPoint)point {
-    unsigned int y = (unsigned int)point.y;
-    if (y >= m_height)
-	y = m_height;
+    int y = (int)point.y;
+	if (y < 0)
+		y = 0;
+	else if (y >= m_height)
+		y = m_height;
     float value = 1.0f - (float)y / (float)m_height;
     
     float rgba[4] = {0.0, 0.0, 0.0, 1.0};
@@ -635,7 +637,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 - (void)loadView {
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    BOOL fullScreenLarge = (frame.size.width > 320.0);
+    BOOL fullScreenLarge = (frame.size.width > 760);
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
@@ -705,7 +707,14 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
     CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : isPortrait ? 96.0f : 232.0f;
     CGFloat leftMargin = fullScreenLarge ? 32.0f : isPortrait ? 4.0f : 16.0f;
-    CGFloat hsvBaseYOrigin = !isPortrait && !fullScreenLarge ? 24.0f : colorTileHeight + (fullScreenLarge ? 48.0f : 48.0f);
+	CGFloat hsvBaseYOrigin = !isPortrait && !fullScreenLarge ? 24.0f : colorTileHeight + 48.0f;
+	CGFloat rightMarin = 60;
+	if (isPortrait && !fullScreenLarge && frame.size.height > 600) {
+		leftMargin += 20;
+		colorTileHeight += 60;
+		hsvBaseYOrigin += 120;
+		rightMarin += 20;
+	}
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f,
                                        isPortrait || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-328,
                                        colorTileHeight);
@@ -721,7 +730,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
         [m_valuePicker setBarWidth: 64];
     } else {
         [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-        [m_valuePicker setFrame: CGRectMake(leftMargin+radius*2, hsvBaseYOrigin, 56.0f, radius*2)];
+		[m_valuePicker setFrame: CGRectMake(frame.size.width - (isPortrait ? rightMarin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
         [m_valuePicker setBarWidth: 32];
     }
     
