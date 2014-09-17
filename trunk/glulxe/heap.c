@@ -39,7 +39,7 @@ static heapblock_t *heap_tail = NULL;
    Set the heap state to inactive, and free the block lists. This is
    called when the game starts or restarts.
 */
-void heap_clear()
+void heap_clear_glulxe()
 {
   while (heap_head) {
     heapblock_t *blo = heap_head;
@@ -65,14 +65,14 @@ void heap_clear()
 /* heap_is_active():
    Returns whether the heap is active.
 */
-int heap_is_active() {
+int heap_is_active_glulxe() {
   return (heap_start != 0);
 }
 
 /* heap_get_start():
    Returns the start address of the heap, or 0 if the heap is not active.
  */
-glui32 heap_get_start() {
+glui32 heap_get_start_glulxe() {
   return heap_start;
 }
 
@@ -82,7 +82,7 @@ glui32 heap_get_start() {
    the interpreter to unconditionally refuse.
    Returns the memory address of the block, or 0 if the operation failed.
 */
-glui32 heap_alloc(glui32 len)
+glui32 heap_alloc_glulxe(glui32 len)
 {
   heapblock_t *blo, *newblo;
 
@@ -225,7 +225,7 @@ glui32 heap_alloc(glui32 len)
 /* heap_free():
    Free a heap block. If necessary, deactivate the heap.
 */
-void heap_free(glui32 addr)
+void heap_free_glulxe(glui32 addr)
 {
   heapblock_t *blo;
 
@@ -239,7 +239,7 @@ void heap_free(glui32 addr)
   blo->isfree = TRUE;
   alloc_count--;
   if (alloc_count <= 0) {
-    heap_clear();
+    heap_clear_glulxe();
   }
 
   /* heap_sanity_check(); */
@@ -264,7 +264,7 @@ void heap_free(glui32 addr)
    The array returned in summary must be freed with glulx_free() after
    the caller uses it.
 */
-int heap_get_summary(glui32 *valcount, glui32 **summary)
+int heap_get_summary_glulxe(glui32 *valcount, glui32 **summary)
 {
   glui32 *arr, len, pos; //, lx;
   heapblock_t *blo;
@@ -308,7 +308,7 @@ int heap_get_summary(glui32 *valcount, glui32 **summary)
    Return 0 for success. Otherwise the operation failed (and, most
    likely, caused a fatal error).
 */
-int heap_apply_summary(glui32 valcount, glui32 *summary)
+int heap_apply_summary_glulxe(glui32 valcount, glui32 *summary)
 {
   glui32 lx, jx, lastend;
 
@@ -416,7 +416,7 @@ static void heap_dump()
    Check the validity of the heap. Throw a fatal error if anything is
    wrong.
 */
-void heap_sanity_check()
+void heap_sanity_check_glulxe()
 {
   heapblock_t *blo, *last;
   int livecount;

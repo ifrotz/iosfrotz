@@ -22,4 +22,5 @@ UIImage *drawRectInUIImage(unsigned int color, CGFloat x, CGFloat y, CGFloat wid
 UIImage *createBlankUIImage(unsigned int bgColor, size_t destWidth, size_t destHeight);
 NSData *imageDataFromBlorb(NSString *blorbFile);
 BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid);
+BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader);
 UIColor *UIColorFromInt(unsigned int color);

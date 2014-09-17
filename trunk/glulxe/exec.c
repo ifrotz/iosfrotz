@@ -33,29 +33,26 @@ void execute_loop()
 #endif /* FLOAT_SUPPORT */
 
   if (do_autosave) {
-    frefid_t fref;
-    strid_t fstr;
-    fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
-    if (!fref)
-	fatal_error("unable to create glulx autorestore fileref");
-    stream_set_iosys(2, 0);
-    fstr = glk_stream_open_file(fref, filemode_Read, 0);
-    if (fstr) {
-	push_callstub(0, 0);
-	value = perform_restore(fstr);
-	pop_callstub(value);
-	gli_delete_stream(fstr);
-
-	// create root textbuffer
-	window_t *win = glk_window_open(0, 0, iphone_textview_height, wintype_TextBuffer, 0);
-	win->line_request = 1;
-	window_textbuffer_t *dwin = win->data;
-	dwin->inbuf = 1;
-    } else
-	printf("unable to open autorestore file\n");
-    do_autosave = 0;
+      frefid_t fref;
+      strid_t fstr;
+      fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
+      if (!fref)
+          fatal_error("unable to create glulx autorestore fileref");
+      stream_set_iosys(2, 0);
+      fstr = glk_stream_open_file(fref, filemode_Read, 0);
+      if (fstr) {
+          push_callstub(0, 0);
+          value = perform_restore(fstr);
+          pop_callstub(value);
+          gli_delete_stream(fstr);
+          gli_delete_fileref(fref);
+      } else {
+          gli_delete_fileref(fref);
+          printf("unable to open autorestore file\n");
+      }
+      do_autosave = 0;
   }
-
+    
   while (!done_executing && !finished) {
 
     profile_tick();
@@ -646,23 +643,29 @@ void execute_loop()
         value = inst[1].value;
         arglist = pop_arguments(value, 0);
         val0 = perform_glk(inst[0].value, value, arglist);
-	
-	if (do_autosave) {
-	    frefid_t fref;
-	    strid_t fstr;
-	    fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
-	    if (!fref)
-		fatal_error("unable to create glulx autosave file");
-	    fstr = glk_stream_open_file(fref, filemode_Write, 0);
 
-	    push_callstub(inst[1].desttype, inst[1].value);
-	    value = perform_save(fstr);
-	    gli_delete_stream(fstr);
-	    pop_callstub(value);
-	    do_autosave = 0;	    
-	}
-	
-	
+        if (do_autosave) {
+            frefid_t fref;
+            strid_t fstr;
+            fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
+            if (!fref)
+                fatal_error("unable to create glulx autosave file");
+            fstr = glk_stream_open_file(fref, filemode_Write, 0);
+            
+            push_callstub(inst[1].desttype, inst[1].value);
+            value = saveToFileStrWithClasses_glulxe(fstr);
+            //        S1 = saveToFileStrWithClasses (base, sp, fstr);
+            
+            gli_delete_stream(fstr);
+            gli_delete_fileref(fref);
+            
+            pop_callstub(value);
+            if (!value)
+                os_mark_recent_save();
+            do_autosave = 0;
+            autosave_done = 1;
+        }
+
         store_operand(inst[2].desttype, inst[2].value, val0);
         profile_out();
         break;
@@ -704,7 +707,7 @@ void execute_loop()
 
       case op_save:
         push_callstub(inst[1].desttype, inst[1].value);
-        value = perform_save(find_stream_by_id(inst[0].value));
+        value = perform_save(find_stream_by_id(inst[0].value), 0, NULL, NULL);
         pop_callstub(value);
         break;
 
@@ -797,18 +800,18 @@ void execute_loop()
         }
         break;
       case op_malloc:
-        value = heap_alloc(inst[0].value);
+        value = heap_alloc_glulxe(inst[0].value);
         store_operand(inst[1].desttype, inst[1].value, value);
         break;
       case op_mfree:
-        heap_free(inst[0].value);
+        heap_free_glulxe(inst[0].value);
         break;
 
       case op_accelfunc:
-        accel_set_func(inst[0].value, inst[1].value);
+        accel_set_func_glulxe(inst[0].value, inst[1].value);
         break;
       case op_accelparam:
-        accel_set_param(inst[0].value, inst[1].value);
+        accel_set_param_glulxe(inst[0].value, inst[1].value);
         break;
 
 #ifdef FLOAT_SUPPORT

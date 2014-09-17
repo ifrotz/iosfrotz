@@ -53,13 +53,13 @@ glui32 do_gestalt(glui32 val, glui32 val2)
 #endif /* FIXED_MEMSIZE */
 
   case gestulx_MAllocHeap:
-    return heap_get_start();
+    return heap_get_start_glulxe();
 
-  case gestulx_Acceleration:
+  case gestulx_Acceleration: // disable until we resolve git conflicts
     return 1; /* We can do accelfunc/accelparam. */
 
   case gestulx_AccelFunc:
-    if (accel_find_func(val2))
+    if (accel_find_func_glulxe(val2))
       return 1; /* We know this accelerated function. */
     return 0;
 

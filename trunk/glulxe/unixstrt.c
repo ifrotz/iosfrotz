@@ -8,12 +8,12 @@
 #include "glkstart.h" /* This comes with the Glk library. */
 
 /* The only command-line argument is the filename. */
-glkunix_argumentlist_t glkunix_arguments[] = {
-  { "", glkunix_arg_ValueFollows, "filename: The game file to load." },
-  { NULL, glkunix_arg_End, NULL }
-};
+//static glkunix_argumentlist_t glkunix_arguments[] = {
+//  { "", glkunix_arg_ValueFollows, "filename: The game file to load." },
+//  { NULL, glkunix_arg_End, NULL }
+//};
 
-int glkunix_startup_code(glkunix_startup_t *data)
+int glkunix_startup_code_glulxe(glkunix_startup_t *data)
 {
   /* It turns out to be more convenient if we return TRUE from here, even 
      when an error occurs, and display an error in glk_main(). */
@@ -59,6 +59,7 @@ int glkunix_startup_code(glkunix_startup_t *data)
   }
 }
 
+#if 0 // redundant with git version
 extern strid_t gli_stream_open_pathname(char *pathname, int textmode, 
     glui32 rock);
 
@@ -78,3 +79,4 @@ int pref_precise_timing = FALSE;
 int pref_historylen = 20;
 int pref_prompt_defaults = TRUE;
 
+#endif

@@ -215,7 +215,7 @@ glui32 perform_restoreundo()
 
   if (res == 0) {
     if (heapsumarr)
-      res = heap_apply_summary(heapsumlen, heapsumarr);
+      res = heap_apply_summary_glulxe(heapsumlen, heapsumarr);
   }
 
   if (res == 0) {
@@ -239,7 +239,7 @@ glui32 perform_restoreundo()
    Write the state to the output stream. This returns 0 on success,
    1 on failure.
 */
-glui32 perform_save(strid_t str)
+glui32 perform_save(strid_t str, int objectCount, void *objectsP, SaveClassesCallback saveClassesCallback)
 {
   dest_t dest;
   int ix;
@@ -334,6 +334,13 @@ glui32 perform_save(strid_t str)
   }
   if (res == 0 && (stacklen & 1) != 0) {
     res = write_byte(&dest, 0);
+  }
+    
+  if (saveClassesCallback) { // this is only used by autosave
+    strid_t oldStr = glk_stream_get_current ();
+    glk_stream_set_current (str);
+    dest.pos += (*saveClassesCallback)(objectCount, objectsP);
+    glk_stream_set_current (oldStr);
   }
 
   filelen = dest.pos - filestart;
@@ -455,6 +462,12 @@ glui32 perform_restore(strid_t str)
     }
     else if (chunktype == IFFID('S', 't', 'k', 's')) {
       res = read_stackstate(&dest, chunklen, TRUE);
+    } else if (chunktype == IFFID('i', 'F', 'z', 'A')) {
+      if (!restoreClassesChunk_glulxe(str, chunklen))
+        return 1;
+      res = 0;
+      dest.pos += chunklen;
+      break;
     }
     else {
       /* Unknown chunk type. Skip it. */
@@ -481,7 +494,7 @@ glui32 perform_restore(strid_t str)
          be out of order. We'll sort it. */
       glulx_sort(heapsumarr+2, (heapsumlen-2)/2, 2*sizeof(glui32),
         &sort_heap_summary);
-      res = heap_apply_summary(heapsumlen, heapsumarr);
+      res = heap_apply_summary_glulxe(heapsumlen, heapsumarr);
     }
   }
 
@@ -652,7 +665,7 @@ static glui32 read_memstate(dest_t *dest, glui32 chunklen)
   int runlen;
   unsigned char ch, ch2;
 
-  heap_clear();
+  heap_clear_glulxe();
 
   res = read_long(dest, &newlen);
   if (res)
@@ -713,7 +726,7 @@ static glui32 write_heapstate(dest_t *dest, int portable)
   glui32 sumlen;
   glui32 *sumarray;
 
-  res = heap_get_summary(&sumlen, &sumarray);
+  res = heap_get_summary_glulxe(&sumlen, &sumarray);
   if (res)
     return res;
 

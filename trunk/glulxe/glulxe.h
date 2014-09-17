@@ -208,18 +208,22 @@ extern void free_temp_string(char *str);
 extern void free_temp_ustring(glui32 *str);
 
 /* heap.c */
-extern void heap_clear(void);
-extern int heap_is_active(void);
-extern glui32 heap_get_start(void);
-extern glui32 heap_alloc(glui32 len);
-extern void heap_free(glui32 addr);
-extern int heap_get_summary(glui32 *valcount, glui32 **summary);
-extern int heap_apply_summary(glui32 valcount, glui32 *summary);
-extern void heap_sanity_check(void);
+extern void heap_clear_glulxe(void);
+extern int heap_is_active_glulxe(void);
+extern glui32 heap_get_start_glulxe(void);
+extern glui32 heap_alloc_glulxe(glui32 len);
+extern void heap_free_glulxe(glui32 addr);
+extern int heap_get_summary_glulxe(glui32 *valcount, glui32 **summary);
+extern int heap_apply_summary_glulxe(glui32 valcount, glui32 *summary);
+extern void heap_sanity_check_glulxe(void);
 
 /* serial.c */
 extern int init_serial(void);
-extern glui32 perform_save(strid_t str);
+typedef glui32 (*SaveClassesCallback)(int objectCount, void *objects);
+glui32 saveToFileStrWithClasses_glulxe (strid_t fstr);
+glui32 restoreClassesChunk_glulxe(strid_t file, glui32 chunkSize);
+
+extern glui32 perform_save(strid_t str, int objectCount, void *objectsP, SaveClassesCallback saveClassesCallback);
 extern glui32 perform_restore(strid_t str);
 extern glui32 perform_saveundo(void);
 extern glui32 perform_restoreundo(void);
@@ -250,6 +254,7 @@ extern glui32 do_gestalt(glui32 val, glui32 val2);
 
 /* glkop.c */
 extern int init_dispatch(void);
+extern void glulxe_shutdown_dispatch();
 extern glui32 perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist);
 extern strid_t find_stream_by_id(glui32 objid);
 
@@ -272,11 +277,11 @@ extern void profile_quit(void);
 
 /* accel.c */
 typedef glui32 (*acceleration_func)(glui32 argc, glui32 *argv);
-extern void init_accel(void);
-extern acceleration_func accel_find_func(glui32 index);
-extern acceleration_func accel_get_func(glui32 addr);
-extern void accel_set_func(glui32 index, glui32 addr);
-extern void accel_set_param(glui32 index, glui32 val);
+extern void init_accel_glulxe(void);
+extern acceleration_func accel_find_func_glulxe(glui32 index);
+extern acceleration_func accel_get_func_glulxe(glui32 addr);
+extern void accel_set_func_glulxe(glui32 index, glui32 addr);
+extern void accel_set_param_glulxe(glui32 index, glui32 val);
 
 #ifdef FLOAT_SUPPORT
 

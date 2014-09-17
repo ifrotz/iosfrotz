@@ -99,7 +99,7 @@ void setup_vm()
 
   /* Initialize various other things in the terp. */
   init_operands(); 
-  init_accel();
+  init_accel_glulxe();
   init_serial();
 
   /* Set up the initial machine state. */
@@ -132,7 +132,7 @@ void vm_restart()
   int res;
 
   /* Deactivate the heap (if it was active). */
-  heap_clear();
+  heap_clear_glulxe();
 
   /* Reset memory to the original size. */
   lx = change_memsize(origendmem, FALSE);
@@ -190,7 +190,7 @@ glui32 change_memsize(glui32 newlen, int internal)
   return 1;
 #else /* FIXED_MEMSIZE */
 
-  if ((!internal) && heap_is_active())
+  if ((!internal) && heap_is_active_glulxe())
     fatal_error("Cannot resize Glulx memory space while heap is active.");
 
   if (newlen < origendmem)

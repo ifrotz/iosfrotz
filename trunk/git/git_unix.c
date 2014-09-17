@@ -111,6 +111,9 @@ void glk_main ()
         fatalError ("could not open game file");
 
     gitWithStream (gStream, CACHE_SIZE, UNDO_SIZE);
+    git_shutdown_dispatch();
+
+    gStream = NULL;
 }
 
 #endif // USE_MMAP
