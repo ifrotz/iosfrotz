@@ -280,7 +280,7 @@ do_debug_step:
     glulxPC = READ_PC;     // Glulx program counter.
     glulxOpcode = READ_PC; // Glulx opcode number.
 
-#if 0
+#if 1
     if (glulxOpcode == op_glk) {
         //	setupAutosave();
     }
@@ -1378,33 +1378,33 @@ do_tailcall:
         S1 = git_perform_glk (L1, L2, (glui32*) args);
         sp = gStackPointer;
 	
-	if (do_autosave) {
-	    for (L3 = L2-1 ; L3 >= 0 ; --L3)
-		PUSH(savedArgs[L3]);
-
-	    frefid_t fref;
-	    strid_t fstr;
-	    fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
-	    if (!fref)
-		fatalError("unable to create glulx autosave file");
-	    fstr = glk_stream_open_file(fref, filemode_Write, 0);
-	    CHECK_FREE(4);
-	    PUSH (0); // DestType
-	    PUSH (0); // DestAddr
-	    PUSH (glulxPC);             // PC
- 	    PUSH ((frame - base) * 4);  // FramePtr
-
-	    S1 = saveToFileStrWithClasses (base, sp, fstr);
-	    gli_delete_stream(fstr);
-        gli_delete_fileref(fref);
-
-	    if (!S1)
-		os_mark_recent_save();
-	    do_autosave = 0; 
-	    autosave_done = 1;
-	    (void)POP; (void)POP; (void)POP; (void)POP; 
-	}
-
+        if (do_autosave) {
+            for (L3 = L2-1 ; L3 >= 0 ; --L3)
+                PUSH(savedArgs[L3]);
+            
+            frefid_t fref;
+            strid_t fstr;
+            fref = gli_new_fileref(AUTOSAVE_FILE, fileusage_BinaryMode|fileusage_Data, 0);
+            if (!fref)
+                fatalError("unable to create glulx autosave file");
+            fstr = glk_stream_open_file(fref, filemode_Write, 0);
+            CHECK_FREE(4);
+            PUSH (0); // DestType
+            PUSH (0); // DestAddr
+            PUSH (glulxPC);             // PC
+            PUSH ((frame - base) * 4);  // FramePtr
+            
+            S1 = saveToFileStrWithClasses (base, sp, fstr);
+            gli_delete_stream(fstr);
+            gli_delete_fileref(fref);
+            
+            if (!S1)
+                os_mark_recent_save();
+            do_autosave = 0;
+            autosave_done = 1;
+            (void)POP; (void)POP; (void)POP; (void)POP;
+        }
+    
         NEXT;
 
     do_binarysearch:

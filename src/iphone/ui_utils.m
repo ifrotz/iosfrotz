@@ -329,6 +329,62 @@ CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh)
     return context;
 }
 
+BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
+    BOOL found = NO;
+    FILE *fp;
+    if ((fp = os_path_open(filename, "rb")) == NULL)
+        return NO;
+    unsigned char zblorbbuf[48];
+    unsigned char *z;
+    unsigned int fileSize=0, chunkSize=0, pos;
+    while (1) {
+        if (fread(zblorbbuf, 1, 12, fp)!=12)
+            break;
+        z = zblorbbuf;
+        if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l')
+            goto foundGLUL;
+        if (*z++ != 'F') break;
+        if (*z++ != 'O') break;
+        if (*z++ != 'R') break;
+        if (*z++ != 'M') break;
+        fileSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+        z += 4;
+        if (*z++ != 'I') break;
+        if (*z++ != 'F') break;
+        if (*z++ != 'R') break;
+        if (*z   != 'S') break;
+        pos = 12;
+        while (pos < fileSize) {
+            if (fread(zblorbbuf, 1, 8, fp) != 8)
+                break;
+            pos += 8;
+            z = zblorbbuf+4;
+            chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+            if (chunkSize % 1 == 1)
+                chunkSize++;
+            z = zblorbbuf;
+            if (chunkSize >= 48 && z[0]=='G' && z[1]=='L' && z[2]=='U' && z[3]=='L') {
+                if (fread(zblorbbuf, 1, 48, fp)!=48)
+                    break;
+                if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l') {
+                foundGLUL:
+                    found = YES;
+                    if (glulHeader)
+                        memcpy(glulHeader, z, 48);
+                }
+                break;
+            } else {
+                pos += chunkSize;
+                fseek (fp, pos, SEEK_SET);
+            }
+        }
+        break;
+    }
+    fclose(fp);
+    return found;
+}
+
+
 BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid) {
     const char *filename = [blorbFile UTF8String];
     BOOL found = NO;

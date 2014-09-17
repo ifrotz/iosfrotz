@@ -21,8 +21,9 @@ static void stream_hexnum(glsi32 val);
    The top-level routine. This does everything, and consequently is
    very simple. 
 */
-void glk_main()
+void glk_main_glulxe()
 {
+
   if (ginit_err) {
     fatal_error_2(ginit_err, ginit_err2);
     return;
@@ -51,7 +52,12 @@ void glk_main()
   finalize_vm();
 
   profile_quit();
-  glk_exit();
+  glk_window_close(NULL, NULL);
+  glk_stream_close(gamefile, NULL);
+  glulxe_shutdown_dispatch();
+  gamefile = 0;
+
+//  glk_exit();
 }
 #endif
 

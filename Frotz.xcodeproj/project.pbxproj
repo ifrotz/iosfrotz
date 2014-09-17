@@ -195,6 +195,23 @@
 		44D013AD1372707D00B7F616 /* NetworkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A61372707D00B7F616 /* NetworkController.m */; };
 		44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D013AE1372787E00B7F616 /* SystemConfiguration.framework */; };
 		44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44D013B01372799D00B7F616 /* ftp_commands.plist */; };
+		44D2DCF219C564FD00204E25 /* exec.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355BE1260497900BFB245 /* exec.c */; };
+		44D2DCF319C564FD00204E25 /* files.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355BF1260497900BFB245 /* files.c */; };
+		44D2DCF419C564FD00204E25 /* float.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C01260497900BFB245 /* float.c */; };
+		44D2DCF519C564FD00204E25 /* funcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C11260497900BFB245 /* funcs.c */; };
+		44D2DCF619C564FD00204E25 /* glkop.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C41260497900BFB245 /* glkop.c */; };
+		44D2DCF819C564FD00204E25 /* operand.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C91260497900BFB245 /* operand.c */; };
+		44D2DCF919C564FD00204E25 /* osdepend.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CA1260497900BFB245 /* osdepend.c */; };
+		44D2DCFA19C564FD00204E25 /* profile.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CB1260497900BFB245 /* profile.c */; };
+		44D2DCFB19C564FD00204E25 /* search.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CC1260497900BFB245 /* search.c */; };
+		44D2DCFC19C564FD00204E25 /* serial.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CD1260497900BFB245 /* serial.c */; };
+		44D2DCFD19C564FD00204E25 /* string.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CE1260497900BFB245 /* string.c */; };
+		44D2DCFE19C564FD00204E25 /* vm.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355CF1260497900BFB245 /* vm.c */; };
+		44D2DCFF19C5654200204E25 /* gestalt.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C21260497900BFB245 /* gestalt.c */; };
+		44D2DD0019C566EA00204E25 /* glkmain.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355E212604AF200BFB245 /* glkmain.c */; };
+		44D2DD0119C56B8600204E25 /* unixstrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 442356871260550600BFB245 /* unixstrt.c */; };
+		44D2DD0219C5713700204E25 /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355BD1260497900BFB245 /* accel.c */; };
+		44D2DD0319C5726400204E25 /* heap.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355C71260497900BFB245 /* heap.c */; };
 		44D3F4D919C147BB00BFF014 /* Frotz-2048x2048B.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */; };
 		44D3F4DA19C147BB00BFF014 /* Frotz-2048x2048F.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */; };
 		44D71CE719882F5300F4AD9A /* Frotz-60x60.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE019882F5300F4AD9A /* Frotz-60x60.png */; };
@@ -546,6 +563,7 @@
 		44D013A61372707D00B7F616 /* NetworkController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkController.m; sourceTree = "<group>"; };
 		44D013AE1372787E00B7F616 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		44D013B01372799D00B7F616 /* ftp_commands.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = ftp_commands.plist; path = resources/ftp_commands.plist; sourceTree = "<group>"; };
+		44D2DD0419C7F6A100204E25 /* glkautosave.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glkautosave.c; sourceTree = "<group>"; };
 		44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-2048x2048B.png"; path = "resources/Frotz-2048x2048B.png"; sourceTree = "<group>"; };
 		44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-2048x2048F.png"; path = "resources/Frotz-2048x2048F.png"; sourceTree = "<group>"; };
 		44D71CE019882F5300F4AD9A /* Frotz-60x60.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-60x60.png"; path = "resources/Frotz-60x60.png"; sourceTree = "<group>"; };
@@ -933,6 +951,7 @@
 		442358B9126187E500BFB245 /* glkios */ = {
 			isa = PBXGroup;
 			children = (
+				44D2DD0419C7F6A100204E25 /* glkautosave.c */,
 				44B583B81998A7700046F661 /* cgdate.c */,
 				4423590A1261894100BFB245 /* cgunicod.c */,
 				4423590B1261894100BFB245 /* gi_blorb.c */,
@@ -1432,6 +1451,23 @@
 				44690D48126A402500B283FF /* saveundo.c in Sources */,
 				44690D49126A402500B283FF /* search.c in Sources */,
 				44690D4A126A402500B283FF /* terp.c in Sources */,
+				44D2DD0219C5713700204E25 /* accel.c in Sources */,
+				44D2DD0019C566EA00204E25 /* glkmain.c in Sources */,
+				44D2DCFF19C5654200204E25 /* gestalt.c in Sources */,
+				44D2DCF219C564FD00204E25 /* exec.c in Sources */,
+				44D2DCF319C564FD00204E25 /* files.c in Sources */,
+				44D2DCF419C564FD00204E25 /* float.c in Sources */,
+				44D2DCF519C564FD00204E25 /* funcs.c in Sources */,
+				44D2DCF619C564FD00204E25 /* glkop.c in Sources */,
+				44D2DD0319C5726400204E25 /* heap.c in Sources */,
+				44D2DCF819C564FD00204E25 /* operand.c in Sources */,
+				44D2DCF919C564FD00204E25 /* osdepend.c in Sources */,
+				44D2DCFA19C564FD00204E25 /* profile.c in Sources */,
+				44D2DCFB19C564FD00204E25 /* search.c in Sources */,
+				44D2DCFC19C564FD00204E25 /* serial.c in Sources */,
+				44D2DCFD19C564FD00204E25 /* string.c in Sources */,
+				44D2DD0119C56B8600204E25 /* unixstrt.c in Sources */,
+				44D2DCFE19C564FD00204E25 /* vm.c in Sources */,
 				446912F6126BED9300B283FF /* ipw_graphics.c in Sources */,
 				44D013A71372707D00B7F616 /* FtpConnection.m in Sources */,
 				44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */,

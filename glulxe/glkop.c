@@ -73,6 +73,11 @@
 #include "glulxe.h"
 #include "gi_dispa.h"
 #include "glkios.h"
+#include "glkios.h"
+#include "ipw_buf.h"
+#include "ipw_grid.h"
+#include "ipw_graphics.h"
+#include "iphone_frotz.h"
 
 typedef struct dispatch_splot_struct {
   int numwanted;
@@ -119,8 +124,9 @@ typedef struct classtable_struct {
 
 /* The list of hash tables, for the classes. */
 static int num_classes = 0;
+#define classes glulxe_classes
 classtable_t **classes = NULL;
-#define git_classes classes
+
 #define type_Window  gidisp_Class_Window
 #define type_Stream gidisp_Class_Stream
 #define type_File gidisp_Class_Fileref
@@ -1079,4 +1085,104 @@ void glulxe_retained_unregister(void *array, glui32 len,
   glulx_free(array);
   glulx_free(arref);
 }
+
+void glulxe_shutdown_dispatch() {
+    window_t *win = NULL;
+    stream_t *str = NULL;
+    fileref_t *fref = NULL;
+    gidispatch_set_object_registry(0, 0);
+    gidispatch_set_retained_registry(0, 0);
+    
+    for (win = glk_window_iterate(NULL, NULL);
+         win;
+         win = glk_window_iterate(win, NULL)) {
+        classes_remove(gidisp_Class_Window, win);
+    }
+    for (str = glk_stream_iterate(NULL, NULL);
+         str;
+         str = glk_stream_iterate(str, NULL)) {
+        classes_remove(gidisp_Class_Stream, str);
+    }
+    for (fref = glk_fileref_iterate(NULL, NULL);
+         fref;
+         fref = glk_fileref_iterate(fref, NULL)) {
+        classes_remove(gidisp_Class_Fileref, fref);
+    }
+    
+    while ((win = glk_window_iterate(NULL, NULL))) {
+        gli_delete_window(win);
+    }
+    while ((str = glk_stream_iterate(NULL, NULL))) {
+        gli_delete_stream(str);
+    }
+    while ((fref = glk_fileref_iterate(NULL, NULL))) {
+        gli_delete_fileref(fref);
+    }
+    
+    for (int classid=0; classid<num_classes; classid++) {
+        glulx_free(classes[classid]);
+        classes[classid] = 0;
+    }
+    glulx_free(classes);
+    classes = 0;
+}
+
+#define GlulxRAM (memmap)
+#include "../glkios/glkautosave.c"
+
+glui32 saveObjectClasses_glulxe(int objectCount, void * objectsP) {
+    char buffer[4];
+    glui32 len = 0;
+    
+    glk_put_string ("iFzA");
+    
+    Write4 (buffer, objectCount * sizeof(glk_object_save_t));
+    glk_put_buffer (buffer, 4);
+    
+    Write4 (buffer, kFrotzGlkClassChunkVersionNumForSave);
+    glk_put_buffer (buffer, 4);
+    len += 4;
+    
+    Write4 (buffer, objectCount);
+    glk_put_buffer (buffer, 4);
+    len += 4;
+    
+    glk_put_buffer ((char *) objectsP, objectCount*sizeof(glk_object_save_t));
+    len += objectCount*sizeof(glk_object_save_t);
+    return len;
+}
+
+
+glui32 saveToFileStrWithClasses_glulxe (strid_t fstr) {
+    glk_object_save_t *objects = NULL;
+    wingfxcount = 0;
+    int objects_count = classes_iter(&objects);
+    glui32 ret = perform_save(fstr, objects_count, objects, saveObjectClasses_glulxe);
+    free(objects);
+    return ret;
+}
+
+glui32 restoreClassesChunk_glulxe(strid_t file, glui32 chunkSize) {
+    glk_object_save_t *objects;
+    char buffer [4];
+    
+    wingfxcount = 0;
+    glk_get_buffer_stream (file, buffer, 4);
+    int versionNum = Read4(buffer);
+    
+    if (versionNum >= FrotzGlkClassChunkVersionNumV1 && versionNum <= FrotzGlkClassChunkVersionNumCurrent) {
+        glk_get_buffer_stream (file, buffer, 4);
+        int objects_count = Read4(buffer);
+        
+        objects = calloc(objects_count, sizeof(glk_object_save_t));
+        glk_get_buffer_stream(file, (char *)objects, chunkSize);
+        int status = classes_restore(objects, objects_count, versionNum);
+        free(objects);
+        return status;
+    } else {
+        iphone_win_puts(0, "\n[Can't restore autosave - unknown Glk Class Save version number]\n");
+        return FALSE;
+    }
+}
+
 

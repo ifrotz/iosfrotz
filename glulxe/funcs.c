@@ -21,7 +21,7 @@ void enter_function(glui32 addr, glui32 argc, glui32 *argv)
   glui32 modeaddr, opaddr, val;
   int loctype, locnum;
 
-  accelfunc = accel_get_func(addr);
+  accelfunc = accel_get_func_glulxe(addr);
   if (accelfunc) {
     profile_in(addr, TRUE);
     val = accelfunc(argc, argv);

@@ -856,7 +856,22 @@ void run_zinterp(bool autorestore) {
     
     reset_memory ();
 }
+
+BOOL gForceUseGlulxe = NO;
+
+void glk_main_glulxe();
+
 void run_glxinterp(const char *story, bool autorestore) {
+    char glulHeader[48];
+
+    BOOL useGlulxe = gForceUseGlulxe;
+    
+    if (readGLULheaderFromUlxOrBlorb(story, glulHeader)) {
+        // Inform-created stories have 'INFO' at offset 36.
+        if (glulHeader[36]!='I' && glulHeader[4]==0 && glulHeader[5]==2) // glulxa-asssembled, probably SuperGLUS?
+            useGlulxe = YES;
+    }
+
     
     gStoryInterp = kGlxStory;
     
@@ -873,12 +888,18 @@ void run_glxinterp(const char *story, bool autorestore) {
     gli_initialize_windows();
     gli_initialize_events();
     
-    glkunix_startup_code(&glkunix_startup);
-    
+    if (useGlulxe)
+        glkunix_startup_code_glulxe(&glkunix_startup);
+    else
+        glkunix_startup_code(&glkunix_startup);
+
     if (autorestore)
         do_autosave = 1;
     
-    glk_main();
+    if (useGlulxe)
+        glk_main_glulxe();
+    else
+        glk_main();
 
     freeGlkImageCache();
 
@@ -2878,7 +2899,7 @@ char *tempStatusLineScreenBuf() {
         else
             grewStatus = 0;
         fast=YES;
-        topWinSize = top_win_height * (m_statusFixedFontPixelHeight) + 0; // was 3 in 1.3, was 6 in 1.2
+        topWinSize = top_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
         
         if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
             [self setupFadeWithDuration: 0.08];
@@ -4097,7 +4118,7 @@ static void setScreenDims(char *storyNameBuf) {
     XYZZY();
     CGSize sz1 = [textView contentSize];
     CGPoint contentOffset = [textView contentOffset];
-    if (!(gStoryInterp == kGlxStory && !glkGridArray[cwin].win->echo_line_input))
+    if (!(gStoryInterp == kGlxStory && (cwin >= 0 && glkGridArray[cwin].win && !glkGridArray[cwin].win->echo_line_input)))
         [textView appendText: inputText];
     ++inputsSinceSaveRestore;
     [textField setText: @""];
@@ -4197,7 +4218,7 @@ static int matchWord(NSString *str, NSString *wordArray[]) {
 }
 
 extern int completion (const zchar *buffer, zchar *result);
-extern int gitCompleteWord(const char *word, char *result);
+extern int glulxCompleteWord(const char *word, char *result);
 
 
 -(NSString*)completeWord:(NSString*)str prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
@@ -4247,7 +4268,7 @@ extern int gitCompleteWord(const char *word, char *result);
     if (gStoryInterp==kZStory)
         status = completion((const zchar*)"examine", (zchar*)resultbuf);
     else
-        status = gitCompleteWord("examine", resultbuf);
+        status = glulxCompleteWord("examine", resultbuf);
     if (status != 0)
         ; // don't match built-ins, game is non-English
     else if ([str isEqualToString: @"x"])  // 1-letter shortcuts
@@ -4279,7 +4300,7 @@ extern int gitCompleteWord(const char *word, char *result);
         if (gStoryInterp==kZStory)
             status = completion((const zchar*)[str UTF8String], (zchar*)resultbuf);
         else
-            status = gitCompleteWord((const char*)[str UTF8String], resultbuf);
+            status = glulxCompleteWord((const char*)[str UTF8String], resultbuf);
         if (status != 2 && strlen(resultbuf) > 0) {
             if (gStoryInterp==kZStory)
                 candString = [str stringByAppendingString: [NSString stringWithUTF8String: resultbuf]];

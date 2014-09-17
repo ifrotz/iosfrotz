@@ -64,8 +64,7 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     // Shut everything down cleanly.
     shutdownUndo();
     shutdownMemory();
-    glk_window_close(NULL, NULL); 
-    git_shutdown_dispatch();
+    glk_window_close(NULL, NULL);
 }
 
 static giblorb_result_t handleBlorb (strid_t stream)

@@ -178,7 +178,7 @@ void memWriteError (git_uint32 address)
     fatalError ("Out-of-bounds memory access");
 }
 
-int gitDictWordCmp(const void *a, const void *b) {
+int glulxDictWordCmp(const void *a, const void *b) {
     const char *k = (const char*)a;
     int l = strlen(k);
     if (l > 9)
@@ -191,15 +191,26 @@ int gitDictWordCmp(const void *a, const void *b) {
 // Dict entries are 16 bytes, beginning with 0x60, followed by 9 byte word, 2 byte flags, 4 bytes padding.
 // An int32 number of entries is stored before the first entry.  After the last entry, which is the last
 // non-padding data in the game file, the game is padded with zeroes up to a multiple of 256 bytes.
-int gitCompleteWord(const char *word, char *result) {
+
+extern unsigned char *memmap;
+extern glui32 origendmem;
+
+int glulxCompleteWord(const char *word, char *result) {
     int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
     *result = '\0';
+    const unsigned char *memoryBegin = gRom, *memoryEnd = memoryBegin + gOriginalEndMem - 1;
+    if (!gRom || !gOriginalEndMem) {
+        memoryBegin = memmap;
+        memoryEnd = memoryBegin + origendmem - 1;
+    }
+    if (!memoryBegin)
+        return status;
     if (!word || !word[0] || !word[1])
         return status;
-    if (gRom && gOriginalEndMem) {
-        const git_uint8 *endMem = gRom + gOriginalEndMem-1, *p = endMem;
-        const git_uint8 *barrier = endMem - 256 - 16;
-        const git_uint8 *stringTable = gRom + memRead32(28);
+    if (memoryBegin && memoryBegin < memoryEnd) {
+        const unsigned char *endMem = memoryEnd, *p = endMem;
+        const unsigned char *barrier = endMem - 256 - 16;
+        const unsigned char *stringTable = memoryBegin + read32(memoryBegin + 28);
         int dictWordCount = 0;
 
         if (barrier < stringTable)
@@ -218,22 +229,22 @@ int gitCompleteWord(const char *word, char *result) {
             ++dictWordCount;
         }
         p += 12;
-        git_uint32 nEntries = memRead32(p-gRom);
+        glui32 nEntries = read32(p);
         if (nEntries != dictWordCount)
             return status; // something wrong; we're probably misinterpreting memory
         //printf ("dict entries %d, word '%s'\n", nEntries, word);
         p += 5;
         const git_uint8 *dictStart = p;
-        p = bsearch(word, dictStart, nEntries, 16, gitDictWordCmp);
+        p = bsearch(word, dictStart, nEntries, 16, glulxDictWordCmp);
         if (!p)
             return status;
-        while (p >= dictStart && gitDictWordCmp(word, p)==0)
+        while (p >= dictStart && glulxDictWordCmp(word, p)==0)
             p -= 16;
         p += 16;
         const char *firstMatch = (const char*)p, *lastMatch = firstMatch;
         int i = (p - dictStart) / 16;
         for (; i < nEntries; ++i, p+=16) {
-            if (gitDictWordCmp(word, p)!=0)
+            if (glulxDictWordCmp(word, p)!=0)
                 break;
             //printf ("word: %s flags %04x\n", p, memRead16(p+9-gRom));
             lastMatch = (const char*)p;

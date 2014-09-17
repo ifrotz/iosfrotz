@@ -195,7 +195,7 @@ git_sint32 restoreFromFileStr (git_sint32* base, strid_t file,
         }
         else if (chunkType == read32("iFzA")) {
             if (!restoreClassesChunk(file, chunkSize))
-            return 1;
+                return 1;
         }
         else
         {

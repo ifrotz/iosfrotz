@@ -51,12 +51,12 @@ typedef struct accelentry_struct {
 
 static accelentry_t **accelentries = NULL;
 
-void init_accel()
+void init_accel_glulxe()
 {
     accelentries = NULL;
 }
 
-acceleration_func accel_find_func(glui32 index)
+acceleration_func accel_find_func_glulxe(glui32 index)
 {
     switch (index) {
         case 0: return NULL; /* 0 always means no acceleration */
@@ -71,7 +71,7 @@ acceleration_func accel_find_func(glui32 index)
     return NULL;
 }
 
-acceleration_func accel_get_func(glui32 addr)
+acceleration_func accel_get_func_glulxe(glui32 addr)
 {
     int bucknum;
     accelentry_t *ptr;
@@ -87,7 +87,7 @@ acceleration_func accel_get_func(glui32 addr)
     return NULL;
 }
 
-void accel_set_func(glui32 index, glui32 addr)
+void accel_set_func_glulxe(glui32 index, glui32 addr)
 {
     int bucknum;
     accelentry_t *ptr;
@@ -109,7 +109,7 @@ void accel_set_func(glui32 index, glui32 addr)
             accelentries[bucknum] = NULL;
     }
 
-    new_func = accel_find_func(index);
+    new_func = accel_find_func_glulxe(index);
 
     bucknum = (addr % ACCEL_HASH_SIZE);
     for (ptr = accelentries[bucknum]; ptr; ptr = ptr->next) {
@@ -132,7 +132,7 @@ void accel_set_func(glui32 index, glui32 addr)
     ptr->func = new_func;
 }
 
-void accel_set_param(glui32 index, glui32 val)
+void accel_set_param_glulxe(glui32 index, glui32 val)
 {
     switch (index) {
         case 0: classes_table = val; break;
