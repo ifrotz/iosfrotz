@@ -315,7 +315,7 @@ int verify_address(glui32 addr, glui32 count)
 int verify_address_write(glui32 addr, glui32 count)
 {
   if (!addr) // silently ignore writes to NULL address
-    return 0;
+    return 1;
   if (addr < ramstart) {
     fatal_error_i("Memory write to read-only address", addr);
     return 0;
@@ -349,7 +349,7 @@ int verify_array_addresses(glui32 addr, glui32 count, glui32 size)
   }
 
   if (count == 0)
-    return 1;
+    return 0;
   bytecount = count*size;
 
   /* If just multiplying by the element size overflows, we have trouble. */
@@ -368,7 +368,7 @@ int verify_array_addresses(glui32 addr, glui32 count, glui32 size)
   /* The simple length test. */
   if (addr+bytecount > endmem) {
     fatal_error_i("Memory access too long", addr);
-      return 0;
+     return 0;
   }
   return 1;
 }
