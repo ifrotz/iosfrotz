@@ -5,6 +5,7 @@
 
 #include "glk.h"
 #include "glulxe.h"
+#include "iphone_frotz.h"
 
 strid_t gamefile = NULL; /* The stream containing the Glulx file. */
 glui32 gamefile_start = 0; /* The position within the stream. (This will not 
@@ -92,10 +93,13 @@ static winid_t get_error_win()
 */
 void fatal_error_handler(char *str, char *arg, int useval, glsi32 val)
 {
-  winid_t win = get_error_win();
+    winid_t win = iphone_glk_getGridArray(0)->win; // get_error_win();
   if (win) {
     glk_set_window(win);
-    glk_put_string("Glulxe fatal error: ");
+  }
+    int savedLineRequest = win->line_request;
+    win->line_request = 0;
+    glk_put_string("\n[Glulxe fatal error: ");
     glk_put_string(str);
     if (arg || useval) {
       glk_put_string(" (");
@@ -107,8 +111,9 @@ void fatal_error_handler(char *str, char *arg, int useval, glsi32 val)
         stream_hexnum(val);
       glk_put_string(")");
     }
-    glk_put_string("\n");
-  }
+    glk_put_string("]\n");
+    win->line_request = savedLineRequest;
+
   glk_exit();
 }
 
@@ -117,11 +122,14 @@ void fatal_error_handler(char *str, char *arg, int useval, glsi32 val)
 */
 void nonfatal_warning_handler(char *str, char *arg, int useval, glsi32 val)
 {
-  winid_t win = get_error_win();
-  if (win) {
+    winid_t win = iphone_glk_getGridArray(0)->win; // get_error_win();
     strid_t oldstr = glk_stream_get_current();
-    glk_set_window(win);
-    glk_put_string("Glulxe warning: ");
+    if (win) {
+        glk_set_window(win);
+    }
+    int savedLineRequest = win->line_request;
+    win->line_request = 0;
+    glk_put_string("\n[Glulxe warning: ");
     glk_put_string(str);
     if (arg || useval) {
       glk_put_string(" (");
@@ -133,9 +141,9 @@ void nonfatal_warning_handler(char *str, char *arg, int useval, glsi32 val)
         stream_hexnum(val);
       glk_put_string(")");
     }
-    glk_put_string("\n");
+    glk_put_string("]\n");
+    win->line_request = savedLineRequest;
     glk_stream_set_current(oldstr);
-  }
 }
 
 /* stream_hexnum():
