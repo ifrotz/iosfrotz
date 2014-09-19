@@ -314,6 +314,8 @@ int verify_address(glui32 addr, glui32 count)
 */
 int verify_address_write(glui32 addr, glui32 count)
 {
+  if (!addr) // silently ignore writes to NULL address
+    return 0;
   if (addr < ramstart) {
     fatal_error_i("Memory write to read-only address", addr);
     return 0;
