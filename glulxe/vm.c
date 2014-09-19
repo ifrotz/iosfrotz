@@ -290,15 +290,21 @@ glui32 *pop_arguments(glui32 count, glui32 addr)
    current memory map. This is called at every memory (read) access if
    VERIFY_MEMORY_ACCESS is defined in the header file.
 */
-void verify_address(glui32 addr, glui32 count)
+int verify_address(glui32 addr, glui32 count)
 {
-  if (addr >= endmem)
-    fatal_error_i("Memory access out of range", addr);
+  if (addr >= endmem) {
+    // make 'la vita' out of range access on window resize non-fatal
+    nonfatal_warning_i("Memory access out of range", addr); // was fatal_error_i()
+    return 0;
+  }
   if (count > 1) {
     addr += (count-1);
-    if (addr >= endmem)
+    if (addr >= endmem) {
       fatal_error_i("Memory access out of range", addr);
+      return 0;
+    }
   }
+  return 1;
 }
 
 /* verify_address_write():
@@ -306,17 +312,24 @@ void verify_address(glui32 addr, glui32 count)
    This is called at every memory write if VERIFY_MEMORY_ACCESS is 
    defined in the header file.
 */
-void verify_address_write(glui32 addr, glui32 count)
+int verify_address_write(glui32 addr, glui32 count)
 {
-  if (addr < ramstart)
+  if (addr < ramstart) {
     fatal_error_i("Memory write to read-only address", addr);
-  if (addr >= endmem)
+    return 0;
+  }
+  if (addr >= endmem) {
     fatal_error_i("Memory access out of range", addr);
+    return 0;
+  }
   if (count > 1) {
     addr += (count-1);
-    if (addr >= endmem)
+    if (addr >= endmem) {
       fatal_error_i("Memory access out of range", addr);
+      return 0;
+    }
   }
+  return 1;
 }
 
 /* verify_array_addresses():
@@ -325,26 +338,36 @@ void verify_address_write(glui32 addr, glui32 count)
    to some trouble that verify_address() does not, because we need
    to be wary of lengths near -- or beyond -- 0x7FFFFFFF.
 */
-void verify_array_addresses(glui32 addr, glui32 count, glui32 size)
+int verify_array_addresses(glui32 addr, glui32 count, glui32 size)
 {
   glui32 bytecount;
-  if (addr >= endmem)
+  if (addr >= endmem) {
     fatal_error_i("Memory access out of range", addr);
+    return 0;
+  }
 
   if (count == 0)
-    return;
+    return 1;
   bytecount = count*size;
 
   /* If just multiplying by the element size overflows, we have trouble. */
-  if (bytecount < count)
+  if (bytecount < count) {
     fatal_error_i("Memory access way too long", addr);
+      return 0;
+  }
 
   /* If the byte length by itself is too long, or if its end overflows,
      we have trouble. */
-  if (bytecount > endmem || addr+bytecount < addr)
+  if (bytecount > endmem || addr+bytecount < addr) {
     fatal_error_i("Memory access much too long", addr);
+      return 0;
+  }
+
   /* The simple length test. */
-  if (addr+bytecount > endmem)
+  if (addr+bytecount > endmem) {
     fatal_error_i("Memory access too long", addr);
+      return 0;
+  }
+  return 1;
 }
 

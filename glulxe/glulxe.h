@@ -28,7 +28,7 @@ typedef signed short glsi16;
    this mode, all reads and writes to main memory will be checked to
    ensure they're in range. This is slower, but prevents malformed
    game files from crashing the interpreter. */
-/* #define VERIFY_MEMORY_ACCESS (1) */
+#define VERIFY_MEMORY_ACCESS (1)
 
 /* Uncomment this definition to turn on Glulx VM profiling. In this
    mode, all function calls are timed, and the timing information is
@@ -68,16 +68,16 @@ typedef signed short glsi16;
 #define Verify(adr, ln) verify_address(adr, ln)
 #define VerifyW(adr, ln) verify_address_write(adr, ln)
 #else
-#define Verify(adr, ln) (0)
-#define VerifyW(adr, ln) (0)
+#define Verify(adr, ln) (1)
+#define VerifyW(adr, ln) (1)
 #endif /* VERIFY_MEMORY_ACCESS */
 
-#define Mem1(adr)  (Verify(adr, 1), Read1(memmap+(adr)))
-#define Mem2(adr)  (Verify(adr, 2), Read2(memmap+(adr)))
-#define Mem4(adr)  (Verify(adr, 4), Read4(memmap+(adr)))
-#define MemW1(adr, vl)  (VerifyW(adr, 1), Write1(memmap+(adr), (vl)))
-#define MemW2(adr, vl)  (VerifyW(adr, 2), Write2(memmap+(adr), (vl)))
-#define MemW4(adr, vl)  (VerifyW(adr, 4), Write4(memmap+(adr), (vl)))
+#define Mem1(adr)  (Verify(adr, 1) ? Read1(memmap+(adr)) : 0)
+#define Mem2(adr)  (Verify(adr, 2) ? Read2(memmap+(adr)) : 0)
+#define Mem4(adr)  (Verify(adr, 4) ? Read4(memmap+(adr)) : 0)
+#define MemW1(adr, vl)  (VerifyW(adr, 1) ? Write1(memmap+(adr), (vl)) : 0)
+#define MemW2(adr, vl)  (VerifyW(adr, 2) ? Write2(memmap+(adr), (vl)) : 0)
+#define MemW4(adr, vl)  (VerifyW(adr, 4) ? Write4(memmap+(adr), (vl)) : 0)
 
 /* Macros to access values on the stack. These *must* be used 
    with proper alignment! (That is, Stk4 and StkW4 must take 
@@ -172,9 +172,9 @@ extern void finalize_vm(void);
 extern void vm_restart(void);
 extern glui32 change_memsize(glui32 newlen, int internal);
 extern glui32 *pop_arguments(glui32 count, glui32 addr);
-extern void verify_address(glui32 addr, glui32 count);
-extern void verify_address_write(glui32 addr, glui32 count);
-extern void verify_array_addresses(glui32 addr, glui32 count, glui32 size);
+extern int verify_address(glui32 addr, glui32 count);
+extern int verify_address_write(glui32 addr, glui32 count);
+extern int verify_array_addresses(glui32 addr, glui32 count, glui32 size);
 
 /* exec.c */
 extern void execute_loop(void);
@@ -254,7 +254,7 @@ extern glui32 do_gestalt(glui32 val, glui32 val2);
 
 /* glkop.c */
 extern int init_dispatch(void);
-extern void glulxe_shutdown_dispatch();
+void glulxe_shutdown_dispatch();
 extern glui32 perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist);
 extern strid_t find_stream_by_id(glui32 objid);
 

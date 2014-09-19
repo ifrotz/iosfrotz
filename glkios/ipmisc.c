@@ -58,9 +58,6 @@ void gli_initialize_misc()
 
 void glk_exit()
 { 
-    gli_streams_close_all();
-
-    putchar('\n');
     finished = 1;
 }
 
