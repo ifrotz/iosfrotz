@@ -1385,6 +1385,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
                     hyperlinkEvent = TRUE;
                     iosEventX = hyperlink;
                     iosEventY = 0;
+                    [self rememberLastContentOffsetAndAutoSave: m_storyView];
                     iphone_feed_input(@"");
                     return YES;
                 }
@@ -1397,6 +1398,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
                     iosEventX /= sz.width;
                     iosEventY /= sz.height;
                 }
+                [self rememberLastContentOffsetAndAutoSave: m_storyView];
                 iphone_feed_input(@"");
                 return YES;
             }
@@ -4093,6 +4095,18 @@ static void setScreenDims(char *storyNameBuf) {
     [self textFieldFakeDidEndEditing: m_inputLine];
 }
 
+-(void)rememberLastContentOffsetAndAutoSave:(UIScrollView*)textView {
+    ++inputsSinceSaveRestore;
+    CGSize sz1 = [textView contentSize];
+    CGPoint contentOffset = [textView contentOffset];
+    CGSize sz2 = [textView contentSize];
+    contentOffset.y +=  sz2.height - sz1.height + 8;
+    [textView setContentOffset: contentOffset animated:YES];
+    lastVisibleYPos[cwin] = sz2.height;
+    
+    [self performSelector: @selector(autoSaveCallback) withObject:nil afterDelay: 30.0];
+}
+
 - (void)textFieldFakeDidEndEditing:(UITextField *)textField {
     NSString *inputText = [textField text];
     //    NSLog(@"input str:'%@' len:%d", inputText, [inputText length]);
@@ -4116,20 +4130,11 @@ static void setScreenDims(char *storyNameBuf) {
     textFieldFrame.origin.y = [textView frame].size.height;
     [textField setFrame: textFieldFrame];
     XYZZY();
-    CGSize sz1 = [textView contentSize];
-    CGPoint contentOffset = [textView contentOffset];
     if (!(gStoryInterp == kGlxStory && (cwin >= 0 && glkGridArray[cwin].win && !glkGridArray[cwin].win->echo_line_input)))
         [textView appendText: inputText];
-    ++inputsSinceSaveRestore;
     [textField setText: @""];
     
-    CGSize sz2 = [textView contentSize];
-    contentOffset.y +=  sz2.height - sz1.height + 8;
-    [textView setContentOffset: contentOffset animated:YES];
-    lastVisibleYPos[cwin] = sz2.height;
-    
-    [self performSelector: @selector(autoSaveCallback) withObject:nil afterDelay: 30.0];
-    
+    [self rememberLastContentOffsetAndAutoSave: textView];
 #if 1
     if (doAutoplay) {
         [self performSelector: @selector(autoplay) withObject: nil afterDelay: 0.25];

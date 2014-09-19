@@ -268,11 +268,11 @@ extern void profile_out(void);
 extern void profile_fail(char *reason);
 extern void profile_quit(void);
 #else /* VM_PROFILING */
-#define profile_tick()       (0)
-#define profile_in(addr, accel)  (0)
-#define profile_out()        (0)
-#define profile_fail(reason) (0)
-#define profile_quit()       (0)
+#define profile_tick()       (void)(0)
+#define profile_in(addr, accel)  (void)(0)
+#define profile_out()        (void)(0)
+#define profile_fail(reason) (void)(0)
+#define profile_quit()       (void)(0)
 #endif /* VM_PROFILING */
 
 /* accel.c */

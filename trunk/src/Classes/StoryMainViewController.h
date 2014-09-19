@@ -206,6 +206,7 @@ extern StoryInputLine *theInputLine;
 -(BOOL) splashVisible;
 -(void) textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
 -(void) textFieldFakeDidEndEditing:(UITextField *)textField;
+-(void) rememberLastContentOffsetAndAutoSave:(UIScrollView*)textView;
 -(int) statusFixedFontPixelWidth;
 -(int) statusFixedFontPixelHeight;
 -(void) updateAutosavePaths;
