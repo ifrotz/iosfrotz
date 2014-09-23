@@ -578,8 +578,6 @@ const int kCompletionViewTag = 21;
             m_lastCharDeleted = YES;
     	[self updatePosition];
     }
-    else
-        return NO;
   
     return (BOOL)[super keyboardInputShouldDelete:sender];
     
