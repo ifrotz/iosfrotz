@@ -132,6 +132,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (RichTextTile *)dequeueReusableTile;
 - (void)prepareForKeyboardShowHide;
 - (void)rememberTopLineForReflow;
+- (UIColor*)getCurrentTextColor;
 - (void)resetColors;
 - (void)resetMargins;
 - (void)setNiceMargins:(BOOL)reflow;

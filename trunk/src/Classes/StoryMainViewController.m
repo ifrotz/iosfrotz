@@ -2114,7 +2114,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
     if (m_kbShown)
         frame.size.height -= m_kbdSize.height;
-
     [m_storyView setFrame: frame];
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
@@ -2124,12 +2123,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_notesController)
         [m_notesController autosize];
     
-#if 1
-    if (gStoryInterp == kGlxStory && !m_kbShown) {
+    if (gStoryInterp == kGlxStory) {
         iphone_recompute_screensize();
         screen_size_changed = 1;
     }
-#endif
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
@@ -2243,7 +2240,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [UIView beginAnimations: @"kbd" context: 0];
     [UIView setAnimationBeginsFromCurrentState:YES];
 
-    
     //NSLog(@"keyboarddidshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
     [m_storyView setFrame: frame];
 
@@ -3719,6 +3715,7 @@ static void setScreenDims(char *storyNameBuf) {
                     if (color == 0x29)
                         color = 0;
                 }
+                [m_inputLine setTextColor: [m_storyView getCurrentTextColor]];
                 if (color)
                     currColor = u_setup.current_color = color;
                 
