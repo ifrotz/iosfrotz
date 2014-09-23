@@ -53,7 +53,7 @@ static zchar zscii_to_latin1[] = {
  *
  */
 
-zchar translate_from_zscii (zbyte c)
+unsigned int translate_from_zscii (zbyte c)
 {
     
     if (c == 0xfc)
@@ -78,7 +78,11 @@ zchar translate_from_zscii (zbyte c)
                 
                 LOW_WORD (addr, unicode)
                 
-                return (unicode < 0x100) ? (zchar) unicode : '?';
+                if (unicode >= 0x100)
+                    return unicode;
+                else
+                    return unicode;
+//                return (unicode < 0x100) ? (zchar) unicode : '?';
                 
             } else return '?';
             
@@ -382,7 +386,7 @@ static void decode_text (enum string_type st, zword addr)
 {
     zchar *ptr;
     long byte_addr;
-    zchar c2;
+    unsigned int c2;
     zword code;
     zbyte c, prev_c = 0;
     int shift_state = 0;
