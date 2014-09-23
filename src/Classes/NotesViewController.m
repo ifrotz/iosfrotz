@@ -137,9 +137,9 @@ static const int kNotesTitleHeight = 24;
         m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
     }
     [m_notesView setAutocapitalizationType:UITextAutocapitalizationTypeNone];
-    if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 QuickType completion screws up notes
-        [m_notesView setAutocorrectionType: UITextAutocorrectionTypeNo];
-    }
+    //if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 QuickType completion screws up notes
+    //     [m_notesView setAutocorrectionType: UITextAutocorrectionTypeNo];
+    //}
 #else
     m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
 #endif
@@ -283,7 +283,7 @@ static const int kNotesTitleHeight = 24;
 -(void) keyboardWillShow:(CGRect)kbBounds {
     CGRect notesFrame = [m_notesBGView frame];
     BOOL isVisible = [self isVisible];
-    notesFrame.size.height -= kbBounds.size.height;
+    notesFrame.size.height = m_scrollView.frame.size.height - kbBounds.size.height;
     
     if (isVisible) {
         [UIView beginAnimations: @"noteskbd" context: 0];
