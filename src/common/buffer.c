@@ -78,46 +78,50 @@ void flush_buffer (void)
  *
  */
 
-void print_char (zchar c)
+void print_char (unsigned int c)
 {
     static bool flag = FALSE;
-
+    if (c >= 0x100)
+        flush_buffer();
     if (message || ostream_memory || enable_buffering) {
-
-	if (!flag) {
-
-	    /* Characters 0 and ZC_RETURN are special cases */
-
-	    if (c == ZC_RETURN)
-		{ new_line (); return; }
-	    if (c == 0)
-		return;
-
-	    /* Flush the buffer before a whitespace or after a hyphen */
-
-	    if (c == ' ' || c == ZC_INDENT || c == ZC_GAP || (prev_c == '-' && c != '-'))
-
-
-		flush_buffer ();
-
-	    /* Set the flag if this is part one of a style or font change */
-
-	    if (c == ZC_NEW_FONT || c == ZC_NEW_STYLE)
-		flag = TRUE;
-
-	    /* Remember the current character code */
-
-	    prev_c = c;
-
-	} else flag = FALSE;
-
-	/* Insert the character into the buffer */
-
-	buffer[bufpos++] = c;
-
-	if (bufpos == TEXT_BUFFER_SIZE)
-	    runtime_error (ERR_TEXT_BUF_OVF);
-
+        
+        if (!flag) {
+            
+            /* Characters 0 and ZC_RETURN are special cases */
+            
+            if (c == ZC_RETURN)
+            { new_line (); return; }
+            if (c == 0)
+                return;
+            
+            /* Flush the buffer before a whitespace or after a hyphen */
+            
+            if (c == ' ' || c == ZC_INDENT || c == ZC_GAP || (prev_c == '-' && c != '-'))
+                
+                
+                flush_buffer ();
+            
+            /* Set the flag if this is part one of a style or font change */
+            
+            if (c == ZC_NEW_FONT || c == ZC_NEW_STYLE)
+                flag = TRUE;
+            
+            /* Remember the current character code */
+            
+            prev_c = c;
+            
+        } else flag = FALSE;
+        
+        /* Insert the character into the buffer */
+        
+        if (c >= 0x100)
+            stream_char(c);
+        else {
+            buffer[bufpos++] = c;
+            
+            if (bufpos == TEXT_BUFFER_SIZE)
+                runtime_error (ERR_TEXT_BUF_OVF);
+        }
     } else stream_char (c);
 
 }/* print_char */

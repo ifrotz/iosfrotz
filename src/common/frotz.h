@@ -571,12 +571,12 @@ void	runtime_error (int);
 
 /*** Various global functions ***/
 
-zchar	translate_from_zscii (zbyte);
+unsigned int	translate_from_zscii (zbyte);
 zbyte	translate_to_zscii (zchar);
 
 void 	flush_buffer (void);
 void	new_line (void);
-void	print_char (zchar);
+void	print_char (unsigned int);
 void	print_num (zword);
 void	print_object (zword);
 void 	print_string (const char *);
