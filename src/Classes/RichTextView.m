@@ -167,11 +167,15 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         index = 0;
     if (m_currentBGColorIndex != index) {
         m_currentBGColorIndex = index;
-    	if (index == 0) {
+    	if (index == 0 || index > [m_colorArray count]) {
             if (m_currBgColor != m_bgColor) {
                 [m_currBgColor release];
                 m_currBgColor = [m_bgColor retain];
             }
+        } else {
+            if (m_currBgColor)
+                [m_currBgColor release];
+            m_currBgColor = [[m_colorArray objectAtIndex: index-1] retain];
         }
         m_prevLineNotTerminated = NO;
     }

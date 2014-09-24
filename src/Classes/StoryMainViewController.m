@@ -2477,7 +2477,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         return;
 
     [m_storyView setBackgroundColor: color];
-//    [m_background setBackgroundColor: color];
     
     [m_background setBackgroundColor: m_defaultBGColor];
 
