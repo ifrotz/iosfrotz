@@ -226,7 +226,7 @@ void gli_event_store(glui32 type, window_t *win, glui32 val1, glui32 val2)
 
 void glk_request_timer_events(glui32 millisecs)
 {
-    if (millisecs < 20) // there's no reason for any text adventure to be firing timers a thousand times a second
+    if (millisecs > 0 && millisecs < 20) // there's no reason for any text adventure to be firing timers a thousand times a second
         millisecs = 20;
     timing_msec = millisecs;
 }
