@@ -11,6 +11,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>z2</string>
 				<string>z3</string>
 				<string>z4</string>
 				<string>z5</string>
@@ -254,6 +255,7 @@
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
+					<string>z2</string>
 					<string>z3</string>
 					<string>z4</string>
 					<string>z5</string>
