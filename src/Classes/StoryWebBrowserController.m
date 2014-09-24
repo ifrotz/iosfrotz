@@ -803,7 +803,8 @@ static bool bypassBundle = NO;
     NSLog(@"ShouldStartLoad: %@", request);
     if ([urlString isEqualToString: @"http:"]) // null url
         return NO;
-    if ([ext isEqualToString: @"z3"] ||
+    if ([ext isEqualToString: @"z2"] ||
+        [ext isEqualToString: @"z3"]||
         [ext isEqualToString: @"z4"]||
         [ext isEqualToString: @"z5"] ||
         [ext isEqualToString: @"z8"] ||

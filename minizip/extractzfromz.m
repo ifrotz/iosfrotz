@@ -105,7 +105,8 @@ NSMutableArray *do_list(unzFile uf)
         }
 	NSString *fileStr = [NSString stringWithUTF8String: filename_inzip];
 	NSString *ext = [[fileStr pathExtension] lowercaseString];
-	if ([ext isEqualToString: @"z3"] ||
+	if ([ext isEqualToString: @"z2"] ||
+        [ext isEqualToString: @"z3"] ||
 	    [ext isEqualToString: @"z4"]||
 	    [ext isEqualToString: @"z5"] ||
 	    [ext isEqualToString: @"z8"] ||
