@@ -3,6 +3,7 @@
 #include "git.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 const git_uint8 * gRom;
 git_uint8 * gRam;
@@ -183,7 +184,7 @@ int glulxDictWordCmp(const void *a, const void *b) {
     int l = strlen(k);
     if (l > 9)
         l = 9;
-    return strncmp(k, (const char*)b, l);
+    return strncasecmp(k, (const char*)b, l);
 }
 
 // Glulx doesn't store the location of the dictionary in the header, but Inform 6 always stores it at
@@ -198,7 +199,7 @@ extern glui32 origendmem;
 int glulxCompleteWord(const char *word, char *result) {
     int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
     *result = '\0';
-    const unsigned char *memoryBegin = gRom, *memoryEnd = memoryBegin + gOriginalEndMem - 1;
+    const unsigned char *memoryBegin = gRom, *memoryEnd = memoryBegin + gOriginalEndMem - 1, *p;
     if (!gRom || !gOriginalEndMem) {
         memoryBegin = memmap;
         memoryEnd = memoryBegin + origendmem - 1;
@@ -208,60 +209,128 @@ int glulxCompleteWord(const char *word, char *result) {
     if (!word || !word[0] || !word[1])
         return status;
     if (memoryBegin && memoryBegin < memoryEnd) {
-        const unsigned char *endMem = memoryEnd, *p = endMem;
-        const unsigned char *barrier = endMem - 256 - 16;
-        const unsigned char *stringTable = memoryBegin + read32(memoryBegin + 28);
-        int dictWordCount = 0;
+        static glui32 checksumCache, endgamefileCache;
+        static const git_uint8 *dictStartCache = NULL;
+        static int dictWordCountCache = 0, worddiffCache = 0;
 
-        if (barrier < stringTable)
-            barrier = stringTable;
-        while (p > barrier) {
-            if (*p == 0x60 && p[-1]==0x00)
-                break;
-            --p;
+        const unsigned char *endMem = memoryEnd;
+        int dictWordCount = 0;
+        int worddiff = 0;
+        const git_uint8 *dictStart = NULL;
+
+        glui32 checksum = read32(memoryBegin + 32), endgamefile = read32(memoryBegin + 12);
+        if (checksum == checksumCache && endgamefile == endgamefileCache) {
+            dictWordCount = dictWordCountCache;
+            worddiff = worddiffCache;
+            dictStart = dictStartCache;
+        } else {
+            checksumCache = checksum;
+            endgamefileCache = endgamefile;
+
+            if (memoryBegin[36]=='I') {
+                p = endMem;
+                const unsigned char *barrier = endMem - 256 - 16;
+                const unsigned char *stringTable = memoryBegin + read32(memoryBegin + 28);
+                
+                if (barrier < stringTable)
+                    barrier = stringTable;
+                while (p > barrier) {
+                    if (*p == 0x60 && p[-1]==0x00)
+                        break;
+                    --p;
+                }
+                if (p <= barrier)
+                    return status;
+                worddiff = 16;
+                barrier = stringTable;
+                while (*p == 0x60) {
+                    p -= worddiff;
+                    ++dictWordCount;
+                }
+                p += 12;
+                glui32 nEntries = read32(p);
+                if (nEntries == dictWordCount) {
+                    //printf ("dict entries %d, word '%s'\n", nEntries, word);
+                    p += 5;
+                    dictStart = p;
+                } // else something wrong; we're probably misinterpreting memory
+            } else if (memoryBegin[5] == 0x02) {
+                const unsigned char *startFuncAddr = memoryBegin + read32(memoryBegin + 24);
+                const unsigned char *ramStart = memoryBegin + read32(memoryBegin + 8);
+                if (startFuncAddr < memoryEnd && ramStart < memoryEnd && startFuncAddr < ramStart) {
+                    p = startFuncAddr;
+                    while (p < ramStart - 64) {
+                        if (*p == 0xe0 && p[22]==0 && p[24]==0xe0 && p[46]==0 && p[48]==0xe0) {
+                            worddiff = 24;
+                            break;
+                        } else if (*p == 0xe0 && p[14]==0 && p[16]==0xe0 && p[30]==0 && p[32]==0xe0) {
+                            worddiff = 16;
+                            break;
+                        }
+                        ++p;
+                    }
+                    if (worddiff != 0) {
+                        dictStart = p+1;
+                        while (p < ramStart - 64 && *p == 0xe0) {
+                            p += worddiff;
+                            ++dictWordCount;
+                        }
+                    }
+                }
+            }
+            dictWordCountCache = dictWordCount;
+            worddiffCache = worddiff;
+            dictStartCache = dictStart;
         }
-        if (p <= barrier)
+        if (!dictStart || !worddiff)
             return status;
-        
-        barrier = stringTable;
-        while (*p == 0x60) {
-            p -= 16;
-            ++dictWordCount;
-        }
-        p += 12;
-        glui32 nEntries = read32(p);
-        if (nEntries != dictWordCount)
-            return status; // something wrong; we're probably misinterpreting memory
-        //printf ("dict entries %d, word '%s'\n", nEntries, word);
-        p += 5;
-        const git_uint8 *dictStart = p;
-        p = bsearch(word, dictStart, nEntries, 16, glulxDictWordCmp);
+
+        p = bsearch(word, dictStart, dictWordCount, worddiff, glulxDictWordCmp);
         if (!p)
             return status;
         while (p >= dictStart && glulxDictWordCmp(word, p)==0)
-            p -= 16;
-        p += 16;
+            p -= worddiff;
+        p += worddiff;
         const char *firstMatch = (const char*)p, *lastMatch = firstMatch;
-        int i = (p - dictStart) / 16;
-        for (; i < nEntries; ++i, p+=16) {
+        int i = (p - dictStart) / worddiff;
+        for (; i < dictWordCount; ++i, p+=worddiff) {
             if (glulxDictWordCmp(word, p)!=0)
                 break;
             //printf ("word: %s flags %04x\n", p, memRead16(p+9-gRom));
             lastMatch = (const char*)p;
         }
+        int maxwordlen = worddiff == 24 ? 10 : 9;
         if (firstMatch == lastMatch) {
-            strncpy(result, firstMatch, 9);
-            result[9] = 0;
+            strncpy(result, firstMatch, maxwordlen);
+            result[maxwordlen] = 0;
             status = 0;
         }
         else {
             int l = 0;
-            while (l < 9 && firstMatch[l]==lastMatch[l])
+            while (l < maxwordlen && firstMatch[l]==lastMatch[l])
                 l++;
             strncpy(result, firstMatch, l);
             result[l] = 0;
             status = 1;
         }
+        if (status < 2) {
+            char *sl = result;
+            int allUpper = 1;
+            while (*sl != '\0') {
+                if (!isupper(*sl))
+                    allUpper = 0;
+                ++sl;
+            }
+            sl = result;
+            if (allUpper) {
+                while (*sl != '\0') {
+                    if (isupper(*sl))
+                        *sl = tolower(*sl);
+                    ++sl;
+                }
+            }
+        }
+        
     }
     return status;
 }
