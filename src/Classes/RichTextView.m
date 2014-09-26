@@ -18,8 +18,8 @@
 
 static BOOL hasAccessibility;
 
-#define DEFAULT_TILE_WIDTH  512
-#define DEFAULT_TILE_HEIGHT 120
+#define DEFAULT_TILE_WIDTH  1024 // 512
+#define DEFAULT_TILE_HEIGHT 120 // 120
 
 #define TEXT_TOP_MARGIN	    16
 #define TEXT_RIGHT_MARGIN   6
@@ -543,8 +543,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
             m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;            
             m_extraLineSpacing = 0;
         }
-        m_tempLeftMargin += origTempLeft;
-        m_tempRightMargin += origTempRight;
+        if (!reflow) {
+            m_tempLeftMargin += origTempLeft;
+            m_tempRightMargin += origTempRight;
+        }
         if (reflow && (m_leftMargin != origLeft || m_rightMargin != origRight || m_extraLineSpacing != origSpacing))
             [self reflowText];
     }
@@ -822,14 +824,15 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         if (hyperlink) {
             fgColor = [UIColor blueColor];
         }
-        //	NSLog(@"i=%d pt=(%f,%f), fg=%@ bg=%@ usebg=%d s=%x t=[%@]", i, pt.x, pt.y, fgColor, bgColor, useBGColor, style, text);
         if (style & kFTReverse) {
             UIColor *tmpColor = fgColor;
             fgColor = bgColor;
             bgColor = tmpColor;
             useBGColor = YES;
         }
+        //CGPoint opt = pt;
         pt = [self convertPoint:pt toView:view];
+        //NSLog(@"i=%d opt=(%f,%f) pt=(%f,%f), fg=%@ bg=%@ usebg=%d s=%x v=%@ t=[%@]", i, opt.x, opt.y, pt.x, pt.y, fgColor, bgColor, useBGColor, style, view, text);
         int lineNum = [[m_textLineNum objectAtIndex:i] intValue];
         [self wordWrapTextSize:text atPoint:&pt font:font style:style fgColor:fgColor bgColor:useBGColor ? bgColor:nil withRect:myRect 
                        lineNumber:lineNum nextPos:&nextPos hotPoint:nil doDraw:YES];
@@ -1034,7 +1037,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         fontAscender = [font ascender];
     }
     
-    CGFloat curLineHeight = fontHeight + m_extraLineSpacing;
     while (text && len > 0) {
         NSRange termRange = [text rangeOfString: @"\n"];
         BOOL hasEOL = NO;
@@ -1046,13 +1048,24 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         } else
             restOfString = nil;
         
+        CGFloat curLineHeight = fontHeight + m_extraLineSpacing;
         if (lineNum+1 < [m_lineYPos count]) {
             curLineHeight = [[m_lineYPos objectAtIndex: lineNum+1] floatValue] - (pos.y-minYPos);
             if (curLineHeight < fontHeight + m_extraLineSpacing)
                 curLineHeight = fontHeight + m_extraLineSpacing;
         }
         while (text && len > 0) {
-            if (m_tempLeftYThresh && pos.y - minYPos > m_tempLeftYThresh) {
+#if 0 // uncomment to annotate each line with its ypos for text wrap debugging
+            {
+                char linenum[32];
+                sprintf(linenum, "[%.1f,%.1lf]", pos.x, pos.y-minYPos);
+                if (text)
+                    text = [[NSString stringWithUTF8String: linenum] stringByAppendingString: text];
+                len = [text length];
+            }
+#endif
+
+             if (m_tempLeftYThresh && pos.y - minYPos > m_tempLeftYThresh) {
                 m_tempLeftMargin = m_leftMargin;
             }
             if (m_tempRightYThresh && pos.y - minYPos > m_tempRightYThresh)
@@ -1102,8 +1115,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                             }
                             [fgColor set];
                         }
-                        if (!isFixed)
+                        if (!isFixed) {
+                            //NSLog(@"xpos2 = %f, actual = %f, text=%@", pos.x, minXPos+xPos, text);
                             textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
+                        }
                         else {
                             // Set fill and stroke colors
                             textSize.width = RTDrawFixedWidthText(context, text, minXPos+xPos, -fontAscender-pos.y, YES);
@@ -1755,7 +1770,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 
 - (void)reflowText {
     [self clearSelection];
-    
     [m_textPos removeAllObjects];
     [m_textLineNum removeAllObjects];
     [m_lineYPos removeAllObjects];
@@ -1763,6 +1777,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     [m_lineWidth removeAllObjects];
     int len = [m_textRuns count];
     m_lastPt = CGPointMake(m_leftMargin, 0);
+    m_tempLeftMargin = m_leftMargin;
+    m_tempRightMargin = m_rightMargin;
     
     m_origY = 0;
     m_numLines = 0;
@@ -1770,7 +1786,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     CGPoint nextPoint;
     CGFloat prevY = 0;
     m_prevPt = m_lastPt;
-    CGRect frame = [self frame];
+    CGRect frame = [self bounds];
     int curImageIndex = 0;
 
     [self updateLine: m_numLines withYPos: m_lastPt.y];
@@ -1911,8 +1927,22 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 
 - (RichTextTile *)tileForRow:(int)row column:(int)column {
     
+    float scaledTileWidth  = [self tileSize].width;
+    float scaledTileHeight = [self tileSize].height;
+
+    RichTextTile *tile = nil;
+    // If we are redrawing an existing onscreen tile, use the same one
+    for (RichTextTile *t in [m_tileContainerView subviews]) {
+        CGPoint center = CGPointMake(scaledTileWidth * (column+0.5), scaledTileHeight * (row+0.5));
+        CGPoint tileCenter = [t center];
+        if (tileCenter.x == center.x && tileCenter.y == center.y) {
+            tile = t;
+            break;
+        }
+    }
     // re-use a tile rather than creating a new one, if possible
-    RichTextTile *tile = [self dequeueReusableTile];
+    if (!tile)
+        tile = [self dequeueReusableTile];
     
     if (!tile) {
         // the scroll view will handle setting the tile's frame, so we don't have to worry about it
@@ -1938,7 +1968,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     CGRect visibleBounds = [self bounds];
     float scaledTileWidth  = [self tileSize].width;
     float scaledTileHeight = [self tileSize].height;
-    
+
     // first recycle all tiles that are no longer visible
     for (UIView *tile in [m_tileContainerView subviews]) {
         
@@ -1954,7 +1984,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             [tile removeFromSuperview];
         }
     }
-    
+
     CGSize maxRect = [self contentSize];
     // calculate which rows and columns are visible by doing a bunch of math.
     int maxRow = floorf((maxRect.height-1) / scaledTileHeight); // this is the maximum possible row
@@ -1974,36 +2004,14 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             BOOL tileIsMissing = (m_firstVisibleRow > row || m_firstVisibleColumn > col || 
                                   m_lastVisibleRow  < row || m_lastVisibleColumn  < col);
             if (tileIsMissing) {
-                //		NSLog(@"layout row %d col %d fvr %.0f lvr %.0f miss %d visBounds (%.0f,%.0f,%.0f,%.0f) contentSize (%.0f,%.0f)", row, col, m_firstVisibleRow, m_lastVisibleRow, tileIsMissing, visibleBounds.origin.x, visibleBounds.origin.y,		visibleBounds.size.width, visibleBounds.size.height, maxRect.width, maxRect.height);
+                //NSLog(@"layout row %d col %d fvr %.0f lvr %.0f miss %d visBounds (%.0f,%.0f,%.0f,%.0f) contentSize (%.0f,%.0f)", row, col, m_firstVisibleRow, m_lastVisibleRow, tileIsMissing, visibleBounds.origin.x, visibleBounds.origin.y,		visibleBounds.size.width, visibleBounds.size.height, maxRect.width, maxRect.height);
                 UIView *tile = [self tileForRow:row column:col];
                 // set the tile's frame so we insert it at the correct position
                 
-#if 1
                 CGRect bounds = CGRectMake(0, 0, scaledTileWidth, scaledTileHeight);
                 CGPoint center = CGPointMake(scaledTileWidth * (col+0.5), scaledTileHeight * (row+0.5));
                 [tile setCenter: center];
                 [tile setBounds: bounds];
-#if 0
-                CGRect myFrame = [m_tileContainerView frame];
-                CGPoint parentCenter = [self center];
-                parentCenter.x = myFrame.size.width/2, parentCenter.y = myFrame.size.height/2;
-                CGFloat pdx = parentCenter.x - center.x, pdy = parentCenter.y - center.y;
-                NSLog(@"parentcenter %f,%f", parentCenter.x, parentCenter.y);
-                [tile setCenter: parentCenter];
-                [tile setBounds: CGRectMake((col+0.5)*scaledTileWidth-parentCenter.x + random()%511,
-                                            (row+0.5)*scaledTileHeight-parentCenter.y + random()%511,
-                                            scaledTileWidth, scaledTileHeight)];
-#endif
-#else
-                CGRect frame = CGRectMake(scaledTileWidth * col, scaledTileHeight * row, scaledTileWidth, scaledTileHeight);
-                [tile setFrame:frame];
-                CGPoint c = [tile center];
-                CGRect b = [tile bounds];
-                CGRect f = [tile frame];
-                NSLog(@"row=%d col=%d, cx=%f, cy=%f, b=(%f,%f,%f,%f) f=(%f,%f,...)", row, col, c.x, c.y, b.origin.x, b.origin.y, b.size.width, b.size.height,
-                      f.origin.x, f.origin.y);
-#endif
-                
                 
                 //		NSLog(@"got tile %@", tile);
                 [m_tileContainerView addSubview:tile];

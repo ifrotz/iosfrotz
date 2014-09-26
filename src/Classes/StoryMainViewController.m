@@ -797,6 +797,7 @@ void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 
 
 }
 
+extern int gLastGlkEventWasArrange;
 
 glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
     giblorb_map_t *map;
@@ -813,8 +814,10 @@ glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2
     if (err)
         return FALSE;
     if (!finished) {
-        if (glkGridArray[viewNum].win->type == wintype_TextBuffer)
-            [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+        if (glkGridArray[viewNum].win->type == wintype_TextBuffer) {
+            if (!gLastGlkEventWasArrange) // work around Diana bug
+                [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+        }
         else
             [theSMVC performSelector:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args]];
     }
