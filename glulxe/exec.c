@@ -46,6 +46,7 @@ void execute_loop()
           pop_callstub(value);
           gli_delete_stream(fstr);
           gli_delete_fileref(fref);
+          glk_game_loaded();
       } else {
           gli_delete_fileref(fref);
           printf("unable to open autorestore file\n");
