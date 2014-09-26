@@ -147,13 +147,18 @@
         "<hr/>\n"
         "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
         "<hr>\n"
-        "<p><ul>"
+        "<p><ul>\n"
+        "<li><b>Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.</b></li>\n"
         "<li><b>Fixed bug printing accented characters in status window.</b></li>\n"
         "<li><b>Several minor bug fixes in glk game support.</b></li>\n"
-        "</ul>"
+        "</ul>\n"
+        "<p>If you enjoy Frotz, please rate it in the App Store.  Or write  a review! Thanks!</p>"
+        "<p><small><i>Craig Smith, September 30, 2014</i><br>\n"
+        "<hr>\n"
+
         "<p>New in Version 1.7:</p>\n"
         "<p><ul>\n"
-        "<li><b>UI makeover with support for iOS 7/8.</b></li>\n"
+        "<li><b>UI makeover with support for iOS 7.</b></li>\n"
         "<li><b>New Search Bar in Story List.</b></li>\n"
         "<li><b>Word auto-completion now uses the current game's vocabulary/dictionary.</b></li>\n"
         "<li><b>Fixed issues with accented characters/Unicode support.</b></li>\n"
@@ -164,9 +169,6 @@
         "<li><b>Lots of other minor bug fixes.</b></li>\n"
         "</ul>"
 
-        "<p>If you enjoy Frotz, please rate it in the App Store.  Or write  a review! Thanks!</p>"
-        "<p><small><i>Craig Smith, September 9, 2014</i><br>\n"
-        "<hr>\n"
         "<p><i>Previous release notes</i></p>\n"
         "\n"
 #if 1
@@ -255,7 +257,7 @@
         // 1.3: sep 4, 2009
     }
     [webView loadHTMLString: [NSString stringWithFormat: @"<html><body>\n%@\n%@\n</body>\n\n", cssString, htmlString] baseURL: nil];
-#if FROTZ_BETA
+#if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);
 #endif
 }

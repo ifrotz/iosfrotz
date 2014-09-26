@@ -818,9 +818,10 @@ static bool bypassBundle = NO;
 #if APPLE_FASCISM
         NSFileManager *defaultManager = [NSFileManager defaultManager];
         NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
-        if (![defaultManager fileExistsAtPath: bundledGamesListPath])
+        if (![defaultManager fileExistsAtPath: bundledGamesListPath]) {
             bypassBundle = YES;
-        else
+            iphone_ifrotz_verbose_debug |= 2;
+        } else
             bypassBundle = (iphone_ifrotz_verbose_debug & 2) != 0;
         if (bypassBundle || ((iphone_ifrotz_verbose_debug & 4)!=0 &&
                              ([urlRelPath rangeOfString: @"competition201"].length>0 || [urlRelPath rangeOfString: @"ifcomp"].length>0))) {
