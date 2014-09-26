@@ -50,11 +50,14 @@ int hyperlinkEvent = FALSE;
 window_t *iosEventWin = NULL;
 int iosEventX = 0, iosEventY = 0;
 
+int gLastGlkEventWasArrange = 0; // used to prevent drawing images in textbuffer during window arrange (bug in diana.gblorb)
+
 void glk_select(event_t *event)
 {
     int needrefresh = TRUE;
     
     curevent = event;
+    gLastGlkEventWasArrange = 0;
     gli_event_clearevent(curevent);
     
     gli_windows_update();
@@ -222,6 +225,8 @@ void gli_event_store(glui32 type, window_t *win, glui32 val1, glui32 val2)
         curevent->val1 = val1;
         curevent->val2 = val2;
     }
+    if (type == evtype_Arrange)
+        gLastGlkEventWasArrange = 1;
 }
 
 void glk_request_timer_events(glui32 millisecs)
