@@ -93,7 +93,7 @@
 - (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
 {
     [m_textbar resignFirstResponder];
-    if (!(iphone_ifrotz_verbose_debug & 4)) {
+    if (!(iphone_ifrotz_verbose_debug & 8)) {
         NSString *text = [m_textbar text];
         if ([text rangeOfString:@"://"].length==0)
             text = [@"http://" stringByAppendingString: text];

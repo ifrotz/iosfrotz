@@ -82,14 +82,14 @@
                          baseFontSize+2, baseFontSize,
                          (iphone_ifrotz_verbose_debug & 2) ?
                          @"<b>Frotz</b> comes with a collection of bundled stories/games, and works with most stories written in the Z-Machine or glulx formats. "
-                         "New stories are downloadable from the Interactive Fiction Database (IFDB) and elsewhere on the Internet using the "
-                         "built-in browser.   Just navigate to the Details page for a story file that interests you and click on the download link.  Z-machine files end in extensions .z3, .z4, .z5, etc."
-                         "or .zblorb.\n"
+                         "More stories are available from the Interactive Fiction Database (IFDB) and elsewhere on the Internet and can be "
+                         "opened in Frotz via Safari or other apps or browsed to using the "
+                         "built-in IFDB browser.   Just navigate to the Details page for a story file that interests you and click on the story link to launch the story.  (Supported story files end in extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, or .gblorb.)\n"
                                                   :
                          @"<p><b>Frotz</b> comes with a very large collection of stories/games. Twenty-five preselected stories appear by default in the Story List, but "
                          "over 300 more are bundled with Frotz.\n</p>"
                          "<p>To enable other stories, use the built-in Story Browser to read reviews and descriptions from the "
-                         "Interactive Fiction Database (IFDB). When you find one that interests you, select the link for the story file (extensions .z3, .z4, .z5, .zblorb, .ulx, .blb, or .gblorb) "
+                         "Interactive Fiction Database (IFDB). When you find one that interests you, select the link for the story file (extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, or .gblorb) "
                          "from its description page, and the story file will be extracted from the bundled archive and added to the Story List. "
                          "Very recent additions to IFDB (or poorly reviewed ones) may not be available in the bundle. "
                          "The bundled list of stories will be expanded with each release of Frotz, but if you'd like to request a particular addition, "
