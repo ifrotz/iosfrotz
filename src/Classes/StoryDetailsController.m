@@ -642,7 +642,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(IBAction)IFDBButtonPressed {
-    if (m_tuid && [m_tuid length] > 15)
+    if (m_tuid && [m_tuid length] >= 15)
         [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"http://ifdb.tads.org/viewgame?id=%@", m_tuid]];
 }
 

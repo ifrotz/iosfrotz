@@ -185,12 +185,18 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	    *urls = [bmDict objectForKey:kBookmarkURLsKey];
 	if (titles)
 	    *titles = [bmDict objectForKey:kBookmarkTitlesKey];
-	return;
+        if (urls && titles && [*urls count]==11 && [*titles count]==11
+            && [[*urls objectAtIndex:0] isEqualToString:@"brasslantern.org"]
+            && [[*urls objectAtIndex:10] isEqualToString:@"nickm.com/if"])
+            ;
+        else
+            return;
     }
 
     if (urls)
 	*urls = [NSArray arrayWithObjects: @"brasslantern.org",
-      @"www.xyzzynews.com", @"ifdb.tads.org", 
+      @"www.xyzzynews.com", @"ifdb.tads.org",
+      @"gallery.guetech.org/greybox.html",
       @"inform7.com", @"www.ifwiki.org/index.php/Main_Page", 
       @"sparkynet.com/spag", @"www.ifarchive.org",
       @"www.ifcomp.org", @"www.wurb.com/if", 
@@ -198,7 +204,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
       nil];
     if (titles)
 	*titles = [NSArray arrayWithObjects: @"Brass Latern",
-      @"XYZZYnews Home Page", @"Interactive Fiction Database - IF and Text Adventures", 
+      @"XYZZYnews Home Page", @"Interactive Fiction Database - IF and Text Adventures",
+      @"Infocom Gallery (Artwork, Docs)",
       @"Inform 7 - A Design System for Interactive Fiction", @"IFWiki Home", 
       @"SPAG - Society for the Promotion of Adventure Games", @"The Interactive Fiction Archive",
       @"The Annual Interactive Fiction Competition", @"Baf's Guide to the Interactive Fiction Archive", 
@@ -531,7 +538,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: [m_webView isLoading]];
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Couldn't load content"
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
 						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     [alert show];
     [alert release];
@@ -763,7 +770,7 @@ static bool bypassBundle = NO;
     m_storyAlreadyInstalled = NO;
     [m_activityView startAnimating];
     
-    NSLog(@"Load %@", request);
+    //NSLog(@"Load %@", request);
     m_currentRequest = [request retain];
     //    NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
@@ -800,7 +807,7 @@ static bool bypassBundle = NO;
     NSString *urlRelPath = [url relativeString];
     NSString *urlString = [urlRelPath lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
-    NSLog(@"ShouldStartLoad: %@", request);
+    //NSLog(@"ShouldStartLoad: %@", request);
     if ([urlString isEqualToString: @"http:"]) // null url
         return NO;
     if ([ext isEqualToString: @"z2"] ||

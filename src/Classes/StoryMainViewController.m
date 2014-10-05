@@ -3814,13 +3814,11 @@ static void setScreenDims(char *storyNameBuf) {
             UIImage *splashImage = scaledUIImage(timg, 0, 0);
             m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
             [timg release];
-            
-            if (![storyBrowser thumbDataForStory: story]) {
-                UIImage *thumb = scaledUIImage(splashImage, 40, 32);
-                if (thumb) {
-                    [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
-                    [storyBrowser saveMetaData];
-                }
+
+            UIImage *thumb = scaledUIImage(splashImage, 40, 32);
+            if (thumb) {
+                [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
+                [storyBrowser saveMetaData];
             }
 
             CGRect rect = [m_splashImageView bounds];
