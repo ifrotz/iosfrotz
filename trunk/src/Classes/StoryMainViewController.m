@@ -2464,7 +2464,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     NSError *error;
     [fileMgr removeItemAtPath: filePath error: &error];
     if ([[DBSession sharedSession] isLinked]) {
-        NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""];
+        NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, filePath.length)];
         NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
         [self.restClient deletePath: dbPath];
         [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
@@ -3629,7 +3629,7 @@ static void setScreenDims(char *storyNameBuf) {
                     else
                         color = (color & 0xf) | (BLACK_COLOUR<<4);
                     currColor = u_setup.current_color = color;
-                } else 	if (color > 0x11 && (color != 0x29))
+                } else 	if (color > 0x11) //  && (color != 0x29)
                     currColor = u_setup.current_color = color;
                 NSNumber *currStyle = [dict objectForKey: @"currTextStyle"];
                 if (currStyle)
@@ -4459,7 +4459,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 -(NSString*)metadataSubPath:(NSString*)path {
     NSString *dbTopPathT = [self dbTopPathT];
-    return [path stringByReplacingOccurrencesOfString:dbTopPathT withString:@""];    
+    return [path stringByReplacingOccurrencesOfString:dbTopPathT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, path.length)];
 }
 
 - (void)restClient:(DBRestClient*)client loadedMetadata:(DBMetadata*)metadata {
@@ -4533,7 +4533,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 -(void)dbSyncSingleSaveDir:(DBMetadata*)metadata {
     NSString *dbSavePath = [self dbSavePath];
     NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-    NSString *subSavePath = [metadata.path stringByReplacingOccurrencesOfString: dbSavePathT withString:@""];
+    NSString *subSavePath = [metadata.path stringByReplacingOccurrencesOfString: dbSavePathT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, metadata.path.length)];
     
     NSMutableArray *dbSaveFiles = [NSMutableArray arrayWithCapacity:metadata.contents.count];
     
@@ -4558,7 +4558,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     while (localIndex < localCount && dbIndex < dbCount) {
         locSF = [localSaveFiles objectAtIndex: localIndex];
         DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
-        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
+        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
         NSDate *dbModDate = md.lastModifiedDate;
         NSComparisonResult cr = [locSF caseInsensitiveCompare: dbSF];
         if (cr == NSOrderedSame) {
@@ -4611,7 +4611,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     }
     while (dbIndex < dbCount) {
     	DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
-        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""];
+        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
         NSDate *dbModDate = md.lastModifiedDate;
         NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
         [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
@@ -4635,7 +4635,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     }	
     for (DBMetadata* child in metadata.contents) {
         if (child.isDirectory)
-            [dbSaveDirs addObject: [child.path stringByReplacingOccurrencesOfString:dbSavePathT withString:@""]];
+            [dbSaveDirs addObject: [child.path stringByReplacingOccurrencesOfString:dbSavePathT withString:@""  options:NSCaseInsensitiveSearch range:NSMakeRange(0, child.path.length)]];
     }
     [localSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
     [dbSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
@@ -4686,7 +4686,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 - (void)restClient:(DBRestClient*)client loadedFile:(NSString*)destPath {
     NSLog(@"db downloaded %@", destPath);
     [self cacheTimestamp:[NSDate date] forSaveFile:
-     [@kFrotzSaveDir stringByAppendingPathComponent:[destPath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@""]]];
+     [@kFrotzSaveDir stringByAppendingPathComponent:[destPath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, destPath.length)]]];
     [self saveDBCacheDict];
 }
 
@@ -4700,7 +4700,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 - (void)restClient:(DBRestClient*)client uploadedFile:(NSString*)destPath from:(NSString*)srcPath {
     NSLog(@"db uploadedFile: %@ from %@", destPath, srcPath);
-    [self cacheTimestamp:[NSDate date] forSaveFile: [destPath stringByReplacingOccurrencesOfString: [self dbTopPathT] withString:@""]];
+    [self cacheTimestamp:[NSDate date] forSaveFile: [destPath stringByReplacingOccurrencesOfString:[self dbTopPathT] withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, destPath.length)]];
     [self saveDBCacheDict];
 }
 
