@@ -30,9 +30,19 @@
         if (osVersStr && [osVersStr characterAtIndex: 0] >= '4') {
             UIPinchGestureRecognizer *pinch = [[[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)] autorelease];
             [self addGestureRecognizer:pinch];
+            
+            UITapGestureRecognizer *tap = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewTwoFingerTap:)]
+                                               autorelease];
+            tap.numberOfTouchesRequired = 2;
+            [self addGestureRecognizer:tap];
         }
     }
     return self;
+}
+
+-(void)storyViewTwoFingerTap:(UITapGestureRecognizer *) recognizer {
+    if ((ipzAllowInput & kIPZNoEcho))
+        iphone_feed_input(@"\x1b"); // press ESC
 }
 
 -(void)storyViewPinch:(UIPinchGestureRecognizer *) recognizer {
