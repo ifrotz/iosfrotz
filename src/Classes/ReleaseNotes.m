@@ -150,10 +150,11 @@
         "<p><ul>\n"
         "<li><b>Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.</b></li>\n"
         "<li><b>Fixed bug printing accented characters in status window.</b></li>\n"
+        "<li><b>Allow pinch gesture to change story font size.</b></li>\n"
         "<li><b>Several minor bug fixes in glk game support.</b></li>\n"
         "</ul>\n"
         "<p>If you enjoy Frotz, please rate it in the App Store.  Or write  a review! Thanks!</p>"
-        "<p><small><i>Craig Smith, September 30, 2014</i><br>\n"
+        "<p><small><i>Craig Smith, October 10, 2014</i><br>\n"
         "<hr>\n"
 
         "<p>New in Version 1.7:</p>\n"

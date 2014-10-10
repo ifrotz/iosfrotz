@@ -65,7 +65,7 @@ int iphone_screenwidth = 320, iphone_screenheight = 480;
 int iphone_fixed_font_width = 5, iphone_fixed_font_height = 10;
 
 int do_autosave = 0, autosave_done = 0, refresh_savedir = 0, restore_frame_count;
-int iphone_ifrotz_verbose_debug = (((!APPLE_FASCISM) << 1)|0); // 4
+int iphone_ifrotz_verbose_debug = 2; // (((!APPLE_FASCISM) << 1)|0); // 4
 
 FileBrowserState do_filebrowser = kFBHidden;
 BOOL disable_complete = NO;
