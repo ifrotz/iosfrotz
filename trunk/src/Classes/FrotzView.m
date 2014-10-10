@@ -23,6 +23,48 @@
 
 @implementation FrotzView
 
+- (RichTextView*)initWithFrame: (CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
+        if (osVersStr && [osVersStr characterAtIndex: 0] >= '4') {
+            UIPinchGestureRecognizer *pinch = [[[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)] autorelease];
+            [self addGestureRecognizer:pinch];
+        }
+    }
+    return self;
+}
+
+-(void)storyViewPinch:(UIPinchGestureRecognizer *) recognizer {
+    if (self.autoresizingMask == 0)
+        return;
+    if (recognizer.state==UIGestureRecognizerStateBegan)
+        m_origFontSize = m_fontSize;
+    else if (recognizer.state==UIGestureRecognizerStateChanged || recognizer.state==UIGestureRecognizerStateEnded) {
+        CGFloat scale = recognizer.scale;
+        
+        CGFloat newFontSize = m_origFontSize * scale;
+        if (newFontSize < 8)
+            newFontSize = 8;
+        else if (newFontSize > 32)
+            newFontSize = 32;
+        if ((int)(m_fontSize) != (int)(newFontSize) || recognizer.state==UIGestureRecognizerStateEnded) {
+            CGFloat duration = 0.12;
+            CATransition *animation = [CATransition animation];
+            [animation setType:kCATransitionFade];
+            [animation setDuration: duration];
+            [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+            [[self.superview.superview layer] addAnimation:animation forKey:@"storyviewpinch"];
+            
+            StoryMainViewController *delegate = (StoryMainViewController*)[self delegate];
+            [delegate setFont: nil withSize: (int)newFontSize];
+            [self repositionAfterReflow];
+            [delegate resizeStatusWindow];
+        }
+    }
+}
+
+
 -(BOOL)canBecomeFirstResponder { return NO; }
 
 -(BOOL)handleMagnifyTouchWithPhase:(UITouchPhase)phase atPoint:(CGPoint) pt {
@@ -31,9 +73,11 @@
     CGRect bounds = [view bounds];
     CGFloat width = bounds.size.width/2.0;
     CGFloat height = bounds.size.height/2.0;
-
-    if (gLargeScreenDevice)
-	return YES;
+    NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
+    if (osVersStr && [osVersStr characterAtIndex: 0] == '3' && [osVersStr characterAtIndex: 2] < '2')
+        ;
+    else if (UseFullSizeStatusLineFont || gLargeScreenDevice)
+        return YES;
     CGFloat magThresY = height*2;
     if (magThresY > 140)
 	magThresY = 140;

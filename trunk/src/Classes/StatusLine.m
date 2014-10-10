@@ -13,31 +13,31 @@
 
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event {
     StoryMainViewController *delegate = (StoryMainViewController*)[self delegate];
-
+    
     [delegate hideInputHelper];
     if (m_tapTimer) {
-	[[m_tapTimer userInfo] release];
-	[m_tapTimer invalidate];
-	[m_tapTimer release];
-	m_tapTimer = nil;
+        [[m_tapTimer userInfo] release];
+        [m_tapTimer invalidate];
+        [m_tapTimer release];
+        m_tapTimer = nil;
     }
     UITouchPhase phase = [touch phase];
     CGPoint superPt = [touch locationInView: [[self superview] superview]];
     if (phase == UITouchPhaseEnded && [touch tapCount]==1) {
-	if (m_magnified) {
-	    SavedTouch *st =[[SavedTouch alloc] initWithPhase:phase point:superPt];
-	    m_tapTimer = [[NSTimer alloc] initWithFireDate: [NSDate dateWithTimeIntervalSinceNow: 0.1] interval:0.0
-		target:self selector:@selector(timerFireMethod:) userInfo:st repeats:NO];
-	    [[NSRunLoop currentRunLoop] addTimer: m_tapTimer forMode: NSDefaultRunLoopMode];
-	} else {
-	    if (![delegate isKBShown])
-		[delegate activateKeyboard];
-	}
-	return YES;
+        if (m_magnified) {
+            SavedTouch *st =[[SavedTouch alloc] initWithPhase:phase point:superPt];
+            m_tapTimer = [[NSTimer alloc] initWithFireDate: [NSDate dateWithTimeIntervalSinceNow: 0.1] interval:0.0
+                                                    target:self selector:@selector(timerFireMethod:) userInfo:st repeats:NO];
+            [[NSRunLoop currentRunLoop] addTimer: m_tapTimer forMode: NSDefaultRunLoopMode];
+        } else {
+            if (![delegate isKBShown])
+                [delegate activateKeyboard];
+        }
+        return YES;
     }
     if ([touch tapCount] <= 1)
-	return [self handleMagnifyTouchWithPhase: phase atPoint:superPt];
-    return NO;
+        return [self handleMagnifyTouchWithPhase: phase atPoint:superPt];
+    return UseFullSizeStatusLineFont ? YES : NO;
 }
 
 - (void)timerFireMethod:(NSTimer*)theTimer {
@@ -48,9 +48,9 @@
     [self handleMagnifyTouchWithPhase: phase atPoint:pt];
     [savedTouch release];
     if (m_tapTimer) {
-	[m_tapTimer invalidate];
-	[m_tapTimer release];
-	m_tapTimer = nil;
+        [m_tapTimer invalidate];
+        [m_tapTimer release];
+        m_tapTimer = nil;
     }
 }
 

@@ -230,9 +230,10 @@ enum ControlTableSections
     int value = [sender value];
     
     if (value != lastValue) {
-	((DisplayCell*)m_fontSizeCell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, value];
-	m_newFontSize = (int)value;
-//	[m_storyDelegate setFont: [m_storyDelegate font] withSize: value];
+        ((DisplayCell*)m_fontSizeCell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, value];
+        m_newFontSize = (int)value;
+        if (gLargeScreenDevice)
+            [m_storyDelegate setFont: [m_storyDelegate font] withSize: value];
     }
     lastValue = value;
 }
@@ -315,7 +316,10 @@ enum ControlTableSections
     self.title = NSLocalizedString(@"Settings", @"");
     if (m_storyDelegate)
         m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
-    
+    if (m_fontSizeCell)
+        ((DisplayCell*)m_fontSizeCell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, m_origFontSize];
+    m_sliderCtl.value = (float)m_origFontSize;
+
 //    [self tableView: nil didSelectRowAtIndexPath: [NSIndexPath indexPathForRow: m_selectedRow inSection: m_selectedSection]];
 }
 

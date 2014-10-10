@@ -386,6 +386,7 @@ extern char *option_zcode_path;	/* dg */
 
 extern long reserve_mem;
 
+void refresh_cwin();
 
 /*** Blorb stuff ***/
 /*

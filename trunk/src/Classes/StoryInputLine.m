@@ -447,9 +447,11 @@ const int kCompletionViewTag = 21;
     [super setText: text];
 }
 
+-(void)delayedInput:(NSString*)text {
+    iphone_feed_input(text);
+}
 
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt {
-    
     if (!m_firstKeyPressed && self.text.length==0) {
         // the clearButtonMode set is done to work around a bug where the input line doesn't draw
         // properly right after an autorestore.  All it does it set the field and call setNeedsLayout,
@@ -483,7 +485,8 @@ const int kCompletionViewTag = 21;
         lastVisibleYPos[cwin] = sz.height;
         
         if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {//qqq was below
-            iphone_feed_input(text);
+            //iphone_feed_input(text); // direct call causes odd performance issue (Bureaucracy)
+            [self performSelector:@selector(delayedInput:) withObject:text afterDelay:0.04];
             return NO;
         }
     }
@@ -596,13 +599,14 @@ const int kCompletionViewTag = 21;
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
         UIKeyCommand *ctrlB = [UIKeyCommand keyCommandWithInput: @"b" modifierFlags: UIKeyModifierControl action: @selector(leftArrow:)];
         UIKeyCommand *ctrlF = [UIKeyCommand keyCommandWithInput: @"f" modifierFlags: UIKeyModifierControl action: @selector(rightArrow:)];
-        return [[NSArray alloc] initWithObjects: upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF, nil];
+        return [NSArray arrayWithObjects: upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF, nil];
     } else {
         UIKeyCommand *upArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputUpArrow modifierFlags: 0 action: @selector(upArrow:)];
         UIKeyCommand *downArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputDownArrow modifierFlags: 0 action: @selector(downArrow:)];
         UIKeyCommand *ctrlP = [UIKeyCommand keyCommandWithInput: @"p" modifierFlags: UIKeyModifierControl action: @selector(upArrow:)];
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
-        return [[NSArray alloc] initWithObjects: upArrow, downArrow, ctrlP, ctrlN, nil];
+        return [NSArray arrayWithObjects
+                : upArrow, downArrow, ctrlP, ctrlN, nil];
     }
     return nil;
 }

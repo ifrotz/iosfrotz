@@ -16,7 +16,6 @@
     NSTimer *m_tapTimer;
     BOOL m_skipNextTap;
     BOOL m_tapInputEnabled;
-
 }
 - (void)appendText:(NSString*)text;
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
