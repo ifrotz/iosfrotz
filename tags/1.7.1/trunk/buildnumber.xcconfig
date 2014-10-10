@@ -1,0 +1,8 @@
+//
+//  buildnumber.xcconfig
+//  Frotz
+//
+//  Created by Craig Smith on 9/9/14.
+//
+//
+BUILD_NUMBER = 123
