@@ -45,10 +45,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define kDefaultTextViewMinWidth 65
 #define kDefaultTextViewWidth ((gLargeScreenDevice || gLargeScreenPhone) ? 80 : kDefaultTextViewMinWidth)
-#define kDefaultTextViewHeight 60
-
 
 #define kClearEscChar '\f'
 #define kClearEscCode "\f"
@@ -843,6 +840,7 @@ void run_zinterp(bool autorestore) {
         init_undo ();
         z_restart ();
         if (autorestore) {
+            refresh_cwin();
             frame_count = restore_frame_count;
             split_window(h_version > 3 ? top_win_height : top_win_height-1);
             
@@ -1134,6 +1132,7 @@ static void setColorTable(RichTextView *v) {
             [newView setFont: [m_storyView font]];
             [newView setFixedFont: [m_storyView fixedFont]];
         }
+        [newView reflowText];
         setColorTable(newView);
         [newView setDelegate: self];
         
@@ -2125,11 +2124,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
     if (m_notesController)
         [m_notesController autosize];
-    
-    if (gStoryInterp == kGlxStory) {
-        iphone_recompute_screensize();
-        screen_size_changed = 1;
-    }
+    [self resizeStatusWindow];
+
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
@@ -2534,42 +2530,61 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void) setFont: (NSString*) fontname withSize:(int)size {
-    m_fontname = [fontname copy];
+    if (fontname) {
+        [m_fontname release];
+        m_fontname = [fontname copy];
+    } // else keep existing font, just change size
     if (size)
         m_fontSize = size;
-    if (m_fontSize < 8 || m_fontSize > (gLargeScreenDevice ? 32 : 24))
+    if (m_fontSize < 1)
         m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+    else if (m_fontSize < 8)
+        m_fontSize = 8;
+    else if (m_fontSize > (gLargeScreenDevice ? 32 : 24))
+        m_fontSize = gLargeScreenDevice ? 32 : 24;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
-	bool normalSizeFixedFont = gLargeScreenDevice || gLargeScreenPhone>1;
+    bool normalSizedStatusFont = UseFullSizeStatusLineFont && isOS32;
+	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
     [m_storyView setFontFamily: [font familyName] size: m_fontSize];
     int fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
-    
-	m_statusFixedFontSize = gLargeScreenDevice ? 15 : normalSizeFixedFont ? 9 : 8;
+    [m_storyView reflowText];
+    if (normalSizedStatusFont) {
+        int lowRange = gLargeScreenDevice ? 12 : 8;
+        int hiRange = gLargeScreenDevice ? 20 : 16;
+        m_statusFixedFontSize = fixedFontSize > hiRange ? hiRange : fixedFontSize < lowRange ? lowRange : fixedFontSize;
+    }
+    else if (gLargeScreenDevice)
+        m_statusFixedFontSize = 15;
+    else
+        m_statusFixedFontSize = normalSizeFixedFont ? 9 : 8;
     NSString *statusFixedFontFamily = [[m_statusLine fixedFont] familyName];
     [m_statusLine setFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
-    m_statusFixedFontWidth = !normalSizeFixedFont ? 5 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4;
+    m_statusFixedFontWidth = !normalSizeFixedFont ? 5.0 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4.0;
     m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont leading];
+    [m_statusLine reflowText];
     
     if (gStoryInterp == kGlxStory) {
         int c = [m_glkViews count];
         for (int k = 0; k < c; ++k) {
+            RichTextView *rtv = [m_glkViews objectAtIndex:k];
             if (glkGridArray[k].win->type == wintype_TextGrid) {
-                [[m_glkViews objectAtIndex:k] setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
-                [[m_glkViews objectAtIndex:k] setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
+                [rtv setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
+                [rtv setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
             } else {
-                [[m_glkViews objectAtIndex:k] setFontFamily: [font familyName] size:m_fontSize];
-                [[m_glkViews objectAtIndex:k] setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
+                [rtv setFontFamily: [font familyName] size:m_fontSize];
+                [rtv setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
             }
+            [rtv reflowText];
         }
         screen_size_changed = 1;
     }
 #else
     m_statusFixedFontSize = 8;
-    m_statusFixedFontWidth = 5;
+    m_statusFixedFontWidth = 5.0;
     m_statusFixedFontPixelHeight = 10;
     [m_storyView setFont: font];
     UIFont *fixedFont = [UIFont fontWithName:fixedFontName size:m_statusFixedFontSize];
@@ -2699,7 +2714,6 @@ static int iphone_top_win_height = 1;
     int off = 0;
     int maxPossCols = MAX_COLS;
     int numRows = iphone_top_win_height;
-    
     int maxCols = 80; //h_screen_cols;
     window_textgrid_t *dwin = NULL;
     NSUInteger viewNum = [m_glkViews indexOfObject: view];
@@ -2718,12 +2732,108 @@ static int iphone_top_win_height = 1;
     [view setTextStyle: slStyle];
     m_cursorOffset = CGPointMake(0, 0);
     for (i=0; i < numRows; ++i) {
+#if UseFullSizeStatusLineFont
+        int needCols = 0;
+        int skipCol = -1, skipCount = 0, skipCol2 = -1, skipCount2 = 0;
+        if (isOS32 && gStoryInterp==kZStory) {
+            CGFloat charWidth = m_statusFixedFontWidth;
+            int displayCols = (int)(view.frame.size.width / charWidth + 0.5);
+            int firstNonReversedRow = 0;
+            if (displayCols < h_screen_cols) {
+                needCols = h_screen_cols - displayCols;
+                for (j=0; j < numRows; ++j) {
+                    isReverse = (screen_data[j * maxPossCols] >> 8) & REVERSE_STYLE;
+                    if (!isReverse)
+                        break;
+                }
+                firstNonReversedRow = j;
+                if (i < firstNonReversedRow) {
+                    int consecSpaces = 0, maxConsecSpaces = 0, maxConsecSpaces2 = 0, spaceIndex = -1, spaceIndex2 = -1;
+                    for (j=0; j < h_screen_cols; ++j) {
+                        wchar_t c = (unsigned char)screen_data[i * maxPossCols + j];
+                        if (c == ' ') {
+                            consecSpaces++;
+                            if (consecSpaces > 1) {
+                                if (consecSpaces > maxConsecSpaces) {
+                                    if (maxConsecSpaces2 > 0 && skipCol!=j-consecSpaces+1) {
+                                        maxConsecSpaces2 = maxConsecSpaces;
+                                        spaceIndex2 = spaceIndex;
+                                        skipCol2 = skipCol; skipCount2 = skipCount;
+                                    }
+                                    maxConsecSpaces = consecSpaces;
+                                    spaceIndex = j;
+                                    skipCol = spaceIndex-consecSpaces+1;
+                                    skipCount = consecSpaces-1;
+                                } else if (consecSpaces > maxConsecSpaces2) {
+                                    maxConsecSpaces2 = consecSpaces;
+                                    spaceIndex2 = j;
+                                    skipCol2 = spaceIndex2-consecSpaces+1;
+                                    skipCount2 = consecSpaces-1;
+                                }
+                            }
+                        } else
+                            consecSpaces = 0;
+                    }
+                    if (skipCount + skipCount2 > needCols) {
+                        skipCount2 = (int)(1.0*skipCount2/(skipCount+skipCount2)*needCols);
+                        skipCount = needCols - skipCount2;
+                    }
+                    if (skipCol2 >= 0 && skipCol2 < skipCol) {
+                        int t = skipCol; skipCol = skipCol2; skipCol2 = t;
+                        t = skipCount; skipCount = skipCount2; skipCount2 = t;
+                    }
+                    //NSLog(@"row=%d n=%d skip1=%d %d, skip2=%d %d", i, needCols, skipCol, skipCount, skipCol2, skipCount2);
+                    if (skipCount + skipCount2 < needCols) {
+                        int diff = needCols - skipCount - skipCount2;
+                        if (diff > skipCol)
+                            diff = skipCol;
+                        skipCol -= diff;
+                        skipCount += diff-1;
+                    }
+                } else {
+                    for (j=h_screen_cols-1; j > 0; --j) {
+                        isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                        if (isReverse)
+                            break;
+                    }
+                    int maxc = j;
+                    int trailingSpace = (h_screen_cols - maxc);
+                    if (needCols > 0 && trailingSpace > 0) {
+                        needCols -= trailingSpace-trailingSpace/2;
+                        if (needCols < 0)
+                            needCols = 0;
+                    }
+                    for (j=0; j < maxc; ++j) {
+                        isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                        if (isReverse)
+                            break;
+                    }
+                    if (j > 0 && j < h_screen_cols) {
+                        skipCol = 0;
+                        if (j > needCols)
+                            skipCount = (needCols+j)/2;
+                        else
+                            skipCount = j;
+                    }
+                }
+            }
+        }
+#endif
+        
         int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> 8) & REVERSE_STYLE;
         tgline_t *ln = dwin && dwin->lines && i < dwin->height ? &(dwin->lines[i]) : NULL;
         for (j=0; j < maxCols; ++j) {
-            wchar_t c;
+            wchar_t c = 0;
+            if (j == skipCol) {
+                j += skipCount;
+                if (skipCol > 0 && skipCount == needCols-skipCount2-1)
+                    c = 0x2026;
+            } else if (j == skipCol2) {
+                j += skipCount2;
+            }
             if (gStoryInterp == kGlxStory) {
-                c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
+                if (!c)
+                    c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
                 if (ln && j < ln->size) {
                     int s = ln->attrs[j];
                     isReverse = ((dwin->hints[s].styleSetMask & kGlKStyleRevertColorMask) && dwin->hints[s].reverseColor!=0);
@@ -2738,7 +2848,8 @@ static int iphone_top_win_height = 1;
                 }
                 color = 0;
             } else {
-                c = (unsigned char)screen_data[i * maxPossCols + j];
+                if (!c)
+                    c = (unsigned char)screen_data[i * maxPossCols + j];
                 color = screen_colors[i * maxPossCols + j];
                 isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
                 if (currColor==0x22 || j >= h_screen_cols-1 && iphone_top_win_height <= 4 && firstColStyle) {
@@ -2809,6 +2920,8 @@ static int iphone_top_win_height = 1;
     if (hasAccessibility)
         [view setAccessibilityValue: view.text];
     [buf release];
+    if (cwin==1)
+        [m_inputLine updatePosition];
 }
 #else
 char *tempStatusLineScreenBuf() {
@@ -2880,7 +2993,15 @@ char *tempStatusLineScreenBuf() {
         statusLine = m_statusLine;
     }
     int statusLen = [inputStatusStr length];
-    
+
+    if (iphone_top_win_height == -2) {
+        topWinSize = prevTopWinHeight * (m_statusFixedFontPixelHeight+1);
+        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
+        iphone_top_win_height = prevTopWinHeight;
+        [storyView setTopMargin: topWinSize];
+        grewStatus = 1;
+    }
+
     if (iphone_top_win_height < 0)
         prevTopWinHeight = -1;
     
@@ -2892,13 +3013,14 @@ char *tempStatusLineScreenBuf() {
         frozeDisplay = YES;
     }
     
-    if (iphone_top_win_height < 0 || prevTopWinHeight != top_win_height && (statusLen > 1 && !grewStatus || top_win_height==0 || top_win_height > prevTopWinHeight)) {
+    if (iphone_top_win_height < 0 || prevTopWinHeight != top_win_height
+                && (grewStatus==2 || statusLen > 1 && !grewStatus || top_win_height==0 || top_win_height > prevTopWinHeight)) {
         
         if (top_win_height > 1 && top_win_height > prevTopWinHeight)
             grewStatus = 1;
         else
             grewStatus = 0;
-        fast=YES;
+        fast = YES;
         topWinSize = top_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
         
         if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
@@ -2909,7 +3031,7 @@ char *tempStatusLineScreenBuf() {
         iphone_top_win_height = top_win_height;
         [storyView setTopMargin: topWinSize+0];
         prevTopWinHeight = top_win_height;
-        //	NSLog(@"set topwinheight %d", top_win_height);
+        //NSLog(@"set topwinheight %d", top_win_height);
     }
     
     if (winSizeChanged) {
@@ -3192,7 +3314,7 @@ char *tempStatusLineScreenBuf() {
         }
     } 
     if (ipzAllowInput & kIPZRequestInput) {
-        grewStatus = 0;
+            grewStatus = 0;
         CGSize sz = [storyView contentSize];
         float viewWidth = viewFrame.size.width;
         if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == top_win_height) {
@@ -3555,6 +3677,17 @@ static void setScreenDims(char *storyNameBuf) {
 #undef hgetchar
 }
 
+-(void) resizeStatusWindow {
+    if (gStoryInterp == kZStory) {
+        iphone_top_win_height = -2;
+        iphone_win_puts(1, "\n\n");
+    } else if (gStoryInterp == kGlxStory) {
+        iphone_recompute_screensize();
+        screen_size_changed = 1;
+    }
+    [m_inputLine updatePosition];
+}
+
 -(BOOL) autoRestoreSession {
     static char storyNameBuf[MAX_FILE_NAME];
     
@@ -3638,7 +3771,7 @@ static void setScreenDims(char *storyNameBuf) {
                 statusScreenData = [dict objectForKey: @"statusWinData"];
                 statusScreenColors = [dict objectForKey: @"statusWinColors"];
                 setScreenDims(storyNameBuf);
-                h_screen_rows = iphone_textview_height;
+                h_screen_rows = kDefaultTextViewHeight; // iphone_textview_height;
                 h_screen_cols = iphone_textview_width;
                 h_screen_width = h_screen_cols;
                 h_screen_height = h_screen_rows;
@@ -3722,7 +3855,7 @@ static void setScreenDims(char *storyNameBuf) {
                     currColor = u_setup.current_color = color;
                 
                 [self rememberActiveStory];
-                
+
                 screen_size_changed = 1;
                 
                 m_storyTID = 0;
@@ -4201,7 +4334,7 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 -(int)statusFixedFontPixelWidth {
-    return m_statusFixedFontWidth;
+    return (int)m_statusFixedFontWidth;
 }
 
 -(int)statusFixedFontPixelHeight {

@@ -24,9 +24,9 @@
 #import "NotesViewController.h"
 
 @class StoryBrowser;
+@class FrotzView;
 
-#import "FrotzView.h"
-
+#import "RichTextView.h"
 #import "TextViewExt.h"
 
 enum { kIPZDisableInput = 0, kIPZRequestInput = 1, kIPZNoEcho = 2, kIPZAllowInput = 4 };
@@ -101,7 +101,7 @@ extern StoryInputLine *theInputLine;
     BOOL m_ignoreWordSelection;
 
     int m_statusFixedFontSize;
-    int m_statusFixedFontWidth;
+    CGFloat m_statusFixedFontWidth;
     int m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
     CGSize m_kbdSize;
@@ -142,6 +142,7 @@ extern StoryInputLine *theInputLine;
 - (void) setIgnoreWordSelection:(BOOL)ignore;
 - (void) abortToBrowser;
 - (void)autosize;
+-(void) resizeStatusWindow;
 -(void) setCurrentStory: (NSString*)story;
 -(void) launchStory;
 -(void) abandonStory:(BOOL)deleteAutoSave;

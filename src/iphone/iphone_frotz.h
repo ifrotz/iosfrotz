@@ -137,6 +137,11 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSaveActiveFile "Current.plist"
 #define kFrotzAutoSaveGlkImgPrefix "glkwingfx"
 
+#define kDefaultTextViewMinWidth 65
+#define kDefaultTextViewHeight 25
+
+#define UseFullSizeStatusLineFont 1
+
 #define IPHONE_FROTZ_VERS "1.7.1"
 #define FROTZ_BETA 1
 

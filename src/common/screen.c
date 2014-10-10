@@ -18,7 +18,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "frotz.h"
+//#include "frotz.h"
+#include "iphone_frotz.h"
 
 extern void set_header_extension (int, zword);
 
@@ -181,10 +182,8 @@ extern int currTextStyle;
 
 static int units_left (void)
 {
-
-//    if (cwin == 0 && (currTextStyle & (REVERSE_STYLE|FIXED_WIDTH_STYLE))==FIXED_WIDTH_STYLE)
-//	return 50 - cwp->right - cwp->x_cursor + 1;
-
+    if (cwin == 1)
+        return MAX_COLS - cwp->right - cwp->x_cursor + 1;
     return cwp->x_size - cwp->right - cwp->x_cursor + 1;
 
 }/* units_left */
@@ -324,12 +323,12 @@ void screen_char (unsigned int c)
 	c = ' ';
 
     if (units_left () < (width = os_char_width (c))) {
-
-	if (!enable_wrapping)
+        
+        if (!enable_wrapping)
 	    { cwp->x_cursor = cwp->x_size - cwp->right; update_cursor(); }
-    else
-        screen_new_line (TRUE);
-
+        else
+            screen_new_line (TRUE);
+        
     }
     os_display_char (c); cwp->x_cursor += width;
 
@@ -605,6 +604,11 @@ static void set_window (zword win)
     update_cursor ();
 
 }/* set_window */
+
+void refresh_cwin() {
+    cwp = wp + cwin;
+    update_attributes ();
+}
 
 /*
  * erase_window

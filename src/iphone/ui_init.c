@@ -173,14 +173,14 @@ void os_init_screen (void)
         if (f_setup.undo_slots == 0)
             h_flags &= ~UNDO_FLAG;
 
-    h_screen_rows = iphone_textview_height;
+    h_screen_rows = kDefaultTextViewHeight; // iphone_textview_height;
     h_screen_cols = iphone_textview_width;
 
     if (u_setup.screen_height != -1)
-	h_screen_rows = u_setup.screen_height;
+        h_screen_rows = u_setup.screen_height;
     if (u_setup.screen_width != -1)
-	h_screen_cols = u_setup.screen_width;
-
+        h_screen_cols = u_setup.screen_width;
+    
     h_screen_width = h_screen_cols;
     h_screen_height = h_screen_rows;
 

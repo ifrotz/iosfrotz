@@ -209,6 +209,7 @@ static void iphone_set_cell(int row, int col, cell c)
         if ((color >> 4) == BLACK_COLOUR)
             color = (WHITE_COLOUR<<4)|BLACK_COLOUR;
         else
+            
             color = (BLACK_COLOUR<<4)|(color & 0xf);
     }
     if (row < 0)
@@ -466,7 +467,7 @@ void os_erase_area (int top, int left, int bottom, int right, int windowNum)
 void os_split_win(int height) {
     if (height > h_screen_height || height > MAX_ROWS)
         height = h_screen_height;
-    if (height > top_win_height && top_win_height > 0) { // >0 cond to help reduce bronze flicker
+    if (height > top_win_height && top_win_height > 1) { // >0 cond to help reduce bronze flicker
         int row, col;
         for (row = top_win_height; row < h_screen_rows; row++)
             for (col = 0; col < h_screen_cols; col++)

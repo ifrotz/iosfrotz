@@ -90,14 +90,18 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 @synthesize selectionDisabled = m_selectionDisabled;
 @synthesize richDataGetImageCallback = m_richDataGetImageCallback;
 
+-(void)repositionAfterReflow {
+    if (m_firstVisibleTextRunIndex > 0 && m_firstVisibleTextRunIndex < [m_textPos count]) {
+        CGPoint pt = [[m_textPos objectAtIndex: m_firstVisibleTextRunIndex] CGPointValue];
+        self.contentOffset = CGPointMake(0, pt.y+m_savedTopYOffset);
+    }
+    
+}
 -(void)setLeftMargin:(unsigned int)m {
     if (m_leftMargin != m) {
         m_tempLeftMargin = m_leftMargin = m;
         [self reflowText];
-        if (m_firstVisibleTextRunIndex > 0 && m_firstVisibleTextRunIndex < [m_textPos count]) {
-            CGPoint pt = [[m_textPos objectAtIndex: m_firstVisibleTextRunIndex] CGPointValue];
-            self.contentOffset = CGPointMake(0, pt.y+m_savedTopYOffset);
-        }
+        [self repositionAfterReflow];
     }
 }
 
@@ -283,7 +287,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_fontMaxWidth = letterSize.width;
         m_fontMinWidth = [@"i" sizeWithFont: m_normalFont].width;
         [self setNiceMargins:NO];
-        [self reflowText];
+        //[self reflowText];
         return YES;
 	}
     return NO;
@@ -325,7 +329,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_fixedBoldItalicFont = boldItalicFont;
         m_fixedFontHeight  = [@"W" sizeWithFont: m_normalFont].height;
         m_fixedFontWidth = [@"i" sizeWithFont: m_fixedNormalFont].width;
-        [self reflowText];
+        //[self reflowText];
         return YES;
 	}
     return NO;
@@ -335,6 +339,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     NSString *familyName = [newFont familyName];
     int newSize = [newFont pointSize];
     [self setFontFamily: familyName size:newSize];
+}
+
+-(void)setFontSize:(CGFloat)newFontSize {
+    [self setFont: [m_normalFont fontWithSize: newFontSize]];
 }
 
 -(void)setFixedFont:(UIFont*)newFont {
@@ -1144,7 +1152,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 minChars = len;
             if (minChars > maxChars-20)
                 minChars = maxChars-20;
-            if (maxChars < 20)
+            if (maxChars < 30)
                 minChars = 0;
             if (noWrap) {
                 termRange = NSMakeRange(len-1, 1);
@@ -2089,10 +2097,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [m_tileContainerView setFrame: CGRectMake(0, 0, frame.size.height, frame.size.width)];
         if (oldFrame.size.width != frame.size.width) {
             [self reflowText];
-            if (m_firstVisibleTextRunIndex > 0 && m_firstVisibleTextRunIndex < [m_textPos count]) {
-                CGPoint pt = [[m_textPos objectAtIndex: m_firstVisibleTextRunIndex] CGPointValue];
-                self.contentOffset = CGPointMake(0, pt.y+m_savedTopYOffset);
-            }
+            [self repositionAfterReflow];
         }
     }
 }

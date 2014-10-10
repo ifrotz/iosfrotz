@@ -11,6 +11,7 @@
 #if UseRichTextView
 
 #import "RichTextView.h"
+#import "StoryMainViewController.h"
 
 @interface FrotzView : RichTextView
 #else
@@ -18,6 +19,7 @@
 #endif
 {
     BOOL m_magnified;
+    CGFloat m_origFontSize;
 }
 -(BOOL)handleMagnifyTouchWithPhase:(UITouchPhase)phase atPoint:(CGPoint) pt;
 @end
