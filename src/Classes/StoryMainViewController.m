@@ -2726,6 +2726,7 @@ static int iphone_top_win_height = 1;
     }
     NSMutableString *buf = [[NSMutableString alloc] init];
     int color = gStoryInterp == kGlxStory ? 0 : screen_colors[0];
+    BOOL noWhitespaceCompression = NO;
     [view setTextColorIndex: color >> 4];
     [view setBgColorIndex: color & 0xf];
     [view clear];
@@ -2805,10 +2806,15 @@ static int iphone_top_win_height = 1;
                     }
                     for (j=0; j < maxc; ++j) {
                         isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                        wchar_t c = (unsigned char)screen_data[i * maxPossCols + j];
                         if (isReverse)
                             break;
+                        if (c != ' ') {
+                            noWhitespaceCompression = YES;
+                            break;
+                        }
                     }
-                    if (j > 0 && j < h_screen_cols) {
+                    if (!noWhitespaceCompression && j > 0 && j < h_screen_cols) {
                         skipCol = 0;
                         if (j > needCols)
                             skipCount = (needCols+j)/2;
@@ -2950,6 +2956,7 @@ char *tempStatusLineScreenBuf() {
     static int prevTopWinHeight = 1;
     static int continuousPrintCount = 0;
     static int grewStatus = 0;
+    static int prevInputsSinceSaveRestore;
     int textLen;
     CGRect viewFrame = [m_storyView frame];
     BOOL fast = NO;
@@ -3014,7 +3021,8 @@ char *tempStatusLineScreenBuf() {
     }
     
     if (iphone_top_win_height < 0 || prevTopWinHeight != top_win_height
-                && (grewStatus==2 || statusLen > 1 && !grewStatus || top_win_height==0 || top_win_height > prevTopWinHeight)) {
+                && (statusLen > 1 && !grewStatus || inputsSinceSaveRestore!=prevInputsSinceSaveRestore ||
+                    top_win_height==0 || top_win_height > prevTopWinHeight)) {
         
         if (top_win_height > 1 && top_win_height > prevTopWinHeight)
             grewStatus = 1;
@@ -3033,7 +3041,8 @@ char *tempStatusLineScreenBuf() {
         prevTopWinHeight = top_win_height;
         //NSLog(@"set topwinheight %d", top_win_height);
     }
-    
+    prevInputsSinceSaveRestore = inputsSinceSaveRestore;
+
     if (winSizeChanged) {
         winSizeChanged = NO;
         pthread_cond_signal(&winSizeChangedCond);
