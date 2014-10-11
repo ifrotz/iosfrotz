@@ -33,6 +33,11 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    BOOL oldOS = NO;
+    NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
+    if (osVersStr && [osVersStr characterAtIndex: 0] == '3' && [osVersStr characterAtIndex: 2] < '2')
+        oldOS = YES;
+
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];
     [self.view addSubview: webView];
@@ -111,19 +116,24 @@
                               "<tr valign=top><td><b>verbose</b></td><td>Print room descriptions always, even if you've been there before.</td></tr>\n"
                               "</table></p>\n"
                               "<span style=\"color:yellow;\">Gestures</span><br/>\n"
-                              "<p>While playing, you can <b>tap the story window</b> once to scroll down one page, <b>double tap</b> to scroll to the end and show the keyboard, <b>triple tap</b> to hide the keyboard, or use a <b>flick</b> gesture to scroll.</p>"
+                              "<p>While playing, you can <b>tap the story window</b> once to scroll down one page, <b>double tap</b> to scroll to the end and show the keyboard, <b>triple tap</b> to hide the keyboard, or use a <b>flick</b> gesture to scroll.  Use a <b>pinch</b> gesture to increase or decrease the font size.</p>"
                               
                               "<p>You can also <b>tap on the command line</b> to bring up a helper menu of common words, or <b>double tap</b> to bring up a menu of recently entered commands. "
-                              "<b>Double tapping</b> on any word in the story window will copy it to the end of the command line.</p>\n"
+                              "<b>Double tapping</b> on any word in the story window will copy it to the end of the command line.  A <b>long press</b> on the keyboard show/hide button will hide and lock the keyboard, if you prefer to control the "
+                              "game using only the input helper menu and other shortcuts.</p>\n"
                               "<p>When displaying built-in <b>help</b>, and in some other situations, games may present a text menu of choices.  In lieu of "
-                              "arrow keys, you can use the <b>N</b> and <b>P</b> keys to go to the next and previous item, and <b>Return</b> to make a selection.</p>"
+                              "arrow keys, you can use the <b>N</b> and <b>P</b> keys to go to the next and previous item, and <b>Return</b> to make a selection. If the game says to use ESC to back out of a menu, you can tap with two fingers to simulate this key.</p>"
                               "%@"
                               "<br/>"
                               "</body>\n",
-                              (!gLargeScreenDevice) ?
+                              (oldOS) ?
                               @"<p>Many games display a status line at the top of the screen with your current location, the time or score, or other relevant info.\n"
                               "In order for the story to properly display all the info it expects to, the status line "
-                              "must use a small font.  If you have trouble reading the status line, you can <b>press and hold</b> on it magnify it.</p>\n " : @""]
+                              "uses a small font.  If you have trouble reading the status line, you can <b>press and hold</b> on it magnify it.</p>\n"
+                              : !gLargeScreenDevice ?
+                              @"<p>Many games display a status line at the top of the screen with your current location, the time or score, or other relevant info.\n"
+                              "In some cases the story can only display all the information it needs to when using a small font.  If you are "
+                              "using a larger font and the status line is truncated, you can pinch to decrease the font size temporarily in order to see the full status line.</p>\n" : @""]
      
                     baseURL:nil
      ];
