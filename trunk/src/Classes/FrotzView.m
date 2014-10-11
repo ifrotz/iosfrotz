@@ -27,7 +27,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-        if (osVersStr && [osVersStr characterAtIndex: 0] >= '4') {
+        if (osVersStr && ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 0] == '1')) { // 1x
             UIPinchGestureRecognizer *pinch = [[[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)] autorelease];
             [self addGestureRecognizer:pinch];
             

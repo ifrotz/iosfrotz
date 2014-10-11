@@ -971,9 +971,9 @@ static void setColorTable(RichTextView *v) {
     if (self)
     {
         NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-        if (osVersStr && [osVersStr characterAtIndex: 0] >= '3') {
+        if (osVersStr && ([osVersStr characterAtIndex: 0] >= '3' || [osVersStr characterAtIndex: 0] == '1')) {
             isOS30 = YES;
-            if ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 2] >= '2')
+            if ([osVersStr characterAtIndex: 0] != '3' || [osVersStr characterAtIndex: 2] >= '2')
                 isOS32 = YES;
         }
         
@@ -3458,7 +3458,9 @@ static UIColor *scanColor(NSString *colorStr) {
         int fontSize= [[dict objectForKey: @"fontSize"] longValue];
         if (!fontSize)
             fontSize = m_fontSize;
-        iphone_ifrotz_verbose_debug = [[dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ] longValue];
+        NSNumber *ivd = [dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ];
+        if (ivd)
+            iphone_ifrotz_verbose_debug = [ivd longValue];
         if (fontname)
             [self setFont: fontname withSize: fontSize];
         else
