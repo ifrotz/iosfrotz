@@ -138,7 +138,7 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSaveGlkImgPrefix "glkwingfx"
 
 #define kDefaultTextViewMinWidth 65
-#define kDefaultTextViewHeight 25
+#define kDefaultTextViewHeight 28
 
 #define UseFullSizeStatusLineFont 1
 
