@@ -20,11 +20,11 @@ Click [http://code.google.com/p/iphonefrotz/wiki/FrotzSupport here] for support 
 
 *10/20/2014*
 
-* Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.
-* Fixed bug printing accented characters in status window.
-* Allow using pinch gesture to change story font size.
-* Smaller app download size; full IFDB access enabled!
-* Several minor bug fixes in glk game support.
+ * Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.
+ * Fixed bug printing accented characters in status window.
+ * Allow using pinch gesture to change story font size.
+ * Smaller app download size; full IFDB access enabled!
+ * Several minor bug fixes in glk game support.
 
 *Update - Version 1.7 now available!*
 
