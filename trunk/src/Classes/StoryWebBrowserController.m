@@ -509,7 +509,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	}
 	NSFileManager *fileMgr = [NSFileManager defaultManager];
 	[fileMgr removeItemAtPath: outFile error: &error];
-    } else if ([[ext lowercaseString] hasPrefix: @"z"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
+    } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
 	alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
 							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
@@ -819,6 +819,8 @@ static bool bypassBundle = NO;
         [ext isEqualToString: @"zip"] ||
         [ext isEqualToString: @"zlb"] ||
         [ext isEqualToString: @"dat"] ||
+        [ext isEqualToString: @"gam"] ||
+        [ext isEqualToString: @"t3"] ||
         [ext isEqualToString: @"blb"] ||
         [ext isEqualToString: @"ulx"] ||
         [ext isEqualToString: @"gblorb"] ||

@@ -484,14 +484,14 @@ const int kCompletionViewTag = 21;
         CGSize sz = [[self storyView] contentSize];
         lastVisibleYPos[cwin] = sz.height;
         
-        if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {//qqq was below
+        if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {// was below
             //iphone_feed_input(text); // direct call causes odd performance issue (Bureaucracy)
             [self performSelector:@selector(delayedInput:) withObject:text afterDelay:0.04];
             return NO;
         }
     }
     
-    if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) //qqq
+    if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
         return NO;
 
     BOOL result = (BOOL)[super keyboardInput:sender shouldInsertText:text isMarkedText:imt];

@@ -66,6 +66,7 @@ int iphone_fixed_font_width = 5, iphone_fixed_font_height = 10;
 
 int do_autosave = 0, autosave_done = 0, refresh_savedir = 0, restore_frame_count;
 int iphone_ifrotz_verbose_debug = 2; // (((!APPLE_FASCISM) << 1)|0); // 4
+static int discard_output_until_prompt = 0;
 
 FileBrowserState do_filebrowser = kFBHidden;
 BOOL disable_complete = NO;
@@ -862,21 +863,28 @@ BOOL gForceUseGlulxe = NO;
 
 void glk_main_glulxe();
 
+void glk_main_tads();
+void glk_main_tads23();
+
 void run_glxinterp(const char *story, bool autorestore) {
     char glulHeader[48];
 
+    BOOL useTADS = NO;
     BOOL useGlulxe = gForceUseGlulxe;
     
-    if (readGLULheaderFromUlxOrBlorb(story, glulHeader)) {
+    if (strcasestr(story, ".gam"))
+        useTADS = YES;
+    else if (strcasestr(story, ".t3"))
+        useTADS = YES;
+    else if (readGLULheaderFromUlxOrBlorb(story, glulHeader)) {
         // Inform-created stories have 'INFO' at offset 36.
         if (glulHeader[36]!='I' && glulHeader[4]==0 && glulHeader[5]==2) // glulxa-asssembled, probably SuperGLUS?
             useGlulxe = YES;
     }
-
     
     gStoryInterp = kGlxStory;
     
-    char *argv[] = { "frotz", (char*)story };
+    char *argv[] = { "frotz", (char*)story, NULL, NULL, NULL };
     glkunix_startup_t  glkunix_startup = { 2,  argv };
     iphone_ioinit();
     
@@ -889,15 +897,26 @@ void run_glxinterp(const char *story, bool autorestore) {
     gli_initialize_windows();
     gli_initialize_events();
     
-    if (useGlulxe)
+    if (useTADS) {
+        if (autorestore) {
+            glkunix_startup.argc = 4;
+            argv[1] = "-r";
+            argv[2] = AUTOSAVE_FILE;
+            argv[3] = (char*)story;
+            discard_output_until_prompt = 1;
+        }
+        glkunix_startup_code_tads(&glkunix_startup);
+    }
+    else if (useGlulxe)
         glkunix_startup_code_glulxe(&glkunix_startup);
     else
         glkunix_startup_code(&glkunix_startup);
-
-    if (autorestore)
-        do_autosave = 1;
     
-    if (useGlulxe)
+    if (useTADS) {
+        do_autosave = 0; // already set up params, leaving on would cause immmediate autosave in main terp loop
+        glk_main_tads23();
+    }
+    else if (useGlulxe)
         glk_main_glulxe();
     else
         glk_main();
@@ -917,10 +936,12 @@ void run_interp(const char *story, bool autorestore) {
     
     NSMutableString *str = [NSMutableString stringWithUTF8String: story];
     story_name  = (char*)[str UTF8String];
-    
-    if ([[str pathExtension] isEqualToString: @"blb"]
-        || [[str pathExtension] isEqualToString: @"gblorb"]
-        || [[str pathExtension] isEqualToString: @"ulx"])
+    NSString *ext = [[str pathExtension] lowercaseString];
+    if ([ext isEqualToString: @"blb"]
+        || [ext isEqualToString: @"gam"]
+        || [ext isEqualToString: @"t3"]
+        || [ext isEqualToString: @"gblorb"]
+        || [ext isEqualToString: @"ulx"])
         run_glxinterp(story, autorestore);
     else
         run_zinterp(autorestore);
@@ -2443,7 +2464,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [nc release];
     }
     else {
-        [self.navigationController popViewControllerAnimated: YES];
+        if ([self.navigationController topViewController]==browser)
+            [self.navigationController popViewControllerAnimated: YES];
         if (!gLargeScreenDevice)
             [self.navigationController setNavigationBarHidden:m_landscape ? YES:NO animated:YES];
     }
@@ -3060,7 +3082,7 @@ char *tempStatusLineScreenBuf() {
         if (!clearStory && !setDefColors) {
 #if UseRichTextView
             NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
-            while (escCodeRange.length > 0) {
+            while (escCodeRange.length > 0 && !discard_output_until_prompt) {
                 if (escCodeRange.location > 0)
                     [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
                 NSString *subEscCode = [inputBufferStr substringFromIndex: escCodeRange.location+1];
@@ -3173,7 +3195,9 @@ char *tempStatusLineScreenBuf() {
             }
 #endif
             int iBufLen = [inputBufferStr length];
-            if (iBufLen < 256)
+            if (discard_output_until_prompt)
+                ; // do nothing
+            else if (iBufLen < 256)
                 [storyView appendText: inputBufferStr];
             else {
                 NSRange nlr = [inputBufferStr rangeOfString: @"\n"];
@@ -3323,7 +3347,7 @@ char *tempStatusLineScreenBuf() {
         }
     } 
     if (ipzAllowInput & kIPZRequestInput) {
-            grewStatus = 0;
+        grewStatus = 0;
         CGSize sz = [storyView contentSize];
         float viewWidth = viewFrame.size.width;
         if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == top_win_height) {
@@ -3360,6 +3384,7 @@ char *tempStatusLineScreenBuf() {
                 lastInputWindow = cwin;
             }
             [storyView markWaitForInput];
+            discard_output_until_prompt = 0;
             [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.08];
             ipzAllowInput |= kIPZAllowInput;
         }
@@ -3732,7 +3757,9 @@ static void setScreenDims(char *storyNameBuf) {
                 
                 if ([[m_currentStory pathExtension] isEqualToString: @"blb"]
                     || [[m_currentStory pathExtension] isEqualToString: @"gblorb"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"ulx"])
+                    || [[m_currentStory pathExtension] isEqualToString: @"ulx"]
+                    || [[m_currentStory pathExtension] isEqualToString: @"gam"]
+                    || [[m_currentStory pathExtension] isEqualToString: @"t3"])
                     gStoryInterp = kGlxStory;
                 else
                     gStoryInterp = kZStory;
@@ -3743,7 +3770,7 @@ static void setScreenDims(char *storyNameBuf) {
                 FILE *sf = fopen(storyNameBuf, "r");
                 if (sf) hvers = fgetc(sf);
                 fclose(sf);
-                if ((hvers < 2 || hvers > 8) && hvers != 'F' && hvers != 'G') { // F for zblorb, G for glulx
+                if ((hvers < 2 || hvers > 8) && hvers != 'F' && hvers != 'G' && hvers!='T') { // F for zblorb, G for glulx, T for TADS
                     NSLog(@"autoRestoreFailed");
                     [fileMgr removeItemAtPath: storySIPPath error:&error];
                     return NO;
@@ -4220,6 +4247,7 @@ static void setScreenDims(char *storyNameBuf) {
     }
     return  YES;
 }
+
 
 -(void)autoSaveCallback {
     if ([self possibleUnsavedProgress]) {

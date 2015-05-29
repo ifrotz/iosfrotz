@@ -32,6 +32,50 @@ void gli_putchar_utf8(glui32 val, FILE *fl)
     }
 }
 
+glui32 gli_utf8_to_utf32(unsigned char *buf, glui32 buflen, glui32 *skipped)
+{
+    glui32 pos = 0, res;
+    glui32 val0, val1, val2, val3;
+    *skipped = 0;
+    if (!buflen)
+        return 0;
+    val0 = buf[pos++];
+    
+    if (val0 < 0x80) {
+        res = val0;
+    } else if ((val0 & 0xe0) == 0xc0) {
+        if (pos+1 > buflen)
+            return 0;
+        val1 = buf[pos++];
+        if ((val1 & 0xc0) != 0x80)
+            return 0;
+        res = (val0 & 0x1f) << 6;
+        res |= (val1 & 0x3f);
+    } else if ((val0 & 0xf0) == 0xe0) {
+        if (pos+2 > buflen)
+            return 0;
+        val1 = buf[pos++];
+        val2 = buf[pos++];
+        if ((val1 & 0xc0) != 0x80 || (val2 & 0xc0) != 0x80)
+            return 0;
+        res = (((val0 & 0xf)<<12)  & 0x0000f000) | (((val1 & 0x3f)<<6) & 0x00000fc0)
+            | (((val2 & 0x3f))    & 0x0000003f);
+    } else if ((val0 & 0xf0) == 0xf0) {
+        if ((val0 & 0xf8) != 0xf0 || pos+3 > buflen)
+            return 0;
+        val1 = buf[pos++];
+        val2 = buf[pos++];
+        val3 = buf[pos++];
+        if ((val1 & 0xc0) != 0x80 || (val2 & 0xc0) != 0x80 || (val3 & 0xc0) != 0x80)
+            return 0;
+        res = (((val0 & 0x7)<<18) & 0x1c0000) | (((val1 & 0x3f)<<12) & 0x03f000)
+            | (((val2 & 0x3f)<<6) & 0x000fc0) | (((val3 & 0x3f)) & 0x00003f);
+    }
+    *skipped = pos;
+    return res;
+}
+
+
 glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
     glui32 *out, glui32 outlen)
 {

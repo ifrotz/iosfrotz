@@ -147,7 +147,6 @@ static const int kNotesTitleHeight = 24;
     //    UIButton *scriptBrowseButton = [UIButton buttonWithType: UIButtonTypeDetailDisclosure];
     //    [m_notesView addSubview: scriptBrowseButton];
     
-//qqq    [m_scrollView addSubview: m_notesBGView];
     [m_notesBGView addSubview: m_notesView];
 }
 

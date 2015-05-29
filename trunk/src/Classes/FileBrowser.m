@@ -388,7 +388,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         NSString *path = [m_path stringByAppendingPathComponent: file];
         if ([fileManager fileExistsAtPath: path isDirectory: &isDir] && !isDir) {
             const char *fn = [file cStringUsingEncoding: NSUTF8StringEncoding];
-            if (fn && strcasecmp(fn, kFrotzAutoSaveFile) != 0 && strcasecmp(fn, kFrotzAutoSavePListFile) != 0) {
+            if (fn && strcasecmp(fn, kFrotzAutoSaveFile) != 0 && strcasecmp(fn, kFrotzAutoSavePListFile) != 0
+                && strcasecmp(fn, kFrotzAutoSaveFileGlkWin) != 0) {
                 if ([file hasSuffix: @".png"] || [file hasSuffix: @".jpg"])
                     continue;
                 if (m_dialogType==kFBDoShowRecord || m_dialogType==kFBDoShowPlayback) {
