@@ -101,6 +101,7 @@
             else if (tapCount == 3) {
                 if ([touch timestamp] > lastTimestamp + 0.5) {
 #if UseRichTextView
+                   // Use self.layer.removeAllAnimations instead ???
                     removeAnim(self);
                     [self clearSelection];
                     //[[delegate inputLine] setText: @""];

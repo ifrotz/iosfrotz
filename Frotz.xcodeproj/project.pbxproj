@@ -88,6 +88,28 @@
 		44407A701236C16F0021DEE4 /* parchment.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 44407A6F1236C16F0021DEE4 /* parchment.jpg */; };
 		44407D10123742030021DEE4 /* zcode.png in Resources */ = {isa = PBXBuildFile; fileRef = 44407D0F123742030021DEE4 /* zcode.png */; };
 		44418F7E124576E800F49BC4 /* flip.png in Resources */ = {isa = PBXBuildFile; fileRef = 44418F7D124576E800F49BC4 /* flip.png */; };
+		444F7D0319F23DE500927703 /* tccmdutl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CE219F23DE500927703 /* tccmdutl.cpp */; };
+		444F7D0419F23DE500927703 /* tcerr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CE419F23DE500927703 /* tcerr.cpp */; };
+		444F7D0519F23DE500927703 /* tcerrmsg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CE619F23DE500927703 /* tcerrmsg.cpp */; };
+		444F7D0619F23DE500927703 /* tcgen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CE819F23DE500927703 /* tcgen.cpp */; };
+		444F7D0719F23DE500927703 /* tcglob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CEA19F23DE500927703 /* tcglob.cpp */; };
+		444F7D0819F23DE500927703 /* tchostsi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CED19F23DE500927703 /* tchostsi.cpp */; };
+		444F7D0919F23DE500927703 /* tclibprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CEF19F23DE500927703 /* tclibprs.cpp */; };
+		444F7D0A19F23DE500927703 /* tcmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF119F23DE500927703 /* tcmain.cpp */; };
+		444F7D0B19F23DE500927703 /* tcprs_rt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF319F23DE500927703 /* tcprs_rt.cpp */; };
+		444F7D0C19F23DE500927703 /* tcprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF419F23DE500927703 /* tcprs.cpp */; };
+		444F7D0D19F23DE500927703 /* tcprsnf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF619F23DE500927703 /* tcprsnf.cpp */; };
+		444F7D0E19F23DE500927703 /* tcprsnl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF719F23DE500927703 /* tcprsnl.cpp */; };
+		444F7D0F19F23DE500927703 /* tcprsstm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF819F23DE500927703 /* tcprsstm.cpp */; };
+		444F7D1019F23DE500927703 /* tcsrc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CF919F23DE500927703 /* tcsrc.cpp */; };
+		444F7D1119F23DE500927703 /* tct3_d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CFB19F23DE500927703 /* tct3_d.cpp */; };
+		444F7D1219F23DE500927703 /* tct3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CFC19F23DE500927703 /* tct3.cpp */; };
+		444F7D1319F23DE500927703 /* tct3nl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CFF19F23DE500927703 /* tct3nl.cpp */; };
+		444F7D1419F23DE500927703 /* tct3stm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D0019F23DE500927703 /* tct3stm.cpp */; };
+		444F7D1519F23DE500927703 /* tct3unas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D0119F23DE500927703 /* tct3unas.cpp */; };
+		444F7D1D19F23E7600927703 /* tctok.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D1919F23E7600927703 /* tctok.cpp */; };
+		444F7D1F19F2BF9200927703 /* oem_glk.c in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D1E19F2BF9200927703 /* oem_glk.c */; };
+		444F7D2119F2C1D900927703 /* vmuni_cs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D2019F2C1D900927703 /* vmuni_cs.cpp */; };
 		44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 44550A7E1277B39300CDEA97 /* TO-DO.txt */; };
 		44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */ = {isa = PBXBuildFile; fileRef = 44550B1A1277FC2B00CDEA97 /* glulx.png */; };
 		445E9394160FF5080098DBE7 /* glarels5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445E9393160FF5080098DBE7 /* glarels5@2x.png */; };
@@ -120,8 +142,125 @@
 		446B9EAB0E2075D1002BDD65 /* FileBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 446B9EA60E2075D1002BDD65 /* FileBrowser.m */; };
 		446B9EAC0E2075D1002BDD65 /* StoryBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 446B9EA80E2075D1002BDD65 /* StoryBrowser.m */; };
 		446B9EAD0E2075D1002BDD65 /* StoryMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 446B9EAA0E2075D1002BDD65 /* StoryMainViewController.m */; };
+		446D26AF19ECF20600B58477 /* osportable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 446D26AE19ECF20600B58477 /* osportable.cc */; };
+		446D26B719ECFA8900B58477 /* linfdum.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D26B619ECFA8900B58477 /* linfdum.c */; };
+		446D26BE19EDC1BC00B58477 /* charmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26B819EDC1BC00B58477 /* charmap.cpp */; };
+		446D27CD19EDC71D00B58477 /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26C919EDC71C00B58477 /* md5.cpp */; };
+		446D27CF19EDC71D00B58477 /* osifcnet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26CC19EDC71C00B58477 /* osifcnet.cpp */; };
+		446D27D019EDC71D00B58477 /* rcmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26CD19EDC71C00B58477 /* rcmain.cpp */; };
+		446D27D219EDC71D00B58477 /* resload.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26D019EDC71C00B58477 /* resload.cpp */; };
+		446D27D319EDC71D00B58477 /* resnoexe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26D219EDC71C00B58477 /* resnoexe.cpp */; };
+		446D27D419EDC71D00B58477 /* sha2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26D319EDC71C00B58477 /* sha2.cpp */; };
+		446D27D519EDC71D00B58477 /* std_dbg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26D519EDC71C00B58477 /* std_dbg.cpp */; };
+		446D27D619EDC71D00B58477 /* std.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D26D619EDC71C00B58477 /* std.cpp */; };
+		446D27F919EDC71D00B58477 /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D271819EDC71C00B58477 /* utf8.cpp */; };
+		446D27FA19EDC71D00B58477 /* vmanonfn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D271919EDC71C00B58477 /* vmanonfn.cpp */; };
+		446D27FB19EDC71D00B58477 /* vmbif.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D271B19EDC71C00B58477 /* vmbif.cpp */; };
+		446D27FD19EDC71D00B58477 /* vmbifl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D271E19EDC71C00B58477 /* vmbifl.cpp */; };
+		446D27FE19EDC71D00B58477 /* vmbifnet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D271F19EDC71C00B58477 /* vmbifnet.cpp */; };
+		446D27FF19EDC71D00B58477 /* vmbifreg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272119EDC71C00B58477 /* vmbifreg.cpp */; };
+		446D280119EDC71D00B58477 /* vmbift3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272419EDC71C00B58477 /* vmbift3.cpp */; };
+		446D280219EDC71D00B58477 /* vmbiftad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272619EDC71C00B58477 /* vmbiftad.cpp */; };
+		446D280319EDC71D00B58477 /* vmbiftio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272819EDC71C00B58477 /* vmbiftio.cpp */; };
+		446D280419EDC71D00B58477 /* vmbignum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272A19EDC71C00B58477 /* vmbignum.cpp */; };
+		446D280519EDC71D00B58477 /* vmbignumlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272C19EDC71C00B58477 /* vmbignumlib.cpp */; };
+		446D280719EDC71D00B58477 /* vmbt3_nd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272E19EDC71C00B58477 /* vmbt3_nd.cpp */; };
+		446D280819EDC71D00B58477 /* vmbytarr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D272F19EDC71C00B58477 /* vmbytarr.cpp */; };
+		446D280919EDC71D00B58477 /* vmcfgmem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273119EDC71C00B58477 /* vmcfgmem.cpp */; };
+		446D280A19EDC71D00B58477 /* vmcoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273219EDC71C00B58477 /* vmcoll.cpp */; };
+		446D280B19EDC71D00B58477 /* vmconhmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273419EDC71C00B58477 /* vmconhmp.cpp */; };
+		446D280D19EDC71D00B58477 /* vmconsol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273619EDC71C00B58477 /* vmconsol.cpp */; };
+		446D280E19EDC71D00B58477 /* vmcrc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273819EDC71C00B58477 /* vmcrc.cpp */; };
+		446D280F19EDC71D00B58477 /* vmcset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273A19EDC71C00B58477 /* vmcset.cpp */; };
+		446D281019EDC71D00B58477 /* vmdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D273C19EDC71C00B58477 /* vmdate.cpp */; };
+		446D281219EDC71D00B58477 /* vmdict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274019EDC71C00B58477 /* vmdict.cpp */; };
+		446D281419EDC71D00B58477 /* vmerr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274419EDC71C00B58477 /* vmerr.cpp */; };
+		446D281519EDC71D00B58477 /* vmerrmsg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274619EDC71C00B58477 /* vmerrmsg.cpp */; };
+		446D281619EDC71D00B58477 /* vmfile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274819EDC71C00B58477 /* vmfile.cpp */; };
+		446D281719EDC71D00B58477 /* vmfilnam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274A19EDC71C00B58477 /* vmfilnam.cpp */; };
+		446D281819EDC71D00B58477 /* vmfilobj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274C19EDC71C00B58477 /* vmfilobj.cpp */; };
+		446D281919EDC71D00B58477 /* vmfref.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D274F19EDC71C00B58477 /* vmfref.cpp */; };
+		446D281A19EDC71D00B58477 /* vmfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D275119EDC71C00B58477 /* vmfunc.cpp */; };
+		446D281B19EDC71D00B58477 /* vmglob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D275319EDC71C00B58477 /* vmglob.cpp */; };
+		446D281D19EDC71D00B58477 /* vmhash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D275819EDC71C00B58477 /* vmhash.cpp */; };
+		446D281E19EDC71D00B58477 /* vmhostsi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D275B19EDC71C00B58477 /* vmhostsi.cpp */; };
+		446D281F19EDC71D00B58477 /* vmhosttx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D275D19EDC71C00B58477 /* vmhosttx.cpp */; };
+		446D282119EDC71D00B58477 /* vmhttpreq.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276019EDC71C00B58477 /* vmhttpreq.cpp */; };
+		446D282319EDC71D00B58477 /* vmimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276419EDC71C00B58477 /* vmimage.cpp */; };
+		446D282519EDC71D00B58477 /* vmimg_nd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276719EDC71C00B58477 /* vmimg_nd.cpp */; };
+		446D282619EDC71D00B58477 /* vmimgrb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276819EDC71C00B58477 /* vmimgrb.cpp */; };
+		446D282819EDC71D00B58477 /* vmini_nd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276C19EDC71C00B58477 /* vmini_nd.cpp */; };
+		446D282919EDC71D00B58477 /* vminit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276D19EDC71C00B58477 /* vminit.cpp */; };
+		446D282A19EDC71D00B58477 /* vminitim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D276F19EDC71C00B58477 /* vminitim.cpp */; };
+		446D282B19EDC71D00B58477 /* vmintcls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277019EDC71C00B58477 /* vmintcls.cpp */; };
+		446D282C19EDC71D00B58477 /* vmisaac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277219EDC71C00B58477 /* vmisaac.cpp */; };
+		446D282D19EDC71D00B58477 /* vmiter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277419EDC71C00B58477 /* vmiter.cpp */; };
+		446D282E19EDC71D00B58477 /* vmlog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277619EDC71C00B58477 /* vmlog.cpp */; };
+		446D282F19EDC71D00B58477 /* vmlookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277819EDC71C00B58477 /* vmlookup.cpp */; };
+		446D283019EDC71D00B58477 /* vmlst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277A19EDC71C00B58477 /* vmlst.cpp */; };
+		446D283119EDC71D00B58477 /* vmmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D277C19EDC71C00B58477 /* vmmain.cpp */; };
+		446D283219EDC71D00B58477 /* vmmcreg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278119EDC71C00B58477 /* vmmcreg.cpp */; };
+		446D283319EDC71D00B58477 /* vmmeta.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278419EDC71C00B58477 /* vmmeta.cpp */; };
+		446D283419EDC71D00B58477 /* vmnet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278619EDC71C00B58477 /* vmnet.cpp */; };
+		446D283519EDC71D00B58477 /* vmnetcfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278819EDC71C00B58477 /* vmnetcfg.cpp */; };
+		446D283619EDC71D00B58477 /* vmnetfil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278919EDC71C00B58477 /* vmnetfil.cpp */; };
+		446D283719EDC71D00B58477 /* vmnetfillcl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278B19EDC71C00B58477 /* vmnetfillcl.cpp */; };
+		446D283819EDC71D00B58477 /* vmnetui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278C19EDC71C00B58477 /* vmnetui.cpp */; };
+		446D283919EDC71D00B58477 /* vmobj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278D19EDC71C00B58477 /* vmobj.cpp */; };
+		446D283A19EDC71D00B58477 /* vmop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D278F19EDC71C00B58477 /* vmop.cpp */; };
+		446D283B19EDC71D00B58477 /* vmpack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279119EDC71C00B58477 /* vmpack.cpp */; };
+		446D283C19EDC71D00B58477 /* vmpat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279419EDC71C00B58477 /* vmpat.cpp */; };
+		446D283D19EDC71D00B58477 /* vmpool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279619EDC71C00B58477 /* vmpool.cpp */; };
+		446D283E19EDC71D00B58477 /* vmpoolim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279819EDC71C00B58477 /* vmpoolim.cpp */; };
+		446D283F19EDC71D00B58477 /* vmpreini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279B19EDC71C00B58477 /* vmpreini.cpp */; };
+		446D284019EDC71D00B58477 /* vmrefcnt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D279F19EDC71C00B58477 /* vmrefcnt.cpp */; };
+		446D284119EDC71D00B58477 /* vmregex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27A019EDC71C00B58477 /* vmregex.cpp */; };
+		446D284219EDC71D00B58477 /* vmrun.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27A319EDC71C00B58477 /* vmrun.cpp */; };
+		446D284319EDC71D00B58477 /* vmrunsym.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27A519EDC71C00B58477 /* vmrunsym.cpp */; };
+		446D284419EDC71D00B58477 /* vmsa.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27A719EDC71C00B58477 /* vmsa.cpp */; };
+		446D284519EDC71D00B58477 /* vmsave.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27A819EDC71C00B58477 /* vmsave.cpp */; };
+		446D284619EDC71D00B58477 /* vmsort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27AA19EDC71C00B58477 /* vmsort.cpp */; };
+		446D284719EDC71D00B58477 /* vmsortv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27AC19EDC71C00B58477 /* vmsortv.cpp */; };
+		446D284819EDC71D00B58477 /* vmsrcf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27AD19EDC71C00B58477 /* vmsrcf.cpp */; };
+		446D284919EDC71D00B58477 /* vmstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27AF19EDC71C00B58477 /* vmstack.cpp */; };
+		446D284A19EDC71D00B58477 /* vmstr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27B119EDC71C00B58477 /* vmstr.cpp */; };
+		446D284B19EDC71D00B58477 /* vmstrbuf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27B319EDC71C00B58477 /* vmstrbuf.cpp */; };
+		446D284C19EDC71D00B58477 /* vmstrcmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27B519EDC71C00B58477 /* vmstrcmp.cpp */; };
+		446D284D19EDC71D00B58477 /* vmtmpfil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27B919EDC71D00B58477 /* vmtmpfil.cpp */; };
+		446D284E19EDC71D00B58477 /* vmtobj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27BB19EDC71D00B58477 /* vmtobj.cpp */; };
+		446D284F19EDC71D00B58477 /* vmtype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27BD19EDC71D00B58477 /* vmtype.cpp */; };
+		446D285019EDC71D00B58477 /* vmtypedh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27BF19EDC71D00B58477 /* vmtypedh.cpp */; };
+		446D285119EDC71D00B58477 /* vmtz.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27C019EDC71D00B58477 /* vmtz.cpp */; };
+		446D285219EDC71D00B58477 /* vmtzobj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27C219EDC71D00B58477 /* vmtzobj.cpp */; };
+		446D285319EDC71D00B58477 /* vmundo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27C419EDC71D00B58477 /* vmundo.cpp */; };
+		446D285419EDC71D00B58477 /* vmvec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27C619EDC71D00B58477 /* vmvec.cpp */; };
+		446D285519EDC71D00B58477 /* vmwrtimg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D27C919EDC71D00B58477 /* vmwrtimg.cpp */; };
+		446D285A19EE435000B58477 /* osnetunix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D285919EE435000B58477 /* osnetunix.cpp */; };
+		446D285C19EE572100B58477 /* vmhttpsrv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D285B19EE572100B58477 /* vmhttpsrv.cpp */; };
+		446D286E19EF04CC00B58477 /* memicmp.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D285D19EF04CC00B58477 /* memicmp.c */; };
+		446D286F19EF04CC00B58477 /* osansi1.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286019EF04CC00B58477 /* osansi1.c */; };
+		446D287019EF04CC00B58477 /* osansi2.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286119EF04CC00B58477 /* osansi2.c */; };
+		446D287119EF04CC00B58477 /* osansi3.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286219EF04CC00B58477 /* osansi3.c */; };
+		446D287219EF04CC00B58477 /* osbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286319EF04CC00B58477 /* osbuffer.c */; };
+		446D287419EF04CC00B58477 /* osglk.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286519EF04CC00B58477 /* osglk.c */; };
+		446D287519EF04CC00B58477 /* osglkban.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286619EF04CC00B58477 /* osglkban.c */; };
+		446D287719EF04CC00B58477 /* osparse.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286819EF04CC00B58477 /* osparse.c */; };
+		446D287819EF04CC00B58477 /* t2askf.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286919EF04CC00B58477 /* t2askf.c */; };
+		446D287919EF04CC00B58477 /* t2indlg.c in Sources */ = {isa = PBXBuildFile; fileRef = 446D286A19EF04CC00B58477 /* t2indlg.c */; };
+		446D287A19EF04CC00B58477 /* t3askf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D286B19EF04CC00B58477 /* t3askf.cpp */; };
+		446D287B19EF04CC00B58477 /* t3indlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D286C19EF04CC00B58477 /* t3indlg.cpp */; };
+		446D287C19EF04CC00B58477 /* t23run.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D286D19EF04CC00B58477 /* t23run.cpp */; };
+		446D288019EF9B2100B58477 /* vmdynfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D287F19EF9B2100B58477 /* vmdynfunc.cpp */; };
+		446D288319EF9BC000B58477 /* vmgram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 446D288119EF9BC000B58477 /* vmgram.cpp */; };
 		446ED97A160E7C110060E655 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 446ED979160E7C110060E655 /* Default-568h@2x.png */; };
 		447036B2123335C400E15D5B /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 447036B1123335C400E15D5B /* Settings.bundle */; };
+		4472105819ECE69F00AAC16F /* argize.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472101619ECE69F00AAC16F /* argize.c */; };
+		4472105B19ECE69F00AAC16F /* emt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472101F19ECE69F00AAC16F /* emt.c */; };
+		4472106019ECE69F00AAC16F /* objcomp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472103519ECE69F00AAC16F /* objcomp.c */; };
+		4472106319ECE69F00AAC16F /* osstzprs.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472103F19ECE69F00AAC16F /* osstzprs.c */; };
+		4472106419ECE69F00AAC16F /* ostzposix.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472104119ECE69F00AAC16F /* ostzposix.c */; };
+		4472106919ECE69F00AAC16F /* tcgdum.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472105019ECE69F00AAC16F /* tcgdum.c */; };
+		4472106C19ECE69F00AAC16F /* voccomp.c in Sources */ = {isa = PBXBuildFile; fileRef = 4472105719ECE69F00AAC16F /* voccomp.c */; };
 		447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4474905F0E85BA4C00A5310F /* CFNetwork.framework */; };
 		447DD4AC125311B500004A83 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 447DD4AB125311B500004A83 /* Security.framework */; };
 		447DF3BA123C136500689076 /* StoryDetailsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 447DF3B8123C136500689076 /* StoryDetailsController.m */; };
@@ -179,7 +318,39 @@
 		44A2E7B911228B0900E35CCC /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44A2E7B811228B0900E35CCC /* Entitlements.plist */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
 		44B583BA1998A7700046F661 /* cgdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 44B583B81998A7700046F661 /* cgdate.c */; };
+		44B63FD219F0DD0D00A143FE /* vmconnom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 44B63FD119F0DD0D00A143FE /* vmconnom.cpp */; };
 		44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */; };
+		44BE71C319EB7C6F00036AA6 /* bif.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719A19EB7C6F00036AA6 /* bif.c */; };
+		44BE71C419EB7C6F00036AA6 /* bifgdum.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719B19EB7C6F00036AA6 /* bifgdum.c */; };
+		44BE71C519EB7C6F00036AA6 /* cmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719C19EB7C6F00036AA6 /* cmap.c */; };
+		44BE71C619EB7C6F00036AA6 /* cmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719D19EB7C6F00036AA6 /* cmd.c */; };
+		44BE71C719EB7C6F00036AA6 /* dat.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719E19EB7C6F00036AA6 /* dat.c */; };
+		44BE71C819EB7C6F00036AA6 /* dbgtr.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719F19EB7C6F00036AA6 /* dbgtr.c */; };
+		44BE71C919EB7C6F00036AA6 /* errmsg.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A019EB7C6F00036AA6 /* errmsg.c */; };
+		44BE71CA19EB7C6F00036AA6 /* execmd.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A119EB7C6F00036AA6 /* execmd.c */; };
+		44BE71CB19EB7C6F00036AA6 /* fio.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A219EB7C6F00036AA6 /* fio.c */; };
+		44BE71CC19EB7C6F00036AA6 /* fioxor.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A319EB7C6F00036AA6 /* fioxor.c */; };
+		44BE71CD19EB7C6F00036AA6 /* getstr.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A419EB7C6F00036AA6 /* getstr.c */; };
+		44BE71D019EB7C6F00036AA6 /* ler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A819EB7C6F00036AA6 /* ler.c */; };
+		44BE71D219EB7C6F00036AA6 /* lst.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71AA19EB7C6F00036AA6 /* lst.c */; };
+		44BE71D319EB7C6F00036AA6 /* mch.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71AB19EB7C6F00036AA6 /* mch.c */; };
+		44BE71D419EB7C6F00036AA6 /* mcm.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71AC19EB7C6F00036AA6 /* mcm.c */; };
+		44BE71D519EB7C6F00036AA6 /* mcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71AD19EB7C6F00036AA6 /* mcs.c */; };
+		44BE71D619EB7C6F00036AA6 /* obj.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71AE19EB7C6F00036AA6 /* obj.c */; };
+		44BE71D919EB7C6F00036AA6 /* oserr.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B219EB7C6F00036AA6 /* oserr.c */; };
+		44BE71DA19EB7C6F00036AA6 /* osifc.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B319EB7C6F00036AA6 /* osifc.c */; };
+		44BE71DB19EB7C6F00036AA6 /* osrestad.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B419EB7C6F00036AA6 /* osrestad.c */; };
+		44BE71DD19EB7C6F00036AA6 /* out.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B719EB7C6F00036AA6 /* out.c */; };
+		44BE71DE19EB7C6F00036AA6 /* output.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B819EB7C6F00036AA6 /* output.c */; };
+		44BE71DF19EB7C6F00036AA6 /* ply.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71B919EB7C6F00036AA6 /* ply.c */; };
+		44BE71E019EB7C6F00036AA6 /* qas.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BA19EB7C6F00036AA6 /* qas.c */; };
+		44BE71E119EB7C6F00036AA6 /* regex.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BB19EB7C6F00036AA6 /* regex.c */; };
+		44BE71E219EB7C6F00036AA6 /* run.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BC19EB7C6F00036AA6 /* run.c */; };
+		44BE71E319EB7C6F00036AA6 /* runstat.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BD19EB7C6F00036AA6 /* runstat.c */; };
+		44BE71E419EB7C6F00036AA6 /* suprun.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BE19EB7C6F00036AA6 /* suprun.c */; };
+		44BE71E519EB7C6F00036AA6 /* trd.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71BF19EB7C6F00036AA6 /* trd.c */; };
+		44BE71E619EB7C6F00036AA6 /* voc.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71C019EB7C6F00036AA6 /* voc.c */; };
+		44BE71E719EB7C6F00036AA6 /* vocab.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71C119EB7C6F00036AA6 /* vocab.c */; };
 		44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44C28D041238C41C00EE9FA3 /* URLPromptController.m */; };
 		44C48A7B15EDD7E20037EDF9 /* colorflipbg@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44C48A7915EDD7E20037EDF9 /* colorflipbg@2x.png */; };
 		44C48A7C15EDD7E20037EDF9 /* colorflipfg@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44C48A7A15EDD7E20037EDF9 /* colorflipfg@2x.png */; };
@@ -408,6 +579,48 @@
 		44407D0F123742030021DEE4 /* zcode.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zcode.png; path = resources/zcode.png; sourceTree = "<group>"; };
 		44418F7D124576E800F49BC4 /* flip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = flip.png; path = resources/flip.png; sourceTree = "<group>"; };
 		444592F91396DBED00C740B9 /* RichTextStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RichTextStyle.h; sourceTree = "<group>"; };
+		444F7CE219F23DE500927703 /* tccmdutl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tccmdutl.cpp; path = tads/tads3/tccmdutl.cpp; sourceTree = "<group>"; };
+		444F7CE319F23DE500927703 /* tccmdutl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tccmdutl.h; path = tads/tads3/tccmdutl.h; sourceTree = "<group>"; };
+		444F7CE419F23DE500927703 /* tcerr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcerr.cpp; path = tads/tads3/tcerr.cpp; sourceTree = "<group>"; };
+		444F7CE519F23DE500927703 /* tcerr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcerr.h; path = tads/tads3/tcerr.h; sourceTree = "<group>"; };
+		444F7CE619F23DE500927703 /* tcerrmsg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcerrmsg.cpp; path = tads/tads3/tcerrmsg.cpp; sourceTree = "<group>"; };
+		444F7CE719F23DE500927703 /* tcerrnum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcerrnum.h; path = tads/tads3/tcerrnum.h; sourceTree = "<group>"; };
+		444F7CE819F23DE500927703 /* tcgen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcgen.cpp; path = tads/tads3/tcgen.cpp; sourceTree = "<group>"; };
+		444F7CE919F23DE500927703 /* tcgen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcgen.h; path = tads/tads3/tcgen.h; sourceTree = "<group>"; };
+		444F7CEA19F23DE500927703 /* tcglob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcglob.cpp; path = tads/tads3/tcglob.cpp; sourceTree = "<group>"; };
+		444F7CEB19F23DE500927703 /* tcglob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcglob.h; path = tads/tads3/tcglob.h; sourceTree = "<group>"; };
+		444F7CEC19F23DE500927703 /* tchost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tchost.h; path = tads/tads3/tchost.h; sourceTree = "<group>"; };
+		444F7CED19F23DE500927703 /* tchostsi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tchostsi.cpp; path = tads/tads3/tchostsi.cpp; sourceTree = "<group>"; };
+		444F7CEE19F23DE500927703 /* tchostsi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tchostsi.h; path = tads/tads3/tchostsi.h; sourceTree = "<group>"; };
+		444F7CEF19F23DE500927703 /* tclibprs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tclibprs.cpp; path = tads/tads3/tclibprs.cpp; sourceTree = "<group>"; };
+		444F7CF019F23DE500927703 /* tclibprs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tclibprs.h; path = tads/tads3/tclibprs.h; sourceTree = "<group>"; };
+		444F7CF119F23DE500927703 /* tcmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcmain.cpp; path = tads/tads3/tcmain.cpp; sourceTree = "<group>"; };
+		444F7CF219F23DE500927703 /* tcmain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcmain.h; path = tads/tads3/tcmain.h; sourceTree = "<group>"; };
+		444F7CF319F23DE500927703 /* tcprs_rt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcprs_rt.cpp; path = tads/tads3/tcprs_rt.cpp; sourceTree = "<group>"; };
+		444F7CF419F23DE500927703 /* tcprs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcprs.cpp; path = tads/tads3/tcprs.cpp; sourceTree = "<group>"; };
+		444F7CF519F23DE500927703 /* tcprs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcprs.h; path = tads/tads3/tcprs.h; sourceTree = "<group>"; };
+		444F7CF619F23DE500927703 /* tcprsnf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcprsnf.cpp; path = tads/tads3/tcprsnf.cpp; sourceTree = "<group>"; };
+		444F7CF719F23DE500927703 /* tcprsnl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcprsnl.cpp; path = tads/tads3/tcprsnl.cpp; sourceTree = "<group>"; };
+		444F7CF819F23DE500927703 /* tcprsstm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcprsstm.cpp; path = tads/tads3/tcprsstm.cpp; sourceTree = "<group>"; };
+		444F7CF919F23DE500927703 /* tcsrc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tcsrc.cpp; path = tads/tads3/tcsrc.cpp; sourceTree = "<group>"; };
+		444F7CFA19F23DE500927703 /* tcsrc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcsrc.h; path = tads/tads3/tcsrc.h; sourceTree = "<group>"; };
+		444F7CFB19F23DE500927703 /* tct3_d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tct3_d.cpp; path = tads/tads3/tct3_d.cpp; sourceTree = "<group>"; };
+		444F7CFC19F23DE500927703 /* tct3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tct3.cpp; path = tads/tads3/tct3.cpp; sourceTree = "<group>"; };
+		444F7CFD19F23DE500927703 /* tct3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tct3.h; path = tads/tads3/tct3.h; sourceTree = "<group>"; };
+		444F7CFE19F23DE500927703 /* tct3base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tct3base.h; path = tads/tads3/tct3base.h; sourceTree = "<group>"; };
+		444F7CFF19F23DE500927703 /* tct3nl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tct3nl.cpp; path = tads/tads3/tct3nl.cpp; sourceTree = "<group>"; };
+		444F7D0019F23DE500927703 /* tct3stm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tct3stm.cpp; path = tads/tads3/tct3stm.cpp; sourceTree = "<group>"; };
+		444F7D0119F23DE500927703 /* tct3unas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tct3unas.cpp; path = tads/tads3/tct3unas.cpp; sourceTree = "<group>"; };
+		444F7D0219F23DE500927703 /* tct3unas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tct3unas.h; path = tads/tads3/tct3unas.h; sourceTree = "<group>"; };
+		444F7D1619F23E7600927703 /* tct3ty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tct3ty.h; path = tads/tads3/tct3ty.h; sourceTree = "<group>"; };
+		444F7D1719F23E7600927703 /* tctarg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tctarg.h; path = tads/tads3/tctarg.h; sourceTree = "<group>"; };
+		444F7D1819F23E7600927703 /* tctargty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tctargty.h; path = tads/tads3/tctargty.h; sourceTree = "<group>"; };
+		444F7D1919F23E7600927703 /* tctok.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tctok.cpp; path = tads/tads3/tctok.cpp; sourceTree = "<group>"; };
+		444F7D1A19F23E7600927703 /* tctok.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tctok.h; path = tads/tads3/tctok.h; sourceTree = "<group>"; };
+		444F7D1B19F23E7600927703 /* tcunas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcunas.h; path = tads/tads3/tcunas.h; sourceTree = "<group>"; };
+		444F7D1C19F23E7600927703 /* tcvsn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcvsn.h; path = tads/tads3/tcvsn.h; sourceTree = "<group>"; };
+		444F7D1E19F2BF9200927703 /* oem_glk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oem_glk.c; path = tads/tads2/oem_glk.c; sourceTree = "<group>"; };
+		444F7D2019F2C1D900927703 /* vmuni_cs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmuni_cs.cpp; path = tads/vmuni_cs.cpp; sourceTree = "<group>"; };
 		44550A7E1277B39300CDEA97 /* TO-DO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "TO-DO.txt"; sourceTree = "<group>"; };
 		44550B1A1277FC2B00CDEA97 /* glulx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glulx.png; path = resources/glulx.png; sourceTree = "<group>"; };
 		445E9393160FF5080098DBE7 /* glarels5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glarels5@2x.png"; path = "resources/glarels5@2x.png"; sourceTree = "<group>"; };
@@ -449,9 +662,276 @@
 		446B9EA70E2075D1002BDD65 /* StoryBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StoryBrowser.h; sourceTree = "<group>"; };
 		446B9EA80E2075D1002BDD65 /* StoryBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StoryBrowser.m; sourceTree = "<group>"; };
 		446B9EAA0E2075D1002BDD65 /* StoryMainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StoryMainViewController.m; sourceTree = "<group>"; };
+		446D26AA19ECF20600B58477 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = tads/tads2/common.h; sourceTree = "<group>"; };
+		446D26AB19ECF20600B58477 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = tads/tads2/config.h; sourceTree = "<group>"; };
+		446D26AC19ECF20600B58477 /* missing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = missing.h; path = tads/tads2/missing.h; sourceTree = "<group>"; };
+		446D26AD19ECF20600B58477 /* osfrobtads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osfrobtads.h; path = tads/tads2/osfrobtads.h; sourceTree = "<group>"; };
+		446D26AE19ECF20600B58477 /* osportable.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osportable.cc; path = tads/tads2/osportable.cc; sourceTree = "<group>"; };
+		446D26B619ECFA8900B58477 /* linfdum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linfdum.c; path = tads/tads2/linfdum.c; sourceTree = "<group>"; };
+		446D26B819EDC1BC00B58477 /* charmap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = charmap.cpp; path = tads/tads3/charmap.cpp; sourceTree = "<group>"; };
+		446D26B919EDC1BC00B58477 /* charmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = charmap.h; path = tads/tads3/charmap.h; sourceTree = "<group>"; };
+		446D26BA19EDC1BC00B58477 /* t3std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t3std.h; path = tads/tads3/t3std.h; sourceTree = "<group>"; };
+		446D26BB19EDC1BC00B58477 /* utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utf8.h; path = tads/tads3/utf8.h; sourceTree = "<group>"; };
+		446D26BC19EDC1BC00B58477 /* vmdatasrc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmdatasrc.h; path = tads/tads3/vmdatasrc.h; sourceTree = "<group>"; };
+		446D26BD19EDC1BC00B58477 /* vmuni.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmuni.h; path = tads/tads3/vmuni.h; sourceTree = "<group>"; };
+		446D26C219EDC34600B58477 /* osnetunix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osnetunix.h; path = tads/tads3/unix/osnetunix.h; sourceTree = "<group>"; };
+		446D26C419EDC3E900B58477 /* osifcnet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osifcnet.h; path = tads/tads3/osifcnet.h; sourceTree = "<group>"; };
+		446D26C519EDC40300B58477 /* vmrefcnt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmrefcnt.h; path = tads/tads3/vmrefcnt.h; sourceTree = "<group>"; };
+		446D26C719EDC71C00B58477 /* core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = core.h; path = tads/tads3/core.h; sourceTree = "<group>"; };
+		446D26C919EDC71C00B58477 /* md5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = md5.cpp; path = tads/tads3/md5.cpp; sourceTree = "<group>"; };
+		446D26CA19EDC71C00B58477 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = md5.h; path = tads/tads3/md5.h; sourceTree = "<group>"; };
+		446D26CC19EDC71C00B58477 /* osifcnet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osifcnet.cpp; path = tads/tads3/osifcnet.cpp; sourceTree = "<group>"; };
+		446D26CD19EDC71C00B58477 /* rcmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rcmain.cpp; path = tads/tads3/rcmain.cpp; sourceTree = "<group>"; };
+		446D26CE19EDC71C00B58477 /* rcmain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rcmain.h; path = tads/tads3/rcmain.h; sourceTree = "<group>"; };
+		446D26D019EDC71C00B58477 /* resload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resload.cpp; path = tads/tads3/resload.cpp; sourceTree = "<group>"; };
+		446D26D119EDC71C00B58477 /* resload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resload.h; path = tads/tads3/resload.h; sourceTree = "<group>"; };
+		446D26D219EDC71C00B58477 /* resnoexe.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resnoexe.cpp; path = tads/tads3/resnoexe.cpp; sourceTree = "<group>"; };
+		446D26D319EDC71C00B58477 /* sha2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha2.cpp; path = tads/tads3/sha2.cpp; sourceTree = "<group>"; };
+		446D26D419EDC71C00B58477 /* sha2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sha2.h; path = tads/tads3/sha2.h; sourceTree = "<group>"; };
+		446D26D519EDC71C00B58477 /* std_dbg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = std_dbg.cpp; path = tads/tads3/std_dbg.cpp; sourceTree = "<group>"; };
+		446D26D619EDC71C00B58477 /* std.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = std.cpp; path = tads/tads3/std.cpp; sourceTree = "<group>"; };
+		446D26D719EDC71C00B58477 /* t3_os.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = t3_os.h; path = tads/tads3/t3_os.h; sourceTree = "<group>"; };
+		446D271819EDC71C00B58477 /* utf8.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utf8.cpp; path = tads/tads3/utf8.cpp; sourceTree = "<group>"; };
+		446D271919EDC71C00B58477 /* vmanonfn.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmanonfn.cpp; path = tads/tads3/vmanonfn.cpp; sourceTree = "<group>"; };
+		446D271A19EDC71C00B58477 /* vmanonfn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmanonfn.h; path = tads/tads3/vmanonfn.h; sourceTree = "<group>"; };
+		446D271B19EDC71C00B58477 /* vmbif.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbif.cpp; path = tads/tads3/vmbif.cpp; sourceTree = "<group>"; };
+		446D271C19EDC71C00B58477 /* vmbif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbif.h; path = tads/tads3/vmbif.h; sourceTree = "<group>"; };
+		446D271E19EDC71C00B58477 /* vmbifl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbifl.cpp; path = tads/tads3/vmbifl.cpp; sourceTree = "<group>"; };
+		446D271F19EDC71C00B58477 /* vmbifnet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbifnet.cpp; path = tads/tads3/vmbifnet.cpp; sourceTree = "<group>"; };
+		446D272019EDC71C00B58477 /* vmbifnet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbifnet.h; path = tads/tads3/vmbifnet.h; sourceTree = "<group>"; };
+		446D272119EDC71C00B58477 /* vmbifreg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbifreg.cpp; path = tads/tads3/vmbifreg.cpp; sourceTree = "<group>"; };
+		446D272219EDC71C00B58477 /* vmbifreg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbifreg.h; path = tads/tads3/vmbifreg.h; sourceTree = "<group>"; };
+		446D272419EDC71C00B58477 /* vmbift3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbift3.cpp; path = tads/tads3/vmbift3.cpp; sourceTree = "<group>"; };
+		446D272519EDC71C00B58477 /* vmbift3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbift3.h; path = tads/tads3/vmbift3.h; sourceTree = "<group>"; };
+		446D272619EDC71C00B58477 /* vmbiftad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbiftad.cpp; path = tads/tads3/vmbiftad.cpp; sourceTree = "<group>"; };
+		446D272719EDC71C00B58477 /* vmbiftad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbiftad.h; path = tads/tads3/vmbiftad.h; sourceTree = "<group>"; };
+		446D272819EDC71C00B58477 /* vmbiftio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbiftio.cpp; path = tads/tads3/vmbiftio.cpp; sourceTree = "<group>"; };
+		446D272919EDC71C00B58477 /* vmbiftio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbiftio.h; path = tads/tads3/vmbiftio.h; sourceTree = "<group>"; };
+		446D272A19EDC71C00B58477 /* vmbignum.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbignum.cpp; path = tads/tads3/vmbignum.cpp; sourceTree = "<group>"; };
+		446D272B19EDC71C00B58477 /* vmbignum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbignum.h; path = tads/tads3/vmbignum.h; sourceTree = "<group>"; };
+		446D272C19EDC71C00B58477 /* vmbignumlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbignumlib.cpp; path = tads/tads3/vmbignumlib.cpp; sourceTree = "<group>"; };
+		446D272E19EDC71C00B58477 /* vmbt3_nd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbt3_nd.cpp; path = tads/tads3/vmbt3_nd.cpp; sourceTree = "<group>"; };
+		446D272F19EDC71C00B58477 /* vmbytarr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmbytarr.cpp; path = tads/tads3/vmbytarr.cpp; sourceTree = "<group>"; };
+		446D273019EDC71C00B58477 /* vmbytarr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmbytarr.h; path = tads/tads3/vmbytarr.h; sourceTree = "<group>"; };
+		446D273119EDC71C00B58477 /* vmcfgmem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmcfgmem.cpp; path = tads/tads3/vmcfgmem.cpp; sourceTree = "<group>"; };
+		446D273219EDC71C00B58477 /* vmcoll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmcoll.cpp; path = tads/tads3/vmcoll.cpp; sourceTree = "<group>"; };
+		446D273319EDC71C00B58477 /* vmcoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmcoll.h; path = tads/tads3/vmcoll.h; sourceTree = "<group>"; };
+		446D273419EDC71C00B58477 /* vmconhmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmconhmp.cpp; path = tads/tads3/vmconhmp.cpp; sourceTree = "<group>"; };
+		446D273619EDC71C00B58477 /* vmconsol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmconsol.cpp; path = tads/tads3/vmconsol.cpp; sourceTree = "<group>"; };
+		446D273719EDC71C00B58477 /* vmconsol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmconsol.h; path = tads/tads3/vmconsol.h; sourceTree = "<group>"; };
+		446D273819EDC71C00B58477 /* vmcrc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmcrc.cpp; path = tads/tads3/vmcrc.cpp; sourceTree = "<group>"; };
+		446D273919EDC71C00B58477 /* vmcrc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmcrc.h; path = tads/tads3/vmcrc.h; sourceTree = "<group>"; };
+		446D273A19EDC71C00B58477 /* vmcset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmcset.cpp; path = tads/tads3/vmcset.cpp; sourceTree = "<group>"; };
+		446D273B19EDC71C00B58477 /* vmcset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmcset.h; path = tads/tads3/vmcset.h; sourceTree = "<group>"; };
+		446D273C19EDC71C00B58477 /* vmdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmdate.cpp; path = tads/tads3/vmdate.cpp; sourceTree = "<group>"; };
+		446D273D19EDC71C00B58477 /* vmdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmdate.h; path = tads/tads3/vmdate.h; sourceTree = "<group>"; };
+		446D273F19EDC71C00B58477 /* vmdbg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmdbg.h; path = tads/tads3/vmdbg.h; sourceTree = "<group>"; };
+		446D274019EDC71C00B58477 /* vmdict.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmdict.cpp; path = tads/tads3/vmdict.cpp; sourceTree = "<group>"; };
+		446D274119EDC71C00B58477 /* vmdict.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmdict.h; path = tads/tads3/vmdict.h; sourceTree = "<group>"; };
+		446D274319EDC71C00B58477 /* vmdynfunc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmdynfunc.h; path = tads/tads3/vmdynfunc.h; sourceTree = "<group>"; };
+		446D274419EDC71C00B58477 /* vmerr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmerr.cpp; path = tads/tads3/vmerr.cpp; sourceTree = "<group>"; };
+		446D274519EDC71C00B58477 /* vmerr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmerr.h; path = tads/tads3/vmerr.h; sourceTree = "<group>"; };
+		446D274619EDC71C00B58477 /* vmerrmsg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmerrmsg.cpp; path = tads/tads3/vmerrmsg.cpp; sourceTree = "<group>"; };
+		446D274719EDC71C00B58477 /* vmerrnum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmerrnum.h; path = tads/tads3/vmerrnum.h; sourceTree = "<group>"; };
+		446D274819EDC71C00B58477 /* vmfile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmfile.cpp; path = tads/tads3/vmfile.cpp; sourceTree = "<group>"; };
+		446D274919EDC71C00B58477 /* vmfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfile.h; path = tads/tads3/vmfile.h; sourceTree = "<group>"; };
+		446D274A19EDC71C00B58477 /* vmfilnam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmfilnam.cpp; path = tads/tads3/vmfilnam.cpp; sourceTree = "<group>"; };
+		446D274B19EDC71C00B58477 /* vmfilnam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfilnam.h; path = tads/tads3/vmfilnam.h; sourceTree = "<group>"; };
+		446D274C19EDC71C00B58477 /* vmfilobj.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmfilobj.cpp; path = tads/tads3/vmfilobj.cpp; sourceTree = "<group>"; };
+		446D274D19EDC71C00B58477 /* vmfilobj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfilobj.h; path = tads/tads3/vmfilobj.h; sourceTree = "<group>"; };
+		446D274E19EDC71C00B58477 /* vmfindrep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfindrep.h; path = tads/tads3/vmfindrep.h; sourceTree = "<group>"; };
+		446D274F19EDC71C00B58477 /* vmfref.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmfref.cpp; path = tads/tads3/vmfref.cpp; sourceTree = "<group>"; };
+		446D275019EDC71C00B58477 /* vmfref.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfref.h; path = tads/tads3/vmfref.h; sourceTree = "<group>"; };
+		446D275119EDC71C00B58477 /* vmfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmfunc.cpp; path = tads/tads3/vmfunc.cpp; sourceTree = "<group>"; };
+		446D275219EDC71C00B58477 /* vmfunc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmfunc.h; path = tads/tads3/vmfunc.h; sourceTree = "<group>"; };
+		446D275319EDC71C00B58477 /* vmglob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmglob.cpp; path = tads/tads3/vmglob.cpp; sourceTree = "<group>"; };
+		446D275419EDC71C00B58477 /* vmglob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmglob.h; path = tads/tads3/vmglob.h; sourceTree = "<group>"; };
+		446D275519EDC71C00B58477 /* vmglobv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmglobv.h; path = tads/tads3/vmglobv.h; sourceTree = "<group>"; };
+		446D275819EDC71C00B58477 /* vmhash.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmhash.cpp; path = tads/tads3/vmhash.cpp; sourceTree = "<group>"; };
+		446D275919EDC71C00B58477 /* vmhash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhash.h; path = tads/tads3/vmhash.h; sourceTree = "<group>"; };
+		446D275A19EDC71C00B58477 /* vmhost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhost.h; path = tads/tads3/vmhost.h; sourceTree = "<group>"; };
+		446D275B19EDC71C00B58477 /* vmhostsi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmhostsi.cpp; path = tads/tads3/vmhostsi.cpp; sourceTree = "<group>"; };
+		446D275C19EDC71C00B58477 /* vmhostsi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhostsi.h; path = tads/tads3/vmhostsi.h; sourceTree = "<group>"; };
+		446D275D19EDC71C00B58477 /* vmhosttx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmhosttx.cpp; path = tads/tads3/vmhosttx.cpp; sourceTree = "<group>"; };
+		446D275E19EDC71C00B58477 /* vmhosttx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhosttx.h; path = tads/tads3/vmhosttx.h; sourceTree = "<group>"; };
+		446D276019EDC71C00B58477 /* vmhttpreq.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmhttpreq.cpp; path = tads/tads3/vmhttpreq.cpp; sourceTree = "<group>"; };
+		446D276119EDC71C00B58477 /* vmhttpreq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhttpreq.h; path = tads/tads3/vmhttpreq.h; sourceTree = "<group>"; };
+		446D276319EDC71C00B58477 /* vmhttpsrv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmhttpsrv.h; path = tads/tads3/vmhttpsrv.h; sourceTree = "<group>"; };
+		446D276419EDC71C00B58477 /* vmimage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmimage.cpp; path = tads/tads3/vmimage.cpp; sourceTree = "<group>"; };
+		446D276519EDC71C00B58477 /* vmimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmimage.h; path = tads/tads3/vmimage.h; sourceTree = "<group>"; };
+		446D276719EDC71C00B58477 /* vmimg_nd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmimg_nd.cpp; path = tads/tads3/vmimg_nd.cpp; sourceTree = "<group>"; };
+		446D276819EDC71C00B58477 /* vmimgrb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmimgrb.cpp; path = tads/tads3/vmimgrb.cpp; sourceTree = "<group>"; };
+		446D276919EDC71C00B58477 /* vmimgrb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmimgrb.h; path = tads/tads3/vmimgrb.h; sourceTree = "<group>"; };
+		446D276A19EDC71C00B58477 /* vmimport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmimport.h; path = tads/tads3/vmimport.h; sourceTree = "<group>"; };
+		446D276C19EDC71C00B58477 /* vmini_nd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmini_nd.cpp; path = tads/tads3/vmini_nd.cpp; sourceTree = "<group>"; };
+		446D276D19EDC71C00B58477 /* vminit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vminit.cpp; path = tads/tads3/vminit.cpp; sourceTree = "<group>"; };
+		446D276E19EDC71C00B58477 /* vminit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vminit.h; path = tads/tads3/vminit.h; sourceTree = "<group>"; };
+		446D276F19EDC71C00B58477 /* vminitim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vminitim.cpp; path = tads/tads3/vminitim.cpp; sourceTree = "<group>"; };
+		446D277019EDC71C00B58477 /* vmintcls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmintcls.cpp; path = tads/tads3/vmintcls.cpp; sourceTree = "<group>"; };
+		446D277119EDC71C00B58477 /* vmintcls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmintcls.h; path = tads/tads3/vmintcls.h; sourceTree = "<group>"; };
+		446D277219EDC71C00B58477 /* vmisaac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmisaac.cpp; path = tads/tads3/vmisaac.cpp; sourceTree = "<group>"; };
+		446D277319EDC71C00B58477 /* vmisaac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmisaac.h; path = tads/tads3/vmisaac.h; sourceTree = "<group>"; };
+		446D277419EDC71C00B58477 /* vmiter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmiter.cpp; path = tads/tads3/vmiter.cpp; sourceTree = "<group>"; };
+		446D277519EDC71C00B58477 /* vmiter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmiter.h; path = tads/tads3/vmiter.h; sourceTree = "<group>"; };
+		446D277619EDC71C00B58477 /* vmlog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmlog.cpp; path = tads/tads3/vmlog.cpp; sourceTree = "<group>"; };
+		446D277719EDC71C00B58477 /* vmlog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmlog.h; path = tads/tads3/vmlog.h; sourceTree = "<group>"; };
+		446D277819EDC71C00B58477 /* vmlookup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmlookup.cpp; path = tads/tads3/vmlookup.cpp; sourceTree = "<group>"; };
+		446D277919EDC71C00B58477 /* vmlookup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmlookup.h; path = tads/tads3/vmlookup.h; sourceTree = "<group>"; };
+		446D277A19EDC71C00B58477 /* vmlst.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmlst.cpp; path = tads/tads3/vmlst.cpp; sourceTree = "<group>"; };
+		446D277B19EDC71C00B58477 /* vmlst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmlst.h; path = tads/tads3/vmlst.h; sourceTree = "<group>"; };
+		446D277C19EDC71C00B58477 /* vmmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmmain.cpp; path = tads/tads3/vmmain.cpp; sourceTree = "<group>"; };
+		446D277D19EDC71C00B58477 /* vmmain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmain.h; path = tads/tads3/vmmain.h; sourceTree = "<group>"; };
+		446D277E19EDC71C00B58477 /* vmmaincn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmaincn.h; path = tads/tads3/vmmaincn.h; sourceTree = "<group>"; };
+		446D277F19EDC71C00B58477 /* vmmccore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmccore.h; path = tads/tads3/vmmccore.h; sourceTree = "<group>"; };
+		446D278019EDC71C00B58477 /* vmmcnet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmcnet.h; path = tads/tads3/vmmcnet.h; sourceTree = "<group>"; };
+		446D278119EDC71C00B58477 /* vmmcreg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmmcreg.cpp; path = tads/tads3/vmmcreg.cpp; sourceTree = "<group>"; };
+		446D278219EDC71C00B58477 /* vmmcreg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmcreg.h; path = tads/tads3/vmmcreg.h; sourceTree = "<group>"; };
+		446D278319EDC71C00B58477 /* vmmersenne.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmersenne.h; path = tads/tads3/vmmersenne.h; sourceTree = "<group>"; };
+		446D278419EDC71C00B58477 /* vmmeta.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmmeta.cpp; path = tads/tads3/vmmeta.cpp; sourceTree = "<group>"; };
+		446D278519EDC71C00B58477 /* vmmeta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmmeta.h; path = tads/tads3/vmmeta.h; sourceTree = "<group>"; };
+		446D278619EDC71C00B58477 /* vmnet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmnet.cpp; path = tads/tads3/vmnet.cpp; sourceTree = "<group>"; };
+		446D278719EDC71C00B58477 /* vmnet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmnet.h; path = tads/tads3/vmnet.h; sourceTree = "<group>"; };
+		446D278819EDC71C00B58477 /* vmnetcfg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmnetcfg.cpp; path = tads/tads3/vmnetcfg.cpp; sourceTree = "<group>"; };
+		446D278919EDC71C00B58477 /* vmnetfil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmnetfil.cpp; path = tads/tads3/vmnetfil.cpp; sourceTree = "<group>"; };
+		446D278A19EDC71C00B58477 /* vmnetfil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmnetfil.h; path = tads/tads3/vmnetfil.h; sourceTree = "<group>"; };
+		446D278B19EDC71C00B58477 /* vmnetfillcl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmnetfillcl.cpp; path = tads/tads3/vmnetfillcl.cpp; sourceTree = "<group>"; };
+		446D278C19EDC71C00B58477 /* vmnetui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmnetui.cpp; path = tads/tads3/vmnetui.cpp; sourceTree = "<group>"; };
+		446D278D19EDC71C00B58477 /* vmobj.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmobj.cpp; path = tads/tads3/vmobj.cpp; sourceTree = "<group>"; };
+		446D278E19EDC71C00B58477 /* vmobj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmobj.h; path = tads/tads3/vmobj.h; sourceTree = "<group>"; };
+		446D278F19EDC71C00B58477 /* vmop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmop.cpp; path = tads/tads3/vmop.cpp; sourceTree = "<group>"; };
+		446D279019EDC71C00B58477 /* vmop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmop.h; path = tads/tads3/vmop.h; sourceTree = "<group>"; };
+		446D279119EDC71C00B58477 /* vmpack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmpack.cpp; path = tads/tads3/vmpack.cpp; sourceTree = "<group>"; };
+		446D279219EDC71C00B58477 /* vmpack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpack.h; path = tads/tads3/vmpack.h; sourceTree = "<group>"; };
+		446D279319EDC71C00B58477 /* vmparam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmparam.h; path = tads/tads3/vmparam.h; sourceTree = "<group>"; };
+		446D279419EDC71C00B58477 /* vmpat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmpat.cpp; path = tads/tads3/vmpat.cpp; sourceTree = "<group>"; };
+		446D279519EDC71C00B58477 /* vmpat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpat.h; path = tads/tads3/vmpat.h; sourceTree = "<group>"; };
+		446D279619EDC71C00B58477 /* vmpool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmpool.cpp; path = tads/tads3/vmpool.cpp; sourceTree = "<group>"; };
+		446D279719EDC71C00B58477 /* vmpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpool.h; path = tads/tads3/vmpool.h; sourceTree = "<group>"; };
+		446D279819EDC71C00B58477 /* vmpoolim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmpoolim.cpp; path = tads/tads3/vmpoolim.cpp; sourceTree = "<group>"; };
+		446D279919EDC71C00B58477 /* vmpoolsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpoolsl.h; path = tads/tads3/vmpoolsl.h; sourceTree = "<group>"; };
+		446D279A19EDC71C00B58477 /* vmpredef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpredef.h; path = tads/tads3/vmpredef.h; sourceTree = "<group>"; };
+		446D279B19EDC71C00B58477 /* vmpreini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmpreini.cpp; path = tads/tads3/vmpreini.cpp; sourceTree = "<group>"; };
+		446D279C19EDC71C00B58477 /* vmpreini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmpreini.h; path = tads/tads3/vmpreini.h; sourceTree = "<group>"; };
+		446D279D19EDC71C00B58477 /* vmprof.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmprof.h; path = tads/tads3/vmprof.h; sourceTree = "<group>"; };
+		446D279E19EDC71C00B58477 /* vmprofty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmprofty.h; path = tads/tads3/vmprofty.h; sourceTree = "<group>"; };
+		446D279F19EDC71C00B58477 /* vmrefcnt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmrefcnt.cpp; path = tads/tads3/vmrefcnt.cpp; sourceTree = "<group>"; };
+		446D27A019EDC71C00B58477 /* vmregex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmregex.cpp; path = tads/tads3/vmregex.cpp; sourceTree = "<group>"; };
+		446D27A119EDC71C00B58477 /* vmregex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmregex.h; path = tads/tads3/vmregex.h; sourceTree = "<group>"; };
+		446D27A219EDC71C00B58477 /* vmres.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmres.h; path = tads/tads3/vmres.h; sourceTree = "<group>"; };
+		446D27A319EDC71C00B58477 /* vmrun.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmrun.cpp; path = tads/tads3/vmrun.cpp; sourceTree = "<group>"; };
+		446D27A419EDC71C00B58477 /* vmrun.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmrun.h; path = tads/tads3/vmrun.h; sourceTree = "<group>"; };
+		446D27A519EDC71C00B58477 /* vmrunsym.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmrunsym.cpp; path = tads/tads3/vmrunsym.cpp; sourceTree = "<group>"; };
+		446D27A619EDC71C00B58477 /* vmrunsym.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmrunsym.h; path = tads/tads3/vmrunsym.h; sourceTree = "<group>"; };
+		446D27A719EDC71C00B58477 /* vmsa.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmsa.cpp; path = tads/tads3/vmsa.cpp; sourceTree = "<group>"; };
+		446D27A819EDC71C00B58477 /* vmsave.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmsave.cpp; path = tads/tads3/vmsave.cpp; sourceTree = "<group>"; };
+		446D27A919EDC71C00B58477 /* vmsave.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmsave.h; path = tads/tads3/vmsave.h; sourceTree = "<group>"; };
+		446D27AA19EDC71C00B58477 /* vmsort.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmsort.cpp; path = tads/tads3/vmsort.cpp; sourceTree = "<group>"; };
+		446D27AB19EDC71C00B58477 /* vmsort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmsort.h; path = tads/tads3/vmsort.h; sourceTree = "<group>"; };
+		446D27AC19EDC71C00B58477 /* vmsortv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmsortv.cpp; path = tads/tads3/vmsortv.cpp; sourceTree = "<group>"; };
+		446D27AD19EDC71C00B58477 /* vmsrcf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmsrcf.cpp; path = tads/tads3/vmsrcf.cpp; sourceTree = "<group>"; };
+		446D27AE19EDC71C00B58477 /* vmsrcf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmsrcf.h; path = tads/tads3/vmsrcf.h; sourceTree = "<group>"; };
+		446D27AF19EDC71C00B58477 /* vmstack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmstack.cpp; path = tads/tads3/vmstack.cpp; sourceTree = "<group>"; };
+		446D27B019EDC71C00B58477 /* vmstack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstack.h; path = tads/tads3/vmstack.h; sourceTree = "<group>"; };
+		446D27B119EDC71C00B58477 /* vmstr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmstr.cpp; path = tads/tads3/vmstr.cpp; sourceTree = "<group>"; };
+		446D27B219EDC71C00B58477 /* vmstr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstr.h; path = tads/tads3/vmstr.h; sourceTree = "<group>"; };
+		446D27B319EDC71C00B58477 /* vmstrbuf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmstrbuf.cpp; path = tads/tads3/vmstrbuf.cpp; sourceTree = "<group>"; };
+		446D27B419EDC71C00B58477 /* vmstrbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstrbuf.h; path = tads/tads3/vmstrbuf.h; sourceTree = "<group>"; };
+		446D27B519EDC71C00B58477 /* vmstrcmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmstrcmp.cpp; path = tads/tads3/vmstrcmp.cpp; sourceTree = "<group>"; };
+		446D27B619EDC71C00B58477 /* vmstrcmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstrcmp.h; path = tads/tads3/vmstrcmp.h; sourceTree = "<group>"; };
+		446D27B719EDC71D00B58477 /* vmstrref.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstrref.h; path = tads/tads3/vmstrref.h; sourceTree = "<group>"; };
+		446D27B819EDC71D00B58477 /* vmstrres.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmstrres.h; path = tads/tads3/vmstrres.h; sourceTree = "<group>"; };
+		446D27B919EDC71D00B58477 /* vmtmpfil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtmpfil.cpp; path = tads/tads3/vmtmpfil.cpp; sourceTree = "<group>"; };
+		446D27BA19EDC71D00B58477 /* vmtmpfil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmtmpfil.h; path = tads/tads3/vmtmpfil.h; sourceTree = "<group>"; };
+		446D27BB19EDC71D00B58477 /* vmtobj.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtobj.cpp; path = tads/tads3/vmtobj.cpp; sourceTree = "<group>"; };
+		446D27BC19EDC71D00B58477 /* vmtobj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmtobj.h; path = tads/tads3/vmtobj.h; sourceTree = "<group>"; };
+		446D27BD19EDC71D00B58477 /* vmtype.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtype.cpp; path = tads/tads3/vmtype.cpp; sourceTree = "<group>"; };
+		446D27BE19EDC71D00B58477 /* vmtype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmtype.h; path = tads/tads3/vmtype.h; sourceTree = "<group>"; };
+		446D27BF19EDC71D00B58477 /* vmtypedh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtypedh.cpp; path = tads/tads3/vmtypedh.cpp; sourceTree = "<group>"; };
+		446D27C019EDC71D00B58477 /* vmtz.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtz.cpp; path = tads/tads3/vmtz.cpp; sourceTree = "<group>"; };
+		446D27C119EDC71D00B58477 /* vmtz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmtz.h; path = tads/tads3/vmtz.h; sourceTree = "<group>"; };
+		446D27C219EDC71D00B58477 /* vmtzobj.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmtzobj.cpp; path = tads/tads3/vmtzobj.cpp; sourceTree = "<group>"; };
+		446D27C319EDC71D00B58477 /* vmtzobj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmtzobj.h; path = tads/tads3/vmtzobj.h; sourceTree = "<group>"; };
+		446D27C419EDC71D00B58477 /* vmundo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmundo.cpp; path = tads/tads3/vmundo.cpp; sourceTree = "<group>"; };
+		446D27C519EDC71D00B58477 /* vmundo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmundo.h; path = tads/tads3/vmundo.h; sourceTree = "<group>"; };
+		446D27C619EDC71D00B58477 /* vmvec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmvec.cpp; path = tads/tads3/vmvec.cpp; sourceTree = "<group>"; };
+		446D27C719EDC71D00B58477 /* vmvec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmvec.h; path = tads/tads3/vmvec.h; sourceTree = "<group>"; };
+		446D27C819EDC71D00B58477 /* vmvsn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmvsn.h; path = tads/tads3/vmvsn.h; sourceTree = "<group>"; };
+		446D27C919EDC71D00B58477 /* vmwrtimg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmwrtimg.cpp; path = tads/tads3/vmwrtimg.cpp; sourceTree = "<group>"; };
+		446D27CA19EDC71D00B58477 /* vmwrtimg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmwrtimg.h; path = tads/tads3/vmwrtimg.h; sourceTree = "<group>"; };
+		446D285919EE435000B58477 /* osnetunix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osnetunix.cpp; path = tads/tads3/unix/osnetunix.cpp; sourceTree = "<group>"; };
+		446D285B19EE572100B58477 /* vmhttpsrv.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmhttpsrv.cpp; path = tads/tads3/vmhttpsrv.cpp; sourceTree = "<group>"; };
+		446D285D19EF04CC00B58477 /* memicmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = memicmp.c; path = tads/memicmp.c; sourceTree = "<group>"; };
+		446D285E19EF04CC00B58477 /* os.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = os.h; path = tads/os.h; sourceTree = "<group>"; };
+		446D285F19EF04CC00B58477 /* osansi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osansi.h; path = tads/osansi.h; sourceTree = "<group>"; };
+		446D286019EF04CC00B58477 /* osansi1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osansi1.c; path = tads/osansi1.c; sourceTree = "<group>"; };
+		446D286119EF04CC00B58477 /* osansi2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osansi2.c; path = tads/osansi2.c; sourceTree = "<group>"; };
+		446D286219EF04CC00B58477 /* osansi3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osansi3.c; path = tads/osansi3.c; sourceTree = "<group>"; };
+		446D286319EF04CC00B58477 /* osbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osbuffer.c; path = tads/osbuffer.c; sourceTree = "<group>"; };
+		446D286519EF04CC00B58477 /* osglk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osglk.c; path = tads/osglk.c; sourceTree = "<group>"; };
+		446D286619EF04CC00B58477 /* osglkban.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osglkban.c; path = tads/osglkban.c; sourceTree = "<group>"; };
+		446D286819EF04CC00B58477 /* osparse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osparse.c; path = tads/osparse.c; sourceTree = "<group>"; };
+		446D286919EF04CC00B58477 /* t2askf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = t2askf.c; path = tads/t2askf.c; sourceTree = "<group>"; };
+		446D286A19EF04CC00B58477 /* t2indlg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = t2indlg.c; path = tads/t2indlg.c; sourceTree = "<group>"; };
+		446D286B19EF04CC00B58477 /* t3askf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t3askf.cpp; path = tads/t3askf.cpp; sourceTree = "<group>"; };
+		446D286C19EF04CC00B58477 /* t3indlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t3indlg.cpp; path = tads/t3indlg.cpp; sourceTree = "<group>"; };
+		446D286D19EF04CC00B58477 /* t23run.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = t23run.cpp; path = tads/t23run.cpp; sourceTree = "<group>"; };
+		446D287F19EF9B2100B58477 /* vmdynfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmdynfunc.cpp; path = tads/tads3/vmdynfunc.cpp; sourceTree = "<group>"; };
+		446D288119EF9BC000B58477 /* vmgram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmgram.cpp; path = tads/tads3/vmgram.cpp; sourceTree = "<group>"; };
+		446D288219EF9BC000B58477 /* vmgram.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vmgram.h; path = tads/tads3/vmgram.h; sourceTree = "<group>"; };
 		446ED979160E7C110060E655 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "resources/Default-568h@2x.png"; sourceTree = "<group>"; };
 		446ED97B160E7C820060E655 /* Frotz-640x1136.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-640x1136.png"; path = "resources/Frotz-640x1136.png"; sourceTree = "<group>"; };
 		447036B1123335C400E15D5B /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
+		4472101519ECE69F00AAC16F /* appctx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = appctx.h; path = tads/tads2/appctx.h; sourceTree = "<group>"; };
+		4472101619ECE69F00AAC16F /* argize.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = argize.c; path = tads/tads2/argize.c; sourceTree = "<group>"; };
+		4472101719ECE69F00AAC16F /* argize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = argize.h; path = tads/tads2/argize.h; sourceTree = "<group>"; };
+		4472101919ECE69F00AAC16F /* bif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bif.h; path = tads/tads2/bif.h; sourceTree = "<group>"; };
+		4472101A19ECE69F00AAC16F /* cmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cmap.h; path = tads/tads2/cmap.h; sourceTree = "<group>"; };
+		4472101B19ECE69F00AAC16F /* cmd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cmd.h; path = tads/tads2/cmd.h; sourceTree = "<group>"; };
+		4472101C19ECE69F00AAC16F /* dat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dat.h; path = tads/tads2/dat.h; sourceTree = "<group>"; };
+		4472101E19ECE69F00AAC16F /* dbg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dbg.h; path = tads/tads2/dbg.h; sourceTree = "<group>"; };
+		4472101F19ECE69F00AAC16F /* emt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = emt.c; path = tads/tads2/emt.c; sourceTree = "<group>"; };
+		4472102019ECE69F00AAC16F /* emt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = emt.h; path = tads/tads2/emt.h; sourceTree = "<group>"; };
+		4472102119ECE69F00AAC16F /* err.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = err.h; path = tads/tads2/err.h; sourceTree = "<group>"; };
+		4472102219ECE69F00AAC16F /* fio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fio.h; path = tads/tads2/fio.h; sourceTree = "<group>"; };
+		4472102719ECE69F00AAC16F /* h_ix86_64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = h_ix86_64.h; path = tads/tads2/h_ix86_64.h; sourceTree = "<group>"; };
+		4472102819ECE69F00AAC16F /* h_ix86.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = h_ix86.h; path = tads/tads2/h_ix86.h; sourceTree = "<group>"; };
+		4472102919ECE69F00AAC16F /* h_ppc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = h_ppc.h; path = tads/tads2/h_ppc.h; sourceTree = "<group>"; };
+		4472102A19ECE69F00AAC16F /* ler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ler.h; path = tads/tads2/ler.h; sourceTree = "<group>"; };
+		4472102B19ECE69F00AAC16F /* lib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lib.h; path = tads/tads2/lib.h; sourceTree = "<group>"; };
+		4472102C19ECE69F00AAC16F /* lin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lin.h; path = tads/tads2/lin.h; sourceTree = "<group>"; };
+		4472102E19ECE69F00AAC16F /* linf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = linf.h; path = tads/tads2/linf.h; sourceTree = "<group>"; };
+		4472102F19ECE69F00AAC16F /* lst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lst.h; path = tads/tads2/lst.h; sourceTree = "<group>"; };
+		4472103019ECE69F00AAC16F /* mch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mch.h; path = tads/tads2/mch.h; sourceTree = "<group>"; };
+		4472103119ECE69F00AAC16F /* mcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mcl.h; path = tads/tads2/mcl.h; sourceTree = "<group>"; };
+		4472103219ECE69F00AAC16F /* mcm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mcm.h; path = tads/tads2/mcm.h; sourceTree = "<group>"; };
+		4472103319ECE69F00AAC16F /* mcs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mcs.h; path = tads/tads2/mcs.h; sourceTree = "<group>"; };
+		4472103419ECE69F00AAC16F /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = obj.h; path = tads/tads2/obj.h; sourceTree = "<group>"; };
+		4472103519ECE69F00AAC16F /* objcomp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = objcomp.c; path = tads/tads2/objcomp.c; sourceTree = "<group>"; };
+		4472103619ECE69F00AAC16F /* oem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = oem.h; path = tads/tads2/oem.h; sourceTree = "<group>"; };
+		4472103719ECE69F00AAC16F /* opc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = opc.h; path = tads/tads2/opc.h; sourceTree = "<group>"; };
+		4472103819ECE69F00AAC16F /* os.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = os.h; path = tads/tads2/os.h; sourceTree = "<group>"; };
+		4472103919ECE69F00AAC16F /* osbigmem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osbigmem.h; path = tads/tads2/osbigmem.h; sourceTree = "<group>"; };
+		4472103A19ECE69F00AAC16F /* osgen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osgen.h; path = tads/tads2/osgen.h; sourceTree = "<group>"; };
+		4472103C19ECE69F00AAC16F /* osifc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osifc.h; path = tads/tads2/osifc.h; sourceTree = "<group>"; };
+		4472103D19ECE69F00AAC16F /* osifctyp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osifctyp.h; path = tads/tads2/osifctyp.h; sourceTree = "<group>"; };
+		4472103F19ECE69F00AAC16F /* osstzprs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osstzprs.c; path = tads/tads2/osstzprs.c; sourceTree = "<group>"; };
+		4472104019ECE69F00AAC16F /* osstzprs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = osstzprs.h; path = tads/tads2/osstzprs.h; sourceTree = "<group>"; };
+		4472104119ECE69F00AAC16F /* ostzposix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ostzposix.c; path = tads/tads2/ostzposix.c; sourceTree = "<group>"; };
+		4472104219ECE69F00AAC16F /* ply.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ply.h; path = tads/tads2/ply.h; sourceTree = "<group>"; };
+		4472104319ECE69F00AAC16F /* prp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prp.h; path = tads/tads2/prp.h; sourceTree = "<group>"; };
+		4472104519ECE69F00AAC16F /* prs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prs.h; path = tads/tads2/prs.h; sourceTree = "<group>"; };
+		4472104719ECE69F00AAC16F /* regex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = regex.h; path = tads/tads2/regex.h; sourceTree = "<group>"; };
+		4472104819ECE69F00AAC16F /* res.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = res.h; path = tads/tads2/res.h; sourceTree = "<group>"; };
+		4472104919ECE69F00AAC16F /* run.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = run.h; path = tads/tads2/run.h; sourceTree = "<group>"; };
+		4472104A19ECE69F00AAC16F /* std.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = std.h; path = tads/tads2/std.h; sourceTree = "<group>"; };
+		4472104C19ECE69F00AAC16F /* sup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sup.h; path = tads/tads2/sup.h; sourceTree = "<group>"; };
+		4472104F19ECE69F00AAC16F /* tcg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcg.h; path = tads/tads2/tcg.h; sourceTree = "<group>"; };
+		4472105019ECE69F00AAC16F /* tcgdum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tcgdum.c; path = tads/tads2/tcgdum.c; sourceTree = "<group>"; };
+		4472105119ECE69F00AAC16F /* tio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tio.h; path = tads/tads2/tio.h; sourceTree = "<group>"; };
+		4472105319ECE69F00AAC16F /* tok.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tok.h; path = tads/tads2/tok.h; sourceTree = "<group>"; };
+		4472105519ECE69F00AAC16F /* trd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = trd.h; path = tads/tads2/trd.h; sourceTree = "<group>"; };
+		4472105619ECE69F00AAC16F /* voc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = voc.h; path = tads/tads2/voc.h; sourceTree = "<group>"; };
+		4472105719ECE69F00AAC16F /* voccomp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = voccomp.c; path = tads/tads2/voccomp.c; sourceTree = "<group>"; };
 		4474905F0E85BA4C00A5310F /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		447DD4AB125311B500004A83 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		447DF3B7123C136500689076 /* StoryDetailsController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StoryDetailsController.h; sourceTree = "<group>"; };
@@ -537,8 +1017,40 @@
 		44A2E7B811228B0900E35CCC /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; name = locale; path = resources/locale; sourceTree = "<group>"; };
 		44B583B81998A7700046F661 /* cgdate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cgdate.c; sourceTree = "<group>"; };
+		44B63FD119F0DD0D00A143FE /* vmconnom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmconnom.cpp; path = tads/tads3/vmconnom.cpp; sourceTree = "<group>"; };
 		44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileTransferInfo.h; sourceTree = "<group>"; };
 		44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileTransferInfo.m; sourceTree = "<group>"; };
+		44BE719A19EB7C6F00036AA6 /* bif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bif.c; path = tads/tads2/bif.c; sourceTree = "<group>"; };
+		44BE719B19EB7C6F00036AA6 /* bifgdum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bifgdum.c; path = tads/tads2/bifgdum.c; sourceTree = "<group>"; };
+		44BE719C19EB7C6F00036AA6 /* cmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmap.c; path = tads/tads2/cmap.c; sourceTree = "<group>"; };
+		44BE719D19EB7C6F00036AA6 /* cmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmd.c; path = tads/tads2/cmd.c; sourceTree = "<group>"; };
+		44BE719E19EB7C6F00036AA6 /* dat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dat.c; path = tads/tads2/dat.c; sourceTree = "<group>"; };
+		44BE719F19EB7C6F00036AA6 /* dbgtr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dbgtr.c; path = tads/tads2/dbgtr.c; sourceTree = "<group>"; };
+		44BE71A019EB7C6F00036AA6 /* errmsg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = errmsg.c; path = tads/tads2/errmsg.c; sourceTree = "<group>"; };
+		44BE71A119EB7C6F00036AA6 /* execmd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = execmd.c; path = tads/tads2/execmd.c; sourceTree = "<group>"; };
+		44BE71A219EB7C6F00036AA6 /* fio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fio.c; path = tads/tads2/fio.c; sourceTree = "<group>"; };
+		44BE71A319EB7C6F00036AA6 /* fioxor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fioxor.c; path = tads/tads2/fioxor.c; sourceTree = "<group>"; };
+		44BE71A419EB7C6F00036AA6 /* getstr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = getstr.c; path = tads/tads2/getstr.c; sourceTree = "<group>"; };
+		44BE71A819EB7C6F00036AA6 /* ler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ler.c; path = tads/tads2/ler.c; sourceTree = "<group>"; };
+		44BE71AA19EB7C6F00036AA6 /* lst.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lst.c; path = tads/tads2/lst.c; sourceTree = "<group>"; };
+		44BE71AB19EB7C6F00036AA6 /* mch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mch.c; path = tads/tads2/mch.c; sourceTree = "<group>"; };
+		44BE71AC19EB7C6F00036AA6 /* mcm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mcm.c; path = tads/tads2/mcm.c; sourceTree = "<group>"; };
+		44BE71AD19EB7C6F00036AA6 /* mcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mcs.c; path = tads/tads2/mcs.c; sourceTree = "<group>"; };
+		44BE71AE19EB7C6F00036AA6 /* obj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = obj.c; path = tads/tads2/obj.c; sourceTree = "<group>"; };
+		44BE71B219EB7C6F00036AA6 /* oserr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oserr.c; path = tads/tads2/oserr.c; sourceTree = "<group>"; };
+		44BE71B319EB7C6F00036AA6 /* osifc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osifc.c; path = tads/tads2/osifc.c; sourceTree = "<group>"; };
+		44BE71B419EB7C6F00036AA6 /* osrestad.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = osrestad.c; path = tads/tads2/osrestad.c; sourceTree = "<group>"; };
+		44BE71B719EB7C6F00036AA6 /* out.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = out.c; path = tads/tads2/out.c; sourceTree = "<group>"; };
+		44BE71B819EB7C6F00036AA6 /* output.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = output.c; path = tads/tads2/output.c; sourceTree = "<group>"; };
+		44BE71B919EB7C6F00036AA6 /* ply.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ply.c; path = tads/tads2/ply.c; sourceTree = "<group>"; };
+		44BE71BA19EB7C6F00036AA6 /* qas.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = qas.c; path = tads/tads2/qas.c; sourceTree = "<group>"; };
+		44BE71BB19EB7C6F00036AA6 /* regex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = regex.c; path = tads/tads2/regex.c; sourceTree = "<group>"; };
+		44BE71BC19EB7C6F00036AA6 /* run.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = run.c; path = tads/tads2/run.c; sourceTree = "<group>"; };
+		44BE71BD19EB7C6F00036AA6 /* runstat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = runstat.c; path = tads/tads2/runstat.c; sourceTree = "<group>"; };
+		44BE71BE19EB7C6F00036AA6 /* suprun.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = suprun.c; path = tads/tads2/suprun.c; sourceTree = "<group>"; };
+		44BE71BF19EB7C6F00036AA6 /* trd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trd.c; path = tads/tads2/trd.c; sourceTree = "<group>"; };
+		44BE71C019EB7C6F00036AA6 /* voc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = voc.c; path = tads/tads2/voc.c; sourceTree = "<group>"; };
+		44BE71C119EB7C6F00036AA6 /* vocab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vocab.c; path = tads/tads2/vocab.c; sourceTree = "<group>"; };
 		44C28D011238C41C00EE9FA3 /* DisplayCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayCell.h; sourceTree = "<group>"; };
 		44C28D031238C41C00EE9FA3 /* URLPromptController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = URLPromptController.h; sourceTree = "<group>"; };
 		44C28D041238C41C00EE9FA3 /* URLPromptController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = URLPromptController.m; sourceTree = "<group>"; };
@@ -746,6 +1258,7 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				44BE719719EB7C5700036AA6 /* tads */,
 				44690D22126A3FFD00B283FF /* git */,
 				442355BC1260493A00BFB245 /* glulxe */,
 				442358B9126187E500BFB245 /* glkios */,
@@ -1043,6 +1556,257 @@
 			name = git;
 			sourceTree = "<group>";
 		};
+		446D26BF19EDC1E200B58477 /* tads3 */ = {
+			isa = PBXGroup;
+			children = (
+				444F7CE219F23DE500927703 /* tccmdutl.cpp */,
+				444F7CE319F23DE500927703 /* tccmdutl.h */,
+				444F7CE419F23DE500927703 /* tcerr.cpp */,
+				444F7CE519F23DE500927703 /* tcerr.h */,
+				444F7CE619F23DE500927703 /* tcerrmsg.cpp */,
+				444F7CE719F23DE500927703 /* tcerrnum.h */,
+				444F7CE819F23DE500927703 /* tcgen.cpp */,
+				444F7CE919F23DE500927703 /* tcgen.h */,
+				444F7CEA19F23DE500927703 /* tcglob.cpp */,
+				444F7CEB19F23DE500927703 /* tcglob.h */,
+				444F7CEC19F23DE500927703 /* tchost.h */,
+				444F7CED19F23DE500927703 /* tchostsi.cpp */,
+				444F7CEE19F23DE500927703 /* tchostsi.h */,
+				444F7CEF19F23DE500927703 /* tclibprs.cpp */,
+				444F7CF019F23DE500927703 /* tclibprs.h */,
+				444F7CF119F23DE500927703 /* tcmain.cpp */,
+				444F7CF219F23DE500927703 /* tcmain.h */,
+				444F7CF319F23DE500927703 /* tcprs_rt.cpp */,
+				444F7CF419F23DE500927703 /* tcprs.cpp */,
+				444F7CF519F23DE500927703 /* tcprs.h */,
+				444F7CF619F23DE500927703 /* tcprsnf.cpp */,
+				444F7CF719F23DE500927703 /* tcprsnl.cpp */,
+				444F7CF819F23DE500927703 /* tcprsstm.cpp */,
+				444F7CF919F23DE500927703 /* tcsrc.cpp */,
+				444F7CFA19F23DE500927703 /* tcsrc.h */,
+				444F7CFB19F23DE500927703 /* tct3_d.cpp */,
+				444F7CFC19F23DE500927703 /* tct3.cpp */,
+				444F7CFD19F23DE500927703 /* tct3.h */,
+				444F7CFE19F23DE500927703 /* tct3base.h */,
+				444F7CFF19F23DE500927703 /* tct3nl.cpp */,
+				444F7D0019F23DE500927703 /* tct3stm.cpp */,
+				444F7D0119F23DE500927703 /* tct3unas.cpp */,
+				444F7D0219F23DE500927703 /* tct3unas.h */,
+				444F7D1619F23E7600927703 /* tct3ty.h */,
+				444F7D1719F23E7600927703 /* tctarg.h */,
+				444F7D1819F23E7600927703 /* tctargty.h */,
+				444F7D1919F23E7600927703 /* tctok.cpp */,
+				444F7D1A19F23E7600927703 /* tctok.h */,
+				444F7D1B19F23E7600927703 /* tcunas.h */,
+				444F7D1C19F23E7600927703 /* tcvsn.h */,
+				446D288119EF9BC000B58477 /* vmgram.cpp */,
+				446D288219EF9BC000B58477 /* vmgram.h */,
+				446D26C719EDC71C00B58477 /* core.h */,
+				446D26C919EDC71C00B58477 /* md5.cpp */,
+				446D287F19EF9B2100B58477 /* vmdynfunc.cpp */,
+				446D26CA19EDC71C00B58477 /* md5.h */,
+				446D26CC19EDC71C00B58477 /* osifcnet.cpp */,
+				446D26CD19EDC71C00B58477 /* rcmain.cpp */,
+				446D26CE19EDC71C00B58477 /* rcmain.h */,
+				446D26D019EDC71C00B58477 /* resload.cpp */,
+				446D26D119EDC71C00B58477 /* resload.h */,
+				446D26D219EDC71C00B58477 /* resnoexe.cpp */,
+				446D26D319EDC71C00B58477 /* sha2.cpp */,
+				446D26D419EDC71C00B58477 /* sha2.h */,
+				446D26D519EDC71C00B58477 /* std_dbg.cpp */,
+				446D26D619EDC71C00B58477 /* std.cpp */,
+				446D26D719EDC71C00B58477 /* t3_os.h */,
+				446D271819EDC71C00B58477 /* utf8.cpp */,
+				446D271919EDC71C00B58477 /* vmanonfn.cpp */,
+				446D271A19EDC71C00B58477 /* vmanonfn.h */,
+				446D271B19EDC71C00B58477 /* vmbif.cpp */,
+				446D271C19EDC71C00B58477 /* vmbif.h */,
+				446D271E19EDC71C00B58477 /* vmbifl.cpp */,
+				446D271F19EDC71C00B58477 /* vmbifnet.cpp */,
+				446D272019EDC71C00B58477 /* vmbifnet.h */,
+				446D272119EDC71C00B58477 /* vmbifreg.cpp */,
+				446D272219EDC71C00B58477 /* vmbifreg.h */,
+				446D272419EDC71C00B58477 /* vmbift3.cpp */,
+				446D272519EDC71C00B58477 /* vmbift3.h */,
+				446D272619EDC71C00B58477 /* vmbiftad.cpp */,
+				446D272719EDC71C00B58477 /* vmbiftad.h */,
+				446D272819EDC71C00B58477 /* vmbiftio.cpp */,
+				446D272919EDC71C00B58477 /* vmbiftio.h */,
+				446D272A19EDC71C00B58477 /* vmbignum.cpp */,
+				446D272B19EDC71C00B58477 /* vmbignum.h */,
+				446D272C19EDC71C00B58477 /* vmbignumlib.cpp */,
+				446D272E19EDC71C00B58477 /* vmbt3_nd.cpp */,
+				446D272F19EDC71C00B58477 /* vmbytarr.cpp */,
+				446D273019EDC71C00B58477 /* vmbytarr.h */,
+				446D273119EDC71C00B58477 /* vmcfgmem.cpp */,
+				446D273219EDC71C00B58477 /* vmcoll.cpp */,
+				446D273319EDC71C00B58477 /* vmcoll.h */,
+				446D273419EDC71C00B58477 /* vmconhmp.cpp */,
+				44B63FD119F0DD0D00A143FE /* vmconnom.cpp */,
+				446D273619EDC71C00B58477 /* vmconsol.cpp */,
+				446D273719EDC71C00B58477 /* vmconsol.h */,
+				446D273819EDC71C00B58477 /* vmcrc.cpp */,
+				446D273919EDC71C00B58477 /* vmcrc.h */,
+				446D273A19EDC71C00B58477 /* vmcset.cpp */,
+				446D273B19EDC71C00B58477 /* vmcset.h */,
+				446D273C19EDC71C00B58477 /* vmdate.cpp */,
+				446D273D19EDC71C00B58477 /* vmdate.h */,
+				446D273F19EDC71C00B58477 /* vmdbg.h */,
+				446D274019EDC71C00B58477 /* vmdict.cpp */,
+				446D274119EDC71C00B58477 /* vmdict.h */,
+				446D274319EDC71C00B58477 /* vmdynfunc.h */,
+				446D274419EDC71C00B58477 /* vmerr.cpp */,
+				446D274519EDC71C00B58477 /* vmerr.h */,
+				446D274619EDC71C00B58477 /* vmerrmsg.cpp */,
+				446D274719EDC71C00B58477 /* vmerrnum.h */,
+				446D274819EDC71C00B58477 /* vmfile.cpp */,
+				446D274919EDC71C00B58477 /* vmfile.h */,
+				446D274A19EDC71C00B58477 /* vmfilnam.cpp */,
+				446D274B19EDC71C00B58477 /* vmfilnam.h */,
+				446D274C19EDC71C00B58477 /* vmfilobj.cpp */,
+				446D274D19EDC71C00B58477 /* vmfilobj.h */,
+				446D274E19EDC71C00B58477 /* vmfindrep.h */,
+				446D274F19EDC71C00B58477 /* vmfref.cpp */,
+				446D275019EDC71C00B58477 /* vmfref.h */,
+				446D275119EDC71C00B58477 /* vmfunc.cpp */,
+				446D275219EDC71C00B58477 /* vmfunc.h */,
+				446D275319EDC71C00B58477 /* vmglob.cpp */,
+				446D275419EDC71C00B58477 /* vmglob.h */,
+				446D275519EDC71C00B58477 /* vmglobv.h */,
+				446D275819EDC71C00B58477 /* vmhash.cpp */,
+				446D275919EDC71C00B58477 /* vmhash.h */,
+				446D275A19EDC71C00B58477 /* vmhost.h */,
+				446D275B19EDC71C00B58477 /* vmhostsi.cpp */,
+				446D275C19EDC71C00B58477 /* vmhostsi.h */,
+				446D275D19EDC71C00B58477 /* vmhosttx.cpp */,
+				446D275E19EDC71C00B58477 /* vmhosttx.h */,
+				446D276019EDC71C00B58477 /* vmhttpreq.cpp */,
+				446D276119EDC71C00B58477 /* vmhttpreq.h */,
+				446D285B19EE572100B58477 /* vmhttpsrv.cpp */,
+				446D276319EDC71C00B58477 /* vmhttpsrv.h */,
+				446D276419EDC71C00B58477 /* vmimage.cpp */,
+				446D276519EDC71C00B58477 /* vmimage.h */,
+				446D276719EDC71C00B58477 /* vmimg_nd.cpp */,
+				446D276819EDC71C00B58477 /* vmimgrb.cpp */,
+				446D276919EDC71C00B58477 /* vmimgrb.h */,
+				446D276A19EDC71C00B58477 /* vmimport.h */,
+				446D276C19EDC71C00B58477 /* vmini_nd.cpp */,
+				446D276D19EDC71C00B58477 /* vminit.cpp */,
+				446D276E19EDC71C00B58477 /* vminit.h */,
+				446D276F19EDC71C00B58477 /* vminitim.cpp */,
+				446D277019EDC71C00B58477 /* vmintcls.cpp */,
+				446D277119EDC71C00B58477 /* vmintcls.h */,
+				446D277219EDC71C00B58477 /* vmisaac.cpp */,
+				446D277319EDC71C00B58477 /* vmisaac.h */,
+				446D277419EDC71C00B58477 /* vmiter.cpp */,
+				446D277519EDC71C00B58477 /* vmiter.h */,
+				446D277619EDC71C00B58477 /* vmlog.cpp */,
+				446D277719EDC71C00B58477 /* vmlog.h */,
+				446D277819EDC71C00B58477 /* vmlookup.cpp */,
+				446D277919EDC71C00B58477 /* vmlookup.h */,
+				446D277A19EDC71C00B58477 /* vmlst.cpp */,
+				446D277B19EDC71C00B58477 /* vmlst.h */,
+				446D277C19EDC71C00B58477 /* vmmain.cpp */,
+				446D277D19EDC71C00B58477 /* vmmain.h */,
+				446D277E19EDC71C00B58477 /* vmmaincn.h */,
+				446D277F19EDC71C00B58477 /* vmmccore.h */,
+				446D278019EDC71C00B58477 /* vmmcnet.h */,
+				446D278119EDC71C00B58477 /* vmmcreg.cpp */,
+				446D278219EDC71C00B58477 /* vmmcreg.h */,
+				446D278319EDC71C00B58477 /* vmmersenne.h */,
+				446D278419EDC71C00B58477 /* vmmeta.cpp */,
+				446D278519EDC71C00B58477 /* vmmeta.h */,
+				446D278619EDC71C00B58477 /* vmnet.cpp */,
+				446D278719EDC71C00B58477 /* vmnet.h */,
+				446D278819EDC71C00B58477 /* vmnetcfg.cpp */,
+				446D278919EDC71C00B58477 /* vmnetfil.cpp */,
+				446D278A19EDC71C00B58477 /* vmnetfil.h */,
+				446D278B19EDC71C00B58477 /* vmnetfillcl.cpp */,
+				446D278C19EDC71C00B58477 /* vmnetui.cpp */,
+				446D278D19EDC71C00B58477 /* vmobj.cpp */,
+				446D278E19EDC71C00B58477 /* vmobj.h */,
+				446D278F19EDC71C00B58477 /* vmop.cpp */,
+				446D279019EDC71C00B58477 /* vmop.h */,
+				446D279119EDC71C00B58477 /* vmpack.cpp */,
+				446D279219EDC71C00B58477 /* vmpack.h */,
+				446D279319EDC71C00B58477 /* vmparam.h */,
+				446D279419EDC71C00B58477 /* vmpat.cpp */,
+				446D279519EDC71C00B58477 /* vmpat.h */,
+				446D279619EDC71C00B58477 /* vmpool.cpp */,
+				446D279719EDC71C00B58477 /* vmpool.h */,
+				446D279819EDC71C00B58477 /* vmpoolim.cpp */,
+				446D279919EDC71C00B58477 /* vmpoolsl.h */,
+				446D279A19EDC71C00B58477 /* vmpredef.h */,
+				446D279B19EDC71C00B58477 /* vmpreini.cpp */,
+				446D279C19EDC71C00B58477 /* vmpreini.h */,
+				446D279D19EDC71C00B58477 /* vmprof.h */,
+				446D279E19EDC71C00B58477 /* vmprofty.h */,
+				446D279F19EDC71C00B58477 /* vmrefcnt.cpp */,
+				446D27A019EDC71C00B58477 /* vmregex.cpp */,
+				446D27A119EDC71C00B58477 /* vmregex.h */,
+				446D27A219EDC71C00B58477 /* vmres.h */,
+				446D27A319EDC71C00B58477 /* vmrun.cpp */,
+				446D27A419EDC71C00B58477 /* vmrun.h */,
+				446D27A519EDC71C00B58477 /* vmrunsym.cpp */,
+				446D27A619EDC71C00B58477 /* vmrunsym.h */,
+				446D27A719EDC71C00B58477 /* vmsa.cpp */,
+				446D27A819EDC71C00B58477 /* vmsave.cpp */,
+				446D27A919EDC71C00B58477 /* vmsave.h */,
+				446D27AA19EDC71C00B58477 /* vmsort.cpp */,
+				446D27AB19EDC71C00B58477 /* vmsort.h */,
+				446D27AC19EDC71C00B58477 /* vmsortv.cpp */,
+				446D27AD19EDC71C00B58477 /* vmsrcf.cpp */,
+				446D27AE19EDC71C00B58477 /* vmsrcf.h */,
+				446D27AF19EDC71C00B58477 /* vmstack.cpp */,
+				446D27B019EDC71C00B58477 /* vmstack.h */,
+				446D27B119EDC71C00B58477 /* vmstr.cpp */,
+				446D27B219EDC71C00B58477 /* vmstr.h */,
+				446D27B319EDC71C00B58477 /* vmstrbuf.cpp */,
+				446D27B419EDC71C00B58477 /* vmstrbuf.h */,
+				446D27B519EDC71C00B58477 /* vmstrcmp.cpp */,
+				446D27B619EDC71C00B58477 /* vmstrcmp.h */,
+				446D27B719EDC71D00B58477 /* vmstrref.h */,
+				446D27B819EDC71D00B58477 /* vmstrres.h */,
+				446D27B919EDC71D00B58477 /* vmtmpfil.cpp */,
+				446D27BA19EDC71D00B58477 /* vmtmpfil.h */,
+				446D27BB19EDC71D00B58477 /* vmtobj.cpp */,
+				446D27BC19EDC71D00B58477 /* vmtobj.h */,
+				446D27BD19EDC71D00B58477 /* vmtype.cpp */,
+				446D27BE19EDC71D00B58477 /* vmtype.h */,
+				446D27BF19EDC71D00B58477 /* vmtypedh.cpp */,
+				446D27C019EDC71D00B58477 /* vmtz.cpp */,
+				446D27C119EDC71D00B58477 /* vmtz.h */,
+				446D27C219EDC71D00B58477 /* vmtzobj.cpp */,
+				446D27C319EDC71D00B58477 /* vmtzobj.h */,
+				446D27C419EDC71D00B58477 /* vmundo.cpp */,
+				446D27C519EDC71D00B58477 /* vmundo.h */,
+				446D27C619EDC71D00B58477 /* vmvec.cpp */,
+				446D27C719EDC71D00B58477 /* vmvec.h */,
+				446D27C819EDC71D00B58477 /* vmvsn.h */,
+				446D27C919EDC71D00B58477 /* vmwrtimg.cpp */,
+				446D27CA19EDC71D00B58477 /* vmwrtimg.h */,
+				446D26C519EDC40300B58477 /* vmrefcnt.h */,
+				446D26C419EDC3E900B58477 /* osifcnet.h */,
+				446D26B819EDC1BC00B58477 /* charmap.cpp */,
+				446D26B919EDC1BC00B58477 /* charmap.h */,
+				446D26BA19EDC1BC00B58477 /* t3std.h */,
+				446D26BB19EDC1BC00B58477 /* utf8.h */,
+				446D26BC19EDC1BC00B58477 /* vmdatasrc.h */,
+				446D26BD19EDC1BC00B58477 /* vmuni.h */,
+				446D26C019EDC33400B58477 /* unix */,
+			);
+			name = tads3;
+			sourceTree = "<group>";
+		};
+		446D26C019EDC33400B58477 /* unix */ = {
+			isa = PBXGroup;
+			children = (
+				446D285919EE435000B58477 /* osnetunix.cpp */,
+				446D26C219EDC34600B58477 /* osnetunix.h */,
+			);
+			name = unix;
+			sourceTree = "<group>";
+		};
 		44951E8E0E31B71A00FEC2B0 /* zlib */ = {
 			isa = PBXGroup;
 			children = (
@@ -1083,6 +1847,127 @@
 				44951F7B0E32799500FEC2B0 /* unzip.h */,
 			);
 			name = minizip;
+			sourceTree = "<group>";
+		};
+		44BE719719EB7C5700036AA6 /* tads */ = {
+			isa = PBXGroup;
+			children = (
+				444F7D2019F2C1D900927703 /* vmuni_cs.cpp */,
+				446D285D19EF04CC00B58477 /* memicmp.c */,
+				446D285E19EF04CC00B58477 /* os.h */,
+				446D285F19EF04CC00B58477 /* osansi.h */,
+				446D286019EF04CC00B58477 /* osansi1.c */,
+				446D286119EF04CC00B58477 /* osansi2.c */,
+				446D286219EF04CC00B58477 /* osansi3.c */,
+				446D286319EF04CC00B58477 /* osbuffer.c */,
+				446D286519EF04CC00B58477 /* osglk.c */,
+				446D286619EF04CC00B58477 /* osglkban.c */,
+				446D286819EF04CC00B58477 /* osparse.c */,
+				446D286919EF04CC00B58477 /* t2askf.c */,
+				446D286A19EF04CC00B58477 /* t2indlg.c */,
+				446D286B19EF04CC00B58477 /* t3askf.cpp */,
+				446D286C19EF04CC00B58477 /* t3indlg.cpp */,
+				446D286D19EF04CC00B58477 /* t23run.cpp */,
+				44BE719819EB7C5E00036AA6 /* tads2 */,
+				446D26BF19EDC1E200B58477 /* tads3 */,
+			);
+			name = tads;
+			sourceTree = "<group>";
+		};
+		44BE719819EB7C5E00036AA6 /* tads2 */ = {
+			isa = PBXGroup;
+			children = (
+				446D26B619ECFA8900B58477 /* linfdum.c */,
+				446D26AA19ECF20600B58477 /* common.h */,
+				446D26AB19ECF20600B58477 /* config.h */,
+				446D26AC19ECF20600B58477 /* missing.h */,
+				446D26AD19ECF20600B58477 /* osfrobtads.h */,
+				446D26AE19ECF20600B58477 /* osportable.cc */,
+				4472101519ECE69F00AAC16F /* appctx.h */,
+				4472101619ECE69F00AAC16F /* argize.c */,
+				4472101719ECE69F00AAC16F /* argize.h */,
+				4472101919ECE69F00AAC16F /* bif.h */,
+				4472101A19ECE69F00AAC16F /* cmap.h */,
+				4472101B19ECE69F00AAC16F /* cmd.h */,
+				4472101C19ECE69F00AAC16F /* dat.h */,
+				4472101E19ECE69F00AAC16F /* dbg.h */,
+				4472101F19ECE69F00AAC16F /* emt.c */,
+				4472102019ECE69F00AAC16F /* emt.h */,
+				4472102119ECE69F00AAC16F /* err.h */,
+				4472102219ECE69F00AAC16F /* fio.h */,
+				4472102719ECE69F00AAC16F /* h_ix86_64.h */,
+				4472102819ECE69F00AAC16F /* h_ix86.h */,
+				4472102919ECE69F00AAC16F /* h_ppc.h */,
+				4472102A19ECE69F00AAC16F /* ler.h */,
+				4472102B19ECE69F00AAC16F /* lib.h */,
+				4472102C19ECE69F00AAC16F /* lin.h */,
+				4472102E19ECE69F00AAC16F /* linf.h */,
+				4472102F19ECE69F00AAC16F /* lst.h */,
+				4472103019ECE69F00AAC16F /* mch.h */,
+				4472103119ECE69F00AAC16F /* mcl.h */,
+				4472103219ECE69F00AAC16F /* mcm.h */,
+				4472103319ECE69F00AAC16F /* mcs.h */,
+				4472103419ECE69F00AAC16F /* obj.h */,
+				4472103519ECE69F00AAC16F /* objcomp.c */,
+				4472103619ECE69F00AAC16F /* oem.h */,
+				444F7D1E19F2BF9200927703 /* oem_glk.c */,
+				4472103719ECE69F00AAC16F /* opc.h */,
+				4472103819ECE69F00AAC16F /* os.h */,
+				4472103919ECE69F00AAC16F /* osbigmem.h */,
+				4472103A19ECE69F00AAC16F /* osgen.h */,
+				4472103C19ECE69F00AAC16F /* osifc.h */,
+				4472103D19ECE69F00AAC16F /* osifctyp.h */,
+				4472103F19ECE69F00AAC16F /* osstzprs.c */,
+				4472104019ECE69F00AAC16F /* osstzprs.h */,
+				4472104119ECE69F00AAC16F /* ostzposix.c */,
+				4472104219ECE69F00AAC16F /* ply.h */,
+				4472104319ECE69F00AAC16F /* prp.h */,
+				4472104519ECE69F00AAC16F /* prs.h */,
+				4472104719ECE69F00AAC16F /* regex.h */,
+				4472104819ECE69F00AAC16F /* res.h */,
+				4472104919ECE69F00AAC16F /* run.h */,
+				4472104A19ECE69F00AAC16F /* std.h */,
+				4472104C19ECE69F00AAC16F /* sup.h */,
+				4472104F19ECE69F00AAC16F /* tcg.h */,
+				4472105019ECE69F00AAC16F /* tcgdum.c */,
+				4472105119ECE69F00AAC16F /* tio.h */,
+				4472105319ECE69F00AAC16F /* tok.h */,
+				4472105519ECE69F00AAC16F /* trd.h */,
+				4472105619ECE69F00AAC16F /* voc.h */,
+				4472105719ECE69F00AAC16F /* voccomp.c */,
+				44BE719A19EB7C6F00036AA6 /* bif.c */,
+				44BE719B19EB7C6F00036AA6 /* bifgdum.c */,
+				44BE719C19EB7C6F00036AA6 /* cmap.c */,
+				44BE719D19EB7C6F00036AA6 /* cmd.c */,
+				44BE719E19EB7C6F00036AA6 /* dat.c */,
+				44BE719F19EB7C6F00036AA6 /* dbgtr.c */,
+				44BE71A019EB7C6F00036AA6 /* errmsg.c */,
+				44BE71A119EB7C6F00036AA6 /* execmd.c */,
+				44BE71A219EB7C6F00036AA6 /* fio.c */,
+				44BE71A319EB7C6F00036AA6 /* fioxor.c */,
+				44BE71A419EB7C6F00036AA6 /* getstr.c */,
+				44BE71A819EB7C6F00036AA6 /* ler.c */,
+				44BE71AA19EB7C6F00036AA6 /* lst.c */,
+				44BE71AB19EB7C6F00036AA6 /* mch.c */,
+				44BE71AC19EB7C6F00036AA6 /* mcm.c */,
+				44BE71AD19EB7C6F00036AA6 /* mcs.c */,
+				44BE71AE19EB7C6F00036AA6 /* obj.c */,
+				44BE71B219EB7C6F00036AA6 /* oserr.c */,
+				44BE71B319EB7C6F00036AA6 /* osifc.c */,
+				44BE71B419EB7C6F00036AA6 /* osrestad.c */,
+				44BE71B719EB7C6F00036AA6 /* out.c */,
+				44BE71B819EB7C6F00036AA6 /* output.c */,
+				44BE71B919EB7C6F00036AA6 /* ply.c */,
+				44BE71BA19EB7C6F00036AA6 /* qas.c */,
+				44BE71BB19EB7C6F00036AA6 /* regex.c */,
+				44BE71BC19EB7C6F00036AA6 /* run.c */,
+				44BE71BD19EB7C6F00036AA6 /* runstat.c */,
+				44BE71BE19EB7C6F00036AA6 /* suprun.c */,
+				44BE71BF19EB7C6F00036AA6 /* trd.c */,
+				44BE71C019EB7C6F00036AA6 /* voc.c */,
+				44BE71C119EB7C6F00036AA6 /* vocab.c */,
+			);
+			name = tads2;
 			sourceTree = "<group>";
 		};
 		44D013971372707D00B7F616 /* FTPServLib */ = {
@@ -1333,8 +2218,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				446D284519EDC71D00B58477 /* vmsave.cpp in Sources */,
 				1D3623260D0F684500981E51 /* FrotzAppDelegate.m in Sources */,
+				446D283419EDC71D00B58477 /* vmnet.cpp in Sources */,
 				441EC8410E10BD1100E74625 /* buffer.c in Sources */,
+				444F7D2119F2C1D900927703 /* vmuni_cs.cpp in Sources */,
+				446D284E19EDC71D00B58477 /* vmtobj.cpp in Sources */,
 				441EC8420E10BD1100E74625 /* err.c in Sources */,
 				441EC8430E10BD1100E74625 /* fastmem.c in Sources */,
 				441EC8440E10BD1100E74625 /* files.c in Sources */,
@@ -1342,138 +2231,305 @@
 				441EC8460E10BD1100E74625 /* hotkey.c in Sources */,
 				441EC8470E10BD1100E74625 /* input.c in Sources */,
 				441EC8490E10BD1100E74625 /* math.c in Sources */,
+				446D282319EDC71D00B58477 /* vmimage.cpp in Sources */,
+				446D286F19EF04CC00B58477 /* osansi1.c in Sources */,
+				44BE71C719EB7C6F00036AA6 /* dat.c in Sources */,
 				441EC84A0E10BD1100E74625 /* object.c in Sources */,
 				441EC84B0E10BD1100E74625 /* process.c in Sources */,
 				441EC84C0E10BD1100E74625 /* quetzal.c in Sources */,
 				441EC84D0E10BD1100E74625 /* random.c in Sources */,
+				446D287819EF04CC00B58477 /* t2askf.c in Sources */,
+				444F7D0C19F23DE500927703 /* tcprs.cpp in Sources */,
+				446D282B19EDC71D00B58477 /* vmintcls.cpp in Sources */,
+				44BE71E219EB7C6F00036AA6 /* run.c in Sources */,
+				446D282619EDC71D00B58477 /* vmimgrb.cpp in Sources */,
+				446D283019EDC71D00B58477 /* vmlst.cpp in Sources */,
+				44BE71DF19EB7C6F00036AA6 /* ply.c in Sources */,
+				446D283F19EDC71D00B58477 /* vmpreini.cpp in Sources */,
 				441EC84E0E10BD1100E74625 /* redirect.c in Sources */,
 				441EC84F0E10BD1100E74625 /* screen.c in Sources */,
+				446D281219EDC71D00B58477 /* vmdict.cpp in Sources */,
 				441EC8500E10BD1100E74625 /* sound.c in Sources */,
+				446D284419EDC71D00B58477 /* vmsa.cpp in Sources */,
 				441EC8510E10BD1100E74625 /* stream.c in Sources */,
+				446D27D319EDC71D00B58477 /* resnoexe.cpp in Sources */,
 				441EC8520E10BD1100E74625 /* table.c in Sources */,
+				44BE71D419EB7C6F00036AA6 /* mcm.c in Sources */,
+				446D27CF19EDC71D00B58477 /* osifcnet.cpp in Sources */,
 				441EC8530E10BD1100E74625 /* text.c in Sources */,
+				446D280F19EDC71D00B58477 /* vmcset.cpp in Sources */,
 				441EC8540E10BD1100E74625 /* variable.c in Sources */,
+				446D283E19EDC71D00B58477 /* vmpoolim.cpp in Sources */,
+				446D287719EF04CC00B58477 /* osparse.c in Sources */,
+				446D282C19EDC71D00B58477 /* vmisaac.cpp in Sources */,
 				441EC8670E10BD4400E74625 /* ui_audio_none.c in Sources */,
+				446D281E19EDC71D00B58477 /* vmhostsi.cpp in Sources */,
+				446D26AF19ECF20600B58477 /* osportable.cc in Sources */,
 				441EC8690E10BD4400E74625 /* ui_init.c in Sources */,
+				44B63FD219F0DD0D00A143FE /* vmconnom.cpp in Sources */,
+				446D281B19EDC71D00B58477 /* vmglob.cpp in Sources */,
+				44BE71E519EB7C6F00036AA6 /* trd.c in Sources */,
 				441EC86B0E10BD4400E74625 /* ui_input.c in Sources */,
+				446D287419EF04CC00B58477 /* osglk.c in Sources */,
+				444F7D1119F23DE500927703 /* tct3_d.cpp in Sources */,
 				441EC86D0E10BD4400E74625 /* ui_pic.c in Sources */,
+				446D281619EDC71D00B58477 /* vmfile.cpp in Sources */,
+				444F7D0F19F23DE500927703 /* tcprsstm.cpp in Sources */,
+				446D283919EDC71D00B58477 /* vmobj.cpp in Sources */,
+				446D285219EDC71D00B58477 /* vmtzobj.cpp in Sources */,
+				4472105819ECE69F00AAC16F /* argize.c in Sources */,
 				441EC86F0E10BD4400E74625 /* ui_text.c in Sources */,
+				446D283619EDC71D00B58477 /* vmnetfil.cpp in Sources */,
 				441EC87B0E10BF3E00E74625 /* main.m in Sources */,
+				446D27FB19EDC71D00B58477 /* vmbif.cpp in Sources */,
+				44BE71DA19EB7C6F00036AA6 /* osifc.c in Sources */,
 				446B9EAB0E2075D1002BDD65 /* FileBrowser.m in Sources */,
 				446B9EAC0E2075D1002BDD65 /* StoryBrowser.m in Sources */,
 				446B9EAD0E2075D1002BDD65 /* StoryMainViewController.m in Sources */,
 				4488D1D30E21E81F008C6FE0 /* StoryWebBrowserController.m in Sources */,
+				44BE71C619EB7C6F00036AA6 /* cmd.c in Sources */,
+				446D281519EDC71D00B58477 /* vmerrmsg.cpp in Sources */,
+				446D27D019EDC71D00B58477 /* rcmain.cpp in Sources */,
+				446D280B19EDC71D00B58477 /* vmconhmp.cpp in Sources */,
+				446D27F919EDC71D00B58477 /* utf8.cpp in Sources */,
+				446D287119EF04CC00B58477 /* osansi3.c in Sources */,
 				44951EA10E31B79A00FEC2B0 /* adler32.c in Sources */,
 				44951EA20E31B79A00FEC2B0 /* crc32.c in Sources */,
+				44BE71C319EB7C6F00036AA6 /* bif.c in Sources */,
 				44951EA30E31B79A00FEC2B0 /* deflate.c in Sources */,
 				44951EA40E31B79A00FEC2B0 /* gzio.c in Sources */,
 				44951EA50E31B79A00FEC2B0 /* infback.c in Sources */,
 				44951EA60E31B79A00FEC2B0 /* inffast.c in Sources */,
 				44951EA70E31B79A00FEC2B0 /* inflate.c in Sources */,
+				446D27D219EDC71D00B58477 /* resload.cpp in Sources */,
 				44B583BA1998A7700046F661 /* cgdate.c in Sources */,
 				44951EA80E31B79A00FEC2B0 /* inftrees.c in Sources */,
 				44951EA90E31B79A00FEC2B0 /* trees.c in Sources */,
 				44951EAA0E31B79A00FEC2B0 /* uncompr.c in Sources */,
 				44951EB20E31B7F500FEC2B0 /* zutil.c in Sources */,
+				44BE71DD19EB7C6F00036AA6 /* out.c in Sources */,
 				44951EB50E31B81E00FEC2B0 /* compress.c in Sources */,
 				44951F7C0E32799500FEC2B0 /* ioapi.c in Sources */,
+				44BE71D919EB7C6F00036AA6 /* oserr.c in Sources */,
+				446D284219EDC71D00B58477 /* vmrun.cpp in Sources */,
 				44951F7D0E32799500FEC2B0 /* extractzfromz.m in Sources */,
+				446D285119EDC71D00B58477 /* vmtz.cpp in Sources */,
+				446D281D19EDC71D00B58477 /* vmhash.cpp in Sources */,
+				446D284719EDC71D00B58477 /* vmsortv.cpp in Sources */,
+				44BE71D619EB7C6F00036AA6 /* obj.c in Sources */,
+				4472106419ECE69F00AAC16F /* ostzposix.c in Sources */,
+				446D280919EDC71D00B58477 /* vmcfgmem.cpp in Sources */,
+				446D281019EDC71D00B58477 /* vmdate.cpp in Sources */,
 				44951F7E0E32799500FEC2B0 /* unzip.c in Sources */,
 				44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */,
+				446D284F19EDC71D00B58477 /* vmtype.cpp in Sources */,
 				447E4E890E46545900B33BBF /* FrotzInfo.m in Sources */,
 				443C9B4A0E46A518003A44D4 /* ui_utils.m in Sources */,
+				4472106C19ECE69F00AAC16F /* voccomp.c in Sources */,
 				44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */,
 				44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */,
+				446D284319EDC71D00B58477 /* vmrunsym.cpp in Sources */,
+				446D280319EDC71D00B58477 /* vmbiftio.cpp in Sources */,
+				446D281719EDC71D00B58477 /* vmfilnam.cpp in Sources */,
 				44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */,
+				446D284619EDC71D00B58477 /* vmsort.cpp in Sources */,
 				44FB39FA0E62406C00142D85 /* ColorPicker.m in Sources */,
 				44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */,
+				446D281A19EDC71D00B58477 /* vmfunc.cpp in Sources */,
+				44BE71C419EB7C6F00036AA6 /* bifgdum.c in Sources */,
+				446D280819EDC71D00B58477 /* vmbytarr.cpp in Sources */,
+				446D283B19EDC71D00B58477 /* vmpack.cpp in Sources */,
+				44BE71E419EB7C6F00036AA6 /* suprun.c in Sources */,
+				446D285019EDC71D00B58477 /* vmtypedh.cpp in Sources */,
 				448164540E6D02C60022EDC0 /* GettingStarted.m in Sources */,
 				448167DD0E7259280022EDC0 /* FontPicker.m in Sources */,
+				444F7D1D19F23E7600927703 /* tctok.cpp in Sources */,
 				44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */,
 				449516AB0F7DEDA90060F524 /* FTPServ.m in Sources */,
 				44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */,
+				446D27FD19EDC71D00B58477 /* vmbifl.cpp in Sources */,
 				447F882A1044DC0B002CA22D /* AboutFrotz.m in Sources */,
+				446D27D519EDC71D00B58477 /* std_dbg.cpp in Sources */,
 				4414E2DC104CDA21008C3F56 /* FrotzWordPicker.m in Sources */,
+				446D285319EDC71D00B58477 /* vmundo.cpp in Sources */,
+				44BE71DB19EB7C6F00036AA6 /* osrestad.c in Sources */,
 				4413B1631071CA2700D39E6A /* RichTextView.m in Sources */,
 				443CD76610FAFCE200A7FB96 /* AsyncSocket.m in Sources */,
+				446D280219EDC71D00B58477 /* vmbiftad.cpp in Sources */,
 				443CD76A10FAFCE200A7FB96 /* DDData.m in Sources */,
+				446D285A19EE435000B58477 /* osnetunix.cpp in Sources */,
 				443CD76B10FAFCE200A7FB96 /* DDNumber.m in Sources */,
+				446D285419EDC71D00B58477 /* vmvec.cpp in Sources */,
 				443CD76C10FAFCE200A7FB96 /* DDRange.m in Sources */,
 				443CD76D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m in Sources */,
 				443CD76E10FAFCE200A7FB96 /* HTTPConnection.m in Sources */,
+				446D284C19EDC71D00B58477 /* vmstrcmp.cpp in Sources */,
 				443CD76F10FAFCE200A7FB96 /* HTTPResponse.m in Sources */,
+				446D280719EDC71D00B58477 /* vmbt3_nd.cpp in Sources */,
 				443CD77010FAFCE200A7FB96 /* HTTPServer.m in Sources */,
 				443CD77810FAFD6100A7FB96 /* FrotzHTTPConnection.m in Sources */,
 				443CD77910FAFD6100A7FB96 /* localhostAddresses.m in Sources */,
+				446D287919EF04CC00B58477 /* t2indlg.c in Sources */,
 				449C92461122188D006CCDF9 /* StoryView.m in Sources */,
+				446D280119EDC71D00B58477 /* vmbift3.cpp in Sources */,
 				449C929611221CE9006CCDF9 /* FrotzView.m in Sources */,
+				446D287219EF04CC00B58477 /* osbuffer.c in Sources */,
 				449C92B311221E21006CCDF9 /* StoryInputLine.m in Sources */,
+				446D288019EF9B2100B58477 /* vmdynfunc.cpp in Sources */,
 				449C92BE11221E7D006CCDF9 /* StatusLine.m in Sources */,
 				44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */,
 				443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */,
+				446D281F19EDC71D00B58477 /* vmhosttx.cpp in Sources */,
+				446D282519EDC71D00B58477 /* vmimg_nd.cpp in Sources */,
+				444F7D0819F23DE500927703 /* tchostsi.cpp in Sources */,
+				446D281819EDC71D00B58477 /* vmfilobj.cpp in Sources */,
 				4440777D1235F32E0021DEE4 /* NotesViewController.m in Sources */,
 				44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */,
 				447DF3BA123C136500689076 /* StoryDetailsController.m in Sources */,
 				44910BE51256F85800409694 /* FrotzDB.m in Sources */,
+				446D280A19EDC71D00B58477 /* vmcoll.cpp in Sources */,
+				4472105B19ECE69F00AAC16F /* emt.c in Sources */,
+				446D283319EDC71D00B58477 /* vmmeta.cpp in Sources */,
 				449119D6125D306200409694 /* UIFontExt.m in Sources */,
 				440DACE2125D8CA70014A8FD /* main.c in Sources */,
+				44BE71CA19EB7C6F00036AA6 /* execmd.c in Sources */,
+				446D284A19EDC71D00B58477 /* vmstr.cpp in Sources */,
+				446D283519EDC71D00B58477 /* vmnetcfg.cpp in Sources */,
 				442358DC1261882100BFB245 /* ipevent.c in Sources */,
+				4472106919ECE69F00AAC16F /* tcgdum.c in Sources */,
+				44BE71CD19EB7C6F00036AA6 /* getstr.c in Sources */,
+				44BE71E719EB7C6F00036AA6 /* vocab.c in Sources */,
+				444F7D1219F23DE500927703 /* tct3.cpp in Sources */,
 				442358DD1261882100BFB245 /* ipfref.c in Sources */,
+				444F7D1319F23DE500927703 /* tct3nl.cpp in Sources */,
+				446D287A19EF04CC00B58477 /* t3askf.cpp in Sources */,
+				444F7D0B19F23DE500927703 /* tcprs_rt.cpp in Sources */,
+				444F7D1019F23DE500927703 /* tcsrc.cpp in Sources */,
+				446D280519EDC71D00B58477 /* vmbignumlib.cpp in Sources */,
 				442358DE1261882100BFB245 /* ipgestal.c in Sources */,
 				442358DF1261882100BFB245 /* ipinput.c in Sources */,
 				442358E21261882100BFB245 /* ipmisc.c in Sources */,
 				442358E41261882100BFB245 /* ipschan.c in Sources */,
+				446D283119EDC71D00B58477 /* vmmain.cpp in Sources */,
 				442358E51261882100BFB245 /* ipstream.c in Sources */,
+				446D287C19EF04CC00B58477 /* t23run.cpp in Sources */,
+				444F7D0319F23DE500927703 /* tccmdutl.cpp in Sources */,
+				446D283219EDC71D00B58477 /* vmmcreg.cpp in Sources */,
 				442358E61261882100BFB245 /* ipstyle.c in Sources */,
+				44BE71D219EB7C6F00036AA6 /* lst.c in Sources */,
 				442358E71261882100BFB245 /* ipw_blnk.c in Sources */,
 				442358E81261882100BFB245 /* ipw_buf.c in Sources */,
 				442358E91261882100BFB245 /* ipw_grid.c in Sources */,
+				446D281419EDC71D00B58477 /* vmerr.cpp in Sources */,
 				442358EA1261882100BFB245 /* ipw_pair.c in Sources */,
+				446D287B19EF04CC00B58477 /* t3indlg.cpp in Sources */,
 				442358EB1261882100BFB245 /* ipwindow.c in Sources */,
 				4423590E1261894100BFB245 /* cgunicod.c in Sources */,
+				44BE71CC19EB7C6F00036AA6 /* fioxor.c in Sources */,
+				44BE71E019EB7C6F00036AA6 /* qas.c in Sources */,
 				4423590F1261894100BFB245 /* gi_blorb.c in Sources */,
 				442359111261894B00BFB245 /* gi_dispa.c in Sources */,
+				446D280D19EDC71D00B58477 /* vmconsol.cpp in Sources */,
 				442359131261894D00BFB245 /* ipblorb.c in Sources */,
 				449127E312643AA10013AD7C /* GlkView.m in Sources */,
 				446902E21265567300B283FF /* test-multiwin.c in Sources */,
+				444F7D0919F23DE500927703 /* tclibprs.cpp in Sources */,
+				4472106319ECE69F00AAC16F /* osstzprs.c in Sources */,
+				444F7D0419F23DE500927703 /* tcerr.cpp in Sources */,
+				446D282E19EDC71D00B58477 /* vmlog.cpp in Sources */,
+				446D287519EF04CC00B58477 /* osglkban.c in Sources */,
 				44690D3A126A402400B283FF /* accel.c in Sources */,
+				446D283C19EDC71D00B58477 /* vmpat.cpp in Sources */,
+				446D283819EDC71D00B58477 /* vmnetui.cpp in Sources */,
 				44690D3B126A402400B283FF /* compiler.c in Sources */,
 				44690D3C126A402400B283FF /* gestalt.c in Sources */,
+				446D26BE19EDC1BC00B58477 /* charmap.cpp in Sources */,
 				44690D3E126A402400B283FF /* git_unix.c in Sources */,
+				444F7D0E19F23DE500927703 /* tcprsnl.cpp in Sources */,
+				44BE71D019EB7C6F00036AA6 /* ler.c in Sources */,
 				44690D40126A402400B283FF /* git.c in Sources */,
+				44BE71C919EB7C6F00036AA6 /* errmsg.c in Sources */,
+				44BE71E119EB7C6F00036AA6 /* regex.c in Sources */,
+				446D280419EDC71D00B58477 /* vmbignum.cpp in Sources */,
 				44690D41126A402500B283FF /* glkop.c in Sources */,
+				446D282819EDC71D00B58477 /* vmini_nd.cpp in Sources */,
+				446D27CD19EDC71D00B58477 /* md5.cpp in Sources */,
 				44690D42126A402500B283FF /* heap.c in Sources */,
+				444F7D0619F23DE500927703 /* tcgen.cpp in Sources */,
 				44690D43126A402500B283FF /* memory.c in Sources */,
 				44690D44126A402500B283FF /* opcodes.c in Sources */,
+				446D27FA19EDC71D00B58477 /* vmanonfn.cpp in Sources */,
 				44690D45126A402500B283FF /* operands.c in Sources */,
 				44690D46126A402500B283FF /* peephole.c in Sources */,
+				446D285C19EE572100B58477 /* vmhttpsrv.cpp in Sources */,
+				446D27D619EDC71D00B58477 /* std.cpp in Sources */,
+				44BE71C819EB7C6F00036AA6 /* dbgtr.c in Sources */,
 				44690D47126A402500B283FF /* savefile.c in Sources */,
 				44690D48126A402500B283FF /* saveundo.c in Sources */,
 				44690D49126A402500B283FF /* search.c in Sources */,
+				44BE71D519EB7C6F00036AA6 /* mcs.c in Sources */,
 				44690D4A126A402500B283FF /* terp.c in Sources */,
+				446D280E19EDC71D00B58477 /* vmcrc.cpp in Sources */,
+				444F7D1419F23DE500927703 /* tct3stm.cpp in Sources */,
 				44D2DD0219C5713700204E25 /* accel.c in Sources */,
 				44D2DD0019C566EA00204E25 /* glkmain.c in Sources */,
+				4472106019ECE69F00AAC16F /* objcomp.c in Sources */,
+				444F7D1F19F2BF9200927703 /* oem_glk.c in Sources */,
 				44D2DCFF19C5654200204E25 /* gestalt.c in Sources */,
 				44D2DCF219C564FD00204E25 /* exec.c in Sources */,
+				44BE71C519EB7C6F00036AA6 /* cmap.c in Sources */,
+				44BE71E619EB7C6F00036AA6 /* voc.c in Sources */,
+				446D284B19EDC71D00B58477 /* vmstrbuf.cpp in Sources */,
 				44D2DCF319C564FD00204E25 /* files.c in Sources */,
 				44D2DCF419C564FD00204E25 /* float.c in Sources */,
+				44BE71DE19EB7C6F00036AA6 /* output.c in Sources */,
+				446D27FF19EDC71D00B58477 /* vmbifreg.cpp in Sources */,
 				44D2DCF519C564FD00204E25 /* funcs.c in Sources */,
 				44D2DCF619C564FD00204E25 /* glkop.c in Sources */,
+				446D285519EDC71D00B58477 /* vmwrtimg.cpp in Sources */,
 				44D2DD0319C5726400204E25 /* heap.c in Sources */,
+				444F7D0D19F23DE500927703 /* tcprsnf.cpp in Sources */,
 				44D2DCF819C564FD00204E25 /* operand.c in Sources */,
+				444F7D0A19F23DE500927703 /* tcmain.cpp in Sources */,
+				446D286E19EF04CC00B58477 /* memicmp.c in Sources */,
+				446D284919EDC71D00B58477 /* vmstack.cpp in Sources */,
+				446D281919EDC71D00B58477 /* vmfref.cpp in Sources */,
+				446D26B719ECFA8900B58477 /* linfdum.c in Sources */,
+				446D284019EDC71D00B58477 /* vmrefcnt.cpp in Sources */,
+				446D284D19EDC71D00B58477 /* vmtmpfil.cpp in Sources */,
 				44D2DCF919C564FD00204E25 /* osdepend.c in Sources */,
 				44D2DCFA19C564FD00204E25 /* profile.c in Sources */,
+				446D282F19EDC71D00B58477 /* vmlookup.cpp in Sources */,
 				44D2DCFB19C564FD00204E25 /* search.c in Sources */,
+				446D27FE19EDC71D00B58477 /* vmbifnet.cpp in Sources */,
+				446D288319EF9BC000B58477 /* vmgram.cpp in Sources */,
+				446D27D419EDC71D00B58477 /* sha2.cpp in Sources */,
 				44D2DCFC19C564FD00204E25 /* serial.c in Sources */,
 				44D2DCFD19C564FD00204E25 /* string.c in Sources */,
+				446D287019EF04CC00B58477 /* osansi2.c in Sources */,
+				444F7D0719F23DE500927703 /* tcglob.cpp in Sources */,
+				446D283D19EDC71D00B58477 /* vmpool.cpp in Sources */,
+				446D283719EDC71D00B58477 /* vmnetfillcl.cpp in Sources */,
 				44D2DD0119C56B8600204E25 /* unixstrt.c in Sources */,
+				444F7D1519F23DE500927703 /* tct3unas.cpp in Sources */,
+				446D282D19EDC71D00B58477 /* vmiter.cpp in Sources */,
+				444F7D0519F23DE500927703 /* tcerrmsg.cpp in Sources */,
+				446D282119EDC71D00B58477 /* vmhttpreq.cpp in Sources */,
+				44BE71D319EB7C6F00036AA6 /* mch.c in Sources */,
+				44BE71E319EB7C6F00036AA6 /* runstat.c in Sources */,
+				446D283A19EDC71D00B58477 /* vmop.cpp in Sources */,
 				44D2DCFE19C564FD00204E25 /* vm.c in Sources */,
+				446D284819EDC71D00B58477 /* vmsrcf.cpp in Sources */,
+				446D282A19EDC71D00B58477 /* vminitim.cpp in Sources */,
+				446D282919EDC71D00B58477 /* vminit.cpp in Sources */,
 				446912F6126BED9300B283FF /* ipw_graphics.c in Sources */,
 				44D013A71372707D00B7F616 /* FtpConnection.m in Sources */,
 				44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */,
+				446D284119EDC71D00B58477 /* vmregex.cpp in Sources */,
 				44D013A91372707D00B7F616 /* FtpServer.m in Sources */,
 				44D013AC1372707D00B7F616 /* list.m in Sources */,
 				44D013AD1372707D00B7F616 /* NetworkController.m in Sources */,
+				44BE71CB19EB7C6F00036AA6 /* fio.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1501,6 +2557,15 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-DVMGLOB_STRUCT",
+					"-DOS_DECLARATIVE_TLS",
+					"-DTC_TARGET_T3",
+					"-DTADSNET",
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -1529,6 +2594,15 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-DVMGLOB_STRUCT",
+					"-DOS_DECLARATIVE_TLS",
+					"-DTC_TARGET_T3",
+					"-DTADSNET",
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -1590,6 +2664,15 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-DVMGLOB_STRUCT",
+					"-DOS_DECLARATIVE_TLS",
+					"-DTC_TARGET_T3",
+					"-DTADSNET",
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -1647,6 +2730,15 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-DVMGLOB_STRUCT",
+					"-DOS_DECLARATIVE_TLS",
+					"-DTC_TARGET_T3",
+					"-DTADSNET",
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-weak_library",

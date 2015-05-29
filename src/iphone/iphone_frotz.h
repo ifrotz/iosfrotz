@@ -136,6 +136,7 @@ extern bool gUseSplitVC;
 #define kFrotzAutoSavePListFile "FrotzSIP.plist"
 #define kFrotzAutoSaveActiveFile "Current.plist"
 #define kFrotzAutoSaveGlkImgPrefix "glkwingfx"
+#define kFrotzAutoSaveFileGlkWin "glkwin.sav"
 
 #define kDefaultTextViewMinWidth 65
 #define kDefaultTextViewHeight 28

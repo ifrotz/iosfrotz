@@ -167,7 +167,7 @@ frefid_t glk_fileref_create_by_name(glui32 usage, char *name,
     int len;
     char *cx;
     char *suffix;
-      
+    
     /* The new spec recommendations: delete all characters in the
        string "/\<>:|?*" (including quotes). Truncate at the first
        period. Change to "null" if there's nothing left. Then append

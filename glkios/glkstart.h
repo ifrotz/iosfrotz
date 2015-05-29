@@ -49,6 +49,7 @@ typedef struct glkunix_startup_struct {
 
 extern int glkunix_startup_code(glkunix_startup_t *data);
 extern int glkunix_startup_code_glulxe(glkunix_startup_t *data);
+extern int glkunix_startup_code_tads(glkunix_startup_t *data);
 
 extern void glkunix_set_base_file(char *filename);
 extern strid_t glkunix_stream_open_pathname_gen(char *pathname,

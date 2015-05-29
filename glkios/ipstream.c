@@ -770,6 +770,8 @@ void gli_put_char_uni(stream_t *str, glui32 ch)
 
 #endif /* GLK_MODULE_UNICODE */
 
+glui32 gli_utf8_to_utf32(unsigned char *buf, glui32 buflen, glui32 *skipped);
+
 static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
 {
     char *cx;
@@ -832,7 +834,14 @@ static void gli_put_buffer(stream_t *str, char *buf, glui32 len)
                 //break;
             }
             for (lx=0, cx=buf; lx<len; lx++, cx++) {
-                gli_window_put_char(str->win, UCS(*cx));
+                if (*(unsigned char*)cx >= 0x80) {
+                    glui32 skip = 1;
+                    glui32 c = gli_utf8_to_utf32((unsigned char*)cx, len-lx, &skip);
+                    gli_window_put_char(str->win, c);
+                    cx += skip-1;
+                    lx += skip-1;
+                } else
+                    gli_window_put_char(str->win, UCS(*cx));
             }
             if (str->win->echostr)
                 gli_put_buffer(str->win->echostr, buf, len);
@@ -884,8 +893,11 @@ static void gli_set_style(stream_t *str, glui32 val)
                 istyle |= kFTBold; // kFTReverse;
             if (weight || val == style_Header || val == style_Subheader || val == style_Input)
                 istyle |= kFTBold;
-            if (!proportional || val == style_Preformatted) // || val == style_BlockQuote)
+            if (!proportional || val == style_Preformatted) { // || val == style_BlockQuote)
                 istyle |= kFTFixedWidth;
+                if (str->win->size && str->win->size <= 4) // Hack. Assume a "status-like" window without wrapping if the window is small.
+                    istyle |= kFTNoWrap;
+            }
 
             if (str->win->type == wintype_TextBuffer) {
                 unsigned int just = gli_stylehint_get(str->win, val, stylehint_Justification);

@@ -642,7 +642,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                     || [[ext lowercaseString] isEqualToString: @"zblorb"]
                     || [[ext lowercaseString] isEqualToString: @"zlb"]
                     || [[ext lowercaseString] isEqualToString: @"dat"]
-                    
+                    || [[ext lowercaseString] isEqualToString: @"gam"]
+                    || [[ext lowercaseString] isEqualToString: @"t3"]
                     || [[ext lowercaseString] isEqualToString: @"blb"]
                     || [[ext lowercaseString] isEqualToString: @"gblorb"]
                     || [[ext lowercaseString] isEqualToString: @"ulx"]

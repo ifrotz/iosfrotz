@@ -112,6 +112,8 @@ NSMutableArray *do_list(unzFile uf)
 	    [ext isEqualToString: @"z5"] ||
 	    [ext isEqualToString: @"z8"] ||
 	    [ext isEqualToString: @"dat"] ||
+	    [ext isEqualToString: @"gam"] ||
+        [ext isEqualToString: @"t3"] ||
 	    [ext isEqualToString: @"zlb"] ||
 	    [ext isEqualToString: @"blb"] ||
 	    [ext isEqualToString: @"ulx"] ||
