@@ -5,7 +5,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
 
-To report a **bug or usability issue** with Frotz, please click [here](https://github.com/ifrotz/iosfrotz/issues/new?title=foo&body=bar%0abar), or go to the Issues tab, click "New Issue", and describe your problem.
+To report a **bug or usability issue** with Frotz, please click [here](https://github.com/ifrotz/iosfrotz/issues/new?title=One-line%20summary&body=%5BPlease+glance+at+the+existing+issues+to+make+sure+the+problem+you+are%0D%0Areporting++isn%27t+a+known+issue+before+reporting.++Feel+free+to+remove+or%0D%0Aedit+any+parts+of+the+form+template+which+don%27t+apply+to+your+issue.%5D%0D%0A%0D%0A%0D%0AWhat+steps+will+reproduce+the+problem%3F%0D%0A1.%0D%0A2.%0D%0A3.%0D%0A%0D%0AWhat+is+the+expected+output+or+behavior%3F++What+do+you+see+instead%3F%0D%0A%0D%0A%0D%0AWhat+version+of+Frotz+are+you+using%3F%0D%0A1.7.1%0D%0A%0D%0AWhat+device+model+are+you+using+%28e.g.%2C+iPhone+6%2C+iPad+4%2C+iPod+Touch+4th+gen.%29%0D%0AiPhone+6%0D%0A%0D%0AWhat+version+of+iOS%3F++%286.1%2C+7.0%2C+etc.%29%0D%0A8.3%0D%0A%0D%0A%0D%0APlease+provide+any+additional+information+below.%0D%0A), or go to the Issues tab, click "New Issue", and describe your problem.
 (Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
 
 **Update 08/21/2014**
