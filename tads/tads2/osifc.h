@@ -1478,7 +1478,7 @@ size_t os_get_root_dirs(char *buf, size_t buflen);
  *   to release the resources associated with the handle.
  */
 #include <dirent.h>
-typedef DIR* osdirhdl_t;
+//typedef DIR* osdirhdl_t;
 int os_open_dir(const char *dirname, /*OUT*/osdirhdl_t *handle);
 
 /*

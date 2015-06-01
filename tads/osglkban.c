@@ -614,7 +614,7 @@ int os_banner_getinfo(void *banner_handle, os_banner_info_t *info)
 
     info->style = gstyletab ? OS_BANNER_STYLE_TAB_ALIGN : 0;
 
-    glk_window_get_size(banner->win, &(banner->cwidth), &(banner->cheight));
+    glk_window_get_size(win, &(banner->cwidth), &(banner->cheight));
 
     info->rows = banner->cheight;
     info->columns = banner->cwidth;

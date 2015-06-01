@@ -413,7 +413,7 @@ char *os_get_root_name(const char *buf)
     char *rootname;
 
     /* scan the name for path separators */
-    for (rootname = buf ; *buf != '\0' ; ++buf)
+    for (rootname = (char*)buf ; *buf != '\0' ; ++buf)
     {
         /* if this is a path separator, remember it */
         if (*buf == OSPATHCHAR || strchr(OSPATHALT, *buf) != 0)
@@ -424,7 +424,7 @@ char *os_get_root_name(const char *buf)
              *   find another separator later, we'll forget about this one
              *   and use the later one instead.  
              */
-            rootname = buf + 1;
+            rootname = (char*)buf + 1;
         }
     }
 

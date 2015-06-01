@@ -307,7 +307,7 @@ int (CVmObjTads::
  *   function table.  
  */
 const int PROPIDX_CREATE_INSTANCE = 1;
-const int PROPIDX_CREATE_CLONE = 2;
+//const int PROPIDX_CREATE_CLONE = 2;
 const int PROPIDX_CREATE_TRANS_INSTANCE = 3;
 const int PROPIDX_CREATE_INSTANCE_OF = 4;
 const int PROPIDX_CREATE_TRANS_INSTANCE_OF = 5;

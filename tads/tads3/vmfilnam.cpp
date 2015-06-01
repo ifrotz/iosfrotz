@@ -120,7 +120,7 @@ int (CVmObjFileName::*CVmObjFileName::func_table_[])(
 const int VMOFN_FROMUNIVERSAL = 4;
 const int VMOFN_GETROOTDIRS = 9;
 const int VMOFN_GETFILETYPE = 10;
-const int VMOFN_GETFILEINFO = 11;
+//const int VMOFN_GETFILEINFO = 11;
 const int VMOFN_DELETEFILE = 12;
 const int VMOFN_RENAMEFILE = 13;
 const int VMOFN_LISTDIR = 14;

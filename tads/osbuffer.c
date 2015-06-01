@@ -29,12 +29,12 @@ extern winid_t mainwin;
 
 #ifndef GLK_UNICODE
 
-void os_put_buffer (unsigned char *buf, size_t len)
+void os_put_buffer (const char *buf, size_t len)
 {
-    glk_put_buffer(buf, len);
+    glk_put_buffer((char*)buf, len);
 }
 
-void os_get_buffer (unsigned char *buf, size_t len, size_t init)
+void os_get_buffer (char *buf, size_t len, size_t init)
 {
     glk_request_line_event(mainwin, buf, len - 1, init);
 }

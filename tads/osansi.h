@@ -24,7 +24,6 @@
 #ifndef OSANSI_H
 #define OSANSI_H
 
-#define OSANSI	/* hmm? */
 #define MAC_OS	/* tell tads not to let os do paging */
 
 #include <stdlib.h>
@@ -153,8 +152,8 @@ int osfdel(const char *fname);
 int osfacc(const char *fname);
 int osfgetc(osfildef *fp);
 
-void os_put_buffer (unsigned char *buf, size_t len);
-void os_get_buffer (unsigned char *buf, size_t len, size_t init);
+void os_put_buffer (const char *buf, size_t len);
+void os_get_buffer (char *buf, size_t len, size_t init);
 unsigned char *os_fill_buffer (unsigned char *buf, size_t len);
 
 /* 

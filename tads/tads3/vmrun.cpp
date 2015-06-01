@@ -1104,7 +1104,7 @@ static inline void int_neg(VMG_ vm_val_t *aval)
 # define true_for_cond(v) \
     ((v)->typ == VM_TRUE \
      || (v)->typ == VM_ENUM \
-     || ((v)->typ == VM_INT && !(v)->val.intval == 0))
+     || ((v)->typ == VM_INT && (!(v)->val.intval) == 0))
 # define is_valid_for_jst(v) \
     ((v)->typ == VM_NIL || (v)->typ == VM_INT)
 #else

@@ -50,6 +50,7 @@ Modified
 #include "osifcnet.h"
 #include "vmhash.h"
 #include "vmtz.h"
+#include "vmdynfunc.h"
 
 
 

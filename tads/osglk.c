@@ -29,6 +29,7 @@
 #include "glk.h"
 #include "iphone_frotz.h"
 #include "glkios.h"
+#include "git.h"
 
 /* for version strings */
 #include "trd.h"
@@ -267,7 +268,7 @@ void os_printz(const char *str)
 void os_print(const char *str, size_t len)
 {
     if (curwin == 0 && str)
-        os_put_buffer((unsigned char *)str, len);
+        os_put_buffer(str, len);
 
     if (curwin == 1)
     {
@@ -362,7 +363,6 @@ static void os_status_redraw(void)
     char buf[256];
     glui32 wid;
     glui32 div;
-    int i;
 
     if (!statuswin)
         return;
@@ -557,7 +557,7 @@ unsigned char *os_gets(unsigned char *buf, size_t buflen)
 {
     event_t event;
 
-    os_get_buffer(buf, buflen, 0);
+    os_get_buffer((char *)buf, buflen, 0);
 
     do
     {
@@ -650,8 +650,10 @@ unsigned char *os_gets(unsigned char *buf, size_t buflen)
  *   routine with use_timeout==FALSE.  The regular os_gets() would not
  *   satisfy this need, because it cannot resume an interrupted input.)  
  */
+#if defined GLK_TIMERS && defined GLK_MODULE_LINE_ECHO
 static char * timebuf = NULL;
 static size_t timelen = 0;
+#endif
 
 int os_gets_timeout(unsigned char *buf, size_t bufl,
                     unsigned long timeout_in_milliseconds, int use_timeout)

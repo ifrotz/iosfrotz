@@ -51,11 +51,11 @@ extern "C"
 int tads_argc;
 char **tads_argv;
 
-static glkunix_argumentlist_t glkunix_arguments[] =
-{
-    { (char *) "", glkunix_arg_ValueFollows, (char *) "filename: The game file to load." },
-    { NULL, glkunix_arg_End, NULL }
-};
+//static glkunix_argumentlist_t glkunix_arguments[] =
+//{
+//    { (char *) "", glkunix_arg_ValueFollows, (char *) "filename: The game file to load." },
+//    { NULL, glkunix_arg_End, NULL }
+//};
 
 extern "C" int glkunix_startup_code_tads(glkunix_startup_t *data)
 {

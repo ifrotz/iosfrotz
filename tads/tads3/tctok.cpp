@@ -6282,7 +6282,7 @@ void CTcTokenizer::splice_string()
      */
     wchar_t in_quote = in_quote_;
     int in_triple = in_triple_;
-    tok_embed_ctx old_ec = comment_in_embedding_;
+//    tok_embed_ctx old_ec = comment_in_embedding_;
 
     /* note if the previous line ended with an explicit \n sequence */
     int explicit_nl = (linebuf_.get_text_len() >= 2
