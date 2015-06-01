@@ -5,8 +5,9 @@
 /meta
 /priv
 
-## Backups
+## Backups and Mac files
 *~
+.DS_Store
 
 ## Build generated
 build/
