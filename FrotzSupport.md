@@ -31,22 +31,6 @@ To report a **bug or usability issue** with Frotz, please click [here](http://co
 
 **FAQ**
 
-<a href='Hidden comment: 
-* *Why isn"t Frotz free anymore?   Will it be again?*
-
-My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price is to make back the annual iTunes Dev Program fee and provide an incentive for me to persevere through Apple"s painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there"s a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies. Frotz will be made free again soon after the new version is approved.
-'></a>
-<a href='Hidden comment: 
-* *Free, $0.99, Free... make up your mind!*
-* *Update 9/19/09* - As promised, since 1.3 has finally been approved, I"ve just updated Frotz"s price to be *FREE* again.   My goal in making Frotz for iPhone is to promote IF to as wide an audience as possible, not to make a profit.  (I have a day job that does me just fine for that.)  The temporary $0.99 price for the past few weeks was to make back the annual iTunes Dev Program fees and provide an incentive for me to persevere through Apple"s painful and arbitrary review process.  Working on Frotz is actually fun for me, but not when there"s a cloud of uncertainty over it that it might be a complete waste of time due to volatile and uncertain App Store approval policies.
-'></a>
-<a href='Hidden comment: 
-* *Why isn"t Frotz free anymore?   Will it be again?*
-
-When I signed up to the iPhone Dev program, it was my understanding that the $99 fee was a one time thing.  Turns out it"s not; it"s an annual fee.  And Apple and its approval process has been so frustrating to deal with that I really feel like giving up on the whole thing.    I just can"t help resenting having to pay Apple a hundred bucks a year just to maintain a free app that adds value to the App Store when they treat the developers so badly.  For now, I"ve decided to charge $0.99 (or local "tier 1" equivalent) for a little bit so I can earn back the money I"ve given Apple to be able to put up Frotz in the App Store.  After that, I"ll make it free again.  If you just want to try it out and would rather not pay, just wait a couple weeks and it"ll be free again.  On the other hand, if you already downloaded Frotz while it was free and want to contribute something, you can *[https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8 donate via PayPal]*.
-* *Update 9/4/09* I plan on making Frotz free again as soon as Apple approves the newly submitted update.
-'></a>
-
   * **Why can't you transfer files to Frotz using the iTunes file sharing feature?**
 
 > Unfortunately, iTunes FIle Sharing doesn't support folders well, and Frotz uses folders internally to keep saved games separate for each story.  I'm not willing to make Frotz put all files at the top level in order for the files to show up in iTunes File Sharing.  If Apple adds better folder support, I will enable the ability in Frotz.  But check out the Dropbox feature, which is by far the easiest way to access your saved game files from multiple computers.
