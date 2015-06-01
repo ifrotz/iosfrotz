@@ -5,7 +5,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
 
-To report a **bug or usability issue** with Frotz, please click [here](https://github.com/ifrotz/iosfrotz/issues/new?title=foo&body=bar%0dbar), or go to the Issues tab, click "New Issue", and describe your problem.
+To report a **bug or usability issue** with Frotz, please click [here](https://github.com/ifrotz/iosfrotz/issues/new?title=foo&body=bar%0abar), or go to the Issues tab, click "New Issue", and describe your problem.
 (Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
 
 **Update 08/21/2014**
