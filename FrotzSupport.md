@@ -1,5 +1,13 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+
+**Reporting Bugs**
+
+If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
+
+To report a **bug or usability issue** with Frotz, please click [here](https://github.com/ifrotz/iosfrotz/github/issues/new?title=foo&body=bar), or go to the Issues tab, click "New Issue", and describe your problem.
+(Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
+
 **Update 08/21/2014**
 
 **Frotz 1.7** now available, with following enhancements and bug fixes:
@@ -17,13 +25,6 @@ This page contains frequently asked questions and miscellaneous help about using
 
 ---
 
-
-**Reporting Bugs**
-
-If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
-
-To report a **bug or usability issue** with Frotz, please click [here](http://code.google.com/p/iphonefrotz/issues/entry), or go to the Issues tab, click "New Issue", and describe your problem.
-(Note that the bug report system requires you to sign in to GMail.  If you do not have a GMail account, you can report a bug using the above e-mail address.)
 
 
 ---
