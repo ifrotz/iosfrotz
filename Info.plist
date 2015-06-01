@@ -163,30 +163,9 @@
 		<string>Default-Landscape@2x~ipad</string>
 	</array>
 	<key>CFBundleIcons</key>
-	<dict>
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>Icon</string>
-				<string>Icon-72</string>
-				<string>Icon-Small-50</string>
-				<string>Icon-Small-50@2x</string>
-				<string>Icon-Small</string>
-				<string>Icon-Small@2x</string>
-				<string>Icon@2x</string>
-				<string>Icon-72@2x</string>
-				<string>Default</string>
-				<string>Default-Portrait~ipad</string>
-				<string>Default-Landscape~ipad</string>
-				<string>Default@2x</string>
-				<string>Default-Portrait@2x~ipad</string>
-				<string>Default-Landscape@2x~ipad</string>
-			</array>
-			<key>UIPrerenderedIcon</key>
-			<true/>
-		</dict>
-	</dict>
+	<dict/>
+	<key>CFBundleIcons~ipad</key>
+	<dict/>
 	<key>CFBundleIdentifier</key>
 	<string>com.flippencorp.${PRODUCT_NAME:identifier}</string>
 	<key>CFBundleInfoDictionaryVersion</key>

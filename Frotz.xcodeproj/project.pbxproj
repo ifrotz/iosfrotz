@@ -110,6 +110,7 @@
 		444F7D1D19F23E7600927703 /* tctok.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D1919F23E7600927703 /* tctok.cpp */; };
 		444F7D1F19F2BF9200927703 /* oem_glk.c in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D1E19F2BF9200927703 /* oem_glk.c */; };
 		444F7D2119F2C1D900927703 /* vmuni_cs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D2019F2C1D900927703 /* vmuni_cs.cpp */; };
+		445484C81B1D04C200E8EE7B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 445484C71B1D04C200E8EE7B /* Images.xcassets */; };
 		44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 44550A7E1277B39300CDEA97 /* TO-DO.txt */; };
 		44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */ = {isa = PBXBuildFile; fileRef = 44550B1A1277FC2B00CDEA97 /* glulx.png */; };
 		445E9394160FF5080098DBE7 /* glarels5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445E9393160FF5080098DBE7 /* glarels5@2x.png */; };
@@ -621,6 +622,7 @@
 		444F7D1C19F23E7600927703 /* tcvsn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tcvsn.h; path = tads/tads3/tcvsn.h; sourceTree = "<group>"; };
 		444F7D1E19F2BF9200927703 /* oem_glk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oem_glk.c; path = tads/tads2/oem_glk.c; sourceTree = "<group>"; };
 		444F7D2019F2C1D900927703 /* vmuni_cs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmuni_cs.cpp; path = tads/vmuni_cs.cpp; sourceTree = "<group>"; };
+		445484C71B1D04C200E8EE7B /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		44550A7E1277B39300CDEA97 /* TO-DO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "TO-DO.txt"; sourceTree = "<group>"; };
 		44550B1A1277FC2B00CDEA97 /* glulx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glulx.png; path = resources/glulx.png; sourceTree = "<group>"; };
 		445E9393160FF5080098DBE7 /* glarels5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glarels5@2x.png"; path = "resources/glarels5@2x.png"; sourceTree = "<group>"; };
@@ -1274,6 +1276,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				445484C71B1D04C200E8EE7B /* Images.xcassets */,
 				44F69CFF19C118E000ECADD0 /* Launch Screen.xib */,
 				44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */,
 				44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */,
@@ -2098,6 +2101,7 @@
 				44D71CE919882F5300F4AD9A /* Frotz-120x120.png in Resources */,
 				447DF3BB123C136500689076 /* StoryDetailsController.xib in Resources */,
 				447DF47F123C295900689076 /* compass-med.png in Resources */,
+				445484C81B1D04C200E8EE7B /* Images.xcassets in Resources */,
 				447DF981123DF34900689076 /* StoryDetailsController-ipad.xib in Resources */,
 				44418F7E124576E800F49BC4 /* flip.png in Resources */,
 				44910FFD1259972F00409694 /* colorflipbg.png in Resources */,
@@ -2540,6 +2544,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
@@ -2555,7 +2561,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2579,6 +2585,8 @@
 			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -2592,7 +2600,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2648,6 +2656,8 @@
 			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -2661,7 +2671,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2713,6 +2723,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -2726,7 +2738,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2769,7 +2781,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "8D4FD0E2-974A-4512-A3D6-D76F52817DBD";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "8D4FD0E2-974A-4512-A3D6-D76F52817DBD";
