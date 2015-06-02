@@ -13,7 +13,7 @@
 
 @implementation FrotzInfo
 
--(id)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem {
+-(instancetype)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem {
 	if ((self = [super init])) {
 	    // Initialization code
         

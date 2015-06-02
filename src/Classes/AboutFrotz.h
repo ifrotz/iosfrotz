@@ -11,5 +11,5 @@
 
 @interface AboutFrotz : FrotzCommonWebViewController {
 }
-- (id)init;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 @end

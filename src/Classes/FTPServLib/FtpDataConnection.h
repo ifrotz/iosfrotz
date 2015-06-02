@@ -33,7 +33,7 @@
 	int					connectionState;
 	
 }
--(id)initWithAsyncSocket:(AsyncSocket*)newSocket forConnection:(id)aConnection withQueuedData:(NSMutableArray*)queuedData;
+-(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forConnection:(id)aConnection withQueuedData:(NSMutableArray*)queuedData NS_DESIGNATED_INITIALIZER;
 -(void)writeString:(NSString*)dataString;
 -(void)writeData:(NSMutableData*)data;
 -(void)writeQueuedData:(NSMutableArray*)queuedData;

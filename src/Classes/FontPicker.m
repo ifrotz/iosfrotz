@@ -14,7 +14,7 @@
 @synthesize fontName;
 @synthesize font;
 
--(id)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFontName font:(UIFont*)aFont {
+-(instancetype)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFontName font:(UIFont*)aFont {
     if ((self = [super init])) {
         self.family = aFamily;
         self.fontName = aFontName;
@@ -35,7 +35,7 @@ static NSInteger sortFontsByFamilyName(id a, id b, void *context) {
 // ??? allow bold/italic toggles using [font traits] - italic/oblique 1,  bold 2
 enum { kUIFontItalic=1, kUIFontBold=2 };
 
-- (id)init {
+- (instancetype)init {
     m_fonts = [[NSMutableArray alloc] initWithCapacity: 50];
     m_fixedFonts = [[NSMutableArray alloc] initWithCapacity: 50];
     self = [super initWithStyle:UITableViewStyleGrouped];
@@ -105,7 +105,7 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
         cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier] autorelease];
     }
     // Configure the cell
-    FrotzFontInfo *f = [m_fixedFontsOnly ? m_fixedFonts : m_fonts objectAtIndex: indexPath.row];
+    FrotzFontInfo *f = (m_fixedFontsOnly ? m_fixedFonts : m_fonts)[indexPath.row];
     cell.text = f.family;
     cell.font = [UIFont fontWithName: cell.text size:12];
     return cell;
@@ -115,10 +115,10 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (m_delegate && [m_delegate respondsToSelector: @selector(setFont:withSize:)]) {
         if (m_fixedFontsOnly) {
-            FrotzFontInfo *f = [m_fixedFonts objectAtIndex: indexPath.row];
+            FrotzFontInfo *f = m_fixedFonts[indexPath.row];
             [m_delegate setFixedFont: f.fontName];
         } else {
-            FrotzFontInfo *f = [m_fonts objectAtIndex: indexPath.row];
+            FrotzFontInfo *f = m_fonts[indexPath.row];
             [m_delegate setFont: f.fontName withSize: [m_delegate fontSize]];
         }
     }
@@ -170,7 +170,7 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
             NSArray *fontArr = m_fixedFontsOnly ? m_fixedFonts : m_fonts;
             int i;
             for (i = 0; i < [fontArr count]; ++i) {
-                FrotzFontInfo *f = [fontArr objectAtIndex: i];
+                FrotzFontInfo *f = fontArr[i];
                 if ([[f fontName] isEqualToString: font]) {
                     [[self tableView] selectRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] animated:NO scrollPosition:UITableViewScrollPositionMiddle];
                     break;

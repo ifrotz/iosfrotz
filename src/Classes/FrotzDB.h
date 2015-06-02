@@ -16,9 +16,8 @@
     BOOL m_isUnlinking;
 }
 
-- (id)init;
+- (instancetype)init;
 - (void)donePressed;
-- (id)delegate;
-- (void)setDelegate:(id)delegate;
+@property (nonatomic, assign) id delegate;
 @end
 

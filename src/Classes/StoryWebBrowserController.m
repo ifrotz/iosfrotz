@@ -117,7 +117,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 
     self.navigationItem.rightBarButtonItem = m_activButtonItem;
 
-    [m_toolBar setItems: [NSArray arrayWithObjects: m_backButtonItem, spaceButtonItem, m_reloadButtonItem, spaceButtonItem, m_cancelButtonItem, spaceButtonItem, m_URLButtonItem, spaceButtonItem, m_forwardButtonItem, nil]];
+    [m_toolBar setItems: @[m_backButtonItem, spaceButtonItem, m_reloadButtonItem, spaceButtonItem, m_cancelButtonItem, spaceButtonItem, m_URLButtonItem, spaceButtonItem, m_forwardButtonItem]];
     [spaceButtonItem release];
     
     [m_background addSubview: m_toolBar];
@@ -172,7 +172,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 
 -(NSString*)bookmarkPath {
     NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = [array objectAtIndex: 0];
+    NSString *docPath = array[0];
     NSString *bmPath = [docPath stringByAppendingPathComponent: kBookmarksFN];
     return bmPath;
 }
@@ -182,35 +182,33 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     NSDictionary *bmDict = [NSDictionary dictionaryWithContentsOfFile: bmPath];
     if (bmDict) {
 	if (urls)
-	    *urls = [bmDict objectForKey:kBookmarkURLsKey];
+	    *urls = bmDict[kBookmarkURLsKey];
 	if (titles)
-	    *titles = [bmDict objectForKey:kBookmarkTitlesKey];
+	    *titles = bmDict[kBookmarkTitlesKey];
         if (urls && titles && [*urls count]==11 && [*titles count]==11
-            && [[*urls objectAtIndex:0] isEqualToString:@"brasslantern.org"]
-            && [[*urls objectAtIndex:10] isEqualToString:@"nickm.com/if"])
+            && [(*urls)[0] isEqualToString:@"brasslantern.org"]
+            && [(*urls)[10] isEqualToString:@"nickm.com/if"])
             ;
         else
             return;
     }
 
     if (urls)
-	*urls = [NSArray arrayWithObjects: @"brasslantern.org",
+	*urls = @[@"brasslantern.org",
       @"www.xyzzynews.com", @"ifdb.tads.org",
       @"gallery.guetech.org/greybox.html",
       @"inform7.com", @"www.ifwiki.org/index.php/Main_Page", 
       @"sparkynet.com/spag", @"www.ifarchive.org",
       @"www.ifcomp.org", @"www.wurb.com/if", 
-      @"www.csd.uwo.ca/Infocom/", @"nickm.com/if",
-      nil];
+      @"www.csd.uwo.ca/Infocom/", @"nickm.com/if"];
     if (titles)
-	*titles = [NSArray arrayWithObjects: @"Brass Latern",
+	*titles = @[@"Brass Latern",
       @"XYZZYnews Home Page", @"Interactive Fiction Database - IF and Text Adventures",
       @"Infocom Gallery (Artwork, Docs)",
       @"Inform 7 - A Design System for Interactive Fiction", @"IFWiki Home", 
       @"SPAG - Society for the Promotion of Adventure Games", @"The Interactive Fiction Archive",
       @"The Annual Interactive Fiction Competition", @"Baf's Guide to the Interactive Fiction Archive", 
-      @"INFOCOM Tribute Page", @"Interactive Fiction - Nick Montfort",
-      nil];
+      @"INFOCOM Tribute Page", @"Interactive Fiction - Nick Montfort"];
 }
 
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles {
@@ -441,7 +439,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	    NSString *story;
 	    if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
 		&& m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
-		story = [[m_expectedArchiveFiles objectAtIndex: 0] stringByDeletingPathExtension];
+		story = [m_expectedArchiveFiles[0] stringByDeletingPathExtension];
 	    else
 		story = [storyFile stringByDeletingPathExtension];
 	    if (story) {
@@ -737,7 +735,7 @@ static bool bypassBundle = NO;
         NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
         NSString *storyFile;
         if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
-            storyFile = (NSString*)[m_expectedArchiveFiles objectAtIndex: 0];
+            storyFile = (NSString*)m_expectedArchiveFiles[0];
         else
             storyFile = [[[request mainDocumentURL] path] lastPathComponent];
         NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
@@ -794,7 +792,7 @@ static bool bypassBundle = NO;
     NSMutableArray *zList = listOfZFilesInZIP(bundledGamesPath);
     if (!zList || [zList count] == 0) 
         return NO;
-    else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: [m_expectedArchiveFiles objectAtIndex: 0]] != NSNotFound)
+    else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: m_expectedArchiveFiles[0]] != NSNotFound)
         return YES;
     else if ([zList indexOfObject: filename] != NSNotFound)
         return YES;

@@ -22,18 +22,16 @@
     BOOL m_justHidHelper;
     BOOL m_completionAmbiguous;
 }
--(StoryInputLine*)initWithFrame:(CGRect)frame;
--(StoryView*) storyView;
--(void)setStoryView:(StoryView*)sv;
--(StatusLine*) statusLine;
--(void)setStatusLine:(StatusLine*)sl;
+-(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
+@property (nonatomic, strong) StoryView *storyView;
+@property (nonatomic, strong) StatusLine *statusLine;
 -(void)resetState;
--(BOOL)updatePosition;
+@property (nonatomic, readonly) BOOL updatePosition;
 -(BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
 -(int)addHistoryItem:(NSString*)historyItem;
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
--(UIView*) inputHelperView;
+@property (nonatomic, readonly, strong) UIView *inputHelperView;
 -(void)setClearButtonMode;
 -(void)maybeShowEnterKey;
 -(void)hideEnterKey;

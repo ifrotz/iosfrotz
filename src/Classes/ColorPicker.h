@@ -25,9 +25,9 @@
     UIColor *m_textColor, *m_bgColor;
     BOOL m_changeTextColor;
 }
-- (id)init;
+- (instancetype)init;
 - (void)dealloc;
-- (CGColorSpaceRef)colorSpace;
+@property (nonatomic, readonly) CGColorSpaceRef colorSpace CF_RETURNS_NOT_RETAINED;
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor;
 - (void)setColor: (UIColor *)color;
 - (void)setColorOnly: (UIColor *)color; // doesn't update cursors or callback delegate
@@ -35,17 +35,16 @@
 - (void)updateColorWithHue:(float)hue Saturation:(float)saturation Value:(float)value;
 - (void)updateHSVCursors;
 - (void)toggleMode;
-- (BOOL)isTextColorMode;
-- (UIColor *)textColor;
-- (UIColor *)bgColor;
-- (float)hue;
-- (float)saturation;
-- (float)value;
-- (HSVPicker *)hsvPicker;
-- (HSVValuePicker *)valuePicker;
-- (ColorTile *)colorTile;
-- (id<ColorPickerDelegate>)delegate;
-- (void)setDelegate: (id<ColorPickerDelegate>)delegate;
+@property (nonatomic, getter=isTextColorMode, readonly) BOOL textColorMode;
+@property (nonatomic, readonly, copy) UIColor *textColor;
+@property (nonatomic, readonly, copy) UIColor *bgColor;
+@property (nonatomic, readonly) float hue;
+@property (nonatomic, readonly) float saturation;
+@property (nonatomic, readonly) float value;
+@property (nonatomic, readonly, strong) HSVPicker *hsvPicker;
+@property (nonatomic, readonly, strong) HSVValuePicker *valuePicker;
+@property (nonatomic, readonly, strong) ColorTile *colorTile;
+@property (nonatomic, assign) id<ColorPickerDelegate> delegate;
 - (void)updateAccessibility;
 @end
 

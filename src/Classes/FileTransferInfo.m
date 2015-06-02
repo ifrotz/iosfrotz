@@ -24,7 +24,7 @@
 
 @implementation FileTransferInfo
 
-- (id)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller {
+- (instancetype)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller {
     if ((self = [super init])) {
         m_controller = controller;
         self.title = NSLocalizedString(@"File Transfer", @"");
@@ -107,7 +107,7 @@
             if (cursor->ifa_addr->sa_family == AF_INET && (cursor->ifa_flags & IFF_LOOPBACK) == 0) {
                 const char *name = cursor->ifa_name;
                 if (name && name[0]=='e' && name[1]=='n') {
-                    addr = [NSString stringWithUTF8String:inet_ntoa(((struct sockaddr_in *)cursor->ifa_addr)->sin_addr)];
+                    addr = @(inet_ntoa(((struct sockaddr_in *)cursor->ifa_addr)->sin_addr));
                     if (addr)
                         break;
                 }
@@ -133,7 +133,7 @@
         while (list[i]) {
             struct in_addr ip = *list[i];
             if (ip.s_addr && ntohl(ip.s_addr) != INADDR_LOOPBACK)
-                return [NSString stringWithUTF8String: inet_ntoa(ip)];
+                return @(inet_ntoa(ip));
             ++i;
         }
     }

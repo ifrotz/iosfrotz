@@ -22,7 +22,7 @@
 
 @class StoryBrowser;
 
-typedef enum { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory } SWBDownloadState;
+typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory };
 
 @interface StoryWebBrowserController : UIViewController <UIWebViewDelegate, KeyboardOwner, URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
     UIView *m_background; // UIView
@@ -43,7 +43,7 @@ typedef enum { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory } SWBDownloadState
     BOOL m_storyAlreadyInstalled;
     NSMutableArray *m_expectedArchiveFiles;
 }
--(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb;
+-(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb NS_DESIGNATED_INITIALIZER;
 -(void)loadView;
 -(void)goBack;
 -(void)goForward;
@@ -54,22 +54,22 @@ typedef enum { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory } SWBDownloadState
 -(void)dismissURLPrompt;
 -(void)showBookmarks;
 -(void)hideBookmarks;
--(UIWebView*)webView;
+@property (nonatomic, readonly, strong) UIWebView *webView;
 -(void)setupFade;
--(UIActivityIndicatorView*)activityIndicator;
--(UIBarButtonItem*)backButton;
+@property (nonatomic, readonly, strong) UIActivityIndicatorView *activityIndicator;
+@property (nonatomic, readonly, strong) UIBarButtonItem *backButton;
 -(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
--(StoryBrowser*)storyBrowser;
--(FrotzInfo*)frotzInfoController;
+@property (nonatomic, readonly, strong) StoryBrowser *storyBrowser;
+@property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 -(void)browserDidPressBackButton;
 -(BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story;
 -(BOOL)savePicData:(NSData*)picData forStory:(NSString*)story;
 -(void)loadZFile:(NSURLRequest*)request;
--(NSString*)currentURL;
--(NSString*)currentURLTitle;
+@property (nonatomic, readonly, copy) NSString *currentURL;
+@property (nonatomic, readonly, copy) NSString *currentURLTitle;
 -(void)loadBookmarksWithURLs:(NSArray**)urls andTitles:(NSArray**)titles;
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles;
--(NSString*)bookmarkPath;
+@property (nonatomic, readonly, copy) NSString *bookmarkPath;
 
 @end
 

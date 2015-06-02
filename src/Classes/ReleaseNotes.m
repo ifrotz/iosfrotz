@@ -21,11 +21,11 @@
 
 @implementation ReleaseNotes
 
-- (id)init {
+- (instancetype)init {
     if ((self = [super init])) {
         self.title = NSLocalizedString(@"Release Notes", @"");
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        NSString *docPath = [array objectAtIndex: 0];
+        NSString *docPath = array[0];
         m_relNotesPath = [[docPath stringByAppendingPathComponent: @kRelNotesFilename] retain];
         [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:1.0];
     }

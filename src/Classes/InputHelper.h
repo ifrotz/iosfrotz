@@ -14,12 +14,12 @@
 -(BOOL)isFirstResponder;
 @end
 
-typedef enum {
+typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
     FrotzInputHelperModeNone = 0,
     FrotzInputHelperModeWords,
     FrotzInputHelperModeMoreWords,
     FrotzInputHelperModeHistory
-    } FrotzInputHelperMode;
+    };
 
 @interface FrotzInputHelper : UITableViewController {
     NSMutableArray *m_history;
@@ -30,18 +30,17 @@ typedef enum {
     int m_lastCommonWordPicked;
     int m_currHistoryItem;
 }
-- (id)init;
-- (void)setDelegate:(NSObject<FrotzInputDelegate>*)delegate;
-- (NSObject<FrotzInputDelegate>*)delegate;
+- (instancetype)init;
+@property (nonatomic, assign) NSObject<FrotzInputDelegate> *delegate;
 - (void)clearHistory;
-- (int)historyCount;
-- (int)menuCount;
+@property (nonatomic, readonly) int historyCount;
+@property (nonatomic, readonly) int menuCount;
 - (NSString*)historyItem:(int)item;
 - (int)addHistoryItem:(NSString*)historyItem;
-- (NSString*)getNextHistoryItem;
-- (NSString*)getPrevHistoryItem;
-- (UIView*)helperView;
-- (FrotzInputHelperMode)mode;
+@property (nonatomic, getter=getNextHistoryItem, readonly, copy) NSString *nextHistoryItem;
+@property (nonatomic, getter=getPrevHistoryItem, readonly, copy) NSString *prevHistoryItem;
+@property (nonatomic, readonly, strong) UIView *helperView;
+@property (nonatomic, readonly) FrotzInputHelperMode mode;
 -(void)showInputHelperInView:(UIView*)parentView atPoint:(CGPoint)pt withMode:(FrotzInputHelperMode)mode;
 -(void)hideInputHelper;
 

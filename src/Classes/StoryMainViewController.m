@@ -118,8 +118,8 @@ static NSMutableDictionary *glkImageCache, *glkViewImageCache;
 volatile void *pp;
 
 static void freeGlkViewImageCache(int vn) {
-    NSNumber *viewNum = [NSNumber numberWithInt:vn];
-    CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: viewNum] pointerValue];
+    NSNumber *viewNum = @(vn);
+    CGContextRef cgctx = (CGContextRef)[glkViewImageCache[viewNum] pointerValue];
     if (cgctx) {
         void *data = CGBitmapContextGetData(cgctx);
         
@@ -201,7 +201,7 @@ static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
             else
                 [glkInputs addObject: [[[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding] autorelease]];
         }
-        bufferStr = [glkInputs objectAtIndex: winNum];
+        bufferStr = glkInputs[winNum];
     } else {
         *isStatus = (winNum == 1 || winNum == 7);
         bufferStr = *isStatus ? ipzStatusStr : ipzBufferStr;
@@ -324,7 +324,7 @@ void iphone_set_input_line(wchar_t *ws, int len) {
     int bufflen = 8 * len + 1;
     char* temp = malloc(bufflen);
     wcstombs(temp, ws, bufflen);
-    NSString *str = [NSString stringWithUTF8String:temp];
+    NSString *str = @(temp);
     free(temp);
     [theInputLine performSelectorOnMainThread:@selector(setText:) withObject:str waitUntilDone:YES];    
 }
@@ -457,7 +457,7 @@ void iphone_destroy_glk_view(int viewNum) {
     //    NSLog(@"destroy glk view %d", viewNum);
     
     glkGridArray[viewNum].pendingClose = YES;
-    [theSMVC performSelectorOnMainThread:@selector(destroyGlkView:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];    
+    [theSMVC performSelectorOnMainThread:@selector(destroyGlkView:) withObject:@(viewNum) waitUntilDone:YES];    
 }
 
 // delay grid allocation until here; we always call this shortly after new
@@ -466,7 +466,7 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
         if (win != glkGridArray[viewNum].win)
             abort();
         CGRect box = CGRectMake(win->bbox.left, win->bbox.top, win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
-        NSArray *a = [NSArray arrayWithObjects: [NSNumber numberWithInt:viewNum], [NSValue valueWithCGRect:box], nil];
+        NSArray *a = @[@(viewNum), [NSValue valueWithCGRect:box]];
         
         if (glkGridArray[viewNum].win->type == wintype_TextGrid) {
             pthread_mutex_lock(&outputMutex);
@@ -538,12 +538,12 @@ void iphone_erase_mainwin() {
 }
 
 void iphone_enable_tap(int viewNum) {
-    [theSMVC performSelectorOnMainThread:@selector(enableTaps:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
+    [theSMVC performSelectorOnMainThread:@selector(enableTaps:) withObject:@(viewNum) waitUntilDone:YES];
     glkGridArray[viewNum].tapsEnabled = YES;
 }
 
 void iphone_disable_tap(int viewNum) {
-    [theSMVC performSelectorOnMainThread:@selector(disableTaps:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
+    [theSMVC performSelectorOnMainThread:@selector(disableTaps:) withObject:@(viewNum) waitUntilDone:YES];
     glkGridArray[viewNum].tapsEnabled = NO;
 }
 
@@ -680,7 +680,7 @@ void iphone_save_glk_win_graphics_img(int ordNum, int viewNum) {
         return;
     window_t *win = glkGridArray[viewNum].win;
     if (win->type == wintype_Graphics) {
-        CGContextRef origCtx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+        CGContextRef origCtx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
         if (origCtx) {
             CGImageRef imgRef = CGBitmapContextCreateImage(origCtx);
             UIImage *img = [UIImage imageWithCGImage: imgRef];
@@ -700,7 +700,7 @@ void iphone_restore_glk_win_graphics_img(int ordNum, int viewNum) {
     window_t *win = glkGridArray[viewNum].win;
     if (win->type == wintype_Graphics) {
         CGRect r = CGRectMake(win->bbox.left, win->bbox.top, win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
-        CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+        CGContextRef cgctx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
         if (!cgctx)
             cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, r.size.width, r.size.height);
         if (cgctx) {
@@ -713,7 +713,7 @@ void iphone_restore_glk_win_graphics_img(int ordNum, int viewNum) {
                     glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
                 drawCGImageInCGContext(cgctx, [img CGImage], 0, 0, width, height);
             }
-            [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
+            glkViewImageCache[@(viewNum)] = [NSValue valueWithPointer: cgctx];
             NSError *error;
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             [fileMgr removeItemAtPath: pngPath error:&error];
@@ -728,7 +728,7 @@ void iphone_set_background_color(int viewNum, glui32 color) {
     glkGridArray[viewNum].bgColor = color;
     //NSLog(@"glk_set_bg_color %d %06x", viewNum, color);
     
-    [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:[NSNumber numberWithInt:viewNum] waitUntilDone:YES];
+    [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:@(viewNum) waitUntilDone:YES];
 }
 
 glui32 iphone_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
@@ -777,7 +777,7 @@ typedef struct glkRectDrawArgs {
 } GlkRectDrawArgs;
 
 void iphone_glk_window_graphics_update(int viewNum) {
-    [theSMVC performSelectorOnMainThread:@selector(updateGlkWin:) withObject:[NSNumber numberWithInt: viewNum] waitUntilDone:NO];
+    [theSMVC performSelectorOnMainThread:@selector(updateGlkWin:) withObject:@(viewNum) waitUntilDone:NO];
 }
 
 void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height) {
@@ -962,7 +962,7 @@ void *interp_cover_autorestore(void *arg) {
 }
 
 @interface UIBarButtonItem (Ext) 
--(UIView*)view;
+@property (nonatomic, readonly, strong) UIView *view;
 @end
 
 
@@ -1005,7 +1005,7 @@ static void setColorTable(RichTextView *v) {
         id fileMgr = [NSFileManager defaultManager];
         
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        docPath = [[array objectAtIndex: 0] copy];
+        docPath = [array[0] copy];
         chdir([docPath UTF8String]);
         
         storyGamePath = [[docPath stringByAppendingPathComponent: @kFrotzGameDir] retain];
@@ -1072,7 +1072,7 @@ static void setColorTable(RichTextView *v) {
 }
 
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView {
-    return [[scrollView subviews] objectAtIndex:0];
+    return [scrollView subviews][0];
 }
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(CGFloat)scale { // scale between minimum and maximum. called after any 'bounce' animations
 }
@@ -1164,7 +1164,7 @@ static void setColorTable(RichTextView *v) {
             glkGridArray[gNewGlkWinNum].pendingClose = NO;
             glkGridArray[gNewGlkWinNum].tapsEnabled = NO;
             glkGridArray[gNewGlkWinNum].nRows = glkGridArray[gNewGlkWinNum].nCols = 0;
-            [m_glkViews replaceObjectAtIndex: holeIndex withObject: newView];
+            m_glkViews[holeIndex] = newView;
         }
         else {
             gNewGlkWinNum = [m_glkViews count];
@@ -1184,9 +1184,9 @@ static void setColorTable(RichTextView *v) {
 }
 
 -(void)resizeGlkView:(NSArray*)arg {
-    int viewNum = [[arg objectAtIndex:0] intValue];
-    CGRect r = [[arg objectAtIndex: 1] CGRectValue];
-    RichTextView *v = [m_glkViews objectAtIndex: viewNum];
+    int viewNum = [arg[0] intValue];
+    CGRect r = [arg[1] CGRectValue];
+    RichTextView *v = m_glkViews[viewNum];
     //NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
     if (v) {
         r.origin.x /= kIOSGlkScaleFactor;
@@ -1205,7 +1205,7 @@ static void setColorTable(RichTextView *v) {
                     }
                 }
                 {
-                    CGContextRef origCtx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+                    CGContextRef origCtx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
                     if (origCtx) {
                         CGContextRef cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, r.size.width, r.size.height);
                         CGImageRef imgRef = CGBitmapContextCreateImage(origCtx);
@@ -1214,7 +1214,7 @@ static void setColorTable(RichTextView *v) {
                         drawCGImageInCGContext(cgctx, imgRef,0, 0, origWidth, origHeight);
                         CGImageRelease(imgRef);
                         freeGlkViewImageCache(viewNum);
-                        [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
+                        glkViewImageCache[@(viewNum)] = [NSValue valueWithPointer: cgctx];
                     }
                 }
             }
@@ -1246,14 +1246,14 @@ static void setColorTable(RichTextView *v) {
             glkGridArray[viewNum].gridArray = nil;
             free(ga);
         }
-        UIView *v = [m_glkViews objectAtIndex: viewNum];
+        UIView *v = m_glkViews[viewNum];
         if (v != m_storyView) {
             --numGlkViews;
             [v removeFromSuperview];
             if (viewNum == [m_glkViews count]-1)
                 [m_glkViews removeLastObject];
             else
-                [m_glkViews replaceObjectAtIndex:viewNum withObject:[NSNull null]];
+                m_glkViews[viewNum] = [NSNull null];
         }        
     }
 }
@@ -1266,7 +1266,7 @@ static void setColorTable(RichTextView *v) {
         CGFloat green = ((color >> 8) & 0xff) / 255.0;
         CGFloat blue = (color & 0xff) / 255.0;
         UIColor *bgColor = [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
-        [[m_glkViews objectAtIndex: winNum] setBackgroundColor: bgColor];
+        [m_glkViews[winNum] setBackgroundColor: bgColor];
     }
 }
 
@@ -1286,7 +1286,7 @@ static void setColorTable(RichTextView *v) {
             [glkViewImageCache removeObjectForKey: viewNum];
         }
 #else
-        CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: viewNum] pointerValue];
+        CGContextRef cgctx = (CGContextRef)[glkViewImageCache[viewNum] pointerValue];
         if (imgView && cgctx) {
             //NSLog(@"updateglkwin: %p %p %p", imgView, [imgView layer], cgctx);
             if ([imgView superview] && [[imgView superview] respondsToSelector:@selector(setZoomScale:animated:)])
@@ -1327,11 +1327,11 @@ static void setColorTable(RichTextView *v) {
     if (v) {
         if (!glkViewImageCache)
             glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
-        CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+        CGContextRef cgctx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
         if (!cgctx)
             cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width/kIOSGlkScaleFactor, v.bounds.size.height/kIOSGlkScaleFactor);
         drawRectInCGContext(cgctx, color, left, top, width, height);
-        [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
+        glkViewImageCache[@(viewNum)] = [NSValue valueWithPointer: cgctx];
     }
     
 }
@@ -1352,7 +1352,7 @@ static void setColorTable(RichTextView *v) {
         glkImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
     UIView *v = [theSMVC glkView: viewNum];
     NSNumber *imgKey = [NSNumber numberWithInt: image];
-    UIImage *img = [glkImageCache objectForKey: imgKey];
+    UIImage *img = glkImageCache[imgKey];
     if (!img) {
         NSData *data = nil;
         if (blorbres && (blorbres->chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres->chunktype == giblorb_make_id('P', 'N', 'G', ' ')))
@@ -1361,7 +1361,7 @@ static void setColorTable(RichTextView *v) {
         if (data) {
             img = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
             //img = [UIImage imageWithData: data];
-            [glkImageCache setObject: img forKey: imgKey];
+            glkImageCache[imgKey] = img;
         }
     }
     if (img) {
@@ -1381,11 +1381,11 @@ static void setColorTable(RichTextView *v) {
            //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
             if (!glkViewImageCache)
                 glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
-            CGContextRef cgctx = (CGContextRef)[[glkViewImageCache objectForKey: [NSNumber numberWithInt: viewNum]] pointerValue];
+            CGContextRef cgctx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
             if (!cgctx)
                 cgctx = createBlankFilledCGContext(glkGridArray[viewNum].bgColor, v.bounds.size.width, v.bounds.size.height);
             drawCGImageInCGContext(cgctx, [img CGImage],val1, val2, width, height);
-            [glkViewImageCache setObject: [NSValue valueWithPointer: cgctx] forKey: [NSNumber numberWithInt: viewNum]];
+            glkViewImageCache[@(viewNum)] = [NSValue valueWithPointer: cgctx];
         }
         retval = TRUE;
     }
@@ -1432,13 +1432,13 @@ extern void gli_iphone_set_focus(window_t *winNum);
 
 -(void)enableTaps:(NSNumber*)viewNum {
     int vn = [viewNum intValue];
-    GlkView *v = [m_glkViews objectAtIndex: vn];
+    GlkView *v = m_glkViews[vn];
     v.tapInputEnabled = YES;
 }
 
 -(void)disableTaps:(NSNumber*)viewNum {
     int vn = [viewNum intValue];
-    GlkView *v = [m_glkViews objectAtIndex: vn];
+    GlkView *v = m_glkViews[vn];
     v.tapInputEnabled = NO;
 }
 
@@ -1462,7 +1462,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
         return nil;
     if (viewNum >= [m_glkViews count])
         return nil;
-    FrotzView *v = [m_glkViews objectAtIndex: viewNum];
+    FrotzView *v = m_glkViews[viewNum];
     if ((NSNull*)v == [NSNull null]) 
         return nil;
     return v;
@@ -1729,7 +1729,7 @@ static BOOL checkedAccessibility = NO, hasAccessibility = NO;
 static UIImage *GlkGetImageCallback(int imageNum) {
     if (!glkImageCache)
         glkImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
-    UIImage *image = [glkImageCache objectForKey: [NSNumber numberWithInt: imageNum]];
+    UIImage *image = glkImageCache[@(imageNum)];
     if (image)
         return image;
 
@@ -1744,9 +1744,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         if (blorbres.chunktype == giblorb_make_id('J', 'P', 'E', 'G') || blorbres.chunktype == giblorb_make_id('P', 'N', 'G', ' '))
             data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
         if (data) {
-            NSNumber *imgKey = [NSNumber numberWithInt: imageNum];
+            NSNumber *imgKey = @(imageNum);
             image = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
-            [glkImageCache setObject: image forKey: imgKey];
+            glkImageCache[imgKey] = image;
         }
     }
     return image;
@@ -2224,7 +2224,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // during a rotation because the show/hide hasn't taken effect yet,
     // so resizing again here will be correct.
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = [userInfo objectForKey: UIKeyboardBoundsUserInfoKey];
+    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
     if (!boundsValue) // sometimes nil in ios 8???
         return;
     CGRect bounds = [boundsValue CGRectValue];
@@ -2232,7 +2232,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 doesn't sent hide notifications for undocked kbd
         // and instead sends another show notification with smaller frame height
-        NSValue *frameUserInfoValue = [userInfo objectForKey: UIKeyboardFrameEndUserInfoKey];
+        NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
         if (gLargeScreenDevice && frameUserInfoValue) {
             CGRect frameEnd = [frameUserInfoValue CGRectValue];
             CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
@@ -2294,7 +2294,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void) keyboardWillShow:(NSNotification*)notif {
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = [userInfo objectForKey: UIKeyboardBoundsUserInfoKey];
+    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
     CGRect bounds = [boundsValue CGRectValue];
     CGRect frame = [self storyViewFullFrame];
 
@@ -2382,7 +2382,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 -(void) scrollStoryViewToEnd:(BOOL)animated {
     FrotzView *storyView = m_storyView;
     if (gStoryInterp == kGlxStory && cwin > 0 && cwin < [m_glkViews count] && glkGridArray[cwin].win->type == wintype_TextBuffer) {
-        storyView = [m_glkViews objectAtIndex: cwin];
+        storyView = m_glkViews[cwin];
     }
     CGSize contentSize = [storyView contentSize];
     float height = contentSize.height-[storyView visibleRect].size.height;
@@ -2592,7 +2592,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (gStoryInterp == kGlxStory) {
         int c = [m_glkViews count];
         for (int k = 0; k < c; ++k) {
-            RichTextView *rtv = [m_glkViews objectAtIndex:k];
+            RichTextView *rtv = m_glkViews[k];
             if (glkGridArray[k].win->type == wintype_TextGrid) {
                 [rtv setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
                 [rtv setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
@@ -3000,14 +3000,14 @@ char *tempStatusLineScreenBuf() {
                 break;
             if ((NSNull*)v == [NSNull null])
                 ;
-            else if (!statusLine && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextGrid && [[glkInputs objectAtIndex:vn] length] > 0) {
+            else if (!statusLine && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextGrid && [glkInputs[vn] length] > 0) {
                 statusLine = v;
-                inputStatusStr = [glkInputs objectAtIndex:vn];
+                inputStatusStr = glkInputs[vn];
                 glkViewIsGrid = YES;
             }
-            else if (!storyView && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextBuffer && [[glkInputs objectAtIndex:vn] length] > 0) {
+            else if (!storyView && glkGridArray[vn].win && glkGridArray[vn].win->type == wintype_TextBuffer && [glkInputs[vn] length] > 0) {
                 storyView = v;
-                inputBufferStr = [glkInputs objectAtIndex:vn];
+                inputBufferStr = glkInputs[vn];
                 viewNum = vn;
             }
             ++vn;
@@ -3433,7 +3433,7 @@ char *tempStatusLineScreenBuf() {
     if (m_fontname) {
         [dict setObject: m_fontname forKey: @"font"];
         if (m_fontSize)
-            [dict setObject: [NSNumber numberWithInt: m_fontSize] forKey: @"fontSize"];
+            [dict setObject: @(m_fontSize) forKey: @"fontSize"];
     }
     CGColorRef textColor = [[self textColor] CGColor];
     CGColorRef bgColor = [[self backgroundColor] CGColor];
@@ -3451,9 +3451,9 @@ char *tempStatusLineScreenBuf() {
     [dict setObject: textColorStr forKey: @"textColor"];
     [dict setObject: bgColorStr forKey: @"backgroundColor"];
     [dict setObject: [NSNumber numberWithBool: !m_completionEnabled] forKey: @"completionDisabled"];
-    [dict setObject: [NSNumber numberWithBool: m_canEditStoryInfo] forKey: @"canEditStoryInfo"];
-    [dict setObject: [NSNumber numberWithInt: iphone_ifrotz_verbose_debug] forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
-    [dict setObject: [NSNumber numberWithBool: m_autoRestoreEnabled] forKey:@"autorestore_preference"];
+    [dict setObject: @(m_canEditStoryInfo) forKey: @"canEditStoryInfo"];
+    [dict setObject: @(iphone_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
+    [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
     
     [dict synchronize];    
 }
@@ -3533,7 +3533,7 @@ static UIColor *scanColor(NSString *colorStr) {
     if ((!m_currentStory || [m_currentStory length]==0) && [fileMgr fileExistsAtPath: activeStoryPath]) {
         NSDictionary *storyLocDict  = [NSDictionary dictionaryWithContentsOfFile: activeStoryPath];
         if (storyLocDict) {
-            storyPath = [storyLocDict objectForKey: @"storyPath"];
+            storyPath = storyLocDict[@"storyPath"];
             storyPath = [self relativePathToAppAbsolutePath: storyPath];
             [self setCurrentStory: storyPath];
             if (gUseSplitVC) {
@@ -3553,7 +3553,7 @@ static UIColor *scanColor(NSString *colorStr) {
     if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
     	NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: storySIPPath] retain];
         if (dict) {
-            storyPath = [dict objectForKey: @"storyPath"];
+            storyPath = dict[@"storyPath"];
             storyPath = [self relativePathToAppAbsolutePath: storyPath];
             [self setCurrentStory: storyPath];
             if (m_currentStory && [fileMgr fileExistsAtPath: m_currentStory]) {
@@ -3743,7 +3743,7 @@ static void setScreenDims(char *storyNameBuf) {
             
             NSString *storyPath = m_currentStory;
             if (!storyPath) {
-                storyPath = [dict objectForKey: @"storyPath"];
+                storyPath = dict[@"storyPath"];
                 storyPath = [self relativePathToAppAbsolutePath: storyPath];
                 [self setCurrentStory: storyPath];
             }
@@ -3778,20 +3778,20 @@ static void setScreenDims(char *storyNameBuf) {
                 
                 h_version = hvers;
                 iphone_top_win_height = -1;
-                top_win_height = [[dict objectForKey: @"statusWinHeight"] longValue];
-                cwin = [[dict objectForKey: @"currentWindow"] longValue];
-                cursor_row = [[dict objectForKey: @"cursorRow"] longValue];
-                cursor_col = [[dict objectForKey: @"cursorCol"] longValue];
-                restore_frame_count = [[dict objectForKey: @"frameCount"] longValue];
+                top_win_height = [dict[@"statusWinHeight"] longValue];
+                cwin = [dict[@"currentWindow"] longValue];
+                cursor_row = [dict[@"cursorRow"] longValue];
+                cursor_col = [dict[@"cursorCol"] longValue];
+                restore_frame_count = [dict[@"frameCount"] longValue];
                 
-                NSString *savedScriptname = [dict objectForKey: @"scriptname"];
+                NSString *savedScriptname = dict[@"scriptname"];
                 if (savedScriptname) {
                     savedScriptname = [self relativePathToAppAbsolutePath: savedScriptname];
                     iphone_start_script((char*)[savedScriptname UTF8String]);
                 } else
                     iphone_stop_script();
                 
-                int color = [[dict objectForKey: @"textColors"] longValue] & 0xff;
+                int color = [dict[@"textColors"] longValue] & 0xff;
                 if (color == 0x21)
                     color = 0x11; // fix corrupt autosave
                 if (color && color != 0x11 && (color & 0xf) == (color >> 4)) { // don't allow fg same as bg
@@ -3802,12 +3802,12 @@ static void setScreenDims(char *storyNameBuf) {
                     currColor = u_setup.current_color = color;
                 } else 	if (color > 0x11) //  && (color != 0x29)
                     currColor = u_setup.current_color = color;
-                NSNumber *currStyle = [dict objectForKey: @"currTextStyle"];
+                NSNumber *currStyle = dict[@"currTextStyle"];
                 if (currStyle)
                     currTextStyle = u_setup.current_text_style = [currStyle integerValue];
 
-                statusScreenData = [dict objectForKey: @"statusWinData"];
-                statusScreenColors = [dict objectForKey: @"statusWinColors"];
+                statusScreenData = dict[@"statusWinData"];
+                statusScreenColors = dict[@"statusWinColors"];
                 setScreenDims(storyNameBuf);
                 h_screen_rows = kDefaultTextViewHeight; // iphone_textview_height;
                 h_screen_cols = iphone_textview_width;
@@ -3850,13 +3850,13 @@ static void setScreenDims(char *storyNameBuf) {
                 [ipzStatusStr setString: @"i\n"];
                 
 #if UseRichTextView
-                NSDictionary *storyTextSaveDict = [dict objectForKey: @"storyRichWinContents"];
+                NSDictionary *storyTextSaveDict = dict[@"storyRichWinContents"];
                 if (storyTextSaveDict) {
                     [m_storyView restoreFromSaveDataDict: storyTextSaveDict];
                     [self scrollStoryViewToEnd: NO];
                 } else {
                     NSMutableString *newText = nil;
-                    NSString *storyText = [dict objectForKey: @"storyWinContents"];
+                    NSString *storyText = dict[@"storyWinContents"];
                     if (storyText) {
                         NSRange r = [storyText rangeOfString: @"<style type="];
                         if (r.length == 0)
@@ -3874,7 +3874,7 @@ static void setScreenDims(char *storyNameBuf) {
 #else
                 [m_storyView setText: [dict objectForKey: @"storyWinContents"]];
 #endif
-                NSNumber *hFlagsNum = [dict objectForKey: @"hflags"];
+                NSNumber *hFlagsNum = dict[@"hflags"];
                 if (hFlagsNum) {
                     hflagsRestore =  [hFlagsNum integerValue] & FIXED_FONT_FLAG;
                 } else
@@ -4148,29 +4148,29 @@ static void setScreenDims(char *storyNameBuf) {
     if (m_currentStory && ([m_currentStory length] > 0)) {
         NSString *story = [m_currentStory storyKey];
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
-        [dict setObject: [self pathToAppRelativePath: m_currentStory] forKey: @"storyPath"];
-        [dict setObject: [NSNumber numberWithInt: iphone_top_win_height] forKey: @"statusWinHeight"];
-        [dict setObject: [NSNumber numberWithInt: cwin] forKey: @"currentWindow"];
-        [dict setObject: [NSNumber numberWithInt: cursor_row] forKey: @"cursorRow"];
-        [dict setObject: [NSNumber numberWithInt: cursor_col] forKey: @"cursorCol"];
-        [dict setObject: [NSNumber numberWithInt: frame_count] forKey: @"frameCount"];
-        [dict setObject: [NSNumber numberWithInt: currColor] forKey: @"textColors"];
-        [dict setObject: [NSNumber numberWithInt: currTextStyle] forKey: @"currTextStyle"];
-        [dict setObject: [NSNumber numberWithInt: (h_flags & FIXED_FONT_FLAG)] forKey: @"hflags"];
+        dict[@"storyPath"] = [self pathToAppRelativePath: m_currentStory];
+        dict[@"statusWinHeight"] = @(iphone_top_win_height);
+        dict[@"currentWindow"] = @(cwin);
+        dict[@"cursorRow"] = @(cursor_row);
+        dict[@"cursorCol"] = @(cursor_col);
+        dict[@"frameCount"] = [NSNumber numberWithInt: frame_count];
+        dict[@"textColors"] = @(currColor);
+        dict[@"currTextStyle"] = @(currTextStyle);
+        dict[@"hflags"] = @(h_flags & FIXED_FONT_FLAG);
         
         if (*iphone_scriptname) {
-            NSString *scriptPath = [self pathToAppRelativePath: [NSString stringWithUTF8String: iphone_scriptname]];
-            [dict setObject: scriptPath forKey: @"scriptname"];
+            NSString *scriptPath = [self pathToAppRelativePath: @(iphone_scriptname)];
+            dict[@"scriptname"] = scriptPath;
         }
         
         NSData *statusData = [NSData dataWithBytes: screen_data length: h_screen_rows * MAX_COLS * sizeof(*screen_data)];
         NSData *statusColors = [NSData dataWithBytes: screen_colors length: h_screen_rows * MAX_COLS * sizeof(*screen_colors)];
-        [dict setObject: statusData  forKey: @"statusWinData"];
-        [dict setObject: statusColors forKey: @"statusWinColors"];
+        dict[@"statusWinData"] = statusData;
+        dict[@"statusWinColors"] = statusColors;
         
 #if UseRichTextView
         NSDictionary *storyTextSaveDict = [m_storyView getSaveDataDict];
-        [dict setObject: storyTextSaveDict forKey: @"storyRichWinContents"];
+        dict[@"storyRichWinContents"] = storyTextSaveDict;
 #else
         NSString *storyText;
         storyText = [m_storyView text];
@@ -4287,7 +4287,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     FrotzView *textView = m_storyView;
     if (gStoryInterp == kGlxStory && cwin >= 0)
-        textView = [m_glkViews objectAtIndex:cwin];
+        textView = m_glkViews[cwin];
     
     iphone_feed_input(inputText);
     iphone_feed_input(@"\n");
@@ -4477,9 +4477,9 @@ extern int glulxCompleteWord(const char *word, char *result);
             status = glulxCompleteWord((const char*)[str UTF8String], resultbuf);
         if (status != 2 && strlen(resultbuf) > 0) {
             if (gStoryInterp==kZStory)
-                candString = [str stringByAppendingString: [NSString stringWithUTF8String: resultbuf]];
+                candString = [str stringByAppendingString: @(resultbuf)];
             else
-                candString = [NSString stringWithUTF8String: resultbuf];
+                candString = @(resultbuf);
             if (candString && [str rangeOfString:@"-"].length==0 && [candString rangeOfString:@"-"].length!=0) {
                 // some games (Alabaster) seem to have hyphenated debugging commands in the dictionary; don't complete
                 // hyphenated words unless the user has actually typed a hyphen
@@ -4525,9 +4525,9 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     m_dbCachedMetadata = [[NSMutableDictionary dictionaryWithContentsOfFile: dbcPath] retain];
     if (!m_dbCachedMetadata)
         m_dbCachedMetadata = [[NSMutableDictionary alloc] initWithCapacity: 4];
-    m_dbTopPath = [m_dbCachedMetadata objectForKey: kDBTopPath];
+    m_dbTopPath = m_dbCachedMetadata[kDBTopPath];
     
-    m_dbActive = [[m_dbCachedMetadata objectForKey: kActiveKey] boolValue];
+    m_dbActive = [m_dbCachedMetadata[kActiveKey] boolValue];
     if ([[DBSession sharedSession] isLinked]) {
         [self.restClient loadMetadata: [self dbTopPath]];
     }
@@ -4558,15 +4558,15 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 }
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile {
-    NSMutableDictionary *timeStampDict = [m_dbCachedMetadata objectForKey: kTimestampKey];
+    NSMutableDictionary *timeStampDict = m_dbCachedMetadata[kTimestampKey];
     if (!timeStampDict) 
         return nil;
     
-    return (NSDate*)[timeStampDict objectForKey: saveFile];
+    return (NSDate*)timeStampDict[saveFile];
 }
 
 -(void)cacheTimestamp:(NSDate*)timeStamp forSaveFile:(NSString*)saveFile {
-    NSMutableDictionary *timeStampDict = [m_dbCachedMetadata objectForKey: kTimestampKey];
+    NSMutableDictionary *timeStampDict = m_dbCachedMetadata[kTimestampKey];
     if (!timeStampDict) {
         timeStampDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
         [m_dbCachedMetadata setValue: timeStampDict forKey: kTimestampKey];
@@ -4578,17 +4578,17 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 }
 
 -(NSString*)getHashForDBPath:(NSString*)path {
-    NSMutableDictionary *hashDict = [m_dbCachedMetadata objectForKey: kHashKey];
+    NSMutableDictionary *hashDict = m_dbCachedMetadata[kHashKey];
     if (!hashDict) 
         return nil;
     
-    return (NSString*)[hashDict objectForKey: path];
+    return (NSString*)hashDict[path];
 }
 
 -(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path {
     if (!hash || !path)
         return;
-    NSMutableDictionary *hashDict = [m_dbCachedMetadata objectForKey: kHashKey];
+    NSMutableDictionary *hashDict = m_dbCachedMetadata[kHashKey];
     if (!hashDict) {
         hashDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
         [m_dbCachedMetadata setValue: hashDict forKey: kHashKey];
@@ -4661,7 +4661,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
         }
         if (!m_dbActive) {
             m_dbActive = YES;
-            [m_dbCachedMetadata setValue: [NSNumber numberWithBool: m_dbActive] forKey: kActiveKey];
+            [m_dbCachedMetadata setValue: @(m_dbActive) forKey: kActiveKey];
             [self saveDBCacheDict];
         }
         //	[self.restClient performSelector:@selector(loadMetadata:) withObject:dbGamePath afterDelay:0.2];
@@ -4726,14 +4726,14 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     int localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSF, *dbSF;
     while (localIndex < localCount && dbIndex < dbCount) {
-        locSF = [localSaveFiles objectAtIndex: localIndex];
-        DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
+        locSF = localSaveFiles[localIndex];
+        DBMetadata *md = dbSaveFiles[dbIndex];
         dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
         NSDate *dbModDate = md.lastModifiedDate;
         NSComparisonResult cr = [locSF caseInsensitiveCompare: dbSF];
         if (cr == NSOrderedSame) {
             NSDictionary *fileAttribs = [defaultManager fileAttributesAtPath:[localSavePath stringByAppendingPathComponent:locSF] traverseLink:NO];
-            NSDate *locModDate = [fileAttribs objectForKey: NSFileModificationDate];
+            NSDate *locModDate = fileAttribs[NSFileModificationDate];
             NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
             NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]];
             //	    NSLog(@"file %@/%@ cachedmd %@ dbmodd %@ locmd %@", subSavePath, locSF, cachedDBModDate, dbModDate, locModDate);
@@ -4775,12 +4775,12 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
         ++i;
     }
     while (localIndex < localCount) {
-        locSF = [localSaveFiles objectAtIndex: localIndex];
+        locSF = localSaveFiles[localIndex];
         [self dbUploadSaveGameFile: [subSavePath stringByAppendingPathComponent: locSF]];
         ++localIndex;
     }
     while (dbIndex < dbCount) {
-    	DBMetadata *md = [dbSaveFiles objectAtIndex: dbIndex];
+    	DBMetadata *md = dbSaveFiles[dbIndex];
         dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
         NSDate *dbModDate = md.lastModifiedDate;
         NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
@@ -4815,8 +4815,8 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     int localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSD, *dbSD;
     while (localIndex < localCount && dbIndex < dbCount) {
-        locSD = [localSaveDirs objectAtIndex: localIndex];
-        dbSD = [dbSaveDirs objectAtIndex: dbIndex];
+        locSD = localSaveDirs[localIndex];
+        dbSD = dbSaveDirs[dbIndex];
         NSComparisonResult cr = [locSD caseInsensitiveCompare: dbSD];
         NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
         if (cr == NSOrderedSame) {
@@ -4836,7 +4836,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
         ++i;
     }
     while (localIndex < localCount) {
-        locSD = [localSaveDirs objectAtIndex: localIndex];
+        locSD = localSaveDirs[localIndex];
         NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
         NSLog(@"create folder in db: %@", locSD);
         [self.restClient createFolder: subPath];
@@ -4912,7 +4912,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
         }
         [m_dbTopPath release];
         m_dbTopPath = [path retain];
-    	[m_dbCachedMetadata setObject:m_dbTopPath forKey:kDBTopPath];
+    	m_dbCachedMetadata[kDBTopPath] = m_dbTopPath;
         [self saveDBCacheDict];
         if ([[DBSession sharedSession] isLinked])
             [self.restClient performSelector:@selector(loadMetadata:) withObject:m_dbTopPath afterDelay:1.0];
@@ -4936,7 +4936,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     int errCode = [error code];
     if (errCode == 404) {
         NSString *topPath = [self dbTopPath];
-        NSString *path = [error.userInfo objectForKey: @"path"];
+        NSString *path = (error.userInfo)[@"path"];
         if (path && [path isEqualToString: topPath]) {
             NSLog(@"creating dbtoppath");
     	    [self dbRecursiveMakeParents: [topPath stringByDeletingLastPathComponent]];

@@ -14,7 +14,7 @@
 
 @implementation AboutFrotz
 
-- (id)init {
+- (instancetype)init {
     if ((self = [super init])) {
         self.title = NSLocalizedString(@"About Frotz", @"");
     }

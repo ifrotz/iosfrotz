@@ -79,19 +79,19 @@ enum AsyncSocketFlags
 - (void) close;
 
 // Errors
-- (NSError *) getErrnoError;
-- (NSError *) getAbortError;
-- (NSError *) getStreamError;
-- (NSError *) getSocketError;
-- (NSError *) getConnectTimeoutError;
-- (NSError *) getReadMaxedOutError;
-- (NSError *) getReadTimeoutError;
-- (NSError *) getWriteTimeoutError;
+@property (nonatomic, getter=getErrnoError, readonly, copy) NSError *errnoError;
+@property (nonatomic, getter=getAbortError, readonly, copy) NSError *abortError;
+@property (nonatomic, getter=getStreamError, readonly, copy) NSError *streamError;
+@property (nonatomic, getter=getSocketError, readonly, copy) NSError *socketError;
+@property (nonatomic, getter=getConnectTimeoutError, readonly, copy) NSError *connectTimeoutError;
+@property (nonatomic, getter=getReadMaxedOutError, readonly, copy) NSError *readMaxedOutError;
+@property (nonatomic, getter=getReadTimeoutError, readonly, copy) NSError *readTimeoutError;
+@property (nonatomic, getter=getWriteTimeoutError, readonly, copy) NSError *writeTimeoutError;
 - (NSError *) errorFromCFStreamError:(CFStreamError)err;
 
 // Diagnostics
-- (BOOL) isSocketConnected;
-- (BOOL) areStreamsConnected;
+@property (nonatomic, getter=isSocketConnected, readonly) BOOL socketConnected;
+@property (nonatomic, readonly) BOOL areStreamsConnected;
 - (NSString *) connectedHost: (CFSocketRef)socket;
 - (UInt16) connectedPort: (CFSocketRef)socket;
 - (NSString *) localHost: (CFSocketRef)socket;
@@ -161,22 +161,22 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	NSData *term;
 	BOOL readAllAvailableData;
 }
-- (id)initWithData:(NSMutableData *)d
+- (instancetype)initWithData:(NSMutableData *)d
 		   timeout:(NSTimeInterval)t
 			   tag:(long)i
   readAllAvailable:(BOOL)a
 		terminator:(NSData *)e
-	  	 maxLength:(CFIndex)m;
+	  	 maxLength:(CFIndex)m NS_DESIGNATED_INITIALIZER;
 
-- (unsigned)readLengthForTerm;
+@property (nonatomic, readonly) unsigned int readLengthForTerm;
 
-- (unsigned)prebufferReadLengthForTerm;
+@property (nonatomic, readonly) unsigned int prebufferReadLengthForTerm;
 - (CFIndex)searchForTermAfterPreBuffering:(CFIndex)numBytes;
 @end
 
 @implementation AsyncReadPacket
 
-- (id)initWithData:(NSMutableData *)d
+- (instancetype)initWithData:(NSMutableData *)d
 		   timeout:(NSTimeInterval)t
 			   tag:(long)i
   readAllAvailable:(BOOL)a
@@ -317,12 +317,12 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	long tag;
 	NSTimeInterval timeout;
 }
-- (id)initWithData:(NSData *)d timeout:(NSTimeInterval)t tag:(long)i;
+- (instancetype)initWithData:(NSData *)d timeout:(NSTimeInterval)t tag:(long)i NS_DESIGNATED_INITIALIZER;
 @end
 
 @implementation AsyncWritePacket
 
-- (id)initWithData:(NSData *)d timeout:(NSTimeInterval)t tag:(long)i
+- (instancetype)initWithData:(NSData *)d timeout:(NSTimeInterval)t tag:(long)i
 {
 	if((self = [super init]))
 	{
@@ -355,12 +355,12 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
   @public
 	NSDictionary *tlsSettings;
 }
-- (id)initWithTLSSettings:(NSDictionary *)settings;
+- (instancetype)initWithTLSSettings:(NSDictionary *)settings NS_DESIGNATED_INITIALIZER;
 @end
 
 @implementation AsyncSpecialPacket
 
-- (id)initWithTLSSettings:(NSDictionary *)settings
+- (instancetype)initWithTLSSettings:(NSDictionary *)settings
 {
 	if((self = [super init]))
 	{
@@ -383,18 +383,18 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 
 @implementation AsyncSocket
 
-- (id)init
+- (instancetype)init
 {
 	return [self initWithDelegate:nil userData:0];
 }
 
-- (id)initWithDelegate:(id)delegate
+- (instancetype)initWithDelegate:(id)delegate
 {
 	return [self initWithDelegate:delegate userData:0];
 }
 
 // Designated initializer.
-- (id)initWithDelegate:(id)delegate userData:(long)userData
+- (instancetype)initWithDelegate:(id)delegate userData:(long)userData
 {
 	if((self = [super init]))
 	{
@@ -431,7 +431,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 		theContext.copyDescription = nil;
 		
 		// Default run loop modes
-		theRunLoopModes = [[NSArray arrayWithObject:NSDefaultRunLoopMode] retain];
+		theRunLoopModes = [@[NSDefaultRunLoopMode] retain];
 	}
 	return self;
 }
@@ -535,7 +535,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFRunLoopAddSource(theRunLoop, source, runLoopMode);
 	}
 }
@@ -545,7 +545,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFRunLoopRemoveSource(theRunLoop, source, runLoopMode);
 	}
 }
@@ -555,7 +555,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFRunLoopAddTimer(theRunLoop, (CFRunLoopTimerRef)timer, runLoopMode);
 	}
 }
@@ -565,7 +565,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)		
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFRunLoopRemoveTimer(theRunLoop, (CFRunLoopTimerRef)timer, runLoopMode);
 	}
 }
@@ -575,7 +575,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFReadStreamUnscheduleFromRunLoop(theReadStream, theRunLoop, runLoopMode);
 	}
 	CFReadStreamSetClient(theReadStream, kCFStreamEventNone, NULL, NULL);
@@ -586,7 +586,7 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 	unsigned i, count = [theRunLoopModes count];
 	for(i = 0; i < count; i++)
 	{
-		CFStringRef runLoopMode = (CFStringRef)[theRunLoopModes objectAtIndex:i];
+		CFStringRef runLoopMode = (CFStringRef)theRunLoopModes[i];
 		CFWriteStreamUnscheduleFromRunLoop(theWriteStream, theRunLoop, runLoopMode);
 	}
 	CFWriteStreamSetClient(theWriteStream, kCFStreamEventNone, NULL, NULL);
@@ -817,8 +817,8 @@ static void MyCFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType 
 			{
 				if(errPtr)
 				{
-					NSString *errMsg = [NSString stringWithCString:gai_strerror(error) encoding:NSASCIIStringEncoding];
-					NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+					NSString *errMsg = @(gai_strerror(error));
+					NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 					
 					*errPtr = [NSError errorWithDomain:@"kCFStreamErrorDomainNetDB" code:error userInfo:info];
 				}
@@ -1353,7 +1353,7 @@ Failed:;
 	}
 	for(i = 0; i < [theRunLoopModes count]; i++)
 	{
-		CFReadStreamScheduleWithRunLoop(theReadStream, theRunLoop, (CFStringRef)[theRunLoopModes objectAtIndex:i]);
+		CFReadStreamScheduleWithRunLoop(theReadStream, theRunLoop, (CFStringRef)theRunLoopModes[i]);
 	}
 
 	// Make write stream non-blocking.
@@ -1373,7 +1373,7 @@ Failed:;
 	}
 	for(i = 0; i < [theRunLoopModes count]; i++)
 	{
-		CFWriteStreamScheduleWithRunLoop (theWriteStream, theRunLoop, (CFStringRef)[theRunLoopModes objectAtIndex:i]);
+		CFWriteStreamScheduleWithRunLoop (theWriteStream, theRunLoop, (CFStringRef)theRunLoopModes[i]);
 	}
 	
 	return YES;
@@ -1756,8 +1756,8 @@ Failed:;
 **/
 - (NSError *)getErrnoError
 {
-	NSString *errorMsg = [NSString stringWithUTF8String:strerror(errno)];
-	NSDictionary *userInfo = [NSDictionary dictionaryWithObject:errorMsg forKey:NSLocalizedDescriptionKey];
+	NSString *errorMsg = @(strerror(errno));
+	NSDictionary *userInfo = @{NSLocalizedDescriptionKey: errorMsg};
 	
 	return [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:userInfo];
 }
@@ -1772,7 +1772,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"General CFSocket error", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketCFSocketError userInfo:info];
 }
@@ -1804,7 +1804,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"Connection canceled", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketCanceledError userInfo:info];
 }
@@ -1818,7 +1818,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"Attempt to connect to host timed out", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketConnectTimeoutError userInfo:info];
 }
@@ -1832,7 +1832,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"Read operation reached set maximum length", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketReadMaxedOutError userInfo:info];
 }
@@ -1846,7 +1846,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"Read operation timed out", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketReadTimeoutError userInfo:info];
 }
@@ -1860,7 +1860,7 @@ Failed:;
 														 @"AsyncSocket", [NSBundle mainBundle],
 														 @"Write operation timed out", nil);
 	
-	NSDictionary *info = [NSDictionary dictionaryWithObject:errMsg forKey:NSLocalizedDescriptionKey];
+	NSDictionary *info = @{NSLocalizedDescriptionKey: errMsg};
 	
 	return [NSError errorWithDomain:AsyncSocketErrorDomain code:AsyncSocketWriteTimeoutError userInfo:info];
 }
@@ -1885,7 +1885,7 @@ Failed:;
 	else if(err.domain == kCFStreamErrorDomainNetDB)
 	{
 		domain = @"kCFStreamErrorDomainNetDB";
-		message = [NSString stringWithCString:gai_strerror(err.error) encoding:NSASCIIStringEncoding];
+		message = @(gai_strerror(err.error));
 	}
 	else if(err.domain == kCFStreamErrorDomainNetServices) {
 		domain = @"kCFStreamErrorDomainNetServices";
@@ -1903,7 +1903,7 @@ Failed:;
 	NSDictionary *info = nil;
 	if(message != nil)
 	{
-		info = [NSDictionary dictionaryWithObject:message forKey:NSLocalizedDescriptionKey];
+		info = @{NSLocalizedDescriptionKey: message};
 	}
 	return [NSError errorWithDomain:domain code:err.error userInfo:info];
 }
@@ -2059,7 +2059,7 @@ Failed:;
 	if (pStr == NULL) [NSException raise: NSInternalInconsistencyException
 								  format: @"Cannot convert address to string."];
 
-	return [NSString stringWithCString:pStr encoding:NSASCIIStringEncoding];
+	return @(pStr);
 }
 
 - (UInt16)addressPort:(CFDataRef)cfaddr
@@ -2295,7 +2295,7 @@ Failed:;
 		if([theReadQueue count] > 0)
 		{
 			// Dequeue the next object in the write queue
-			theCurrentRead = [[theReadQueue objectAtIndex:0] retain];
+			theCurrentRead = [theReadQueue[0] retain];
 			[theReadQueue removeObjectAtIndex:0];
 			
 			if([theCurrentRead isKindOfClass:[AsyncSpecialPacket class]])
@@ -2598,7 +2598,7 @@ Failed:;
 		if([theWriteQueue count] > 0)
 		{
 			// Dequeue the next object in the write queue
-			theCurrentWrite = [[theWriteQueue objectAtIndex:0] retain];
+			theCurrentWrite = [theWriteQueue[0] retain];
 			[theWriteQueue removeObjectAtIndex:0];
 			
 			if([theCurrentWrite isKindOfClass:[AsyncSpecialPacket class]])

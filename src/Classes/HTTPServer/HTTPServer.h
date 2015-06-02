@@ -26,36 +26,28 @@
 	NSMutableArray *connections;
 }
 
-- (id)delegate;
-- (void)setDelegate:(id)newDelegate;
+@property (nonatomic, assign) id delegate;
 
-- (NSURL *)documentRoot;
-- (void)setDocumentRoot:(NSURL *)value;
+@property (nonatomic, copy) NSURL *documentRoot;
 
-- (Class)connectionClass;
-- (void)setConnectionClass:(Class)value;
+@property (nonatomic, strong) Class connectionClass;
 
-- (NSString *)domain;
-- (void)setDomain:(NSString *)value;
+@property (nonatomic, copy) NSString *domain;
 
-- (NSString *)type;
-- (void)setType:(NSString *)value;
+@property (nonatomic, copy) NSString *type;
 
-- (NSString *)name;
-- (NSString *)publishedName;
-- (void)setName:(NSString *)value;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, readonly, copy) NSString *publishedName;
 
-- (UInt16)port;
-- (void)setPort:(UInt16)value;
+@property (nonatomic) UInt16 port;
 
-- (NSDictionary *)TXTRecordDictionary;
-- (void)setTXTRecordDictionary:(NSDictionary *)dict;
+@property (nonatomic, copy) NSDictionary *TXTRecordDictionary;
 
 - (BOOL)start:(NSError **)error;
-- (NSArray*)addresses;
-- (BOOL)isRunning;
-- (BOOL)stop;
+@property (nonatomic, readonly, copy) NSArray *addresses;
+@property (nonatomic, getter=isRunning, readonly) BOOL running;
+@property (nonatomic, readonly) BOOL stop;
 
-- (uint)numberOfHTTPConnections;
+@property (nonatomic, readonly) uint numberOfHTTPConnections;
 
 @end

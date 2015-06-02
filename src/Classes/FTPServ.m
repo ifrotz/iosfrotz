@@ -570,12 +570,12 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     }
     else if(m_loggedIn && isCmd(buf, "LIST")) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
-        [self createListForDirectory: [NSString stringWithUTF8String: bufa]];
+        [self createListForDirectory: @(bufa)];
         //	[self performSelector:@selector(createListForDirectory:) withObject: [NSString stringWithUTF8String: bufa] afterDelay:0.1];
     }
     else if(m_loggedIn && isCmd(buf, "NLST")) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
-        [self createNListForDirectory: [NSString stringWithUTF8String: bufa]];
+        [self createNListForDirectory: @(bufa)];
         //	[self performSelector:@selector(createNListForDirectory:) withObject: [NSString stringWithUTF8String: bufa] afterDelay:0.1];
     }
     else if(m_loggedIn && isCmd(buf, "RETR")) {
@@ -590,7 +590,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
         NSFileManager *defaultManager = [NSFileManager defaultManager];
         NSError *error;
-        if ([defaultManager removeItemAtPath: [NSString stringWithUTF8String: bufa] error: &error])
+        if ([defaultManager removeItemAtPath: @(bufa) error: &error])
             [self sendResponse: m_commandConnection buf: "250 Deleted."];
         else [self sendResponse: m_commandConnection buf:"550 File could not be deleted."];
     }
@@ -633,7 +633,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
 - (void)commandDataAvailableNotification:(NSNotification *)notification {
     NSFileHandle *connectionHandle = [notification object];                                  
     NSDictionary *userInfo = [notification userInfo];
-    NSData *readData = [userInfo objectForKey:NSFileHandleNotificationDataItem];
+    NSData *readData = userInfo[NSFileHandleNotificationDataItem];
     
     char buf[BUFSIZE];
     int cpos = 0;
@@ -690,7 +690,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
 
 -(void)passiveDataConnectionReceived:(NSNotification *)aNotification {
     //NSFileHandle * 
-    m_incomingConnection = [[aNotification userInfo] objectForKey:NSFileHandleNotificationFileHandleItem];
+    m_incomingConnection = [aNotification userInfo][NSFileHandleNotificationFileHandleItem];
     
     int msgsock = [m_incomingConnection fileDescriptor];
     m_pasvSock = msgsock;
@@ -715,7 +715,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
 - (void)dataAvailableNotification:(NSNotification *)notification {
     NSFileHandle *connectionHandle = [notification object];                                  
     NSDictionary *userInfo = [notification userInfo];
-    NSData *readData = [userInfo objectForKey:NSFileHandleNotificationDataItem];
+    NSData *readData = userInfo[NSFileHandleNotificationDataItem];
     int len = [readData length];
     BOOL err = NO;
     if (len > 0) {
@@ -748,7 +748,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     }
 }
 
--(id)initWithConnection:(NSFileHandle*)incomingConnection rootPath:(NSString*)rootPath {
+-(instancetype)initWithConnection:(NSFileHandle*)incomingConnection rootPath:(NSString*)rootPath {
     if ((self = [self init])) {
         m_socket = 0; //aaa-1;   
         m_csocket = 0; //aaa-1;
@@ -790,7 +790,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
 @implementation  FTPServer
 
 -(void)connectionReceived:(NSNotification *)aNotification {
-    NSFileHandle * incomingConnection = [[aNotification userInfo] objectForKey:NSFileHandleNotificationFileHandleItem];
+    NSFileHandle * incomingConnection = [aNotification userInfo][NSFileHandleNotificationFileHandleItem];
     [[aNotification object] acceptConnectionInBackgroundAndNotify];
     
     [[FTPSession alloc] initWithConnection: incomingConnection rootPath:m_rootPath];
@@ -798,7 +798,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     
 }
 
--(id)initWithPort:(int)port rootPath:(NSString*)rootPath {
+-(instancetype)initWithPort:(int)port rootPath:(NSString*)rootPath {
     signal(SIGPIPE, SIG_IGN);
     if ((self = [self init])) {
         m_port = port;

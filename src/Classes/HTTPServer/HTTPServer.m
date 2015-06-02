@@ -9,7 +9,7 @@
  * Standard Constructor.
  * Instantiates an HTTP server, but does not start it.
  **/
-- (id)init
+- (instancetype)init
 {
 	if((self = [super init]))
 	{

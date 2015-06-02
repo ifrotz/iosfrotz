@@ -26,21 +26,19 @@
     UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> *m_delegate;
 }
 
--(NotesViewController*)initWithFrame:(CGRect)frame;
+-(NotesViewController*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 -(void)dealloc;
--(void)setTitle:(NSString *)title;
--(NSString*)title;
--(void)setText:(NSString*)text;
--(NSString*)text;
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *text;
 -(void)setFrame:(CGRect)frame;
 -(void)setChainResponder:(UIResponder*)responder;
 -(void)activateKeyboard;
 -(void)dismissKeyboard;
 -(void)toggleKeyboard;
--(UIScrollView*)containerScrollView;
+@property (nonatomic, readonly, strong) UIScrollView *containerScrollView;
 -(void) keyboardWillShow:(CGRect)kbBounds;
 -(void) keyboardWillHide;
--(BOOL)isVisible;
+@property (nonatomic, getter=isVisible, readonly) BOOL visible;
 -(void)show;
 -(void)hide;
 -(void)loadView;

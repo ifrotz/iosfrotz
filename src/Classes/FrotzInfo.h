@@ -33,13 +33,12 @@
     id <KeyboardOwner> m_kbdOwner;
 }
 
--(id)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem;
+-(instancetype)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem NS_DESIGNATED_INITIALIZER;
 -(void)dismissInfo;
 -(void)frotzInfo;
--(void)setKeyboardOwner:(id<KeyboardOwner>)kbdOwner;
--(id<KeyboardOwner>)keyboardOwner;
--(UINavigationController*)navController;
--(UINavigationItem*)navItem;
+@property (nonatomic, strong) id<KeyboardOwner> keyboardOwner;
+@property (nonatomic, readonly, strong) UINavigationController *navController;
+@property (nonatomic, readonly, strong) UINavigationItem *navItem;
 -(void)updateAccessibility;
 -(void)updateTitle;
 @end

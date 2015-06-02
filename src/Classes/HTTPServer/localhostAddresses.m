@@ -35,7 +35,7 @@
 						[ip appendFormat:@"."];
 					[ip appendFormat:@"%d", base[i]];
 				}
-				[result setObject:(NSString*)ip forKey:[NSString stringWithFormat:@"%s", cursor->ifa_name]];
+				result[[NSString stringWithFormat:@"%s", cursor->ifa_name]] = (NSString*)ip;
 			}
 			cursor = cursor->ifa_next;
 		}
@@ -45,7 +45,7 @@
 	NSURL *netIPURL = [NSURL URLWithString:@"http://whatismyip.org"];
 	NSString *netIP = [NSString stringWithContentsOfURL:netIPURL encoding:NSUTF8StringEncoding error:nil];
 	if (netIP)
-		[result setObject:netIP forKey:@"www"];
+		result[@"www"] = netIP;
 	NSLog(@"IP addresses: %@", result);
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"LocalhostAdressesResolved" object:result];
 	

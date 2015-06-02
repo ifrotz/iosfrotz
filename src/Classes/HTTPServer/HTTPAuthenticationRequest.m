@@ -8,7 +8,7 @@
 
 @implementation HTTPAuthenticationRequest
 
-- (id)initWithRequest:(CFHTTPMessageRef)request
+- (instancetype)initWithRequest:(CFHTTPMessageRef)request
 {
 	if((self = [super init]))
 	{

@@ -18,7 +18,7 @@
     return m_delegate;
 }
 
-- (id)initWithStyle:(UITableViewStyle)style {
+- (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {
 
     }
@@ -59,7 +59,7 @@
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     UIBarButtonItem *editButtonItem =  [self editButtonItem]; //[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     UIBarButtonItem *cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
-    [toolBar setItems: [NSArray arrayWithObjects: addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem, nil]];
+    [toolBar setItems: @[addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem]];
     [addButtonItem release];
     [cancelButtonItem release];
     [spaceButtonItem release];
@@ -89,7 +89,7 @@
 	    [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
 	    NSUInteger indexes[] = { 0, [m_sites count] };
 	    NSIndexPath *indexPath = [NSIndexPath indexPathWithIndexes: indexes length:2];
-	    NSArray *indexPaths = [NSArray arrayWithObject: indexPath];
+	    NSArray *indexPaths = @[indexPath];
 	    [tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationBottom];
 	    [tableView reloadData];
 	    [tableView endUpdates];
@@ -128,15 +128,15 @@
     cell.accessoryType = UITableViewCellAccessoryNone;
     int row = [indexPath row];
     if (row < [m_sites count]) {
-	cell.textLabel.text = [m_sites objectAtIndex: row];
+	cell.textLabel.text = m_sites[row];
 	if (row < [m_titles count])
-	    cell.detailTextLabel.text = [m_titles objectAtIndex: row];
+	    cell.detailTextLabel.text = m_titles[row];
     }
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [m_delegate enterURL: [m_sites objectAtIndex: [indexPath row]]];
+    [m_delegate enterURL: m_sites[[indexPath row]]];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -162,8 +162,8 @@
     int toRow = toIndexPath.row;
     int count = [m_sites count];
     if (fromRow < count && toRow < count) {
-	NSString *url = [m_sites objectAtIndex: fromRow];
-	NSString *title = (fromRow < [m_titles count]) ? [m_titles objectAtIndex: fromRow] : nil;
+	NSString *url = m_sites[fromRow];
+	NSString *title = (fromRow < [m_titles count]) ? m_titles[fromRow] : nil;
 	[m_sites removeObjectAtIndex: fromRow];
 	if (title)
 	    [m_titles removeObjectAtIndex: fromRow];

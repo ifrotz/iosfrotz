@@ -21,7 +21,7 @@
     NSString *fontName;
     UIFont *font;
 }
--(id)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFont font:(UIFont*)aFont;
+-(instancetype)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFont font:(UIFont*)aFont NS_DESIGNATED_INITIALIZER;
 
 @property(nonatomic,retain) NSString *family;
 @property(nonatomic,retain) NSString *fontName;
@@ -34,7 +34,7 @@
     NSObject<FrotzFontDelegate> *m_delegate;
     BOOL m_fixedFontsOnly;
 }
-- (id)init;
+- (instancetype)init;
 - (void)setDelegate:(NSObject<FrotzFontDelegate>*)delegate;
 - (void)setFixedFontsOnly:(BOOL)fixed;
 @end

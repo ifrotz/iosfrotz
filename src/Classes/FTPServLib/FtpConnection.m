@@ -28,7 +28,7 @@
 @synthesize rnfrFilename;
 
 // ----------------------------------------------------------------------------------------------------------
--(id)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer 
+-(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer 
 // ----------------------------------------------------------------------------------------------------------
 {
 	self = [super init ];
@@ -412,13 +412,13 @@
 -(void)processCommand // assumes data has been place in Array msgComponents
 // ----------------------------------------------------------------------------------------------------------
 {
-	NSString *commandString =  [ msgComponents objectAtIndex:0];
+	NSString *commandString =  msgComponents[0];
 	
 	if ([ commandString length ] > 0)																// If there is a command here
 	{
 		// Search through dictionary for correct matching command and method that it calls
 		
-		NSString *commandSelector = [ [[server commands] objectForKey:[commandString lowercaseString] ] stringByAppendingString:@"arguments:"];
+		NSString *commandSelector = [ [server commands][[commandString lowercaseString]] stringByAppendingString:@"arguments:"];
 		
 		if ( commandSelector )																		// If we have a matching command
 		{
@@ -482,7 +482,7 @@
 	// send out confirmation message -- 331 password required for
 	if ( currentUser != nil )
 		[currentUser release];
-	currentUser =  [[ arguments objectAtIndex:1 ] retain];
+	currentUser =  [arguments[1] retain];
 	NSString *outputString = [ NSString stringWithFormat:@"230 Login successful." ];
 	[ sender sendMessage:outputString];
 }
@@ -587,11 +587,11 @@
 // ----------------------------------------------------------------------------------------------------------
 {	
 	// LPRT,"6,16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,231,92"	
-	NSString *socketDesc = [ arguments objectAtIndex:1 ] ;
+	NSString *socketDesc = arguments[1] ;
 	NSArray *socketAddr = [ socketDesc componentsSeparatedByString:@"," ];
 	
-	int hb = [[socketAddr objectAtIndex:19] intValue ];
-	int lb = [[socketAddr objectAtIndex:20] intValue ];
+	int hb = [socketAddr[19] intValue ];
+	int lb = [socketAddr[20] intValue ];
 	
 	NSLog(@"%d %d %d",hb <<8, hb,lb );
 	int clientPort = (hb <<8 ) + lb;
@@ -606,14 +606,14 @@
 {
 	// EPRT |2|1080::8:800:200C:417A|5282|
 	
-	NSString *socketDesc = [ arguments objectAtIndex:1 ] ;
+	NSString *socketDesc = arguments[1] ;
 	NSArray *socketAddr = [ socketDesc componentsSeparatedByString:@"|" ];
 	
 	NSString *item;
 	for (item in socketAddr) {
 		NSLog(@"%@",item);
 	}
-	int clientPort = [[ socketAddr objectAtIndex:3 ] intValue ];
+	int clientPort = [socketAddr[3] intValue ];
 	
 	NSLog(@"Got Send Port %d", clientPort );
 	
@@ -650,11 +650,11 @@
 	//  PORT 127,0,0,1,197,251  looks like this
 	// get 2nd argument and split up by , and then take the last 2 bits
 	
-	NSString *socketDesc = [ arguments objectAtIndex:1 ] ;
+	NSString *socketDesc = arguments[1] ;
 	NSArray *socketAddr = [ socketDesc componentsSeparatedByString:@"," ];
 	
-	hb = [[socketAddr objectAtIndex:4] intValue ];
-	lb = [[socketAddr objectAtIndex:5] intValue ];
+	hb = [socketAddr[4] intValue ];
+	lb = [socketAddr[5] intValue ];
 	
 	
 	int clientPort = (hb <<8 ) + lb;
@@ -670,7 +670,7 @@
 -(void)doOpts:(id)sender arguments:(NSArray*)arguments
 // ----------------------------------------------------------------------------------------------------------
 {
-	NSString *cmd = [ arguments objectAtIndex:1 ];
+	NSString *cmd = arguments[1];
 	NSString *cmdstr = [ NSString stringWithFormat:@"502 Unknown command '%@'",cmd ];
 	[ sender sendMessage:cmdstr ];
 	//	502 Unknown command 'sj'		
@@ -683,7 +683,7 @@
 	
 	// FIXME - change the data output to the matching type -- we dont do anything with this yet,, there are many types apart from this one.
 	
-	NSString *cmd =  [ arguments objectAtIndex:1 ];
+	NSString *cmd =  arguments[1];
 	
 	//if ( [ [cmd lowercaseString] isEqualToString:@"i" ])
 	//	{
@@ -1086,13 +1086,13 @@
 		
 		for ( int n=1; n<[arguments count]; n++) {														// Start at arg2, 
 			// test to see if argument begins with a - as it might be just a parameter, not the name
-			if (![[[arguments objectAtIndex:n] substringToIndex:1] isEqualToString:@"-"]) 
+			if (![[arguments[n] substringToIndex:1] isEqualToString:@"-"]) 
 			{
 				if ([filename length]==0) {
-					filename = [arguments objectAtIndex:n ];
+					filename = arguments[n];
 				}
 				else {
-					filename = [ NSString stringWithFormat:@"%@ %@", filename, [arguments objectAtIndex:n ] ];						// autoreleased
+					filename = [ NSString stringWithFormat:@"%@ %@", filename, arguments[n] ];						// autoreleased
 				}
 
 

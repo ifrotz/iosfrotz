@@ -30,10 +30,10 @@
 @interface StoryInfo : NSObject {
     NSString *path;
 }
--(id)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)browser;
+-(instancetype)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)browser NS_DESIGNATED_INITIALIZER;
 -(BOOL)isEqual:(id)object;
 -(void)dealloc;
--(NSString*)title;
+@property (nonatomic, readonly, copy) NSString *title;
 
 @property(nonatomic,copy) NSString *path;
 @property(nonatomic,assign) StoryBrowser *browser;
@@ -78,26 +78,25 @@
     UIPopoverController *m_popoverController;
     UIBarButtonItem *m_popoverBarButton;
 }
-- (id)init;
-- (void)setLaunchPath:(NSString*)path;
-- (NSString*)launchPath;
-- (UIView *)navTitleView;
-- (NSMutableArray*)storyNames;
+- (instancetype)init;
+@property (nonatomic, copy) NSString *launchPath;
+@property (nonatomic, readonly, strong) UIView *navTitleView;
+@property (nonatomic, readonly, copy) NSMutableArray *storyNames;
 - (BOOL)storyIsInstalled:(NSString*)story;
 - (NSString*)canonicalStoryName:(NSString*)story;
-- (NSMutableArray*)unsupportedStoryNames;
+@property (nonatomic, readonly, copy) NSMutableArray *unsupportedStoryNames;
 - (void)addRecentStoryInfo:(StoryInfo*)storyInfo;
 - (void)addRecentStory:(NSString*)storyInfo;
 - (void)addPath: (NSString *)path;
-- (BOOL)lowMemory;
+@property (nonatomic, readonly) BOOL lowMemory;
 - (void)refresh;
 - (void)reloadData;
 - (void)updateNavButton;
-- (UIBarButtonItem*)nowPlayingNavItem;
-- (StoryMainViewController*)storyMainViewController;
-- (FrotzInfo*)frotzInfoController;
-- (FrotzSettingsController*)settings;
-- (StoryDetailsController*)detailsController;
+@property (nonatomic, readonly, strong) UIBarButtonItem *nowPlayingNavItem;
+@property (nonatomic, readonly, strong) StoryMainViewController *storyMainViewController;
+@property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
+@property (nonatomic, readonly, strong) FrotzSettingsController *settings;
+@property (nonatomic, readonly, strong) StoryDetailsController *detailsController;
 - (void)refreshDetails;
 - (void)setStoryDetails:(StoryInfo*)storyInfo;
 - (void)showStoryDetails:(StoryInfo*)storyInfo;
@@ -109,7 +108,7 @@
 - (void)addAuthors: (NSString*)authors forStory:(NSString*)story;
 - (void)addTUID: (NSString*)tuid forStory:(NSString*)story;
 - (void)addDescript: (NSString*)descript forStory:(NSString*)story;
-- (BOOL)canEditStoryInfo;
+@property (nonatomic, readonly) BOOL canEditStoryInfo;
 - (NSString*)fullTitleForStory:(NSString*)story;
 - (NSString*)customTitleForStory:(NSString*)story storyKey:(NSString**)storyKey;
 - (NSString*)tuidForStory:(NSString*)story;
@@ -123,7 +122,7 @@
 - (NSString*)splashPathForStory:(NSString*)story;
 - (NSString*)cacheSplashPathForBuiltinStory:(NSString*)story;
 - (NSString*)userSplashPathForStory:(NSString*)story;
-- (NSArray*)builtinSplashes;
+@property (nonatomic, readonly, copy) NSArray *builtinSplashes;
 - (void)hideStory: (NSString*)story withState:(BOOL)hide;
 - (void)unHideAll;
 - (BOOL)isHidden: (NSString*)story;
@@ -136,8 +135,8 @@
 - (void)launchStory: (NSString*)storyPath;
 - (void)launchStoryInfo:(StoryInfo*)storyInfo;
 - (void)resumeStory;
-- (NSString*)resourceGamePath;
-- (NSString*)currentStory;
+@property (nonatomic, readonly, copy) NSString *resourceGamePath;
+@property (nonatomic, readonly, copy) NSString *currentStory;
 - (void)launchBrowserWithURL:(NSString*)url;
 - (void)launchBrowser;
 - (NSInteger)numberOfSectionsInTableView: (UITableView*)tableView;
@@ -160,5 +159,5 @@
 extern NSString *storyGamePath;
 
 @interface NSString (storyKey)
--(NSString*)storyKey;
+@property (nonatomic, readonly, copy) NSString *storyKey;
 @end

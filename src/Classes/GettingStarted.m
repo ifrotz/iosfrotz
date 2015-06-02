@@ -13,7 +13,7 @@
 
 @implementation GettingStarted
 
-- (id)init {
+- (instancetype)init {
     if ((self = [super init])) {
         self.title = NSLocalizedString(@"Getting Started", @"");
     }

@@ -111,7 +111,7 @@ static NSString *kWebResourceMIMETypeKey = @"WebResourceMIMEType";
 static NSString *kWebResourceDataKey = @"WebResourceData";
 
 static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
-    if ([gpBoard containsPasteboardTypes: [NSArray arrayWithObject: kAppleWebArchivePBType]]) {
+    if ([gpBoard containsPasteboardTypes: @[kAppleWebArchivePBType]]) {
         NSData *data = [gpBoard dataForPasteboardType: kAppleWebArchivePBType];
         if (data) {
             NSString *errorStr = nil;
@@ -120,12 +120,12 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
                                                                             format:&plFmt errorDescription:&errorStr];
             if (errorStr) [errorStr release];
             if (dict && [dict respondsToSelector:@selector(objectForKey:)]) {
-                NSArray *resources = [dict objectForKey: kWebSubResourcesKey];
+                NSArray *resources = dict[kWebSubResourcesKey];
                 if (resources && [resources count]==1) {
-                    NSDictionary *subDict = [resources objectAtIndex:0];
-                    NSString *mimeType = [subDict objectForKey: kWebResourceMIMETypeKey];
+                    NSDictionary *subDict = resources[0];
+                    NSString *mimeType = subDict[kWebResourceMIMETypeKey];
                     if ([mimeType isEqualToString: @"image/jpeg"] || [mimeType isEqualToString:@"image/png"])
-                        return [subDict objectForKey: kWebResourceDataKey];
+                        return subDict[kWebResourceDataKey];
                 }
             }
         }
@@ -384,7 +384,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (m_descriptionWebView) {
         NSArray *subviews = m_descriptionWebView.subviews;
         if ([subviews count] > 0) {
-            UIScrollView *sv = [subviews objectAtIndex: 0];
+            UIScrollView *sv = subviews[0];
             if (sv && [sv respondsToSelector:@selector(setBounces:)])
                 [sv setBounces:NO];
         }

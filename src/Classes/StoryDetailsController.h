@@ -19,7 +19,7 @@
     CGRect m_savedBounds;
 }
 -(void)displayMenu;
--(BOOL)isMagnified;
+@property (nonatomic, getter=isMagnified, readonly) BOOL magnified;
 -(void)magnifyImage:(BOOL)toggle;
 -(void)doPaste;
 @property (nonatomic,assign) StoryDetailsController *detailsController;
@@ -61,7 +61,7 @@
 -(void)clear;
 -(void)refresh;
 -(void)updateSelectionInstructions:(BOOL)hasPopover;
--(BOOL)keyboardIsActive;
+@property (nonatomic, readonly) BOOL keyboardIsActive;
 -(void)dimArtwork:(BOOL)dim;
 -(IBAction)playButtonPressed;
 -(IBAction)IFDBButtonPressed;

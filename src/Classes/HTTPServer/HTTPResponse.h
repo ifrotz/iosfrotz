@@ -27,8 +27,8 @@
 }
 
 @property(retain) NSString* fileName;
-- (id)initWithFilePath:(NSString *)filePath;
-- (NSString *)filePath;
+- (instancetype)initWithFilePath:(NSString *)filePath NS_DESIGNATED_INITIALIZER;
+@property (nonatomic, readonly, copy) NSString *filePath;
 
 @end
 
@@ -38,6 +38,6 @@
 	NSData *data;
 }
 
-- (id)initWithData:(NSData *)data;
+- (instancetype)initWithData:(NSData *)data NS_DESIGNATED_INITIALIZER;
 
 @end

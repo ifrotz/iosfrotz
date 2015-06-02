@@ -17,7 +17,7 @@
     NSString *m_relNotesPath;
     UIButton *m_rateButton;
 }
-- (id)init;
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 - (void)updateReleaseNotes:(BOOL)force;
 - (void)updateReleaseNotesAuto;
 - (void)showReleaseNotes;

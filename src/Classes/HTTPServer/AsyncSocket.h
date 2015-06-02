@@ -136,29 +136,27 @@ typedef enum AsyncSocketError AsyncSocketError;
 	long theUserData;
 }
 
-- (id)init;
-- (id)initWithDelegate:(id)delegate;
-- (id)initWithDelegate:(id)delegate userData:(long)userData;
+- (instancetype)init;
+- (instancetype)initWithDelegate:(id)delegate;
+- (instancetype)initWithDelegate:(id)delegate userData:(long)userData NS_DESIGNATED_INITIALIZER;
 
 /* String representation is long but has no "\n". */
-- (NSString *)description;
+@property (nonatomic, readonly, copy) NSString *description;
 
 /**
  * Use "canSafelySetDelegate" to see if there is any pending business (reads and writes) with the current delegate
  * before changing it.  It is, of course, safe to change the delegate before connecting or accepting connections.
 **/
-- (id)delegate;
-- (BOOL)canSafelySetDelegate;
-- (void)setDelegate:(id)delegate;
+@property (nonatomic, assign) id delegate;
+@property (nonatomic, readonly) BOOL canSafelySetDelegate;
 
 /* User data can be a long, or an id or void * cast to a long. */
-- (long)userData;
-- (void)setUserData:(long)userData;
+@property (nonatomic) long userData;
 
 /* Don't use these to read or write. And don't close them, either! */
-- (CFSocketRef)getCFSocket;
-- (CFReadStreamRef)getCFReadStream;
-- (CFWriteStreamRef)getCFWriteStream;
+@property (nonatomic, getter=getCFSocket, readonly) CFSocketRef CFSocket CF_RETURNS_NOT_RETAINED;
+@property (nonatomic, getter=getCFReadStream, readonly) CFReadStreamRef CFReadStream CF_RETURNS_NOT_RETAINED;
+@property (nonatomic, getter=getCFWriteStream, readonly) CFWriteStreamRef CFWriteStream CF_RETURNS_NOT_RETAINED;
 
 // Once one of the accept or connect methods are called, the AsyncSocket instance is locked in
 // and the other accept/connect methods can't be called without disconnecting the socket first.
@@ -253,20 +251,20 @@ typedef enum AsyncSocketError AsyncSocketError;
 - (void)disconnectAfterReadingAndWriting;
 
 /* Returns YES if the socket and streams are open, connected, and ready for reading and writing. */
-- (BOOL)isConnected;
+@property (nonatomic, getter=isConnected, readonly) BOOL connected;
 
 /**
  * Returns the local or remote host and port to which this socket is connected, or nil and 0 if not connected.
  * The host will be an IP address.
 **/
-- (NSString *)connectedHost;
-- (UInt16)connectedPort;
+@property (nonatomic, readonly, copy) NSString *connectedHost;
+@property (nonatomic, readonly) UInt16 connectedPort;
 
-- (NSString *)localHost;
-- (UInt16)localPort;
+@property (nonatomic, readonly, copy) NSString *localHost;
+@property (nonatomic, readonly) UInt16 localPort;
 
-- (BOOL)isIPv4;
-- (BOOL)isIPv6;
+@property (nonatomic, getter=isIPv4, readonly) BOOL IPv4;
+@property (nonatomic, getter=isIPv6, readonly) BOOL IPv6;
 
 // The readData and writeData methods won't block. To not time out, use a negative time interval.
 // If they time out, "onSocket:disconnectWithError:" is called. The tag is for your convenience.
@@ -398,7 +396,7 @@ typedef enum AsyncSocketError AsyncSocketError;
  * In the event of an error, this method may be called during onSocket:willDisconnectWithError: to read
  * any data that's left on the socket.
 **/
-- (NSData *)unreadData;
+@property (nonatomic, readonly, copy) NSData *unreadData;
 
 /* A few common line separators, for use with the readDataToData:... methods. */
 + (NSData *)CRLFData;   // 0x0D0A

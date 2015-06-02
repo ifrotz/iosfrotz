@@ -11,10 +11,10 @@
 //    CoreSurfaceBufferRef m_screenSurface;
 }
 
-- (id)initWithFrame:(CGRect)frame;
+- (instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 - (void)dealloc;
-- (int)width;
-- (int)height;
+@property (nonatomic, readonly) int width;
+@property (nonatomic, readonly) int height;
 @end
 
 @interface ColorTile: UIView {
@@ -23,11 +23,11 @@
     UIImage *m_flipFgImg, *m_flipBgImg;
     UIImageView *m_imgView;
 }
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker NS_DESIGNATED_INITIALIZER;
 - (void) setFrame:(CGRect)frame;
 - (void) setTextColor: (UIColor *)color;
 - (void) setBGColor: (UIColor *)color;
-- (UILabel*) textLabel;
+@property (nonatomic, readonly, strong) UILabel *textLabel;
 @end
 
 @interface HSVValuePicker : ColorPickerView {
@@ -36,11 +36,10 @@
     int m_barWidth;
     CGImageRef m_imageRef;
 }
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
 - (void)drawRect:(CGRect)rect;
 - (void)setLeftMargin: (int)margin;
-- (void)setBarWidth : (int)width;
-- (int)barWidth;
+@property (nonatomic) int barWidth;
 - (void)mousePositionToValue:(CGPoint)point;
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event;
@@ -54,8 +53,8 @@
     CGImageRef m_imageRef;
     unsigned int *m_hsvData;
 }
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
-- (unsigned int *)hsvData;
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
+@property (nonatomic, readonly) unsigned int *hsvData;
 - (void)dealloc;
 - (void)drawRect:(CGRect)rect;
 - (void)mousePositionToColor:(CGPoint)point;
@@ -66,7 +65,7 @@
 @end
 
 @implementation ColorPickerView 
-- (id)initWithFrame:(CGRect)frame {
+- (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])!=nil) {
         m_width = frame.size.width;
 	m_height = frame.size.height;
@@ -97,7 +96,7 @@
 
 @implementation ColorTile
 
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     if ((self = [super initWithFrame: frame]) != nil) {
 	m_colorPicker = colorPicker;
 	self.autoresizesSubviews = YES;
@@ -258,7 +257,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 @implementation HSVValuePicker
 
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     [super initWithFrame: frame];
     m_colorPicker = colorPicker;
     return self;
@@ -403,7 +402,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 @implementation HSVPicker
 
-- (id) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
+- (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     [super initWithFrame: frame];
 
     m_colorPicker = colorPicker;
@@ -610,7 +609,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 @end
 
 @implementation ColorPicker
-- (id)init {
+- (instancetype)init {
     if ((self = [super init])!=nil) {
     	self.title = NSLocalizedString(@"Select Color", @"");
     }

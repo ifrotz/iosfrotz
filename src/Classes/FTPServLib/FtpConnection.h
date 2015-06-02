@@ -54,7 +54,7 @@
 
 }
 
--(id)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer ;
+-(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer  NS_DESIGNATED_INITIALIZER;
 #pragma mark STATE
 
 @property(readwrite)int transferMode;
@@ -63,13 +63,13 @@
 @property(readwrite, retain ) NSString *currentDir;
 @property(readwrite, retain ) NSString *rnfrFilename;
 
--(NSString*)connectionAddress;
+@property (nonatomic, readonly, copy) NSString *connectionAddress;
 
 
 #pragma mark ASYNCSOCKET DATACONN 
 
 -(BOOL)openDataSocket:(int)portNumber;
--(int)choosePasvDataPort;
+@property (nonatomic, readonly) int choosePasvDataPort;
 
 
 -(BOOL)onSocketWillConnect:(AsyncSocket *)sock;
@@ -123,7 +123,7 @@
 -(Boolean)canChangeDirectoryTo:(NSString *)testDirectory;
 - (Boolean)accessibleFilePath:(NSString*)filePath;															// check filepath exists and is in basedir ( if set )
 - (Boolean)validNewFilePath:(NSString*)filePath;
-- (NSString *)visibleCurrentDir;
+@property (nonatomic, readonly, copy) NSString *visibleCurrentDir;
 -(NSString *)rootedPath:(NSString*)path;
 
 @end

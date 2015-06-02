@@ -51,7 +51,7 @@
 
 @implementation FrotzAppDelegate
 
-- (id)init {
+- (instancetype)init {
 	if ((self = [super init])) {
 		// 
 	} 
@@ -114,7 +114,7 @@ bool gUseSplitVC;
 
     m_browser = [[StoryBrowser alloc] init];
     if (launchOption) {
-	NSURL *url = [launchOption objectForKey:UIApplicationLaunchOptionsURLKey];
+	NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
 	if (url) 
 	    launchURL = url;
     }
@@ -140,7 +140,7 @@ bool gUseSplitVC;
 #endif
             [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
-        splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
+        splitVC.viewControllers = @[m_navigationController, [[m_browser detailsController] navigationController]];
 
         if ([m_window respondsToSelector:@selector(setRootViewController:)])
             [m_window setRootViewController: splitVC];

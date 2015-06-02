@@ -97,12 +97,12 @@ static const int kNotesTitleHeight = 24;
     //    [m_notesTitle setFont: font];
     
     UIImage *glyph = [UIImage imageNamed: @"notes.png"];
-    m_notesTitle = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects: @"Notes", glyph, nil]];
+    m_notesTitle = [[UISegmentedControl alloc] initWithItems:@[@"Notes", glyph]];
     [m_notesTitle setWidth: 24 forSegmentAtIndex:1];
     [m_notesTitle setEnabled:FALSE forSegmentAtIndex:0];
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-        [m_notesTitle setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIColor blackColor], UITextAttributeTextColor, nil] forState:UIControlStateDisabled];
+        [m_notesTitle setTitleTextAttributes:@{UITextAttributeTextColor: [UIColor blackColor]} forState:UIControlStateDisabled];
 #endif
 
     [m_notesTitle setMomentary:YES];

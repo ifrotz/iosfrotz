@@ -28,7 +28,7 @@
 -(void)viewDidDisappear:(BOOL)animated {
 }
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self)

@@ -14,9 +14,8 @@
     UILabel *m_label;
 }
 -(void)setOrigin:(CGPoint)origin;
--(CompletionLabel*)initWithFont:(UIFont*)font;
--(NSString*)text;
--(void)setText:(NSString*)text;
+-(CompletionLabel*)initWithFont:(UIFont*)font NS_DESIGNATED_INITIALIZER;
+@property (nonatomic, copy) NSString *text;
 -(void)setFont:(UIFont *)font;
 -(void)autoSize;
 @end

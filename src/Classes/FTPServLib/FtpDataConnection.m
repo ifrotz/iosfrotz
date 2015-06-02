@@ -27,7 +27,7 @@
 @synthesize connectionState;
 
 // ----------------------------------------------------------------------------------------------------------
--(id)initWithAsyncSocket:(AsyncSocket*)newSocket forConnection:(id)aConnection withQueuedData:(NSMutableArray*)queuedData
+-(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forConnection:(id)aConnection withQueuedData:(NSMutableArray*)queuedData
 // ----------------------------------------------------------------------------------------------------------
 {
 	self = [super init ];

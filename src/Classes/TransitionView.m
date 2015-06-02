@@ -20,7 +20,7 @@
     
     if ([oldView superview] == self) {
         // Find the index of oldView so that we can insert newView at the same place
-        for(index = 0; [subViews objectAtIndex:index] != oldView; ++index) {}
+        for(index = 0; subViews[index] != oldView; ++index) {}
         [oldView removeFromSuperview];
     }
     

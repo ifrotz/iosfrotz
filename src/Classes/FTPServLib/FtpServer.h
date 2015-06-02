@@ -43,10 +43,10 @@
 	Boolean			changeRoot;							// Change root to virtual root ( basedir )
 	int				clientEncoding;						// FTP client encoding type
 }
-- (id)initWithPort:(unsigned)serverPort withDir:(NSString *)aDirectory notifyObject:(id)sender;
+- (instancetype)initWithPort:(unsigned)serverPort withDir:(NSString *)aDirectory notifyObject:(id)sender NS_DESIGNATED_INITIALIZER;
 - (void)startFtpServer;
 - (void)stopFtpServer;
-- (BOOL)isRunning;
+@property (nonatomic, getter=isRunning, readonly) BOOL running;
 
 #pragma mark ASYNCSOCKET DELEGATES
 - (void)onSocket:(AsyncSocket *)sock didAcceptNewSocket:(AsyncSocket *)newSocket;

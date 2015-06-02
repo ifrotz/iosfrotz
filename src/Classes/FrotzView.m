@@ -12,7 +12,7 @@
 @implementation SavedTouch
 @synthesize phase;
 @synthesize pt;
--(id)initWithPhase:(UITouchPhase)aPhase point:(CGPoint)aPt {
+-(instancetype)initWithPhase:(UITouchPhase)aPhase point:(CGPoint)aPt {
     if ((self = [super init])) {
 	phase = aPhase;
 	pt = aPt;

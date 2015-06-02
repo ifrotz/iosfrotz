@@ -105,7 +105,7 @@ static NSMutableArray *recentNonces;
  * Associates this new HTTP connection with the given AsyncSocket.
  * This HTTP connection object will become the socket's delegate and take over responsibility for the socket.
 **/
-- (id)initWithAsyncSocket:(AsyncSocket *)newSocket forServer:(HTTPServer *)myServer
+- (instancetype)initWithAsyncSocket:(AsyncSocket *)newSocket forServer:(HTTPServer *)myServer
 {
 	if((self = [super init]))
 	{
@@ -517,7 +517,7 @@ static NSMutableArray *recentNonces;
 	NSUInteger i;
 	for(i = 0; i < [rangeComponents count]; i++)
 	{
-		NSString *rangeComponent = [rangeComponents objectAtIndex:i];
+		NSString *rangeComponent = rangeComponents[i];
 		
 		NSRange dashRange = [rangeComponent rangeOfString:@"-"];
 		
@@ -588,12 +588,12 @@ static NSMutableArray *recentNonces;
 	
 	for(i = 0; i < [ranges count] - 1; i++)
 	{
-		DDRange range1 = [[ranges objectAtIndex:i] ddrangeValue];
+		DDRange range1 = [ranges[i] ddrangeValue];
 		
 		NSUInteger j;
 		for(j = i+1; j < [ranges count]; j++)
 		{
-			DDRange range2 = [[ranges objectAtIndex:j] ddrangeValue];
+			DDRange range2 = [ranges[j] ddrangeValue];
 			
 			DDRange iRange = DDIntersectionRange(range1, range2);
 			
@@ -732,7 +732,7 @@ static NSMutableArray *recentNonces;
 			if([ranges count] == 1)
 			{
 				// Client is requesting a single range
-				DDRange range = [[ranges objectAtIndex:0] ddrangeValue];
+				DDRange range = [ranges[0] ddrangeValue];
 				
 				[httpResponse setOffset:range.location];
 				
@@ -748,11 +748,11 @@ static NSMutableArray *recentNonces;
 				// We have to send each range using multipart/byteranges
 				
 				// Write range header
-				NSData *rangeHeader = [ranges_headers objectAtIndex:0];
+				NSData *rangeHeader = ranges_headers[0];
 				[asyncSocket writeData:rangeHeader withTimeout:WRITE_HEAD_TIMEOUT tag:HTTP_PARTIAL_RESPONSE_HEADER];
 				
 				// Start writing range body
-				DDRange range = [[ranges objectAtIndex:0] ddrangeValue];
+				DDRange range = [ranges[0] ddrangeValue];
 				
 				[httpResponse setOffset:range.location];
 				
@@ -778,7 +778,7 @@ static NSMutableArray *recentNonces;
 	// Status Code 206 - Partial Content
 	CFHTTPMessageRef response = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 206, NULL, kCFHTTPVersion1_1);
 	
-	DDRange range = [[ranges objectAtIndex:0] ddrangeValue];
+	DDRange range = [ranges[0] ddrangeValue];
 	
 	NSString *contentLengthStr = [NSString stringWithFormat:@"%qu", range.length];
 	CFHTTPMessageSetHeaderFieldValue(response, CFSTR("Content-Length"), (CFStringRef)contentLengthStr);
@@ -833,7 +833,7 @@ static NSMutableArray *recentNonces;
 	unsigned i;
 	for(i = 0; i < [ranges count]; i++)
 	{
-		DDRange range = [[ranges objectAtIndex:i] ddrangeValue];
+		DDRange range = [ranges[i] ddrangeValue];
 		
 		NSString *rangeStr = [NSString stringWithFormat:@"%qu-%qu", range.location, DDMaxRange(range) - 1];
 		NSString *contentRangeVal = [NSString stringWithFormat:@"bytes %@/%qu", rangeStr, contentLength];
@@ -1099,7 +1099,7 @@ static NSMutableArray *recentNonces;
 		    
 		    while((key = [keyEnumerator nextObject]))
 		    {
-			    NSString *value = [responseHeaders objectForKey:key];
+			    NSString *value = responseHeaders[key];
 			    
 			    CFHTTPMessageSetHeaderFieldValue(response, (CFStringRef)key, (CFStringRef)value);
 		    }
@@ -1152,7 +1152,7 @@ static NSMutableArray *recentNonces;
 		
 		while((key = [keyEnumerator nextObject]))
 		{
-			NSString *value = [responseHeaders objectForKey:key];
+			NSString *value = responseHeaders[key];
 			
 			CFHTTPMessageSetHeaderFieldValue(response, (CFStringRef)key, (CFStringRef)value);
 		}
@@ -1383,7 +1383,7 @@ static NSMutableArray *recentNonces;
 	else if(tag == HTTP_PARTIAL_RANGE_RESPONSE_BODY)
 	{
 		// We only wrote a part of the range - there may be more.
-		DDRange range = [[ranges objectAtIndex:0] ddrangeValue];
+		DDRange range = [ranges[0] ddrangeValue];
 		
 		UInt64 offset = [httpResponse offset];
 		UInt64 bytesRead = offset - range.location;
@@ -1406,7 +1406,7 @@ static NSMutableArray *recentNonces;
 	{
 		// We only wrote part of the range - there may be more.
 		// Plus, there may be more ranges.
-		DDRange range = [[ranges objectAtIndex:rangeIndex] ddrangeValue];
+		DDRange range = [ranges[rangeIndex] ddrangeValue];
 		
 		UInt64 offset = [httpResponse offset];
 		UInt64 bytesRead = offset - range.location;
@@ -1425,11 +1425,11 @@ static NSMutableArray *recentNonces;
 			if(++rangeIndex < [ranges count])
 			{
 				// Write range header
-				NSData *rangeHeader = [ranges_headers objectAtIndex:rangeIndex];
+				NSData *rangeHeader = ranges_headers[rangeIndex];
 				[asyncSocket writeData:rangeHeader withTimeout:WRITE_HEAD_TIMEOUT tag:HTTP_PARTIAL_RESPONSE_HEADER];
 				
 				// Start writing range body
-				range = [[ranges objectAtIndex:rangeIndex] ddrangeValue];
+				range = [ranges[rangeIndex] ddrangeValue];
 				
 				[httpResponse setOffset:range.location];
 				

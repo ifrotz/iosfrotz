@@ -30,6 +30,6 @@
 }
 @property(nonatomic,assign) UITouchPhase phase;
 @property(nonatomic,assign) CGPoint pt;
--(id)initWithPhase:(UITouchPhase)phase point:(CGPoint)pt;
+-(instancetype)initWithPhase:(UITouchPhase)phase point:(CGPoint)pt NS_DESIGNATED_INITIALIZER;
 @end
 

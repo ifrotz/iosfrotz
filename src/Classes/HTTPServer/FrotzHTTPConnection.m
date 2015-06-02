@@ -344,13 +344,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
             if (isHiddenFile(fname))
                 continue;
             NSDictionary *fileDict = [defaultManager fileAttributesAtPath:[fullPath stringByAppendingPathComponent:fname] traverseLink:NO];
-            NSString *modDate = [[fileDict objectForKey:NSFileModificationDate] description];
-            if ([[fileDict objectForKey:NSFileType] isEqualToString: @"NSFileTypeDirectory"]) {
+            NSString *modDate = [fileDict[NSFileModificationDate] description];
+            if ([fileDict[NSFileType] isEqualToString: @"NSFileTypeDirectory"]) {
                 isDir = YES;
                 fname = [fname stringByAppendingString:@"/"];
             }
             [outdata appendFormat: @"<tr><td><a href=\"%@%@\">%32@</a></td> <td align=\"right\">%d</td> <td>%@</td><td>  ", path, fname, fname,
-             [[fileDict objectForKey:NSFileSize] intValue], [modDate substringToIndex: [modDate length]-5]];
+             [fileDict[NSFileSize] intValue], [modDate substringToIndex: [modDate length]-5]];
             if (!isDir)
                 [outdata appendFormat: @"<td><small><a href=\"/remove=%@%@\">(Remove)</a></small></td></tr>\n", path, fname];
             else
@@ -412,13 +412,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		
 		if ([multipartData count] < 2) return nil;
 		
-		NSString* postInfo = [[NSString alloc] initWithBytes:[[multipartData objectAtIndex:1] bytes]
-													  length:[[multipartData objectAtIndex:1] length]
+		NSString* postInfo = [[NSString alloc] initWithBytes:[multipartData[1] bytes]
+													  length:[multipartData[1] length]
 													encoding:NSUTF8StringEncoding];
 		
 		NSArray* postInfoComponents = [postInfo componentsSeparatedByString:@"; filename="];
 		postInfoComponents = [[postInfoComponents lastObject] componentsSeparatedByString:@"\""];
-		postInfoComponents = [[postInfoComponents objectAtIndex:1] componentsSeparatedByString:@"\\"];
+		postInfoComponents = [postInfoComponents[1] componentsSeparatedByString:@"\\"];
 		NSString* fn = [postInfoComponents lastObject];
  		if (fn) {
 			NSLog(@"NewFileUploaded %@", fn);
@@ -426,7 +426,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		}
 		
 		for (int n = 1; n < [multipartData count] - 1; n++)
-			NSLog(@"%@", [[[NSString alloc] initWithBytes:[[multipartData objectAtIndex:n] bytes] length:[[multipartData objectAtIndex:n] length] encoding:NSUTF8StringEncoding] autorelease]);
+			NSLog(@"%@", [[[NSString alloc] initWithBytes:[multipartData[n] bytes] length:[multipartData[n] length] encoding:NSUTF8StringEncoding] autorelease]);
 		
 		[postInfo release];
 		[multipartData release];
@@ -547,13 +547,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 [multipartData addObject:newData];
             else {
                 postHeaderOK = TRUE;
-                partSeparator =      [[[NSString alloc] initWithBytes:[[multipartData objectAtIndex:0] bytes] length:[[multipartData objectAtIndex:0] length] encoding:NSUTF8StringEncoding] autorelease];
+                partSeparator =      [[[NSString alloc] initWithBytes:[multipartData[0] bytes] length:[multipartData[0] length] encoding:NSUTF8StringEncoding] autorelease];
                 partSeparator = [[@"\r\n" stringByAppendingString: partSeparator] retain];
-                NSString* postInfo = [[NSString alloc] initWithBytes:[[multipartData objectAtIndex:1] bytes] length:[[multipartData objectAtIndex:1] length] encoding:NSUTF8StringEncoding];
+                NSString* postInfo = [[NSString alloc] initWithBytes:[multipartData[1] bytes] length:[multipartData[1] length] encoding:NSUTF8StringEncoding];
                 int partSepLen = [partSeparator length];
                 NSArray* postInfoComponents = [postInfo componentsSeparatedByString:@"; filename="];
                 postInfoComponents = [[postInfoComponents lastObject] componentsSeparatedByString:@"\""];
-                postInfoComponents = [[postInfoComponents objectAtIndex:1] componentsSeparatedByString:@"\\"];
+                postInfoComponents = [postInfoComponents[1] componentsSeparatedByString:@"\\"];
                 
                 NSURL *uri = [NSMakeCollectable(CFHTTPMessageCopyRequestURL(request)) autorelease];
                 int partEndOffset = indexOfBytes(postDataChunk, dataStartIndex, [partSeparator UTF8String], partSepLen, &partialMatch);
@@ -641,7 +641,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         NSArray* partHeaderComponents = [part componentsSeparatedByString:@"form-data; name="];
         if ([partHeaderComponents count] > 1) {
             partHeaderComponents = [[partHeaderComponents lastObject] componentsSeparatedByString:@"\""];
-            NSString *control = [partHeaderComponents objectAtIndex:1];
+            NSString *control = partHeaderComponents[1];
             partHeaderComponents = [[partHeaderComponents lastObject] componentsSeparatedByString:@"\r\n"];
             NSString *value = [partHeaderComponents lastObject];
             [self handlePostControl: control value: value];

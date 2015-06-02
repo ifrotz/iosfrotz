@@ -22,8 +22,7 @@
 }
 -(void)setText:(NSString*)text;
 -(void)setPlaceholder:(NSString*)text;
--(void)setDelegate:(id<URLPromptDelegate>)delegate;
--(id<URLPromptDelegate>)delegate;
+@property (nonatomic, assign) id<URLPromptDelegate> delegate;
 @end
 
 #define kSearchBarHeight		40.0

@@ -427,7 +427,7 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
                     free(buf);
                     break;
                 }
-                NSString *xmlString = [NSString stringWithCString: buf encoding: NSUTF8StringEncoding];
+                NSString *xmlString = @(buf);
                 NSRange r = [xmlString rangeOfString: @"<identification>"], r2 = [xmlString rangeOfString: @"</identification>"];
                 if (r.length && r2.length) {
                     NSRange r3 = [xmlString rangeOfString:@"<tuid>" options:0 range: NSMakeRange(r.location+r.length, r2.location-(r.location+r.length))];

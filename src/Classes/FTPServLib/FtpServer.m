@@ -34,7 +34,7 @@
 @synthesize changeRoot;
 
 // ----------------------------------------------------------------------------------------------------------
-- (id)initWithPort:(unsigned)serverPort withDir:(NSString*)aDirectory notifyObject:(id)sender
+- (instancetype)initWithPort:(unsigned)serverPort withDir:(NSString*)aDirectory notifyObject:(id)sender
 // ----------------------------------------------------------------------------------------------------------
 {
     if( (self = [super init] )) {

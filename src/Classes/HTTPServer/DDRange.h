@@ -47,6 +47,6 @@ FOUNDATION_EXPORT DDRange DDRangeFromString(NSString *aString);
 @interface NSValue (NSValueDDRangeExtensions)
 
 + (NSValue *)valueWithDDRange:(DDRange)range;
-- (DDRange)ddrangeValue;
+@property (nonatomic, readonly) DDRange ddrangeValue;
 
 @end

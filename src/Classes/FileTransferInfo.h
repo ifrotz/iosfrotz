@@ -32,12 +32,12 @@
     HTTPServer *m_httpserv;
     BOOL m_running;
 }
--(id)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller;
+-(instancetype)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller NS_DESIGNATED_INITIALIZER;
 -(void)toggleServer;
 -(void)startServer;
 -(void)stopServer;
--(BOOL)serverIsRunning;
--(NSString*)localIPAddress;
+@property (nonatomic, readonly) BOOL serverIsRunning;
+@property (nonatomic, readonly, copy) NSString *localIPAddress;
 -(void)updateMessage;
 @end
 

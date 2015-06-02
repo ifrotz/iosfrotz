@@ -50,7 +50,7 @@ const long kMinimumRequiredSpace = 2;
 @synthesize path;
 @synthesize browser;
 
--(id)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)abrowser {
+-(instancetype)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)abrowser {
     if ((self = [super init]) != nil) {
     	self.path = storyPath;
         self.browser = abrowser;
@@ -75,7 +75,7 @@ const long kMinimumRequiredSpace = 2;
 
 
 void removeOldPngSplash(const char *filename) {
-    NSString *path = [[[NSString stringWithUTF8String: filename] stringByDeletingPathExtension] stringByAppendingPathExtension: @"png"];
+    NSString *path = [[@(filename) stringByDeletingPathExtension] stringByAppendingPathExtension: @"png"];
     NSError *error = nil;
     NSFileManager *defaultManager = [NSFileManager defaultManager];
     if ([defaultManager fileExistsAtPath: path])
@@ -90,10 +90,9 @@ void removeOldPngSplash(const char *filename) {
 
 -(NSArray*)recentPaths {
     int count = [m_recents count];
-    NSArray *array = [NSArray arrayWithObjects:
-                      count > 0 ? [[m_recents objectAtIndex:0] path]: nil,
-                      count > 1 ? [[m_recents objectAtIndex:1] path]: nil,
-                      count > 2 ? [[m_recents objectAtIndex:2] path]: nil, nil];
+    NSArray *array = @[count > 0 ? [m_recents[0] path]: nil,
+                      count > 1 ? [m_recents[1] path]: nil,
+                      count > 2 ? [m_recents[2] path]: nil];
     return array;
 }
 
@@ -119,7 +118,7 @@ void removeOldPngSplash(const char *filename) {
     return NO;
 }
 
-- (id)init {
+- (instancetype)init {
     
     if ((self = [super initWithStyle:UITableViewStylePlain]) != nil) {
         BOOL needMDDictUpdate = NO;
@@ -128,7 +127,7 @@ void removeOldPngSplash(const char *filename) {
         NSFileManager *defaultManager = [NSFileManager defaultManager];
         
         NSDictionary *fattributes = [[NSFileManager defaultManager] attributesOfFileSystemForPath:NSHomeDirectory() error:nil];
-        NSNumber *fsfree = [fattributes objectForKey:NSFileSystemFreeSize];
+        NSNumber *fsfree = fattributes[NSFileSystemFreeSize];
         int64_t freeSpace = [fsfree longLongValue]/1024/1024;
         
         if ([self checkMinimumDiskSpace: kMinimumRequiredSpace freeSpace:freeSpace])
@@ -221,8 +220,8 @@ void removeOldPngSplash(const char *filename) {
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
         
-        NSString *docPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) objectAtIndex:0];
-        NSString *cachesPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true) objectAtIndex:0];
+        NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
+        NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
         NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
         NSString *siPath = [docPath stringByAppendingPathComponent: kSIFilename];
         NSString *splashPath = [docPath stringByAppendingPathComponent:	kSplashesDir];
@@ -236,15 +235,15 @@ void removeOldPngSplash(const char *filename) {
         }
         m_metaDict = [[NSMutableDictionary dictionaryWithContentsOfFile: metadataPath] retain];
         
-        NSString *vers = m_metaDict ? [m_metaDict objectForKey: kMDFrotzVersionKey] : nil;
+        NSString *vers = m_metaDict ? m_metaDict[kMDFrotzVersionKey] : nil;
         
         if (!m_metaDict) {
             m_metaDict = [[NSMutableDictionary alloc] initWithCapacity: 4];
             NSMutableDictionary *titleDict = [[NSMutableDictionary alloc] initWithCapacity: 32];
             NSMutableDictionary *thumbDict = [[NSMutableDictionary alloc] initWithCapacity: 32];
-            [m_metaDict setObject: @IPHONE_FROTZ_VERS forKey: kMDFrotzVersionKey];
-            [m_metaDict setObject: titleDict forKey: kMDFullTitlesKey];
-            [m_metaDict setObject: thumbDict forKey: kMDThumbnailsKey];
+            m_metaDict[kMDFrotzVersionKey] = @IPHONE_FROTZ_VERS;
+            m_metaDict[kMDFullTitlesKey] = titleDict;
+            m_metaDict[kMDThumbnailsKey] = thumbDict;
             [titleDict release];
             [thumbDict release];
             needMDDictUpdate = YES;
@@ -255,17 +254,17 @@ void removeOldPngSplash(const char *filename) {
         if (!m_storyInfoDict)
             m_storyInfoDict = [[NSMutableDictionary alloc] initWithCapacity: 2];
         if (m_storyInfoDict)
-            [self setRecentPaths: [m_storyInfoDict objectForKey: kSIRecentStories]];
+            [self setRecentPaths: m_storyInfoDict[kSIRecentStories]];
         
         // the icons for these games weren't in the 1.0 release; add them to user's metadata dict
-        NSArray *newItems = [NSArray arrayWithObjects: @"cutthroats", @"deadline", @"lurking", @"moonmist", @"plundered",
+        NSArray *newItems = @[@"cutthroats", @"deadline", @"lurking", @"moonmist", @"plundered",
                              @"seastalker", @"sherlock", @"suspect", @"suspended", @"wishbringer", @"witness", @"photopia",
                              // updates in 1.5:
                              @"905", @"beyondzork", @"hitchhiker", @"dreamhold", @"heroes", @"minster", @"misdirection", @"tangle",
-                             @"vespers", @"weather", @"zdungeon", nil];
-        NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
-        NSMutableDictionary *thumbDict = [m_metaDict objectForKey: kMDThumbnailsKey];
-        NSMutableDictionary *oldSplashDict = [m_metaDict objectForKey: kMDSplashesKey];
+                             @"vespers", @"weather", @"zdungeon"];
+        NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
+        NSMutableDictionary *thumbDict = m_metaDict[kMDThumbnailsKey];
+        NSMutableDictionary *oldSplashDict = m_metaDict[kMDSplashesKey];
         
         if (oldSplashDict) {
             if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
@@ -275,7 +274,7 @@ void removeOldPngSplash(const char *filename) {
             id key;	     
             while ((key = [splashEnum nextObject])) {
                 NSString *gameSplashPath = [splashPath stringByAppendingPathComponent:[key stringByAppendingPathExtension: @"png"]];
-                NSData *imgData = [oldSplashDict objectForKey: key];
+                NSData *imgData = oldSplashDict[key];
                 [imgData writeToFile:gameSplashPath options:0 error:&error];
             }
             [m_metaDict removeObjectForKey: kMDSplashesKey];
@@ -304,18 +303,18 @@ void removeOldPngSplash(const char *filename) {
             if (titleDict && thumbDict) {
                 NSString *item;
                 for (item in newItems) {
-                    if ([item isEqualToString: @"photopia"] || ![thumbDict objectForKey: item] || ![titleDict objectForKey: item]) {
+                    if ([item isEqualToString: @"photopia"] || !thumbDict[item] || !titleDict[item]) {
                         needMDDictUpdate = YES;
                         if (!dfltMetaData)
                             dfltMetaData = [[NSDictionary alloc] initWithContentsOfFile: dfltMDPath];
                         if (dfltMetaData) {
                             NSObject *obj;
-                            obj = [[dfltMetaData objectForKey: kMDFullTitlesKey] objectForKey: item];
+                            obj = dfltMetaData[kMDFullTitlesKey][item];
                             if (obj)
-                                [titleDict setObject: obj forKey: item];
-                            obj = [[dfltMetaData objectForKey: kMDThumbnailsKey] objectForKey: item];
+                                titleDict[item] = obj;
+                            obj = dfltMetaData[kMDThumbnailsKey][item];
                             if (obj)
-                                [thumbDict setObject: obj forKey: item];
+                                thumbDict[item] = obj;
                         }
                     }
                 }
@@ -324,23 +323,23 @@ void removeOldPngSplash(const char *filename) {
             if (titleDict) {
                 // fix misspelling in previous built-in metadata
                 NSString *hhFix = @"Hitchhiker's Guide to the Galaxy";
-                [titleDict setObject:hhFix forKey:@"hhgttg"];
-                [titleDict setObject:hhFix forKey:@"hitchhiker"];
-                [titleDict setObject:@"The Dreamhold" forKey:@"dreamhold"];
-                [titleDict setObject:@"Bureaucracy" forKey:@"bureaucracy"];
+                titleDict[@"hhgttg"] = hhFix;
+                titleDict[@"hitchhiker"] = hhFix;
+                titleDict[@"dreamhold"] = @"The Dreamhold";
+                titleDict[@"bureaucracy"] = @"Bureaucracy";
             }
 
-            NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
-            NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
-            NSMutableDictionary *descriptDict = [m_metaDict objectForKey: kMDDescriptsKey];
+            NSMutableDictionary *tuidDict = m_metaDict[kMDTUIDKey];
+            NSMutableDictionary *authorDict = m_metaDict[kMDAuthorsKey];
+            NSMutableDictionary *descriptDict = m_metaDict[kMDDescriptsKey];
             if (!dfltMetaData && (!tuidDict || !authorDict || !descriptDict))
                 dfltMetaData = [[NSDictionary alloc] initWithContentsOfFile: dfltMDPath];
             if (!tuidDict)
-                tuidDict = [[[NSMutableDictionary alloc] initWithDictionary: [dfltMetaData objectForKey: kMDTUIDKey] copyItems:YES] autorelease];
+                tuidDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDTUIDKey] copyItems:YES] autorelease];
             if (!authorDict)
-                authorDict = [[[NSMutableDictionary alloc] initWithDictionary: [dfltMetaData objectForKey: kMDAuthorsKey] copyItems:YES] autorelease];
+                authorDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDAuthorsKey] copyItems:YES] autorelease];
             if (!descriptDict)
-                descriptDict = [[[NSMutableDictionary alloc] initWithDictionary: [dfltMetaData objectForKey: kMDDescriptsKey] copyItems:YES] autorelease];
+                descriptDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDDescriptsKey] copyItems:YES] autorelease];
             
             NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
             if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
@@ -359,8 +358,8 @@ void removeOldPngSplash(const char *filename) {
                             if (storyKey) {
                                 storyKey = [storyKey storyKey];
                                 if (tuid && authors) {
-                                    [tuidDict setObject:tuid forKey:storyKey];
-                                    [authorDict setObject: authors forKey:storyKey];
+                                    tuidDict[storyKey] = tuid;
+                                    authorDict[storyKey] = authors;
                                 }
                             }
                             //NSLog(@"story=%@, tuid=%@, authors=%@", storyKey, tuid, authors);				
@@ -370,9 +369,9 @@ void removeOldPngSplash(const char *filename) {
                     r.length = len - r.location;
                 }
             }
-            [m_metaDict setObject: tuidDict forKey: kMDTUIDKey];
-            [m_metaDict setObject: authorDict forKey:kMDAuthorsKey];
-            [m_metaDict setObject: descriptDict forKey:kMDDescriptsKey];
+            m_metaDict[kMDTUIDKey] = tuidDict;
+            m_metaDict[kMDAuthorsKey] = authorDict;
+            m_metaDict[kMDDescriptsKey] = descriptDict;
             needMDDictUpdate = YES;
         }
 
@@ -433,7 +432,7 @@ void removeOldPngSplash(const char *filename) {
             }
         }
         if (!vers || ![vers isEqualToString: @IPHONE_FROTZ_VERS]) {
-            [m_metaDict setObject: @IPHONE_FROTZ_VERS forKey: kMDFrotzVersionKey];
+            m_metaDict[kMDFrotzVersionKey] = @IPHONE_FROTZ_VERS;
             needMDDictUpdate = YES;
         }
         if (needMDDictUpdate) {
@@ -505,12 +504,12 @@ void removeOldPngSplash(const char *filename) {
 }
 
 - (NSString*)customTitleForStory:(NSString*)story storyKey:(NSString**)storyKey {
-    NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
+    NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
     story = [story storyKey];
-    NSString *title = [titleDict objectForKey: story];
+    NSString *title = titleDict[story];
     if (!title) {
         story = [self mapInfocom83Filename: story];
-        title = [titleDict objectForKey: story];
+        title = titleDict[story];
     }
     if (storyKey)
         *storyKey = story;
@@ -532,34 +531,34 @@ void removeOldPngSplash(const char *filename) {
 }
 
 - (NSString*)tuidForStory:(NSString*)story {
-    NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
+    NSMutableDictionary *tuidDict = m_metaDict[kMDTUIDKey];
     story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-    NSString *tuid = [tuidDict objectForKey: story];
+    NSString *tuid = tuidDict[story];
     if (!tuid) {
         story = [self mapInfocom83Filename: story];
-        tuid = [tuidDict objectForKey: story];
+        tuid = tuidDict[story];
     }
     return tuid;
 }
 
 - (NSString*)authorsForStory:(NSString*)story {
-    NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
+    NSMutableDictionary *authorDict = m_metaDict[kMDAuthorsKey];
     story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-    NSString *authors = [authorDict objectForKey: story];
+    NSString *authors = authorDict[story];
     if (!authors) {
         story = [self mapInfocom83Filename: story];
-        authors = [authorDict objectForKey: story];
+        authors = authorDict[story];
     }
     return authors;
 }
 
 - (NSString*)descriptForStory:(NSString*)story {
-    NSMutableDictionary *descriptDict = [m_metaDict objectForKey: kMDDescriptsKey];
+    NSMutableDictionary *descriptDict = m_metaDict[kMDDescriptsKey];
     story = [[story lowercaseString] stringByReplacingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
-    NSString *descript = [descriptDict objectForKey: story];
+    NSString *descript = descriptDict[story];
     if (!descript) {
         story = [self mapInfocom83Filename: story];
-        descript = [descriptDict objectForKey: story];
+        descript = descriptDict[story];
     }
     return descript;
 }
@@ -735,25 +734,25 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     NSMutableArray *savedRecentPaths = [NSMutableArray arrayWithCapacity: [recentPaths count]];
     for (NSString *path in recentPaths)
         [savedRecentPaths addObject: [m_storyMainViewController pathToAppRelativePath: path]];
-    [m_storyInfoDict setObject: savedRecentPaths forKey: kSIRecentStories];
+    m_storyInfoDict[kSIRecentStories] = savedRecentPaths;
     [self saveStoryInfoDict];
 }
 
 - (NSString*)getNotesForStory:(NSString*)story {
-    NSMutableDictionary *notesDict = [m_storyInfoDict objectForKey: kSIStoryNotes];
+    NSMutableDictionary *notesDict = m_storyInfoDict[kSIStoryNotes];
     if (notesDict)
-        return [notesDict objectForKey: story];
+        return notesDict[story];
     return nil;
 }
 
 - (void)saveNotes:(NSString*)notesText forStory:(NSString*)story {
-    NSMutableDictionary *notesDict = [m_storyInfoDict objectForKey: kSIStoryNotes];
+    NSMutableDictionary *notesDict = m_storyInfoDict[kSIStoryNotes];
     if (!notesDict) {
         notesDict = [[[NSMutableDictionary alloc] initWithCapacity: 4] autorelease];
-        [m_storyInfoDict setObject:notesDict forKey:kSIStoryNotes];
+        m_storyInfoDict[kSIStoryNotes] = notesDict;
     }
-    if (notesText && [notesText length] > 0 || [notesDict objectForKey:story]) {
-        [notesDict setObject:notesText forKey:story];
+    if (notesText && [notesText length] > 0 || notesDict[story]) {
+        notesDict[story] = notesText;
         [self saveStoryInfoDict];
     }
 }
@@ -761,7 +760,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 - (void)saveStoryInfoDict {
     NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = [array objectAtIndex: 0];
+    NSString *docPath = array[0];
     NSString *siPath = [docPath stringByAppendingPathComponent: kSIFilename];
     NSString *error;
     
@@ -781,7 +780,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (!m_metaDict) // || m_lowMemory)
         return;
     NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = [array objectAtIndex: 0];
+    NSString *docPath = array[0];
     NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
     NSData *plistData;
     NSString *error;
@@ -799,35 +798,35 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)addTitle: (NSString*)fullName forStory:(NSString*)story {
-    NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
-    [titleDict setObject: fullName forKey: [story lowercaseString]];
+    NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
+    titleDict[[story lowercaseString]] = fullName;
 }
 
 - (void)addAuthors: (NSString*)authors forStory:(NSString*)story {
-    NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
-    [authorDict setObject: authors forKey: [story lowercaseString]];
+    NSMutableDictionary *authorDict = m_metaDict[kMDAuthorsKey];
+    authorDict[[story lowercaseString]] = authors;
 }
 
 - (void)addTUID: (NSString*)tuid forStory:(NSString*)story {
-    NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
-    [tuidDict setObject: tuid forKey: [story lowercaseString]];
+    NSMutableDictionary *tuidDict = m_metaDict[kMDTUIDKey];
+    tuidDict[[story lowercaseString]] = tuid;
 }
 
 - (void)addDescript: (NSString*)descript forStory:(NSString*)story {
-    NSMutableDictionary *descriptDict = [m_metaDict objectForKey: kMDDescriptsKey];
-    [descriptDict setObject: descript forKey: [story lowercaseString]];
+    NSMutableDictionary *descriptDict = m_metaDict[kMDDescriptsKey];
+    descriptDict[[story lowercaseString]] = descript;
 }
 
 - (void)hideStory: (NSString*)story withState:(BOOL)hide {
-    NSMutableDictionary *hiddenDict = [m_metaDict objectForKey: kMDHiddenStoriesKey];
+    NSMutableDictionary *hiddenDict = m_metaDict[kMDHiddenStoriesKey];
     if (!hiddenDict) {
         if (!hide)
             return;
         hiddenDict = [[[NSMutableDictionary alloc] initWithCapacity: 10] autorelease];
-        [m_metaDict setObject: hiddenDict forKey: kMDHiddenStoriesKey];
+        m_metaDict[kMDHiddenStoriesKey] = hiddenDict;
     }
     if (hide)
-        [hiddenDict setValue:[NSNumber numberWithBool: YES] forKey: [story lowercaseString]];
+        [hiddenDict setValue:@YES forKey: [story lowercaseString]];
     else
         [hiddenDict removeObjectForKey: [story lowercaseString]];
 }
@@ -838,10 +837,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (BOOL)isHidden: (NSString*)story {
-    NSMutableDictionary *hiddenDict = [m_metaDict objectForKey: kMDHiddenStoriesKey];
+    NSMutableDictionary *hiddenDict = m_metaDict[kMDHiddenStoriesKey];
     if (!hiddenDict)
         return NO;
-    id obj = [hiddenDict objectForKey: [story lowercaseString]];
+    id obj = hiddenDict[[story lowercaseString]];
     if (obj && [obj boolValue])
         return YES;
     return NO;
@@ -850,33 +849,31 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)addThumbData: (NSData*)imageData forStory:(NSString*)story {
     if (!m_metaDict)
         return;
-    NSMutableDictionary *thumbDict = [m_metaDict objectForKey: kMDThumbnailsKey];
-    [thumbDict setObject: imageData forKey: [story lowercaseString]];
+    NSMutableDictionary *thumbDict = m_metaDict[kMDThumbnailsKey];
+    thumbDict[[story lowercaseString]] = imageData;
 }
 
 - (NSString*)mapInfocom83Filename:(NSString*)aStory {
     static NSDictionary *map = nil;
     NSString *story = [aStory lowercaseString];
     if (!map)
-        map = [[NSDictionary dictionaryWithObjectsAndKeys: // map alternate/shortened filenames and common misspellings
-                @"beyondzork", @"beyondzo", @"borderzone", @"borderzo", @"bureaucracy", @"bureaucr", @"bureaucracy", @"bureau", @"cutthroats", @"cutthroa", @"enchanter", @"enchante",
-                @"hitchhiker", @"hitchhik", @"hitchhiker", @"hgg", @"hitchhiker", @"hhgg", @"hitchhiker", @"h2g2", @"hitchhiker", @"hhgttg",
-                @"hollywood", @"hollywoo", @"leather", @"phobos", @"nordandbert", @"nordandb", @"planetfall", @"planetfa", @"plundered", @"plundere",
-                @"seastalker", @"seastalk", @"sorcerer", @"sorceror", @"spellbreaker", @"spellbr",@"spellbreaker", @"spellbre", @"starcross", @"starcros",
-                @"stationfall", @"stationf", @"suspended", @"suspend", @"suspended", @"suspende", @"wishbringer", @"wishbrin",
-                nil] retain];
+        map = [@{@"beyondzo": @"beyondzork", @"borderzo": @"borderzone", @"bureaucr": @"bureaucracy", @"bureau": @"bureaucracy", @"cutthroa": @"cutthroats", @"enchante": @"enchanter",
+                @"hitchhik": @"hitchhiker", @"hgg": @"hitchhiker", @"hhgg": @"hitchhiker", @"h2g2": @"hitchhiker", @"hhgttg": @"hitchhiker",
+                @"hollywoo": @"hollywood", @"phobos": @"leather", @"nordandb": @"nordandbert", @"planetfa": @"planetfall", @"plundere": @"plundered",
+                @"seastalk": @"seastalker", @"sorceror": @"sorcerer", @"spellbr": @"spellbreaker",@"spellbre": @"spellbreaker", @"starcros": @"starcross",
+                @"stationf": @"stationfall", @"suspend": @"suspended", @"suspende": @"suspended", @"wishbrin": @"wishbringer"} retain];
     NSString *longStory;
-    longStory = [map objectForKey: story];
+    longStory = map[story];
     if (longStory)
         return longStory;
     NSRange r = [story rangeOfString: @"-"];
     if (r.length > 0 && r.location > 4 && r.location < [story length]-1 && isdigit([story characterAtIndex: r.location+1])) {
         story = [story substringToIndex: r.location];
-        longStory = [map objectForKey: story];
+        longStory = map[story];
         if (!longStory)
             longStory = story;
-        NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
-        NSString *title = [titleDict objectForKey: longStory];
+        NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
+        NSString *title = titleDict[longStory];
         if (title)
             return longStory;
     }
@@ -884,7 +881,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(NSString*)cacheSplashPathForBuiltinStory:(NSString*)story {
-    NSString *cachesPath = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true) objectAtIndex: 0];
+    NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
     NSString *splashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
     NSString *basefile = [self mapInfocom83Filename: story];
     NSString *gameSplashPath = [splashPath stringByAppendingPathComponent:basefile];
@@ -893,7 +890,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(NSString*)userSplashPathForStory:(NSString*)story {
-    NSString *docPath =  [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true) objectAtIndex: 0];
+    NSString *docPath =  NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
     
     NSString *splashPath = [docPath stringByAppendingPathComponent: kSplashesDir];
     NSString *basefile = [self mapInfocom83Filename: story];
@@ -924,13 +921,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(NSArray*)builtinSplashes {
-    NSArray *builtinSplashes = [NSArray arrayWithObjects:
-                        @"905",@"actofmurder",@"allroads",@"amfv",@"anchor",@"arthur",@"balances",@"ballyhoo",@"beyondzork",@"borderzone",
+    NSArray *builtinSplashes = @[@"905",@"actofmurder",@"allroads",@"amfv",@"anchor",@"arthur",@"balances",@"ballyhoo",@"beyondzork",@"borderzone",
                         @"bronze",@"bureaucracy",@"change",@"curses",@"cutthroats",@"deadline",@"dreamhold",@"enchanter",@"heroes",
                         @"hitchhiker",@"hollywood",@"infidel",@"jigsaw",@"leather",@"lurking",@"minster",@"misdirection",@"moonmist",
                         @"nordandbert",@"photopia",@"planetfall",@"plundered",@"risorg",@"seastalker",@"sherbet",@"sherlock",@"slouch",
                         @"sorcerer",@"spellbreaker",@"starcross",@"stationfall",@"suspect",@"suspended",@"tangle",@"trinity",
-                        @"vespers",@"vgame",@"weapon",@"weather",@"wishbringer",@"witness",@"zdungeon",@"zork1",@"zork2",@"zork3", nil];
+                        @"vespers",@"vgame",@"weapon",@"weather",@"wishbringer",@"witness",@"zdungeon",@"zork1",@"zork2",@"zork3"];
     return builtinSplashes;
 }
 
@@ -1022,8 +1018,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchString:(NSString *)searchString
 {
     [self filterContentForSearchText:searchString
-                               scope:[[self.searchDisplayController.searchBar scopeButtonTitles]
-                                      objectAtIndex:[self.searchDisplayController.searchBar
+                               scope:[self.searchDisplayController.searchBar scopeButtonTitles][[self.searchDisplayController.searchBar
                                                      selectedScopeButtonIndex]]];
     
     return YES;
@@ -1306,7 +1301,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (indexPath.section == 0 && [m_recents count] > 0)
         return NO;
     if (row < [m_storyNames count]) {
-        NSString *delStory = [[m_storyNames objectAtIndex: row] path];
+        NSString *delStory = [m_storyNames[row] path];
         if ([[m_storyMainViewController currentStory] isEqualToString: delStory])
             return NO;
         NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -1321,7 +1316,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         NSInteger row = indexPath.row;
         if (row < [m_storyNames count]) {
-            StoryInfo *storyInfo = [m_storyNames objectAtIndex: row];
+            StoryInfo *storyInfo = m_storyNames[row];
             NSString *delStory = [storyInfo path];
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             NSError *error;
@@ -1393,30 +1388,30 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         NSString *storyName = [storyPath storyKey];
         
         if (newTitle && ![newTitle isEqual: [self fullTitleForStory: storyName]]) {
-            NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
+            NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
             if (titleDict) {
                 if (newTitle && [newTitle length] > 0)
-                    [titleDict setObject: newTitle forKey: storyName];
+                    titleDict[storyName] = newTitle;
                 else
                     [titleDict removeObjectForKey: storyName];
                 update = YES;
             }
         }
         if (newAuthors && ![newAuthors isEqual: [self authorsForStory: storyName]]) {
-            NSMutableDictionary *authorDict = [m_metaDict objectForKey: kMDAuthorsKey];
+            NSMutableDictionary *authorDict = m_metaDict[kMDAuthorsKey];
             if (authorDict) {
                 if (newAuthors && [newAuthors length] > 0)
-                    [authorDict setObject: newAuthors forKey: storyName];
+                    authorDict[storyName] = newAuthors;
                 else
                     [authorDict removeObjectForKey: storyName];
                 update = YES;
             }
         }
         if (newTUID && ![newTUID isEqual: [self tuidForStory: storyName]]) {
-            NSMutableDictionary *tuidDict = [m_metaDict objectForKey: kMDTUIDKey];
+            NSMutableDictionary *tuidDict = m_metaDict[kMDTUIDKey];
             if (tuidDict) {
                 if (newTUID && [newTUID length] > 0)
-                    [tuidDict setObject: newTUID forKey: storyName];
+                    tuidDict[storyName] = newTUID;
                 else
                     [tuidDict removeObjectForKey: storyName];
                 update = YES;
@@ -1475,9 +1470,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 ![titleBlorb isEqual: [self fullTitleForStory: storyName]]
                     && [self customTitleForStory: storyName storyKey:nil]==nil) {
                 m_details.storyTitle = titleBlorb;
-                NSMutableDictionary *titleDict = [m_metaDict objectForKey: kMDFullTitlesKey];
+                NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
                 if (titleDict) {
-                    [titleDict setObject: titleBlorb forKey: storyName];
+                    titleDict[storyName] = titleBlorb;
                     [self saveMetaData];
                     [self refresh];
                 }
@@ -1563,8 +1558,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(NSData*)thumbDataForStory:(NSString*)story {
     NSString *key = [self mapInfocom83Filename: story];
-    NSMutableDictionary *thumbDict = [m_metaDict objectForKey: kMDThumbnailsKey];
-    NSData *imageData = [thumbDict objectForKey: key];
+    NSMutableDictionary *thumbDict = m_metaDict[kMDThumbnailsKey];
+    NSData *imageData = thumbDict[key];
     return imageData;
 }
 
@@ -1620,12 +1615,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     NSInteger row = indexPath.row;
     if (tableView == self.searchDisplayController.searchResultsTableView) {
         if (m_filteredNames && row < [m_filteredNames count])
-            row = [self indexRowFromStoryInfo: [m_filteredNames objectAtIndex: row]];
+            row = [self indexRowFromStoryInfo: m_filteredNames[row]];
         else
             row = -1;
     }
     else if (indexPath.section == 0 && row < [m_recents count])
-        row = [self indexRowFromStoryInfo: [m_recents objectAtIndex: row]];
+        row = [self indexRowFromStoryInfo: m_recents[row]];
     
     if (gUseSplitVC)
         cell.accessoryType = UITableViewCellAccessoryNone;
@@ -1638,7 +1633,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         return cell;
     }
     if (row >= 0 && row < [m_storyNames count]) {
-        NSString *storyName = [[[m_storyNames objectAtIndex: row] path] storyKey];
+        NSString *storyName = [[m_storyNames[row] path] storyKey];
         NSString *title = [self fullTitleForStory: storyName];
         UIImage *image;
         cell.textLabel.text = title;
@@ -1696,17 +1691,17 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     int row = indexPath.row;
     if (tableView == self.searchDisplayController.searchResultsTableView) {
         if (m_filteredNames && row < [m_filteredNames count])
-            row = [self indexRowFromStoryInfo: [m_filteredNames objectAtIndex: row]];
+            row = [self indexRowFromStoryInfo: m_filteredNames[row]];
         else
             row = -1;
     } else if (indexPath.section == 0 && [m_recents count] > 0)
-        return [m_recents objectAtIndex: row];
+        return m_recents[row];
     if (row < 0)
         return nil;
     if (indexPath.section > 1 || indexPath.row == -1 || row >= [m_storyNames count])
         return nil;
 	
-    return [m_storyNames objectAtIndex: row];
+    return m_storyNames[row];
 }
 
 - (NSString *)storyForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView{

@@ -34,16 +34,16 @@
 	UInt64 requestContentLengthReceived;
 }
 
-- (id)initWithAsyncSocket:(AsyncSocket *)newSocket forServer:(HTTPServer *)myServer;
+- (instancetype)initWithAsyncSocket:(AsyncSocket *)newSocket forServer:(HTTPServer *)myServer NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)supportsMethod:(NSString *)method atPath:(NSString *)path;
 
-- (BOOL)isSecureServer;
-- (NSArray *)sslIdentityAndCertificates;
+@property (nonatomic, getter=isSecureServer, readonly) BOOL secureServer;
+@property (nonatomic, readonly, copy) NSArray *sslIdentityAndCertificates;
 
 - (BOOL)isPasswordProtected:(NSString *)path;
-- (BOOL)useDigestAccessAuthentication;
-- (NSString *)realm;
+@property (nonatomic, readonly) BOOL useDigestAccessAuthentication;
+@property (nonatomic, readonly, copy) NSString *realm;
 - (NSString *)passwordForUser:(NSString *)username;
 
 - (NSString *)filePathForURI:(NSString *)path;

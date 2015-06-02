@@ -5,7 +5,7 @@
 
 @synthesize fileName;
 
-- (id)initWithFilePath:(NSString *)filePathParam
+- (instancetype)initWithFilePath:(NSString *)filePathParam
 {
 	if((self = [super init]))
 	{
@@ -29,7 +29,7 @@
 {
 	NSDictionary *fileAttributes = [[NSFileManager defaultManager] fileAttributesAtPath:filePath traverseLink:NO];
 	
-	NSNumber *fileSize = [fileAttributes objectForKey:NSFileSize];
+	NSNumber *fileSize = fileAttributes[NSFileSize];
 	
 	return (UInt64)[fileSize unsignedLongLongValue];
 }
@@ -70,7 +70,7 @@
 
 @implementation HTTPDataResponse
 
-- (id)initWithData:(NSData *)dataParam
+- (instancetype)initWithData:(NSData *)dataParam
 {
 	if((self = [super init]))
 	{

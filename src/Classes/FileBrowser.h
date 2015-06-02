@@ -21,7 +21,7 @@
 #import <UIKit/UIKit.h>
 
 
-typedef enum  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowScript, kFBDoShowViewScripts, kFBDoShowRecord, kFBDoShowPlayback  } FileBrowserState;
+typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowScript, kFBDoShowViewScripts, kFBDoShowRecord, kFBDoShowPlayback  };
 
 @protocol TextFileBrowser
 -(NSString*)textFileBrowserPath;
@@ -49,18 +49,16 @@ typedef enum  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowS
 	UIButton *m_saveButton;
 	int m_textFileCount;
 }
-- (id)initWithDialogType:(FileBrowserState)dialogType;
-- (NSString *)path;
-- (void)setPath: (NSString *)path;
+- (instancetype)initWithDialogType:(FileBrowserState)dialogType NS_DESIGNATED_INITIALIZER;
+@property (nonatomic, copy) NSString *path;
 - (void)reloadData;
-- (void)setDelegate:(id<FileSelected>)delegate;
-- (id<FileSelected>)delegate;
+@property (nonatomic, assign) id<FileSelected> delegate;
 - (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section;
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath;
-- (NSString *)selectedFile;
+@property (nonatomic, readonly, copy) NSString *selectedFile;
 - (void)commit:(id)sender;
 - (void)doneWithTextFile:(id)sender;
 - (void)addExtension: (NSString *)extension;
-- (int)textFileCount;
+@property (nonatomic, readonly) int textFileCount;
 @end

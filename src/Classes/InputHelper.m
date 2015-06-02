@@ -13,14 +13,13 @@ const CGFloat kHistoryLineHeight = 20.0;
 
 @implementation FrotzInputHelper
 
-- (id)init {
+- (instancetype)init {
     if ((self = [super initWithStyle:UITableViewStylePlain])) {
         m_history = [[NSMutableArray alloc] initWithCapacity: 2];
-        m_commonCommands = [NSArray arrayWithObjects: 
-                            @"about ", @"all ", @"and ", @"ask ", @"at ", @"attack ", @"behind ", @"but ", @"cast ", @"climb ", @"door ", @"down ", @"from ", @"get ", @"give ", @"help ",
+        m_commonCommands = @[@"about ", @"all ", @"and ", @"ask ", @"at ", @"attack ", @"behind ", @"but ", @"cast ", @"climb ", @"door ", @"down ", @"from ", @"get ", @"give ", @"help ",
                             @"in ",@"jump ", @"kick ", @"kill ", @"learn ", @"leave ", @"memorize ", @"no", @"off ", @"on ", @"push ", @"pull ", @"put ", @"read ", @"remove ", @"say ", @"search ", @"switch ",  @"take ", @"talk ", @"tell ", @"then ",
                             @"through ", @"throw ", @"tie ", @"to ", @"touch ", @"turn", @"under ", @"untie ", @"up ", @"wait ", @"wear ",@"window ", @"with ", @"quit ", @"yes", @", ", @". ", @"\"",
-                            @"brief", @"diagnose", @"save", @"score", @"restart", @"restore", @"undo", @"verbose", nil];
+                            @"brief", @"diagnose", @"save", @"score", @"restart", @"restore", @"undo", @"verbose"];
         [m_commonCommands retain];
         m_mode = 0;
         m_lastCommonWordPicked = 0;
@@ -50,7 +49,7 @@ const CGFloat kHistoryLineHeight = 20.0;
     [tableView setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
     
     NSArray* nibViews =  [[NSBundle mainBundle] loadNibNamed:@"FrotzWordPicker" owner:self options:nil];
-    m_wordPicker = [nibViews objectAtIndex: 0];
+    m_wordPicker = nibViews[0];
     [m_wordPicker retain];
     
     NSArray *subViews = [m_wordPicker subviews];
@@ -179,9 +178,9 @@ const CGFloat kHistoryLineHeight = 20.0;
 - (NSString*)historyItem:(int)item {
     if (m_mode == FrotzInputHelperModeMoreWords) {
         if (item < [m_commonCommands count])
-            return [m_commonCommands objectAtIndex: item];
+            return m_commonCommands[item];
     } else if (item < [m_history count])
-        return [m_history objectAtIndex: item];
+        return m_history[item];
     return nil;
 }
 
@@ -214,7 +213,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         return @"";
     if (m_currHistoryItem < count-1) {
         ++m_currHistoryItem;
-        return [m_history objectAtIndex: m_currHistoryItem];
+        return m_history[m_currHistoryItem];
     } else
         m_currHistoryItem = count;
     return @"";
@@ -226,7 +225,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         return @"";
     if (m_currHistoryItem > 0) {
         --m_currHistoryItem;
-        return [m_history objectAtIndex: m_currHistoryItem];
+        return m_history[m_currHistoryItem];
     } else
         m_currHistoryItem = -1;
     return @"";
@@ -272,7 +271,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier] autorelease];
     }
     // Configure the cell
-    NSString *item = m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands objectAtIndex: indexPath.row] : [m_history objectAtIndex: indexPath.row];
+    NSString *item = m_mode == FrotzInputHelperModeMoreWords ? m_commonCommands[indexPath.row] : m_history[indexPath.row];
     cell.text = item;
     cell.textColor = m_mode == FrotzInputHelperModeMoreWords && indexPath.row > [m_commonCommands count] - 9 ? [UIColor yellowColor] : [UIColor whiteColor];
     cell.backgroundColor = [UIColor blackColor]; // [UIColor darkGrayColor];
@@ -287,7 +286,7 @@ const CGFloat kHistoryLineHeight = 20.0;
             m_lastCommonWordPicked = indexPath.row;
 	    
         NSString *item = m_mode == FrotzInputHelperModeMoreWords ?
-        [m_commonCommands objectAtIndex: indexPath.row] : [m_history objectAtIndex: indexPath.row];
+        m_commonCommands[indexPath.row] : m_history[indexPath.row];
         [m_delegate inputHelperString: item];
     }
 }

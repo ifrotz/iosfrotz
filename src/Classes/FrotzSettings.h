@@ -57,16 +57,14 @@
     
     int m_origFontSize, m_newFontSize;
 }
-- (id)init;
-- (BOOL)settingsActive;
-- (void)setInfoDelegate:(id<FrotzSettingsInfoDelegate>)delegate;
-- (id<FrotzSettingsInfoDelegate>)infoDelegate;
-- (void)setStoryDelegate:(id<FrotzSettingsStoryDelegate, FrotzFontDelegate>)delegate;
-- (id<FrotzSettingsStoryDelegate, FrotzFontDelegate>)storyDelegate;
-- (NSString*)rootPath;
+- (instancetype)init;
+@property (nonatomic, readonly) BOOL settingsActive;
+@property (nonatomic, strong) id<FrotzSettingsInfoDelegate> infoDelegate;
+@property (nonatomic, strong) id<FrotzSettingsStoryDelegate,FrotzFontDelegate> storyDelegate;
+@property (nonatomic, readonly, copy) NSString *rootPath;
 - (void)donePressed;
 - (void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color;
-- (UIFont*)fontForColorDemo;
+@property (nonatomic, readonly, copy) UIFont *fontForColorDemo;
 - (void)updateAccessibility;
 
 @end

@@ -599,14 +599,13 @@ const int kCompletionViewTag = 21;
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
         UIKeyCommand *ctrlB = [UIKeyCommand keyCommandWithInput: @"b" modifierFlags: UIKeyModifierControl action: @selector(leftArrow:)];
         UIKeyCommand *ctrlF = [UIKeyCommand keyCommandWithInput: @"f" modifierFlags: UIKeyModifierControl action: @selector(rightArrow:)];
-        return [NSArray arrayWithObjects: upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF, nil];
+        return @[upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF];
     } else {
         UIKeyCommand *upArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputUpArrow modifierFlags: 0 action: @selector(upArrow:)];
         UIKeyCommand *downArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputDownArrow modifierFlags: 0 action: @selector(downArrow:)];
         UIKeyCommand *ctrlP = [UIKeyCommand keyCommandWithInput: @"p" modifierFlags: UIKeyModifierControl action: @selector(upArrow:)];
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
-        return [NSArray arrayWithObjects
-                : upArrow, downArrow, ctrlP, ctrlN, nil];
+        return @[upArrow, downArrow, ctrlP, ctrlN];
     }
     return nil;
 }

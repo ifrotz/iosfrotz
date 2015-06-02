@@ -29,7 +29,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 @property(nonatomic,retain) NSString *path;
 @property(nonatomic,retain) NSDate *modDate;
 -(NSComparisonResult)compare:(FileInfo*)other;
--(id)initWithPath:(NSString*)path;
+-(instancetype)initWithPath:(NSString*)path NS_DESIGNATED_INITIALIZER;
 -(void)dealloc;
 @end
 
@@ -37,12 +37,12 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 @synthesize path;
 @synthesize modDate;
 
--(id)initWithPath:(NSString*)aPath {
+-(instancetype)initWithPath:(NSString*)aPath {
     if ((self = [super init])) {
         self.path = aPath;
         NSDictionary *fileAttribs = [[NSFileManager defaultManager] fileAttributesAtPath: aPath traverseLink:NO];
         if (fileAttribs)
-            self.modDate = [fileAttribs objectForKey:NSFileModificationDate];
+            self.modDate = fileAttribs[NSFileModificationDate];
     }
     return self;
 }
@@ -60,7 +60,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
 
 @implementation FileBrowser 
-- (id)initWithDialogType:(FileBrowserState)dialogType {
+- (instancetype)initWithDialogType:(FileBrowserState)dialogType {
     if ((self = [super init]) != nil) {
         m_tableViewController = [[UITableViewController alloc] init];
         m_dialogType = dialogType;
@@ -134,7 +134,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         [m_textField setAutocorrectionType: UITextAutocorrectionTypeNo];
         [m_textField setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
         
-        m_textField.text = [NSString stringWithUTF8String: iphone_filename ];
+        m_textField.text = @(iphone_filename);
         
         //	[m_tableView setBounces: NO];
         
@@ -307,10 +307,10 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         NSInteger row = indexPath.row;
         if (row < [m_files count]) {
             if ([m_delegate respondsToSelector: @selector(fileBrowser:deleteFile:)])
-                [m_delegate fileBrowser:self deleteFile: [[m_files objectAtIndex: row] path]];
+                [m_delegate fileBrowser:self deleteFile: [m_files[row] path]];
             [m_files removeObjectAtIndex: row];
             m_rowCount = [m_files count];
-            NSArray *indexPaths = [NSArray arrayWithObject: indexPath];
+            NSArray *indexPaths = @[indexPath];
             [m_tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
             [self reloadData];
             [[self editButtonItem] setEnabled: (m_rowCount > 0)];
@@ -444,17 +444,17 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
             cell = [[cell initWithFrame:CGRectZero reuseIdentifier:@"saveGameCell"] autorelease];
     }
     
-    NSString *file = [[[m_files objectAtIndex: indexPath.row] path] lastPathComponent], *cellText = nil;
+    NSString *file = [[m_files[indexPath.row] path] lastPathComponent], *cellText = nil;
     if ([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]) {
         cellText = [file stringByDeletingPathExtension];
-        if (indexPath.row > 0 && [[[[m_files objectAtIndex: indexPath.row-1] path] lastPathComponent] isEqual: cellText])
+        if (indexPath.row > 0 && [[[m_files[indexPath.row-1] path] lastPathComponent] isEqual: cellText])
             cellText = file;
 	}
     else
         cellText = file;
     cell.text = cellText;
     if ([cell respondsToSelector: @selector(detailTextLabel)]) {
-        NSDate *moddate = [[m_files objectAtIndex:indexPath.row] modDate];
+        NSDate *moddate = [m_files[indexPath.row] modDate];
         
         if (moddate)
             cell.detailTextLabel.text = [NSString stringWithFormat: @"%@; .%@", [moddate description], [[file pathExtension] lowercaseString]];
@@ -468,7 +468,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [self setEditing: NO];
     if (m_textField) {
         if (indexPath != nil) {
-            NSString *file = [[[m_files objectAtIndex: indexPath.row] path] lastPathComponent];
+            NSString *file = [[m_files[indexPath.row] path] lastPathComponent];
             if ([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt])
                 [m_textField setText:[file stringByDeletingPathExtension]];
             else
@@ -516,7 +516,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     if (indexPath == nil || indexPath.row == -1) {
         return nil;
     }
-    return [[m_files objectAtIndex: indexPath.row] path];
+    return [m_files[indexPath.row] path];
 }
 
 @end

@@ -24,6 +24,5 @@
     id<BookmarkDelegate> m_delegate;
     UITableView *m_tableView;
 }
--(void)setDelegate:(id<BookmarkDelegate>)delegate;
--(id<BookmarkDelegate>)delegate;
+@property (nonatomic, assign) id<BookmarkDelegate> delegate;
 @end
