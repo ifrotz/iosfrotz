@@ -13,7 +13,7 @@
 #import "FrotzSettings.h"
 #import "FrotzCommonWebView.h"
 
-#import "HTTPServer/FrotzHTTPConnection.h"
+#import "FrotzHTTPConnection.h"
 
 #include <arpa/inet.h>
 #include <netdb.h>

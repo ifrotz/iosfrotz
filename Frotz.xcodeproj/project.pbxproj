@@ -564,27 +564,27 @@
 		443C9B490E46A518003A44D4 /* ui_utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ui_utils.m; sourceTree = "<group>"; };
 		443C9C030E46C32C003A44D4 /* StoryMainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StoryMainViewController.h; sourceTree = "<group>"; };
 		443C9DE20E46DD59003A44D4 /* metadata.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.bplist; name = metadata.plist; path = resources/metadata.plist; sourceTree = "<group>"; };
-		443CD74E10FAFCE200A7FB96 /* AsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AsyncSocket.h; path = ../src/Classes/HTTPServer/AsyncSocket.h; sourceTree = "<group>"; };
-		443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AsyncSocket.m; path = ../src/Classes/HTTPServer/AsyncSocket.m; sourceTree = "<group>"; };
-		443CD75710FAFCE200A7FB96 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDData.h; path = ../src/Classes/HTTPServer/DDData.h; sourceTree = "<group>"; };
-		443CD75810FAFCE200A7FB96 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDData.m; path = ../src/Classes/HTTPServer/DDData.m; sourceTree = "<group>"; };
-		443CD75910FAFCE200A7FB96 /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDNumber.h; path = ../src/Classes/HTTPServer/DDNumber.h; sourceTree = "<group>"; };
-		443CD75A10FAFCE200A7FB96 /* DDNumber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDNumber.m; path = ../src/Classes/HTTPServer/DDNumber.m; sourceTree = "<group>"; };
-		443CD75B10FAFCE200A7FB96 /* DDRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDRange.h; path = ../src/Classes/HTTPServer/DDRange.h; sourceTree = "<group>"; };
-		443CD75C10FAFCE200A7FB96 /* DDRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDRange.m; path = ../src/Classes/HTTPServer/DDRange.m; sourceTree = "<group>"; };
-		443CD75D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPAuthenticationRequest.h; path = ../src/Classes/HTTPServer/HTTPAuthenticationRequest.h; sourceTree = "<group>"; };
-		443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPAuthenticationRequest.m; path = ../src/Classes/HTTPServer/HTTPAuthenticationRequest.m; sourceTree = "<group>"; };
-		443CD75F10FAFCE200A7FB96 /* HTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPConnection.h; path = ../src/Classes/HTTPServer/HTTPConnection.h; sourceTree = "<group>"; };
-		443CD76010FAFCE200A7FB96 /* HTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPConnection.m; path = ../src/Classes/HTTPServer/HTTPConnection.m; sourceTree = "<group>"; };
-		443CD76110FAFCE200A7FB96 /* HTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPResponse.h; path = ../src/Classes/HTTPServer/HTTPResponse.h; sourceTree = "<group>"; };
-		443CD76210FAFCE200A7FB96 /* HTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPResponse.m; path = ../src/Classes/HTTPServer/HTTPResponse.m; sourceTree = "<group>"; };
-		443CD76310FAFCE200A7FB96 /* HTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPServer.h; path = ../src/Classes/HTTPServer/HTTPServer.h; sourceTree = "<group>"; };
-		443CD76410FAFCE200A7FB96 /* HTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPServer.m; path = ../src/Classes/HTTPServer/HTTPServer.m; sourceTree = "<group>"; };
-		443CD76510FAFCE200A7FB96 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ReadMe.txt; path = ../src/Classes/HTTPServer/ReadMe.txt; sourceTree = "<group>"; };
-		443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FrotzHTTPConnection.m; path = HTTPServer/FrotzHTTPConnection.m; sourceTree = "<group>"; };
-		443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FrotzHTTPConnection.h; path = HTTPServer/FrotzHTTPConnection.h; sourceTree = "<group>"; };
-		443CD77410FAFD6100A7FB96 /* localhostAddresses.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = localhostAddresses.m; path = ../src/Classes/HTTPServer/localhostAddresses.m; sourceTree = "<group>"; };
-		443CD77510FAFD6100A7FB96 /* localhostAddresses.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = localhostAddresses.h; path = ../src/Classes/HTTPServer/localhostAddresses.h; sourceTree = "<group>"; };
+		443CD74E10FAFCE200A7FB96 /* AsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocket.h; sourceTree = "<group>"; };
+		443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsyncSocket.m; sourceTree = "<group>"; };
+		443CD75710FAFCE200A7FB96 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDData.h; sourceTree = "<group>"; };
+		443CD75810FAFCE200A7FB96 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDData.m; sourceTree = "<group>"; };
+		443CD75910FAFCE200A7FB96 /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDNumber.h; sourceTree = "<group>"; };
+		443CD75A10FAFCE200A7FB96 /* DDNumber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDNumber.m; sourceTree = "<group>"; };
+		443CD75B10FAFCE200A7FB96 /* DDRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDRange.h; sourceTree = "<group>"; };
+		443CD75C10FAFCE200A7FB96 /* DDRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDRange.m; sourceTree = "<group>"; };
+		443CD75D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPAuthenticationRequest.h; sourceTree = "<group>"; };
+		443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPAuthenticationRequest.m; sourceTree = "<group>"; };
+		443CD75F10FAFCE200A7FB96 /* HTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnection.h; sourceTree = "<group>"; };
+		443CD76010FAFCE200A7FB96 /* HTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPConnection.m; sourceTree = "<group>"; };
+		443CD76110FAFCE200A7FB96 /* HTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPResponse.h; sourceTree = "<group>"; };
+		443CD76210FAFCE200A7FB96 /* HTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPResponse.m; sourceTree = "<group>"; };
+		443CD76310FAFCE200A7FB96 /* HTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPServer.h; sourceTree = "<group>"; };
+		443CD76410FAFCE200A7FB96 /* HTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPServer.m; sourceTree = "<group>"; };
+		443CD76510FAFCE200A7FB96 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
+		443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzHTTPConnection.m; sourceTree = "<group>"; };
+		443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzHTTPConnection.h; sourceTree = "<group>"; };
+		443CD77410FAFD6100A7FB96 /* localhostAddresses.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = localhostAddresses.m; sourceTree = "<group>"; };
+		443CD77510FAFD6100A7FB96 /* localhostAddresses.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = localhostAddresses.h; sourceTree = "<group>"; };
 		4440777B1235F32E0021DEE4 /* NotesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotesViewController.h; sourceTree = "<group>"; };
 		4440777C1235F32E0021DEE4 /* NotesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotesViewController.m; sourceTree = "<group>"; };
 		44407A6F1236C16F0021DEE4 /* parchment.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = parchment.jpg; path = resources/parchment.jpg; sourceTree = "<group>"; };
@@ -1545,7 +1545,8 @@
 				443CD76410FAFCE200A7FB96 /* HTTPServer.m */,
 				443CD76510FAFCE200A7FB96 /* ReadMe.txt */,
 			);
-			path = CocoaHTTPServer;
+			name = CocoaHTTPServer;
+			path = HTTPServer;
 			sourceTree = "<group>";
 		};
 		445485051B1F9DD500E8EE7B /* frotz */ = {
@@ -1562,8 +1563,8 @@
 			children = (
 				44951F750E32794700FEC2B0 /* minizip */,
 				44951E8E0E31B71A00FEC2B0 /* zlib */,
-				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 				44D013971372707D00B7F616 /* FTPServLib */,
+				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 			);
 			name = Libs;
 			sourceTree = "<group>";
@@ -2033,8 +2034,7 @@
 				44D013A51372707D00B7F616 /* NetworkController.h */,
 				44D013A61372707D00B7F616 /* NetworkController.m */,
 			);
-			name = FTPServLib;
-			path = src/Classes/FTPServLib;
+			path = FTPServLib;
 			sourceTree = "<group>";
 		};
 		44DA420715E9869C007F61DA /* Frotz Images */ = {
@@ -3072,6 +3072,7 @@
 				445484E21B1E61A900E8EE7B /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Frotz" */ = {
 			isa = XCConfigurationList;
