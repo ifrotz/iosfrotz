@@ -1453,7 +1453,7 @@
 				443C9B490E46A518003A44D4 /* ui_utils.m */,
 			);
 			name = ios;
-			path = src/iphone;
+			path = src/ios;
 			sourceTree = "<group>";
 		};
 		442355BC1260493A00BFB245 /* glulxe */ = {
