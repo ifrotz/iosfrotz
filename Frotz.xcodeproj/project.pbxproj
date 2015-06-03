@@ -74,16 +74,6 @@
 		443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */; };
 		443C9B4A0E46A518003A44D4 /* ui_utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 443C9B490E46A518003A44D4 /* ui_utils.m */; };
 		443C9DE30E46DD59003A44D4 /* metadata.plist in Resources */ = {isa = PBXBuildFile; fileRef = 443C9DE20E46DD59003A44D4 /* metadata.plist */; };
-		443CD76610FAFCE200A7FB96 /* AsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */; };
-		443CD76A10FAFCE200A7FB96 /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75810FAFCE200A7FB96 /* DDData.m */; };
-		443CD76B10FAFCE200A7FB96 /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75A10FAFCE200A7FB96 /* DDNumber.m */; };
-		443CD76C10FAFCE200A7FB96 /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75C10FAFCE200A7FB96 /* DDRange.m */; };
-		443CD76D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */; };
-		443CD76E10FAFCE200A7FB96 /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76010FAFCE200A7FB96 /* HTTPConnection.m */; };
-		443CD76F10FAFCE200A7FB96 /* HTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76210FAFCE200A7FB96 /* HTTPResponse.m */; };
-		443CD77010FAFCE200A7FB96 /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76410FAFCE200A7FB96 /* HTTPServer.m */; };
-		443CD77810FAFD6100A7FB96 /* FrotzHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */; };
-		443CD77910FAFD6100A7FB96 /* localhostAddresses.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD77410FAFD6100A7FB96 /* localhostAddresses.m */; };
 		4440777D1235F32E0021DEE4 /* NotesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4440777C1235F32E0021DEE4 /* NotesViewController.m */; };
 		44407A701236C16F0021DEE4 /* parchment.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 44407A6F1236C16F0021DEE4 /* parchment.jpg */; };
 		44407D10123742030021DEE4 /* zcode.png in Resources */ = {isa = PBXBuildFile; fileRef = 44407D0F123742030021DEE4 /* zcode.png */; };
@@ -111,6 +101,18 @@
 		444F7D1F19F2BF9200927703 /* oem_glk.c in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D1E19F2BF9200927703 /* oem_glk.c */; };
 		444F7D2119F2C1D900927703 /* vmuni_cs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7D2019F2C1D900927703 /* vmuni_cs.cpp */; };
 		445484C81B1D04C200E8EE7B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 445484C71B1D04C200E8EE7B /* Images.xcassets */; };
+		445484EA1B1E632E00E8EE7B /* localhostAddresses.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD77410FAFD6100A7FB96 /* localhostAddresses.m */; };
+		445484ED1B1E632E00E8EE7B /* AsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */; };
+		445484EF1B1E632E00E8EE7B /* DDData.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75810FAFCE200A7FB96 /* DDData.m */; };
+		445484F11B1E632E00E8EE7B /* DDNumber.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75A10FAFCE200A7FB96 /* DDNumber.m */; };
+		445484F31B1E632E00E8EE7B /* DDRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75C10FAFCE200A7FB96 /* DDRange.m */; };
+		445484F51B1E632E00E8EE7B /* HTTPAuthenticationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */; };
+		445484F71B1E632E00E8EE7B /* HTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76010FAFCE200A7FB96 /* HTTPConnection.m */; };
+		445484F91B1E632E00E8EE7B /* HTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76210FAFCE200A7FB96 /* HTTPResponse.m */; };
+		445484FB1B1E632E00E8EE7B /* HTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD76410FAFCE200A7FB96 /* HTTPServer.m */; };
+		445484FD1B1E675D00E8EE7B /* FrotzHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */; };
+		445484FE1B1E67E200E8EE7B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
+		445485031B1EAA2D00E8EE7B /* libCocoaHTTPServer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 445484CD1B1E61A900E8EE7B /* libCocoaHTTPServer.a */; };
 		44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */ = {isa = PBXBuildFile; fileRef = 44550A7E1277B39300CDEA97 /* TO-DO.txt */; };
 		44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */ = {isa = PBXBuildFile; fileRef = 44550B1A1277FC2B00CDEA97 /* glulx.png */; };
 		445E9394160FF5080098DBE7 /* glarels5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445E9393160FF5080098DBE7 /* glarels5@2x.png */; };
@@ -422,6 +424,16 @@
 		44FDFBAB1999D02D00B44B03 /* icon-keyboard-locked@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		445485001B1E68BB00E8EE7B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 445484CC1B1E61A900E8EE7B;
+			remoteInfo = CocoaHTTPServer;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		4431B76C0E204F52001E5DAD /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -553,27 +565,27 @@
 		443C9B490E46A518003A44D4 /* ui_utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ui_utils.m; sourceTree = "<group>"; };
 		443C9C030E46C32C003A44D4 /* StoryMainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StoryMainViewController.h; sourceTree = "<group>"; };
 		443C9DE20E46DD59003A44D4 /* metadata.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.bplist; name = metadata.plist; path = resources/metadata.plist; sourceTree = "<group>"; };
-		443CD74E10FAFCE200A7FB96 /* AsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncSocket.h; sourceTree = "<group>"; };
-		443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AsyncSocket.m; sourceTree = "<group>"; };
-		443CD75710FAFCE200A7FB96 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDData.h; sourceTree = "<group>"; };
-		443CD75810FAFCE200A7FB96 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDData.m; sourceTree = "<group>"; };
-		443CD75910FAFCE200A7FB96 /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDNumber.h; sourceTree = "<group>"; };
-		443CD75A10FAFCE200A7FB96 /* DDNumber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDNumber.m; sourceTree = "<group>"; };
-		443CD75B10FAFCE200A7FB96 /* DDRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDRange.h; sourceTree = "<group>"; };
-		443CD75C10FAFCE200A7FB96 /* DDRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DDRange.m; sourceTree = "<group>"; };
-		443CD75D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPAuthenticationRequest.h; sourceTree = "<group>"; };
-		443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPAuthenticationRequest.m; sourceTree = "<group>"; };
-		443CD75F10FAFCE200A7FB96 /* HTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPConnection.h; sourceTree = "<group>"; };
-		443CD76010FAFCE200A7FB96 /* HTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPConnection.m; sourceTree = "<group>"; };
-		443CD76110FAFCE200A7FB96 /* HTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPResponse.h; sourceTree = "<group>"; };
-		443CD76210FAFCE200A7FB96 /* HTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPResponse.m; sourceTree = "<group>"; };
-		443CD76310FAFCE200A7FB96 /* HTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPServer.h; sourceTree = "<group>"; };
-		443CD76410FAFCE200A7FB96 /* HTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPServer.m; sourceTree = "<group>"; };
-		443CD76510FAFCE200A7FB96 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ReadMe.txt; sourceTree = "<group>"; };
-		443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzHTTPConnection.m; sourceTree = "<group>"; };
-		443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzHTTPConnection.h; sourceTree = "<group>"; };
-		443CD77410FAFD6100A7FB96 /* localhostAddresses.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = localhostAddresses.m; sourceTree = "<group>"; };
-		443CD77510FAFD6100A7FB96 /* localhostAddresses.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = localhostAddresses.h; sourceTree = "<group>"; };
+		443CD74E10FAFCE200A7FB96 /* AsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AsyncSocket.h; path = ../src/Classes/HTTPServer/AsyncSocket.h; sourceTree = "<group>"; };
+		443CD74F10FAFCE200A7FB96 /* AsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AsyncSocket.m; path = ../src/Classes/HTTPServer/AsyncSocket.m; sourceTree = "<group>"; };
+		443CD75710FAFCE200A7FB96 /* DDData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDData.h; path = ../src/Classes/HTTPServer/DDData.h; sourceTree = "<group>"; };
+		443CD75810FAFCE200A7FB96 /* DDData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDData.m; path = ../src/Classes/HTTPServer/DDData.m; sourceTree = "<group>"; };
+		443CD75910FAFCE200A7FB96 /* DDNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDNumber.h; path = ../src/Classes/HTTPServer/DDNumber.h; sourceTree = "<group>"; };
+		443CD75A10FAFCE200A7FB96 /* DDNumber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDNumber.m; path = ../src/Classes/HTTPServer/DDNumber.m; sourceTree = "<group>"; };
+		443CD75B10FAFCE200A7FB96 /* DDRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DDRange.h; path = ../src/Classes/HTTPServer/DDRange.h; sourceTree = "<group>"; };
+		443CD75C10FAFCE200A7FB96 /* DDRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DDRange.m; path = ../src/Classes/HTTPServer/DDRange.m; sourceTree = "<group>"; };
+		443CD75D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPAuthenticationRequest.h; path = ../src/Classes/HTTPServer/HTTPAuthenticationRequest.h; sourceTree = "<group>"; };
+		443CD75E10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPAuthenticationRequest.m; path = ../src/Classes/HTTPServer/HTTPAuthenticationRequest.m; sourceTree = "<group>"; };
+		443CD75F10FAFCE200A7FB96 /* HTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPConnection.h; path = ../src/Classes/HTTPServer/HTTPConnection.h; sourceTree = "<group>"; };
+		443CD76010FAFCE200A7FB96 /* HTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPConnection.m; path = ../src/Classes/HTTPServer/HTTPConnection.m; sourceTree = "<group>"; };
+		443CD76110FAFCE200A7FB96 /* HTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPResponse.h; path = ../src/Classes/HTTPServer/HTTPResponse.h; sourceTree = "<group>"; };
+		443CD76210FAFCE200A7FB96 /* HTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPResponse.m; path = ../src/Classes/HTTPServer/HTTPResponse.m; sourceTree = "<group>"; };
+		443CD76310FAFCE200A7FB96 /* HTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPServer.h; path = ../src/Classes/HTTPServer/HTTPServer.h; sourceTree = "<group>"; };
+		443CD76410FAFCE200A7FB96 /* HTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPServer.m; path = ../src/Classes/HTTPServer/HTTPServer.m; sourceTree = "<group>"; };
+		443CD76510FAFCE200A7FB96 /* ReadMe.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = ReadMe.txt; path = ../src/Classes/HTTPServer/ReadMe.txt; sourceTree = "<group>"; };
+		443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FrotzHTTPConnection.m; path = HTTPServer/FrotzHTTPConnection.m; sourceTree = "<group>"; };
+		443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FrotzHTTPConnection.h; path = HTTPServer/FrotzHTTPConnection.h; sourceTree = "<group>"; };
+		443CD77410FAFD6100A7FB96 /* localhostAddresses.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = localhostAddresses.m; path = ../src/Classes/HTTPServer/localhostAddresses.m; sourceTree = "<group>"; };
+		443CD77510FAFD6100A7FB96 /* localhostAddresses.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = localhostAddresses.h; path = ../src/Classes/HTTPServer/localhostAddresses.h; sourceTree = "<group>"; };
 		4440777B1235F32E0021DEE4 /* NotesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotesViewController.h; sourceTree = "<group>"; };
 		4440777C1235F32E0021DEE4 /* NotesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotesViewController.m; sourceTree = "<group>"; };
 		44407A6F1236C16F0021DEE4 /* parchment.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = parchment.jpg; path = resources/parchment.jpg; sourceTree = "<group>"; };
@@ -623,6 +635,7 @@
 		444F7D1E19F2BF9200927703 /* oem_glk.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = oem_glk.c; path = tads/tads2/oem_glk.c; sourceTree = "<group>"; };
 		444F7D2019F2C1D900927703 /* vmuni_cs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vmuni_cs.cpp; path = tads/vmuni_cs.cpp; sourceTree = "<group>"; };
 		445484C71B1D04C200E8EE7B /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		445484CD1B1E61A900E8EE7B /* libCocoaHTTPServer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCocoaHTTPServer.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44550A7E1277B39300CDEA97 /* TO-DO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "TO-DO.txt"; sourceTree = "<group>"; };
 		44550B1A1277FC2B00CDEA97 /* glulx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glulx.png; path = resources/glulx.png; sourceTree = "<group>"; };
 		445E9393160FF5080098DBE7 /* glarels5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glarels5@2x.png"; path = "resources/glarels5@2x.png"; sourceTree = "<group>"; };
@@ -1145,9 +1158,18 @@
 				2892E4100DC94CBA00A64D0F /* CoreGraphics.framework in Frameworks */,
 				44CA10990E3D93B0009AEF85 /* QuartzCore.framework in Frameworks */,
 				447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */,
+				445485031B1EAA2D00E8EE7B /* libCocoaHTTPServer.a in Frameworks */,
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 				445E9396160FFF420098DBE7 /* DropboxSDK.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		445484CA1B1E61A900E8EE7B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				445484FE1B1E67E200E8EE7B /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1187,6 +1209,8 @@
 				449C929511221CE9006CCDF9 /* FrotzView.m */,
 				4414E2DA104CDA21008C3F56 /* FrotzWordPicker.h */,
 				4414E2DB104CDA21008C3F56 /* FrotzWordPicker.m */,
+				443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */,
+				443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */,
 				449516A90F7DEDA90060F524 /* FTPServ.h */,
 				449516AA0F7DEDA90060F524 /* FTPServ.m */,
 				44D013971372707D00B7F616 /* FTPServLib */,
@@ -1194,7 +1218,6 @@
 				448164530E6D02C60022EDC0 /* GettingStarted.m */,
 				449127E112643AA10013AD7C /* GlkView.h */,
 				449127E212643AA10013AD7C /* GlkView.m */,
-				443CD74D10FAFCE200A7FB96 /* HTTPServer */,
 				44E0660A0FE76FEC0003A36B /* InputHelper.h */,
 				44E0660B0FE76FEC0003A36B /* InputHelper.m */,
 				4440777B1235F32E0021DEE4 /* NotesViewController.h */,
@@ -1235,6 +1258,7 @@
 			isa = PBXGroup;
 			children = (
 				1D6058910D05DD3D006BFB54 /* Frotz.app */,
+				445484CD1B1E61A900E8EE7B /* libCocoaHTTPServer.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1243,13 +1267,13 @@
 			isa = PBXGroup;
 			children = (
 				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
-				445E9395160FFF420098DBE7 /* DropboxSDK.framework */,
 				44550A7E1277B39300CDEA97 /* TO-DO.txt */,
 				447036B1123335C400E15D5B /* Settings.bundle */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				44DA420715E9869C007F61DA /* Frotz Images */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				44A2E7B811228B0900E35CCC /* Entitlements.plist */,
@@ -1375,6 +1399,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				445E9395160FFF420098DBE7 /* DropboxSDK.framework */,
 				44320C7717E9874700549CBD /* Reveal.framework */,
 				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
 				4474905F0E85BA4C00A5310F /* CFNetwork.framework */,
@@ -1503,11 +1528,9 @@
 			path = glkios;
 			sourceTree = "<group>";
 		};
-		443CD74D10FAFCE200A7FB96 /* HTTPServer */ = {
+		445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */ = {
 			isa = PBXGroup;
 			children = (
-				443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */,
-				443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */,
 				443CD77410FAFD6100A7FB96 /* localhostAddresses.m */,
 				443CD77510FAFD6100A7FB96 /* localhostAddresses.h */,
 				443CD74E10FAFCE200A7FB96 /* AsyncSocket.h */,
@@ -1528,7 +1551,7 @@
 				443CD76410FAFCE200A7FB96 /* HTTPServer.m */,
 				443CD76510FAFCE200A7FB96 /* ReadMe.txt */,
 			);
-			path = HTTPServer;
+			path = CocoaHTTPServer;
 			sourceTree = "<group>";
 		};
 		44690D22126A3FFD00B283FF /* git */ = {
@@ -2016,6 +2039,16 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		445484CB1B1E61A900E8EE7B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		1D6058900D05DD3D006BFB54 /* Frotz */ = {
 			isa = PBXNativeTarget;
@@ -2032,11 +2065,29 @@
 			buildRules = (
 			);
 			dependencies = (
+				445485011B1E68BB00E8EE7B /* PBXTargetDependency */,
 			);
 			name = Frotz;
 			productName = Frotz;
 			productReference = 1D6058910D05DD3D006BFB54 /* Frotz.app */;
 			productType = "com.apple.product-type.application";
+		};
+		445484CC1B1E61A900E8EE7B /* CocoaHTTPServer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 445484DE1B1E61A900E8EE7B /* Build configuration list for PBXNativeTarget "CocoaHTTPServer" */;
+			buildPhases = (
+				445484C91B1E61A900E8EE7B /* Sources */,
+				445484CA1B1E61A900E8EE7B /* Frameworks */,
+				445484CB1B1E61A900E8EE7B /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CocoaHTTPServer;
+			productName = CocoaHTTPServer;
+			productReference = 445484CD1B1E61A900E8EE7B /* libCocoaHTTPServer.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -2048,6 +2099,9 @@
 				TargetAttributes = {
 					1D6058900D05DD3D006BFB54 = {
 						DevelopmentTeam = 6KG7666N88;
+					};
+					445484CC1B1E61A900E8EE7B = {
+						CreatedOnToolsVersion = 6.3.2;
 					};
 				};
 			};
@@ -2067,6 +2121,7 @@
 			projectRoot = "";
 			targets = (
 				1D6058900D05DD3D006BFB54 /* Frotz */,
+				445484CC1B1E61A900E8EE7B /* CocoaHTTPServer */,
 			);
 		};
 /* End PBXProject section */
@@ -2235,6 +2290,7 @@
 				441EC8460E10BD1100E74625 /* hotkey.c in Sources */,
 				441EC8470E10BD1100E74625 /* input.c in Sources */,
 				441EC8490E10BD1100E74625 /* math.c in Sources */,
+				445484FD1B1E675D00E8EE7B /* FrotzHTTPConnection.m in Sources */,
 				446D282319EDC71D00B58477 /* vmimage.cpp in Sources */,
 				446D286F19EF04CC00B58477 /* osansi1.c in Sources */,
 				44BE71C719EB7C6F00036AA6 /* dat.c in Sources */,
@@ -2358,21 +2414,11 @@
 				446D285319EDC71D00B58477 /* vmundo.cpp in Sources */,
 				44BE71DB19EB7C6F00036AA6 /* osrestad.c in Sources */,
 				4413B1631071CA2700D39E6A /* RichTextView.m in Sources */,
-				443CD76610FAFCE200A7FB96 /* AsyncSocket.m in Sources */,
 				446D280219EDC71D00B58477 /* vmbiftad.cpp in Sources */,
-				443CD76A10FAFCE200A7FB96 /* DDData.m in Sources */,
 				446D285A19EE435000B58477 /* osnetunix.cpp in Sources */,
-				443CD76B10FAFCE200A7FB96 /* DDNumber.m in Sources */,
 				446D285419EDC71D00B58477 /* vmvec.cpp in Sources */,
-				443CD76C10FAFCE200A7FB96 /* DDRange.m in Sources */,
-				443CD76D10FAFCE200A7FB96 /* HTTPAuthenticationRequest.m in Sources */,
-				443CD76E10FAFCE200A7FB96 /* HTTPConnection.m in Sources */,
 				446D284C19EDC71D00B58477 /* vmstrcmp.cpp in Sources */,
-				443CD76F10FAFCE200A7FB96 /* HTTPResponse.m in Sources */,
 				446D280719EDC71D00B58477 /* vmbt3_nd.cpp in Sources */,
-				443CD77010FAFCE200A7FB96 /* HTTPServer.m in Sources */,
-				443CD77810FAFD6100A7FB96 /* FrotzHTTPConnection.m in Sources */,
-				443CD77910FAFD6100A7FB96 /* localhostAddresses.m in Sources */,
 				446D287919EF04CC00B58477 /* t2indlg.c in Sources */,
 				449C92461122188D006CCDF9 /* StoryView.m in Sources */,
 				446D280119EDC71D00B58477 /* vmbift3.cpp in Sources */,
@@ -2537,7 +2583,31 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		445484C91B1E61A900E8EE7B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				445484EA1B1E632E00E8EE7B /* localhostAddresses.m in Sources */,
+				445484ED1B1E632E00E8EE7B /* AsyncSocket.m in Sources */,
+				445484EF1B1E632E00E8EE7B /* DDData.m in Sources */,
+				445484F11B1E632E00E8EE7B /* DDNumber.m in Sources */,
+				445484F31B1E632E00E8EE7B /* DDRange.m in Sources */,
+				445484F51B1E632E00E8EE7B /* HTTPAuthenticationRequest.m in Sources */,
+				445484F71B1E632E00E8EE7B /* HTTPConnection.m in Sources */,
+				445484F91B1E632E00E8EE7B /* HTTPResponse.m in Sources */,
+				445484FB1B1E632E00E8EE7B /* HTTPServer.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		445485011B1E68BB00E8EE7B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 445484CC1B1E61A900E8EE7B /* CocoaHTTPServer */;
+			targetProxy = 445485001B1E68BB00E8EE7B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
@@ -2559,7 +2629,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
@@ -2598,7 +2668,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
@@ -2619,6 +2689,141 @@
 			};
 			name = Release;
 		};
+		445484DF1B1E61A900E8EE7B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		445484E01B1E61A900E8EE7B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+		445484E11B1E61A900E8EE7B /* Release armv6 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+			};
+			name = "Release armv6";
+		};
+		445484E21B1E61A900E8EE7B /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+			};
+			name = Distribution;
+		};
 		44954F9E0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
@@ -2635,7 +2840,7 @@
 					"FROTZ_IOS_PORT=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
@@ -2669,7 +2874,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
@@ -2705,7 +2910,7 @@
 					"FROTZ_IOS_PORT=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
@@ -2736,7 +2941,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
@@ -2777,7 +2982,7 @@
 					"FROTZ_IOS_PORT=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
@@ -2807,7 +3012,7 @@
 					"FROTZ_IOS_PORT=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
-				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
@@ -2834,6 +3039,16 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		445484DE1B1E61A900E8EE7B /* Build configuration list for PBXNativeTarget "CocoaHTTPServer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				445484DF1B1E61A900E8EE7B /* Debug */,
+				445484E01B1E61A900E8EE7B /* Release */,
+				445484E11B1E61A900E8EE7B /* Release armv6 */,
+				445484E21B1E61A900E8EE7B /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Frotz" */ = {
 			isa = XCConfigurationList;

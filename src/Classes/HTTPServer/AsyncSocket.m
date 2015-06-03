@@ -1265,7 +1265,7 @@ Failed:;
 	theSocket = NULL;
 	theSocket6 = NULL;
 	
-	NSError *err;
+	NSError *err = nil;
 	BOOL pass = YES;
 	
 	if(pass && ![self createStreamsFromNative:nativeSocket error:&err]) pass = NO;
