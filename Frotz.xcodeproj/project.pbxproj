@@ -1175,7 +1175,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		080E96DDFE201D6D7F000001 /* Classes */ = {
+		080E96DDFE201D6D7F000001 /* UI */ = {
 			isa = PBXGroup;
 			children = (
 				447F88281044DC0B002CA22D /* AboutFrotz.h */,
@@ -1212,7 +1212,6 @@
 				443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */,
 				449516A90F7DEDA90060F524 /* FTPServ.h */,
 				449516AA0F7DEDA90060F524 /* FTPServ.m */,
-				44D013971372707D00B7F616 /* FTPServLib */,
 				448164520E6D02C60022EDC0 /* GettingStarted.h */,
 				448164530E6D02C60022EDC0 /* GettingStarted.m */,
 				449127E112643AA10013AD7C /* GlkView.h */,
@@ -1249,7 +1248,7 @@
 				44C28D041238C41C00EE9FA3 /* URLPromptController.m */,
 				44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */,
 			);
-			name = Classes;
+			name = UI;
 			path = src/Classes;
 			sourceTree = "<group>";
 		};
@@ -1268,9 +1267,10 @@
 				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
 				44550A7E1277B39300CDEA97 /* TO-DO.txt */,
 				447036B1123335C400E15D5B /* Settings.bundle */,
-				080E96DDFE201D6D7F000001 /* Classes */,
-				29B97315FDCFA39411CA2CEA /* Other Sources */,
-				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
+				080E96DDFE201D6D7F000001 /* UI */,
+				29B97315FDCFA39411CA2CEA /* Terps */,
+				445485071B1F9E4D00E8EE7B /* GLK */,
+				445485061B1F9DFD00E8EE7B /* Libs */,
 				44DA420715E9869C007F61DA /* Frotz Images */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -1280,20 +1280,16 @@
 			name = CustomTemplate;
 			sourceTree = "<group>";
 		};
-		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
+		29B97315FDCFA39411CA2CEA /* Terps */ = {
 			isa = PBXGroup;
 			children = (
+				445485051B1F9DD500E8EE7B /* frotz */,
 				44BE719719EB7C5700036AA6 /* tads */,
 				44690D22126A3FFD00B283FF /* git */,
 				442355BC1260493A00BFB245 /* glulxe */,
-				442358B9126187E500BFB245 /* glkios */,
-				44951F750E32794700FEC2B0 /* minizip */,
-				44951E8E0E31B71A00FEC2B0 /* zlib */,
-				441EC8560E10BD3400E74625 /* iphone */,
-				441EC8550E10BD1D00E74625 /* common */,
 				28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */,
 			);
-			name = "Other Sources";
+			name = Terps;
 			sourceTree = "<group>";
 		};
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
@@ -1441,7 +1437,7 @@
 			path = src/common;
 			sourceTree = "<group>";
 		};
-		441EC8560E10BD3400E74625 /* iphone */ = {
+		441EC8560E10BD3400E74625 /* ios */ = {
 			isa = PBXGroup;
 			children = (
 				441EC8570E10BD4400E74625 /* getopt.h */,
@@ -1456,7 +1452,7 @@
 				443C9B480E46A518003A44D4 /* ui_utils.h */,
 				443C9B490E46A518003A44D4 /* ui_utils.m */,
 			);
-			name = iphone;
+			name = ios;
 			path = src/iphone;
 			sourceTree = "<group>";
 		};
@@ -1550,6 +1546,34 @@
 				443CD76510FAFCE200A7FB96 /* ReadMe.txt */,
 			);
 			path = CocoaHTTPServer;
+			sourceTree = "<group>";
+		};
+		445485051B1F9DD500E8EE7B /* frotz */ = {
+			isa = PBXGroup;
+			children = (
+				441EC8550E10BD1D00E74625 /* common */,
+				441EC8560E10BD3400E74625 /* ios */,
+			);
+			name = frotz;
+			sourceTree = "<group>";
+		};
+		445485061B1F9DFD00E8EE7B /* Libs */ = {
+			isa = PBXGroup;
+			children = (
+				44951F750E32794700FEC2B0 /* minizip */,
+				44951E8E0E31B71A00FEC2B0 /* zlib */,
+				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
+				44D013971372707D00B7F616 /* FTPServLib */,
+			);
+			name = Libs;
+			sourceTree = "<group>";
+		};
+		445485071B1F9E4D00E8EE7B /* GLK */ = {
+			isa = PBXGroup;
+			children = (
+				442358B9126187E500BFB245 /* glkios */,
+			);
+			name = GLK;
 			sourceTree = "<group>";
 		};
 		44690D22126A3FFD00B283FF /* git */ = {
@@ -2009,7 +2033,8 @@
 				44D013A51372707D00B7F616 /* NetworkController.h */,
 				44D013A61372707D00B7F616 /* NetworkController.m */,
 			);
-			path = FTPServLib;
+			name = FTPServLib;
+			path = src/Classes/FTPServLib;
 			sourceTree = "<group>";
 		};
 		44DA420715E9869C007F61DA /* Frotz Images */ = {
