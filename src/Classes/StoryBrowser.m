@@ -23,7 +23,7 @@
 #import "FrotzInfo.h"
 #import "ui_utils.h"
 #import "extractzfromz.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 NSString *kSplashesDir = @"Splashes";
 
@@ -164,7 +164,7 @@ void removeOldPngSplash(const char *filename) {
 #ifdef NO_SANDBOX
         // This won't actually succeed anymore in post 2.0 because of sandboxing
         // I don't think jailbroken apps have to obey the sandbox, so if anyone compiles
-        // from source for JB devices, add this #define to iphone_frotz.h
+        // from source for JB devices, add this #define to iosfrotz.h
         NSString *topAppDir = [[[[NSBundle mainBundle] resourcePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
         
         NSArray *apps = [defaultManager directoryContentsAtPath: topAppDir];

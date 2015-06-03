@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #import "FTPServ.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 #include <CFNetwork/CFNetServices.h>
 

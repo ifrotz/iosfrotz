@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 #ifdef NO_SOUND	/* don't compile this unless we're using no audio */
 

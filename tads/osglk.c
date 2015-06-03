@@ -27,7 +27,7 @@
 
 #include "os.h"
 #include "glk.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #include "glkios.h"
 #include "git.h"
 

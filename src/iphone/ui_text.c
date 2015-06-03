@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #include "RichTextStyle.h"
 
 /* When color_enabled is FALSE, we still minimally keep track of colors by

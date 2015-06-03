@@ -1,5 +1,5 @@
 /*
- * iphone_frotz.h
+ * iosfrotz.h
  *
  * IPhone interface, declarations, definitions, and defaults, based on Unix/ frotz
  *

@@ -12,7 +12,7 @@
 #include "glk.h"
 #include "glkios.h"
 #include "gi_blorb.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #include "RichTextStyle.h"
 
 /* This implements pretty much what any Glk implementation needs for 

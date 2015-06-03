@@ -113,7 +113,7 @@
 #include "ipw_buf.h"
 #include "ipw_grid.h"
 #include "ipw_graphics.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 #include <stdlib.h>
 #include <string.h>

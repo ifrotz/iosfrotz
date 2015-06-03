@@ -8,7 +8,7 @@
 
 #import "GettingStarted.h"
 #import "TextViewExt.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "FrotzCommonWebView.h"
 
 @implementation GettingStarted

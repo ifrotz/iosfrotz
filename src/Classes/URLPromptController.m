@@ -7,7 +7,7 @@
 //
 
 #import "URLPromptController.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 @implementation URLPromptController
 

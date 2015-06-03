@@ -30,7 +30,7 @@ Modified
 #include <ctype.h>
 
 #include "ply.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 extern int finished;
 

@@ -6,7 +6,7 @@
 //
 
 #import "StoryDetailsController.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 
 @implementation FrotzImageView

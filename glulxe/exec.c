@@ -7,7 +7,7 @@
 #include "glulxe.h"
 #include "opcodes.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #include "ipw_buf.h"
 
 #ifdef FLOAT_SUPPORT

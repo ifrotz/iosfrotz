@@ -8,7 +8,7 @@
 
 #import "AboutFrotz.h"
 #import "TextViewExt.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "StoryMainViewController.h"
 #import "FrotzCommonWebView.h"
 

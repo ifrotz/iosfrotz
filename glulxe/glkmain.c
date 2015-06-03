@@ -5,7 +5,7 @@
 
 #include "glk.h"
 #include "glulxe.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 strid_t gamefile = NULL; /* The stream containing the Glulx file. */
 glui32 gamefile_start = 0; /* The position within the stream. (This will not 

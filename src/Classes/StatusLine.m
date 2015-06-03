@@ -7,7 +7,7 @@
 //
 
 #import "StatusLine.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 @implementation StatusLine
 

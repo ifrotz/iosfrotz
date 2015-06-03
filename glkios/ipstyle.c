@@ -13,7 +13,7 @@
 #include "ipw_grid.h"
 #include "ipw_buf.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 void glk_stylehint_set(glui32 wintype, glui32 styl, glui32 hint, glsi32 val)
 {

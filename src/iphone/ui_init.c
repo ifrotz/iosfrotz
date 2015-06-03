@@ -34,7 +34,7 @@
 
 #include <termios.h>
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 f_setup_t f_setup;
 u_setup_t u_setup;

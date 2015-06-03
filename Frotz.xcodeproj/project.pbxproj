@@ -497,8 +497,7 @@
 		441EC83F0E10BD1100E74625 /* text.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = text.c; sourceTree = "<group>"; };
 		441EC8400E10BD1100E74625 /* variable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = variable.c; sourceTree = "<group>"; };
 		441EC8570E10BD4400E74625 /* getopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getopt.h; sourceTree = "<group>"; };
-		441EC8580E10BD4400E74625 /* iphone.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iphone.h; sourceTree = "<group>"; };
-		441EC8590E10BD4400E74625 /* iphone_frotz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iphone_frotz.h; sourceTree = "<group>"; };
+		441EC8590E10BD4400E74625 /* iosfrotz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iosfrotz.h; sourceTree = "<group>"; };
 		441EC85A0E10BD4400E74625 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		441EC85B0E10BD4400E74625 /* ui_audio_none.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_audio_none.c; sourceTree = "<group>"; };
 		441EC85D0E10BD4400E74625 /* ui_init.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_init.c; sourceTree = "<group>"; };
@@ -1271,9 +1270,9 @@
 				447036B1123335C400E15D5B /* Settings.bundle */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 				44DA420715E9869C007F61DA /* Frotz Images */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
-				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				44A2E7B811228B0900E35CCC /* Entitlements.plist */,
@@ -1446,8 +1445,7 @@
 			isa = PBXGroup;
 			children = (
 				441EC8570E10BD4400E74625 /* getopt.h */,
-				441EC8580E10BD4400E74625 /* iphone.h */,
-				441EC8590E10BD4400E74625 /* iphone_frotz.h */,
+				441EC8590E10BD4400E74625 /* iosfrotz.h */,
 				441EC85A0E10BD4400E74625 /* main.m */,
 				441EC85B0E10BD4400E74625 /* ui_audio_none.c */,
 				441EC85D0E10BD4400E74625 /* ui_init.c */,

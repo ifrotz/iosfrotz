@@ -15,7 +15,7 @@
 #include "glkios.h"
 #include "ipw_buf.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 
 /* Maximum buffer size. The slack value is how much larger than the size 

@@ -19,7 +19,7 @@
  */
 
 //#include "frotz.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 extern void set_header_extension (int, zword);
 

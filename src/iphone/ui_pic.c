@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 #define PIC_FILE_HEADER_FLAGS 1
 #define PIC_FILE_HEADER_NUM_IMAGES 4

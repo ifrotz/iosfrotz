@@ -1,7 +1,7 @@
 #import "FrotzDB.h"
 #import "DisplayCell.h"
 
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "StoryMainViewController.h"
 
 #define kLeftMargin                     20.0

@@ -12,7 +12,7 @@
 #include "glk.h"
 #include "glkios.h"
 #include "ipw_pair.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 window_pair_t *win_pair_create(window_t *win, glui32 method, window_t *key, 
     glui32 size)

@@ -12,7 +12,7 @@
 #include "glkios.h"
 #include "opcodes.h"
 #include "ipw_buf.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 typedef struct {
         // pc

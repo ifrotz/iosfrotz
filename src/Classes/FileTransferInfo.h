@@ -7,7 +7,7 @@
 //
 #import <UIKit/UIKit.h>
 
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 #if UseNewFTPServer
 #import "FtpServer.h"

@@ -6,7 +6,7 @@
 //  Copyright 2010 Craig Smith. All rights reserved.
 //
 
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "NotesViewController.h"
 
 @interface HScrollView : UIScrollView

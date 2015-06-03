@@ -16,7 +16,7 @@
 #include "ipw_grid.h"
 #include "ipw_buf.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 typedef void (*command_fptr)(window_t *win, glui32);
 

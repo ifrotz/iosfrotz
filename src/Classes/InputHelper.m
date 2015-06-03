@@ -6,7 +6,7 @@
 //  Copyright 2008 Craig Smith. All rights reserved.
 //
 
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "InputHelper.h"
 
 const CGFloat kHistoryLineHeight = 20.0;

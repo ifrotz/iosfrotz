@@ -17,7 +17,7 @@
 #include "glk.h"
 #include "glkios.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* A pointer to the place where the pending glk_select() will store its
  event. When not inside a glk_select() call, this will be NULL. */

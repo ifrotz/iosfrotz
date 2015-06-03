@@ -18,7 +18,7 @@
  */
 #import "FtpConnection.h"
 #import "FtpServer.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 @implementation FtpConnection
 

@@ -16,7 +16,7 @@
 
 */
 #import <UIKit/UIKit.h>
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 #import "StoryWebBrowserController.h"
 #import "StoryBrowser.h"
 #import "ui_utils.h"

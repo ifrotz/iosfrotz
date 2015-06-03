@@ -7,7 +7,7 @@
  *
  */
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #include "ui_utils.h"
 
 static CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh);

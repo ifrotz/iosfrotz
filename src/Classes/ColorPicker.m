@@ -1,7 +1,7 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <Foundation/Foundation.h>
 #import "ColorPicker.h"
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 @interface ColorPickerView : UIView 
 {

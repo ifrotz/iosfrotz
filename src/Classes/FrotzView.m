@@ -7,7 +7,7 @@
 //
 
 #import "FrotzView.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 @implementation SavedTouch
 @synthesize phase;

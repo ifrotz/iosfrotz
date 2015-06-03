@@ -6,7 +6,7 @@
 //  Copyright 2008 Craig Smith. All rights reserved.
 //
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #import "FrotzInfo.h"
 #import <QuartzCore/QuartzCore.h>
 #import "TextViewExt.h"

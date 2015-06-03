@@ -15,7 +15,7 @@
 #include "glkios.h"
 #include "ipw_grid.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* A grid of characters. We store the window as a list of lines (see
  ipw_grid.h); within a line, just store an array of characters and

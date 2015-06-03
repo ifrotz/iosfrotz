@@ -7,7 +7,7 @@
 #include "git.h"
 #include "glk.h"
 #include "glkstart.h" // This comes with the Glk library.
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 #include <string.h>
 

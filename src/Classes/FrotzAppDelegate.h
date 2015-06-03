@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 #import "StoryBrowser.h"
 #import "TransitionView.h"
 

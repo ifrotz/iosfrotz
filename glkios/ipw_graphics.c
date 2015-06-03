@@ -9,7 +9,7 @@
 #include "glk.h"
 #include "glkios.h"
 #include "ipw_graphics.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 #include <stdlib.h>
 

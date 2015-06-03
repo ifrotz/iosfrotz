@@ -53,7 +53,7 @@ Modified
 #include "vmerr.h"
 #include "vmobj.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* ------------------------------------------------------------------------ */
 /*

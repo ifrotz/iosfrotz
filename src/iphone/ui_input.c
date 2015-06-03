@@ -25,7 +25,7 @@
 
 #include <sys/time.h>
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 static struct timeval global_timeout;
 

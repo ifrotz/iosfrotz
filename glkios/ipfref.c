@@ -13,7 +13,7 @@
 #include <sys/stat.h> /* for stat() */
 #include "glk.h"
 #include "glkios.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* This code implements filerefs as they work in a stdio system: a
     fileref contains a pathname, a text/binary flag, and a file

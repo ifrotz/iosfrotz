@@ -2,7 +2,7 @@
 #import "DisplayCell.h"
 #import "FileTransferInfo.h"
 
-#import "iphone_frotz.h"
+#import "iosfrotz.h"
 
 #define kLeftMargin                     20.0
 #define kTopMargin                      20.0

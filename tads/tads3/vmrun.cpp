@@ -50,7 +50,7 @@ Modified
 #include "vmnetfil.h"
 #include "vmfilobj.h"
 #include "vmbiftad.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* ------------------------------------------------------------------------ */
 /*

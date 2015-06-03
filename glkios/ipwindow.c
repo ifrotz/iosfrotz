@@ -18,7 +18,7 @@
 #include "ipw_graphics.h"
 
 #include "gi_blorb.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 /* Linked list of all windows */
 static window_t *gli_windowlist = NULL; 

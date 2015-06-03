@@ -11,7 +11,7 @@
 #include "glk.h"
 #include "glkios.h"
 
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 static unsigned char char_tolower_table[256];
 static unsigned char char_toupper_table[256];

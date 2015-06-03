@@ -17,7 +17,7 @@
  */
 
 #import "FileBrowser.h"
-#include "iphone_frotz.h"
+#include "iosfrotz.h"
 
 static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
