@@ -90,9 +90,10 @@ void removeOldPngSplash(const char *filename) {
 
 -(NSArray*)recentPaths {
     int count = [m_recents count];
-    NSArray *array = @[count > 0 ? [m_recents[0] path]: nil,
+    NSArray *array = [NSArray arrayWithObjects:
+                      count > 0 ? [m_recents[0] path]: nil,
                       count > 1 ? [m_recents[1] path]: nil,
-                      count > 2 ? [m_recents[2] path]: nil];
+                      count > 2 ? [m_recents[2] path]: nil, nil];
     return array;
 }
 
