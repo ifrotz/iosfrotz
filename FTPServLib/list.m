@@ -94,7 +94,7 @@ NSString* createList(NSString* directoryPath, BOOL shortForm)
                 
                 fileSubdirCount = fileSubdirCount <1 ? 1 : fileSubdirCount;
                 
-                binaryString =  int2BinString([filePermissions unsignedLongValue]) ;
+                binaryString =  int2BinString((int)[filePermissions unsignedLongValue]) ;
                 binaryString = [ binaryString substringFromIndex:7 ];// snip off the front
                 formattedString = [ NSString stringWithFormat:@"%@%@ %5li %12@ %12@ %10qu %@ %@", fileIsDirectory ? @"d" : @"-" ,bin2perms(binaryString),fileSubdirCount, fileOwner, fileGroup, [fileSize unsignedLongLongValue], fileDateFormatted , filePath ];
             }
@@ -174,7 +174,7 @@ NSMutableString *bin2perms(NSString *binaryValue)
 	NSMutableString *returnString = [[ NSMutableString alloc ] init];
 	NSRange subStringRange;
 	subStringRange.length = 1;
-	NSString *replaceWithChar;
+	NSString *replaceWithChar = nil;
 	
 	for (int n=0; n < [binaryValue length]; n++) 
 	{

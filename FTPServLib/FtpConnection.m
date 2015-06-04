@@ -1189,7 +1189,7 @@
 	
 	if ( server.changeRoot )											// if root changed, to basedir
 	{
-		int alength = [server.baseDir length ];							// length of basedir
+		NSUInteger alength = [server.baseDir length ];							// length of basedir
 		
 		//NSLog(@"Length is %u", alength );								
 		NSString *aString = [ currentDir substringFromIndex:alength ];	// get the bit after basedir

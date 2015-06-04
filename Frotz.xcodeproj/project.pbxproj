@@ -361,11 +361,6 @@
 		44C48A8215F6E5C20037EDF9 /* val-crosshair-ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 44C48A8115F6E5C20037EDF9 /* val-crosshair-ipad.png */; };
 		44CA10990E3D93B0009AEF85 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44CA10980E3D93B0009AEF85 /* QuartzCore.framework */; };
 		44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 44CA12F00E41076D009AEF85 /* TransitionView.m */; };
-		44D013A71372707D00B7F616 /* FtpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013991372707D00B7F616 /* FtpConnection.m */; };
-		44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139B1372707D00B7F616 /* FtpDataConnection.m */; };
-		44D013A91372707D00B7F616 /* FtpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139E1372707D00B7F616 /* FtpServer.m */; };
-		44D013AC1372707D00B7F616 /* list.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A41372707D00B7F616 /* list.m */; };
-		44D013AD1372707D00B7F616 /* NetworkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A61372707D00B7F616 /* NetworkController.m */; };
 		44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D013AE1372787E00B7F616 /* SystemConfiguration.framework */; };
 		44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44D013B01372799D00B7F616 /* ftp_commands.plist */; };
 		44D2DCF219C564FD00204E25 /* exec.c in Sources */ = {isa = PBXBuildFile; fileRef = 442355BE1260497900BFB245 /* exec.c */; };
@@ -415,6 +410,12 @@
 		44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4454850C1B1FBAB900E8EE7B /* libtads.a */; };
 		44F7B1011B2014E600DDD2A3 /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */; };
 		44F7B1021B20176A00DDD2A3 /* fio.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A219EB7C6F00036AA6 /* fio.c */; };
+		44F7B1221B2021BF00DDD2A3 /* FtpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013991372707D00B7F616 /* FtpConnection.m */; };
+		44F7B1231B2021BF00DDD2A3 /* FtpDataConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139B1372707D00B7F616 /* FtpDataConnection.m */; };
+		44F7B1241B2021BF00DDD2A3 /* FtpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139E1372707D00B7F616 /* FtpServer.m */; };
+		44F7B1251B2021BF00DDD2A3 /* list.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A41372707D00B7F616 /* list.m */; };
+		44F7B1261B2021BF00DDD2A3 /* NetworkController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013A61372707D00B7F616 /* NetworkController.m */; };
+		44F7B1271B2021DF00DDD2A3 /* libFTPServ.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1071B20213E00DDD2A3 /* libFTPServ.a */; };
 		44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */; };
 		44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393B0E612A3D00142D85 /* FrotzSettings.m */; };
 		44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393C0E612A3D00142D85 /* DisplayCell.m */; };
@@ -447,6 +448,15 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4454850A1B1FBAB900E8EE7B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		44F7B1051B20213E00DDD2A3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "include/$(PRODUCT_NAME)";
@@ -1147,6 +1157,7 @@
 		44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordSelectionProtocol.h; sourceTree = "<group>"; };
 		44F69CFF19C118E000ECADD0 /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
 		44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
+		44F7B1071B20213E00DDD2A3 /* libFTPServ.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFTPServ.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookmarkListController.h; sourceTree = "<group>"; };
 		44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookmarkListController.m; sourceTree = "<group>"; };
 		44FB393B0E612A3D00142D85 /* FrotzSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzSettings.m; sourceTree = "<group>"; };
@@ -1168,6 +1179,7 @@
 			files = (
 				445485031B1EAA2D00E8EE7B /* libCocoaHTTPServer.a in Frameworks */,
 				44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */,
+				44F7B1271B2021DF00DDD2A3 /* libFTPServ.a in Frameworks */,
 				44F7B1011B2014E600DDD2A3 /* libstdc++.dylib in Frameworks */,
 				1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */,
 				1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */,
@@ -1189,6 +1201,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		445485091B1FBAB900E8EE7B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		44F7B1041B20213E00DDD2A3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1281,6 +1300,7 @@
 				1D6058910D05DD3D006BFB54 /* Frotz.app */,
 				445484CD1B1E61A900E8EE7B /* libCocoaHTTPServer.a */,
 				4454850C1B1FBAB900E8EE7B /* libtads.a */,
+				44F7B1071B20213E00DDD2A3 /* libFTPServ.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1589,7 +1609,7 @@
 			children = (
 				44951F750E32794700FEC2B0 /* minizip */,
 				44951E8E0E31B71A00FEC2B0 /* zlib */,
-				44D013971372707D00B7F616 /* FTPServLib */,
+				44D013971372707D00B7F616 /* FTPServ */,
 				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
 			);
 			name = Libs;
@@ -2045,7 +2065,7 @@
 			name = tads2;
 			sourceTree = "<group>";
 		};
-		44D013971372707D00B7F616 /* FTPServLib */ = {
+		44D013971372707D00B7F616 /* FTPServ */ = {
 			isa = PBXGroup;
 			children = (
 				44D013981372707D00B7F616 /* FtpConnection.h */,
@@ -2060,6 +2080,7 @@
 				44D013A51372707D00B7F616 /* NetworkController.h */,
 				44D013A61372707D00B7F616 /* NetworkController.m */,
 			);
+			name = FTPServ;
 			path = FTPServLib;
 			sourceTree = "<group>";
 		};
@@ -2155,6 +2176,23 @@
 			productReference = 4454850C1B1FBAB900E8EE7B /* libtads.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		44F7B1061B20213E00DDD2A3 /* FTPServ */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44F7B1181B20213E00DDD2A3 /* Build configuration list for PBXNativeTarget "FTPServ" */;
+			buildPhases = (
+				44F7B1031B20213E00DDD2A3 /* Sources */,
+				44F7B1041B20213E00DDD2A3 /* Frameworks */,
+				44F7B1051B20213E00DDD2A3 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FTPServ;
+			productName = FTPServ;
+			productReference = 44F7B1071B20213E00DDD2A3 /* libFTPServ.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -2170,6 +2208,9 @@
 						CreatedOnToolsVersion = 6.3.2;
 					};
 					4454850B1B1FBAB900E8EE7B = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
+					44F7B1061B20213E00DDD2A3 = {
 						CreatedOnToolsVersion = 6.3.2;
 					};
 				};
@@ -2192,6 +2233,7 @@
 				1D6058900D05DD3D006BFB54 /* Frotz */,
 				445484CC1B1E61A900E8EE7B /* CocoaHTTPServer */,
 				4454850B1B1FBAB900E8EE7B /* tads */,
+				44F7B1061B20213E00DDD2A3 /* FTPServ */,
 			);
 		};
 /* End PBXProject section */
@@ -2347,11 +2389,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44D013A71372707D00B7F616 /* FtpConnection.m in Sources */,
-				44D013A81372707D00B7F616 /* FtpDataConnection.m in Sources */,
-				44D013A91372707D00B7F616 /* FtpServer.m in Sources */,
-				44D013AC1372707D00B7F616 /* list.m in Sources */,
-				44D013AD1372707D00B7F616 /* NetworkController.m in Sources */,
 				44690D3A126A402400B283FF /* accel.c in Sources */,
 				44690D3B126A402400B283FF /* compiler.c in Sources */,
 				44690D3C126A402400B283FF /* gestalt.c in Sources */,
@@ -2676,6 +2713,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		44F7B1031B20213E00DDD2A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44F7B1221B2021BF00DDD2A3 /* FtpConnection.m in Sources */,
+				44F7B1231B2021BF00DDD2A3 /* FtpDataConnection.m in Sources */,
+				44F7B1241B2021BF00DDD2A3 /* FtpServer.m in Sources */,
+				44F7B1251B2021BF00DDD2A3 /* list.m in Sources */,
+				44F7B1261B2021BF00DDD2A3 /* NetworkController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2908,7 +2957,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -2961,7 +3010,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -3008,7 +3057,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -3055,7 +3104,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -3239,6 +3288,160 @@
 			};
 			name = "Release armv6";
 		};
+		44F7B1191B20213E00DDD2A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		44F7B11A1B20213E00DDD2A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		44F7B11B1B20213E00DDD2A3 /* Release armv6 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = "Release armv6";
+		};
+		44F7B11C1B20213E00DDD2A3 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Distribution;
+		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3332,6 +3535,16 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		44F7B1181B20213E00DDD2A3 /* Build configuration list for PBXNativeTarget "FTPServ" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44F7B1191B20213E00DDD2A3 /* Debug */,
+				44F7B11A1B20213E00DDD2A3 /* Release */,
+				44F7B11B1B20213E00DDD2A3 /* Release armv6 */,
+				44F7B11C1B20213E00DDD2A3 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Frotz" */ = {
 			isa = XCConfigurationList;
