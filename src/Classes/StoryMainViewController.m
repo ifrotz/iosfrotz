@@ -588,6 +588,16 @@ void iphone_mark_recent_save() {
     inputsSinceSaveRestore = 0;
 }
 
+char *iphone_get_temp_filename() {
+    char *templateName= strdup([[NSTemporaryDirectory() stringByAppendingPathComponent:@"frotztmp.XXXXXX"] fileSystemRepresentation]);
+    char *tempFilename = mktemp(templateName);
+    if (!tempFilename) {
+        free(templateName);
+        return NULL;
+    }
+    return tempFilename;
+}
+
 int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
     *iphone_filename = 0;
     switch (flag) {

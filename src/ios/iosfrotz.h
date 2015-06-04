@@ -81,6 +81,7 @@ void iphone_erase_win(int winnum);
 void iphone_set_top_win_height(int height);
 void iphone_mark_recent_save();
 void iphone_more_prompt();
+char *iphone_get_temp_filename();
 void iphone_set_text_attribs(int viewNum, int style, int color, bool lock);
 void iphone_put_image(int viewNum, int imageNum, int imageAlign, bool lock);
 void iphone_set_hyperlink_value(int viewNum, int val, bool lock);

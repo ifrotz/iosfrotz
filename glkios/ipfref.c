@@ -122,15 +122,16 @@ static char *gli_suffix_for_usage(glui32 usage)
 frefid_t glk_fileref_create_temp(glui32 usage, glui32 rock)
 {
     char *filename;
-    fileref_t *fref;
+    fileref_t *fref = NULL;
     
     /* This is a pretty good way to do this on Unix systems. On Macs,
         it's pretty bad, but this library won't be used on the Mac 
         -- I hope. I have no idea about the DOS/Windows world. */
-        
-    filename = tmpnam(NULL);
-    
-    fref = gli_new_fileref(filename, usage, rock);
+    filename = iphone_get_temp_filename();
+    if (filename) {
+        fref = gli_new_fileref(filename, usage, rock);
+        free(filename);
+    }
     if (!fref) {
         gli_strict_warning(L"fileref_create_temp: unable to create fileref.");
         return NULL;
