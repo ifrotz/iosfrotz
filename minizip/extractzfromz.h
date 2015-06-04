@@ -1,4 +1,6 @@
 
+#import <Foundation/Foundation.h>
+
 NSMutableArray *listOfZFilesInZIP(NSString *zipFileStr);
 int extractOneFileFromZIP(NSString *zipFileStr, NSString *dirName, NSString *fileName);
 int extractAllFilesFromZIP(NSString *zipFileStr, NSString *dirName);
