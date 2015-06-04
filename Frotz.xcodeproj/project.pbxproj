@@ -405,7 +405,6 @@
 		44F7B16B1B202A2900DDD2A3 /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951F770E32799500FEC2B0 /* ioapi.c */; };
 		44F7B16C1B202A2B00DDD2A3 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951F7A0E32799500FEC2B0 /* unzip.c */; };
 		44F7B16D1B202B4900DDD2A3 /* libminizip.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B14F1B202A0800DDD2A3 /* libminizip.a */; };
-		44F7B18D1B202BF500DDD2A3 /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E8F0E31B79A00FEC2B0 /* adler32.c */; };
 		44F7B18E1B202BF500DDD2A3 /* compress.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951EB40E31B81E00FEC2B0 /* compress.c */; };
 		44F7B18F1B202BF500DDD2A3 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E900E31B79A00FEC2B0 /* crc32.c */; };
 		44F7B1901B202BF500DDD2A3 /* deflate.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E920E31B79A00FEC2B0 /* deflate.c */; };
@@ -416,8 +415,9 @@
 		44F7B1951B202BF500DDD2A3 /* inftrees.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E9B0E31B79A00FEC2B0 /* inftrees.c */; };
 		44F7B1961B202BF500DDD2A3 /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E9D0E31B79A00FEC2B0 /* trees.c */; };
 		44F7B1971B202BF500DDD2A3 /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E9F0E31B79A00FEC2B0 /* uncompr.c */; };
-		44F7B1981B202BF500DDD2A3 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951EB00E31B7F500FEC2B0 /* zutil.c */; };
 		44F7B1991B202C1B00DDD2A3 /* libzlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1721B202B7A00DDD2A3 /* libzlib.a */; };
+		44F7B19A1B202FF700DDD2A3 /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E8F0E31B79A00FEC2B0 /* adler32.c */; };
+		44F7B19B1B20302800DDD2A3 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951EB00E31B7F500FEC2B0 /* zutil.c */; };
 		44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */; };
 		44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393B0E612A3D00142D85 /* FrotzSettings.m */; };
 		44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393C0E612A3D00142D85 /* DisplayCell.m */; };
@@ -1347,9 +1347,10 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
-				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
 				44550A7E1277B39300CDEA97 /* TO-DO.txt */,
 				447036B1123335C400E15D5B /* Settings.bundle */,
+				28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */,
+				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
 				080E96DDFE201D6D7F000001 /* UI */,
 				29B97315FDCFA39411CA2CEA /* Terps */,
 				445485071B1F9E4D00E8EE7B /* GLK */,
@@ -1370,7 +1371,6 @@
 				44BE719719EB7C5700036AA6 /* tads */,
 				44690D22126A3FFD00B283FF /* git */,
 				442355BC1260493A00BFB245 /* glulxe */,
-				28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */,
 			);
 			name = Terps;
 			sourceTree = "<group>";
@@ -1477,7 +1477,6 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */,
 				445E9395160FFF420098DBE7 /* DropboxSDK.framework */,
 				44320C7717E9874700549CBD /* Reveal.framework */,
 				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
@@ -1487,6 +1486,7 @@
 				1DF5F4DF0D08C38300B7A737 /* UIKit.framework */,
 				1D30AB110D05D00D00671497 /* Foundation.framework */,
 				447DD4AB125311B500004A83 /* Security.framework */,
+				44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2804,7 +2804,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44F7B18D1B202BF500DDD2A3 /* adler32.c in Sources */,
+				44F7B19A1B202FF700DDD2A3 /* adler32.c in Sources */,
 				44F7B18E1B202BF500DDD2A3 /* compress.c in Sources */,
 				44F7B18F1B202BF500DDD2A3 /* crc32.c in Sources */,
 				44F7B1901B202BF500DDD2A3 /* deflate.c in Sources */,
@@ -2815,7 +2815,7 @@
 				44F7B1951B202BF500DDD2A3 /* inftrees.c in Sources */,
 				44F7B1961B202BF500DDD2A3 /* trees.c in Sources */,
 				44F7B1971B202BF500DDD2A3 /* uncompr.c in Sources */,
-				44F7B1981B202BF500DDD2A3 /* zutil.c in Sources */,
+				44F7B19B1B20302800DDD2A3 /* zutil.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
