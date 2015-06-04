@@ -1645,10 +1645,10 @@
 		445485061B1F9DFD00E8EE7B /* Libs */ = {
 			isa = PBXGroup;
 			children = (
-				44951F750E32794700FEC2B0 /* minizip */,
-				44951E8E0E31B71A00FEC2B0 /* zlib */,
 				44D013971372707D00B7F616 /* FTPServ */,
 				445484CE1B1E61A900E8EE7B /* CocoaHTTPServer */,
+				44951F750E32794700FEC2B0 /* minizip */,
+				44951E8E0E31B71A00FEC2B0 /* zlib */,
 			);
 			name = Libs;
 			sourceTree = "<group>";
