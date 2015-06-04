@@ -51,23 +51,6 @@
 		441EC86F0E10BD4400E74625 /* ui_text.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8640E10BD4400E74625 /* ui_text.c */; };
 		441EC87B0E10BF3E00E74625 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 441EC85A0E10BD4400E74625 /* main.m */; };
 		442351D0125E77C000BFB245 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 442351CF125E77C000BFB245 /* notes.png */; };
-		442358DC1261882100BFB245 /* ipevent.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C31261882100BFB245 /* ipevent.c */; };
-		442358DD1261882100BFB245 /* ipfref.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C41261882100BFB245 /* ipfref.c */; };
-		442358DE1261882100BFB245 /* ipgestal.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C51261882100BFB245 /* ipgestal.c */; };
-		442358DF1261882100BFB245 /* ipinput.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C61261882100BFB245 /* ipinput.c */; };
-		442358E21261882100BFB245 /* ipmisc.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C91261882100BFB245 /* ipmisc.c */; };
-		442358E41261882100BFB245 /* ipschan.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CC1261882100BFB245 /* ipschan.c */; };
-		442358E51261882100BFB245 /* ipstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CD1261882100BFB245 /* ipstream.c */; };
-		442358E61261882100BFB245 /* ipstyle.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CE1261882100BFB245 /* ipstyle.c */; };
-		442358E71261882100BFB245 /* ipw_blnk.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CF1261882100BFB245 /* ipw_blnk.c */; };
-		442358E81261882100BFB245 /* ipw_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D11261882100BFB245 /* ipw_buf.c */; };
-		442358E91261882100BFB245 /* ipw_grid.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D31261882100BFB245 /* ipw_grid.c */; };
-		442358EA1261882100BFB245 /* ipw_pair.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D51261882100BFB245 /* ipw_pair.c */; };
-		442358EB1261882100BFB245 /* ipwindow.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D71261882100BFB245 /* ipwindow.c */; };
-		4423590E1261894100BFB245 /* cgunicod.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590A1261894100BFB245 /* cgunicod.c */; };
-		4423590F1261894100BFB245 /* gi_blorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590B1261894100BFB245 /* gi_blorb.c */; };
-		442359111261894B00BFB245 /* gi_dispa.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358BC1261882100BFB245 /* gi_dispa.c */; };
-		442359131261894D00BFB245 /* ipblorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C21261882100BFB245 /* ipblorb.c */; };
 		443149C50E3B0077007A075F /* NavBack.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149C40E3B0077007A075F /* NavBack.png */; };
 		443149D80E3B0154007A075F /* NavForward.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149D70E3B0154007A075F /* NavForward.png */; };
 		443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */ = {isa = PBXBuildFile; fileRef = 443A64AD114F5EDB0093B4B2 /* splashes.zip */; };
@@ -124,7 +107,6 @@
 		44619B9E160FB0D400B70223 /* refresh-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 44619B9D160FB0D400B70223 /* refresh-small.png */; };
 		44619BA0160FB36500B70223 /* refresh.png in Resources */ = {isa = PBXBuildFile; fileRef = 44619B9F160FB36500B70223 /* refresh.png */; };
 		446248DC0E3BABF10057917B /* nowplaying.png in Resources */ = {isa = PBXBuildFile; fileRef = 446248DB0E3BABF10057917B /* nowplaying.png */; };
-		446902E21265567300B283FF /* test-multiwin.c in Sources */ = {isa = PBXBuildFile; fileRef = 446902E11265567300B283FF /* test-multiwin.c */; };
 		44690D3A126A402400B283FF /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D23126A402400B283FF /* accel.c */; };
 		44690D3B126A402400B283FF /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D24126A402400B283FF /* compiler.c */; };
 		44690D3C126A402400B283FF /* gestalt.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D27126A402400B283FF /* gestalt.c */; };
@@ -140,7 +122,6 @@
 		44690D48126A402500B283FF /* saveundo.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D36126A402400B283FF /* saveundo.c */; };
 		44690D49126A402500B283FF /* search.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D37126A402400B283FF /* search.c */; };
 		44690D4A126A402500B283FF /* terp.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D38126A402400B283FF /* terp.c */; };
-		446912F6126BED9300B283FF /* ipw_graphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 446912F4126BED9300B283FF /* ipw_graphics.c */; };
 		446B9DA00E2059E3002BDD65 /* Games in Resources */ = {isa = PBXBuildFile; fileRef = 446B9D960E2059E3002BDD65 /* Games */; };
 		446B9EAB0E2075D1002BDD65 /* FileBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 446B9EA60E2075D1002BDD65 /* FileBrowser.m */; };
 		446B9EAC0E2075D1002BDD65 /* StoryBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 446B9EA80E2075D1002BDD65 /* StoryBrowser.m */; };
@@ -305,7 +286,6 @@
 		44A0FA9615EC7700005FF570 /* nowplaying@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A0FA9515EC7700005FF570 /* nowplaying@2x.png */; };
 		44A2E7B911228B0900E35CCC /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44A2E7B811228B0900E35CCC /* Entitlements.plist */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
-		44B583BA1998A7700046F661 /* cgdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 44B583B81998A7700046F661 /* cgdate.c */; };
 		44B63FD219F0DD0D00A143FE /* vmconnom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 44B63FD119F0DD0D00A143FE /* vmconnom.cpp */; };
 		44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */; };
 		44BE71C319EB7C6F00036AA6 /* bif.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719A19EB7C6F00036AA6 /* bif.c */; };
@@ -418,6 +398,27 @@
 		44F7B1991B202C1B00DDD2A3 /* libzlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1721B202B7A00DDD2A3 /* libzlib.a */; };
 		44F7B19A1B202FF700DDD2A3 /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951E8F0E31B79A00FEC2B0 /* adler32.c */; };
 		44F7B19B1B20302800DDD2A3 /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 44951EB00E31B7F500FEC2B0 /* zutil.c */; };
+		44F7B1CF1B20D99C00DDD2A3 /* libglkios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */; };
+		44F7B1E41B20DAF300DDD2A3 /* cgdate.c in Sources */ = {isa = PBXBuildFile; fileRef = 44B583B81998A7700046F661 /* cgdate.c */; };
+		44F7B1E51B20DAF300DDD2A3 /* cgunicod.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590A1261894100BFB245 /* cgunicod.c */; };
+		44F7B1E61B20DAF300DDD2A3 /* gi_blorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 4423590B1261894100BFB245 /* gi_blorb.c */; };
+		44F7B1E71B20DAF300DDD2A3 /* gi_dispa.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358BC1261882100BFB245 /* gi_dispa.c */; };
+		44F7B1E81B20DAF300DDD2A3 /* ipblorb.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C21261882100BFB245 /* ipblorb.c */; };
+		44F7B1E91B20DAF300DDD2A3 /* ipevent.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C31261882100BFB245 /* ipevent.c */; };
+		44F7B1EA1B20DAF300DDD2A3 /* ipfref.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C41261882100BFB245 /* ipfref.c */; };
+		44F7B1EB1B20DAF300DDD2A3 /* ipgestal.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C51261882100BFB245 /* ipgestal.c */; };
+		44F7B1EC1B20DAF300DDD2A3 /* ipinput.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C61261882100BFB245 /* ipinput.c */; };
+		44F7B1ED1B20DAF300DDD2A3 /* ipmisc.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358C91261882100BFB245 /* ipmisc.c */; };
+		44F7B1EE1B20DAF300DDD2A3 /* ipschan.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CC1261882100BFB245 /* ipschan.c */; };
+		44F7B1EF1B20DAF300DDD2A3 /* ipstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CD1261882100BFB245 /* ipstream.c */; };
+		44F7B1F01B20DAF300DDD2A3 /* ipstyle.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CE1261882100BFB245 /* ipstyle.c */; };
+		44F7B1F11B20DAF300DDD2A3 /* ipw_blnk.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358CF1261882100BFB245 /* ipw_blnk.c */; };
+		44F7B1F21B20DAF300DDD2A3 /* ipw_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D11261882100BFB245 /* ipw_buf.c */; };
+		44F7B1F31B20DAF300DDD2A3 /* ipw_graphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 446912F4126BED9300B283FF /* ipw_graphics.c */; };
+		44F7B1F41B20DAF300DDD2A3 /* ipw_grid.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D31261882100BFB245 /* ipw_grid.c */; };
+		44F7B1F51B20DAF300DDD2A3 /* ipw_pair.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D51261882100BFB245 /* ipw_pair.c */; };
+		44F7B1F61B20DAF300DDD2A3 /* ipwindow.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D71261882100BFB245 /* ipwindow.c */; };
+		44F7B1F71B20DAF300DDD2A3 /* test-multiwin.c in Sources */ = {isa = PBXBuildFile; fileRef = 446902E11265567300B283FF /* test-multiwin.c */; };
 		44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */; };
 		44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393B0E612A3D00142D85 /* FrotzSettings.m */; };
 		44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393C0E612A3D00142D85 /* DisplayCell.m */; };
@@ -477,6 +478,15 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		44F7B1701B202B7A00DDD2A3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		44F7B19E1B20D4BD00DDD2A3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "include/$(PRODUCT_NAME)";
@@ -1179,6 +1189,7 @@
 		44F7B1071B20213E00DDD2A3 /* libFTPServ.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFTPServ.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B14F1B202A0800DDD2A3 /* libminizip.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libminizip.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B1721B202B7A00DDD2A3 /* libzlib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libzlib.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglkios.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookmarkListController.h; sourceTree = "<group>"; };
 		44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookmarkListController.m; sourceTree = "<group>"; };
 		44FB393B0E612A3D00142D85 /* FrotzSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzSettings.m; sourceTree = "<group>"; };
@@ -1200,6 +1211,7 @@
 			files = (
 				445485031B1EAA2D00E8EE7B /* libCocoaHTTPServer.a in Frameworks */,
 				44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */,
+				44F7B1CF1B20D99C00DDD2A3 /* libglkios.a in Frameworks */,
 				44F7B1271B2021DF00DDD2A3 /* libFTPServ.a in Frameworks */,
 				44F7B16D1B202B4900DDD2A3 /* libminizip.a in Frameworks */,
 				44F7B1991B202C1B00DDD2A3 /* libzlib.a in Frameworks */,
@@ -1245,6 +1257,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		44F7B16F1B202B7A00DDD2A3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		44F7B19D1B20D4BD00DDD2A3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1340,6 +1359,7 @@
 				44F7B1071B20213E00DDD2A3 /* libFTPServ.a */,
 				44F7B14F1B202A0800DDD2A3 /* libminizip.a */,
 				44F7B1721B202B7A00DDD2A3 /* libzlib.a */,
+				44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1570,38 +1590,38 @@
 		442358B9126187E500BFB245 /* glkios */ = {
 			isa = PBXGroup;
 			children = (
-				44D2DD0419C7F6A100204E25 /* glkautosave.c */,
 				44B583B81998A7700046F661 /* cgdate.c */,
 				4423590A1261894100BFB245 /* cgunicod.c */,
 				4423590B1261894100BFB245 /* gi_blorb.c */,
-				4423590C1261894100BFB245 /* gi_blorb.h */,
 				442358BC1261882100BFB245 /* gi_dispa.c */,
-				442358BD1261882100BFB245 /* gi_dispa.h */,
-				442358BE1261882100BFB245 /* glk.h */,
-				442358C01261882100BFB245 /* glkstart.h */,
-				442358C11261882100BFB245 /* glkios.h */,
 				442358C21261882100BFB245 /* ipblorb.c */,
 				442358C31261882100BFB245 /* ipevent.c */,
 				442358C41261882100BFB245 /* ipfref.c */,
 				442358C51261882100BFB245 /* ipgestal.c */,
 				442358C61261882100BFB245 /* ipinput.c */,
 				442358C91261882100BFB245 /* ipmisc.c */,
-				442358CB1261882100BFB245 /* gtoption.h */,
 				442358CC1261882100BFB245 /* ipschan.c */,
 				442358CD1261882100BFB245 /* ipstream.c */,
 				442358CE1261882100BFB245 /* ipstyle.c */,
 				442358CF1261882100BFB245 /* ipw_blnk.c */,
-				442358D01261882100BFB245 /* ipw_blnk.h */,
 				442358D11261882100BFB245 /* ipw_buf.c */,
-				442358D21261882100BFB245 /* ipw_buf.h */,
-				442358D31261882100BFB245 /* ipw_grid.c */,
-				442358D41261882100BFB245 /* ipw_grid.h */,
-				446912F5126BED9300B283FF /* ipw_graphics.h */,
 				446912F4126BED9300B283FF /* ipw_graphics.c */,
+				442358D31261882100BFB245 /* ipw_grid.c */,
 				442358D51261882100BFB245 /* ipw_pair.c */,
-				442358D61261882100BFB245 /* ipw_pair.h */,
 				442358D71261882100BFB245 /* ipwindow.c */,
 				446902E11265567300B283FF /* test-multiwin.c */,
+				44D2DD0419C7F6A100204E25 /* glkautosave.c */,
+				4423590C1261894100BFB245 /* gi_blorb.h */,
+				442358BD1261882100BFB245 /* gi_dispa.h */,
+				442358BE1261882100BFB245 /* glk.h */,
+				442358C11261882100BFB245 /* glkios.h */,
+				442358C01261882100BFB245 /* glkstart.h */,
+				442358CB1261882100BFB245 /* gtoption.h */,
+				442358D01261882100BFB245 /* ipw_blnk.h */,
+				442358D21261882100BFB245 /* ipw_buf.h */,
+				446912F5126BED9300B283FF /* ipw_graphics.h */,
+				442358D41261882100BFB245 /* ipw_grid.h */,
+				442358D61261882100BFB245 /* ipw_pair.h */,
 			);
 			path = glkios;
 			sourceTree = "<group>";
@@ -2265,6 +2285,23 @@
 			productReference = 44F7B1721B202B7A00DDD2A3 /* libzlib.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		44F7B19F1B20D4BD00DDD2A3 /* glkios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44F7B1B11B20D4BD00DDD2A3 /* Build configuration list for PBXNativeTarget "glkios" */;
+			buildPhases = (
+				44F7B19C1B20D4BD00DDD2A3 /* Sources */,
+				44F7B19D1B20D4BD00DDD2A3 /* Frameworks */,
+				44F7B19E1B20D4BD00DDD2A3 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = glkios;
+			productName = glkios;
+			productReference = 44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -2291,6 +2328,9 @@
 					44F7B1711B202B7A00DDD2A3 = {
 						CreatedOnToolsVersion = 6.3.2;
 					};
+					44F7B19F1B20D4BD00DDD2A3 = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
 				};
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Frotz" */;
@@ -2314,6 +2354,7 @@
 				44F7B14E1B202A0800DDD2A3 /* minizip */,
 				44F7B1711B202B7A00DDD2A3 /* zlib */,
 				4454850B1B1FBAB900E8EE7B /* tads */,
+				44F7B19F1B20D4BD00DDD2A3 /* glkios */,
 			);
 		};
 /* End PBXProject section */
@@ -2484,26 +2525,6 @@
 				44690D48126A402500B283FF /* saveundo.c in Sources */,
 				44690D49126A402500B283FF /* search.c in Sources */,
 				44690D4A126A402500B283FF /* terp.c in Sources */,
-				44B583BA1998A7700046F661 /* cgdate.c in Sources */,
-				4423590E1261894100BFB245 /* cgunicod.c in Sources */,
-				4423590F1261894100BFB245 /* gi_blorb.c in Sources */,
-				442359111261894B00BFB245 /* gi_dispa.c in Sources */,
-				442359131261894D00BFB245 /* ipblorb.c in Sources */,
-				442358DC1261882100BFB245 /* ipevent.c in Sources */,
-				442358DD1261882100BFB245 /* ipfref.c in Sources */,
-				442358DE1261882100BFB245 /* ipgestal.c in Sources */,
-				442358DF1261882100BFB245 /* ipinput.c in Sources */,
-				442358E21261882100BFB245 /* ipmisc.c in Sources */,
-				442358E41261882100BFB245 /* ipschan.c in Sources */,
-				442358E51261882100BFB245 /* ipstream.c in Sources */,
-				442358E61261882100BFB245 /* ipstyle.c in Sources */,
-				442358EB1261882100BFB245 /* ipwindow.c in Sources */,
-				442358E71261882100BFB245 /* ipw_blnk.c in Sources */,
-				442358E81261882100BFB245 /* ipw_buf.c in Sources */,
-				446912F6126BED9300B283FF /* ipw_graphics.c in Sources */,
-				442358E91261882100BFB245 /* ipw_grid.c in Sources */,
-				442358EA1261882100BFB245 /* ipw_pair.c in Sources */,
-				446902E21265567300B283FF /* test-multiwin.c in Sources */,
 				44D2DD0219C5713700204E25 /* accel.c in Sources */,
 				44D2DCF219C564FD00204E25 /* exec.c in Sources */,
 				44D2DCF319C564FD00204E25 /* files.c in Sources */,
@@ -2816,6 +2837,33 @@
 				44F7B1961B202BF500DDD2A3 /* trees.c in Sources */,
 				44F7B1971B202BF500DDD2A3 /* uncompr.c in Sources */,
 				44F7B19B1B20302800DDD2A3 /* zutil.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		44F7B19C1B20D4BD00DDD2A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44F7B1E41B20DAF300DDD2A3 /* cgdate.c in Sources */,
+				44F7B1EA1B20DAF300DDD2A3 /* ipfref.c in Sources */,
+				44F7B1ED1B20DAF300DDD2A3 /* ipmisc.c in Sources */,
+				44F7B1F01B20DAF300DDD2A3 /* ipstyle.c in Sources */,
+				44F7B1E61B20DAF300DDD2A3 /* gi_blorb.c in Sources */,
+				44F7B1F11B20DAF300DDD2A3 /* ipw_blnk.c in Sources */,
+				44F7B1F51B20DAF300DDD2A3 /* ipw_pair.c in Sources */,
+				44F7B1EF1B20DAF300DDD2A3 /* ipstream.c in Sources */,
+				44F7B1F61B20DAF300DDD2A3 /* ipwindow.c in Sources */,
+				44F7B1E81B20DAF300DDD2A3 /* ipblorb.c in Sources */,
+				44F7B1F21B20DAF300DDD2A3 /* ipw_buf.c in Sources */,
+				44F7B1EB1B20DAF300DDD2A3 /* ipgestal.c in Sources */,
+				44F7B1E51B20DAF300DDD2A3 /* cgunicod.c in Sources */,
+				44F7B1F41B20DAF300DDD2A3 /* ipw_grid.c in Sources */,
+				44F7B1E71B20DAF300DDD2A3 /* gi_dispa.c in Sources */,
+				44F7B1E91B20DAF300DDD2A3 /* ipevent.c in Sources */,
+				44F7B1EE1B20DAF300DDD2A3 /* ipschan.c in Sources */,
+				44F7B1EC1B20DAF300DDD2A3 /* ipinput.c in Sources */,
+				44F7B1F71B20DAF300DDD2A3 /* test-multiwin.c in Sources */,
+				44F7B1F31B20DAF300DDD2A3 /* ipw_graphics.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3844,6 +3892,163 @@
 			};
 			name = Distribution;
 		};
+		44F7B1B21B20D4BD00DDD2A3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		44F7B1B31B20D4BD00DDD2A3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		44F7B1B41B20D4BD00DDD2A3 /* Release armv6 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = "Release armv6";
+		};
+		44F7B1B51B20D4BD00DDD2A3 /* Distribution */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Distribution;
+		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -3965,6 +4170,16 @@
 				44F7B1851B202B7A00DDD2A3 /* Release */,
 				44F7B1861B202B7A00DDD2A3 /* Release armv6 */,
 				44F7B1871B202B7A00DDD2A3 /* Distribution */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		44F7B1B11B20D4BD00DDD2A3 /* Build configuration list for PBXNativeTarget "glkios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44F7B1B21B20D4BD00DDD2A3 /* Debug */,
+				44F7B1B31B20D4BD00DDD2A3 /* Release */,
+				44F7B1B41B20D4BD00DDD2A3 /* Release armv6 */,
+				44F7B1B51B20D4BD00DDD2A3 /* Distribution */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

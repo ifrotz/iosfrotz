@@ -50,16 +50,16 @@ void win_graphics_update(window_t *win) {
 #ifdef GLK_MODULE_IMAGE
 
 glui32 glk_image_draw(winid_t win, glui32 image, glsi32 val1, glsi32 val2) {
-    if (!win || win->iphone_glkViewNum < 0 || win->type != wintype_Graphics
-        && win->type != wintype_TextBuffer)
+    if (!win || win->iphone_glkViewNum < 0
+        || (win->type != wintype_Graphics && win->type != wintype_TextBuffer))
         return FALSE;
     
     return iphone_glk_image_draw(win->iphone_glkViewNum, image, val1, val2, 0, 0);
 }
 
 glui32 glk_image_draw_scaled(winid_t win, glui32 image,  glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
-    if (!win || win->iphone_glkViewNum < 0 || win->type != wintype_Graphics
-        && win->type != wintype_TextBuffer)
+    if (!win || win->iphone_glkViewNum < 0
+        || (win->type != wintype_Graphics && win->type != wintype_TextBuffer))
         return FALSE;
 
     return iphone_glk_image_draw(win->iphone_glkViewNum, image, val1, val2, width, height);

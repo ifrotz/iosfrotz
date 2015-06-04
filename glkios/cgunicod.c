@@ -202,7 +202,7 @@ static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
     glui32 *newoutbuf;
     glui32 outcount;
     int dest_block_rest, dest_block_first;
-    int dest_spec_rest, dest_spec_first;
+    int dest_spec_rest = destcase, dest_spec_first = destcase;
 
     switch (cond) {
     case COND_ALL:
