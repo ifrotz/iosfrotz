@@ -3640,15 +3640,17 @@ int CRegexSearcher::match(const char *entire_str, size_t entire_str_len,
         continue;
 
     do_local_return:
-        /* check what kind of state we're returning to */
-        switch(stack_.get_top_type())
         {
-            int str_ofs;
-            int ret1, ret2;
-            int ret1_is_winner;
-            int iter;
-            re_recog_type typ;
-            int lblen;
+        int str_ofs;
+        int ret1, ret2;
+        int ret1_is_winner;
+        int iter;
+        re_recog_type typ;
+        int lblen;
+
+            /* check what kind of state we're returning to */
+        switch(stack_.get_top_type())
+          {
                
         case -1:
             /*
@@ -3902,6 +3904,7 @@ int CRegexSearcher::match(const char *entire_str, size_t entire_str_len,
             /* resume where we left off */
             cur_state = tuple_arr[cur_state].next_state_1;
             break;
+          }
         }
 
         /* resume from here */

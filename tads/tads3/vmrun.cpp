@@ -1135,7 +1135,7 @@ void CVmRun::run(VMG_ const uchar *start_pc)
      *   it causes better optimization on some platforms, and is harmless
      *   when it doesn't help with optimization.  
      */
-    register const uchar *p = start_pc;
+    const uchar *p = start_pc;
     vmrun_prop_eval propev;
     vm_val_t *valp;
     vm_val_t *valp2;
@@ -1297,13 +1297,7 @@ resume_execution:
                 /* close out the network file */
                 netfile->close(vmg0_);
                 
-                
-                //int ret = saveToFileStrWithClasses (base, sp, fstr);
-               // gli_delete_stream(fstr);
-               // gli_delete_fileref(fref);
-                
-                if (!ret)
-                    os_mark_recent_save();
+                iphone_mark_recent_save();
                 autosave_done = 1;
             }
 
@@ -2223,7 +2217,7 @@ resume_execution:
 
                     default:
                         err_throw(VMERR_INVALID_OPCODE_MOD);
-                        continue;
+                        //continue;
                     }
                 }
                 continue;

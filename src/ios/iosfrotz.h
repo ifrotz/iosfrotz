@@ -11,6 +11,10 @@
 #define FALSE 0
 #define TRUE 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../common/frotz.h"
 
 #include "ui_setup.h"
@@ -22,6 +26,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <CoreGraphics/CGGeometry.h>
+
 
 #include "glk.h"
 #include "glkios.h"
@@ -47,6 +52,7 @@ extern cell *screen_data, *screen_colors;
 extern int cursor_row, cursor_col;
 
 extern int finished; // set by z_quit
+
 
 FILE *pathopen(const char *name, const char *p, const char *mode, char *fullname);
 void os_set_default_file_names(char *basename);
@@ -127,6 +133,10 @@ extern int iphone_ifrotz_verbose_debug;
 extern bool gLargeScreenDevice;
 extern int gLargeScreenPhone;
 extern bool gUseSplitVC;
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #define kFrotzGameDir "Games"
 #define kFrotzSaveDir "Saves"
