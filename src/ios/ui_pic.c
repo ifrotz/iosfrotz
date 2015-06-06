@@ -41,6 +41,7 @@ static struct {
 } *pict_info;
 static int num_pictures = 0;
 
+#if 0 // unused
 static unsigned char lookupb(unsigned char *p, int n)
 {
   return p[n];
@@ -65,6 +66,7 @@ static int round_div(int x, int y)
 		quotient++;
 	return quotient;
 }
+#endif
 
 /* Convert a Z picture number to an index into pict_info.  */
 static int z_num_to_index(int n)

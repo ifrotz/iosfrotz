@@ -39,11 +39,11 @@ static struct timeval global_timeout;
 #define RING_DEC( ptr, beg, end) (ptr > (beg) ? --ptr : (ptr = (end)))
 #define RING_INC( ptr, beg, end) (ptr < (end) ? ++ptr : (ptr = (beg)))
 
-#define MAX_HISTORY 20
-static char *history_buffer[MAX_HISTORY];
-static char **history_next = history_buffer; /* Next available slot. */
-static char **history_view = history_buffer; /* What the user is looking at. */
-#define history_end (history_buffer + MAX_HISTORY - 1)
+//#define MAX_HISTORY 20
+//static char *history_buffer[MAX_HISTORY];
+//static char **history_next = history_buffer; /* Next available slot. */
+//static char **history_view = history_buffer; /* What the user is looking at. */
+//#define history_end (history_buffer + MAX_HISTORY - 1)
 
 extern bool is_terminator (zchar);
 extern void read_string (int, zchar *);
@@ -94,7 +94,7 @@ static int timeout_to_ms()
     if (diff.tv_sec < 0) return 0;
     if (diff.tv_sec >= INT_MAX / 1000 - 1) /* Paranoia... */
 	return INT_MAX - 1000;
-    return diff.tv_sec * 1000 + diff.tv_usec / 1000;
+    return (int)(diff.tv_sec * 1000 + diff.tv_usec / 1000);
 }
 
 /*
@@ -228,7 +228,7 @@ static int unix_read_char(int extkeys)
     }
 }
 
-
+#if 0
 /*
  * unix_add_to_history
  *
@@ -295,7 +295,7 @@ static int unix_history_forward(zchar *str, int searchlen, int maxlen)
     strcpy((char *)str + searchlen, *history_view + searchlen);
     return 1;
 }
-
+#endif
 
 
 /*
@@ -441,6 +441,7 @@ static bool ui_read_line(char *s, char *prompt, bool show_cursor,
     return FALSE;
 }
 
+#if 0
 /* Read a line that is not part of z-machine input (more prompts and
  * filename requests).  */
 static void ui_read_misc_line(char *s, char *prompt)
@@ -449,6 +450,7 @@ static void ui_read_misc_line(char *s, char *prompt)
   /* Remove terminating newline */
   s[strlen(s) - 1] = '\0';
 }
+#endif
 
 /* For allowing the user to input in a single line keys to be returned
  * for several consecutive calls to read_char, with no screen update

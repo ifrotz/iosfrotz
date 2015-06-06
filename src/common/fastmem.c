@@ -860,7 +860,7 @@ static long mem_diff (zbyte *a, zbyte *b, zword mem_size, zbyte *diff)
     unsigned size = mem_size;
     zbyte *p = diff;
     unsigned j;
-    zbyte c;
+    zbyte c = 0;
 
     for (;;) {
 	for (j = 0; size > 0 && (c = *a++ ^ *b++) == 0; j++)

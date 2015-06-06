@@ -44,8 +44,8 @@ cell *screen_data = NULL;
 cellcolor *screen_colors = NULL;
 
 static cell make_cell(int style, char c) {return (style << 8) | (0xff & c);}
-static char cell_char(cell c) {return c & 0xff;}
-static int cell_style(cell c) {return c >> 8;}
+//static char cell_char(cell c) {return c & 0xff;}
+//static int cell_style(cell c) {return c >> 8;}
 
 /* A cell's style is REVERSE_STYLE, normal (0), or PICTURE_STYLE.
  * PICTURE_STYLE means the character is part of an ascii image outline

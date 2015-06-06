@@ -30,7 +30,7 @@
 #include <ctype.h>
 
 /* We will use our own private getopt functions. */
-#include "getopt.h"
+//#include "getopt.h"
 
 #include <termios.h>
 
