@@ -134,7 +134,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         [m_textField setAutocorrectionType: UITextAutocorrectionTypeNo];
         [m_textField setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
         
-        m_textField.text = @(iphone_filename);
+        m_textField.text = @(iosif_filename);
         
         //	[m_tableView setBounces: NO];
         

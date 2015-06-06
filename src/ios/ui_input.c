@@ -100,7 +100,7 @@ static int timeout_to_ms()
 /*
  * unix_read_char
  *
- * This uses iphone_getchar() routine to get the next character
+ * This uses iosif_getchar() routine to get the next character
  * typed, and returns it.  It returns values which the standard
  * considers to be legal input, and also returns editing and frotz hot
  * keys.  If called with extkeys set it will also return line-editing
@@ -114,7 +114,7 @@ static int unix_read_char(int extkeys)
     int c;
     while(1) {
 	int tmo = timeout_to_ms();
-	c = iphone_getchar(tmo);
+	c = iosif_getchar(tmo);
 	if (c == ZC_AUTOSAVE) {
 	    do_autosave = 1;
 	    return c;
@@ -150,7 +150,7 @@ static int unix_read_char(int extkeys)
 	   value of the letter.  We have to decide here whether to
 	   return a single escape or a frotz hot key. */
 	case -30:
-	    c = iphone_getchar(timeout_to_ms());
+	    c = iosif_getchar(timeout_to_ms());
 	    switch(c) {
 	    case -1: return ZC_ESCAPE;
 	    case 'p': return ZC_HKEY_PLAYBACK;
@@ -311,14 +311,14 @@ zchar os_read_key (int timeout, int cursor)
     zchar c;
 
 //    if (!cursor) curs_set(0); //xxx
-    iphone_enable_single_key_input();
+    iosif_enable_single_key_input();
     unix_set_global_timeout(timeout);
     c = (zchar) unix_read_char(0);
     if (cwin == 1 && c == ZC_BACKSPACE) {
-	iphone_backspace();
-	iphone_putchar(c);
+	iosif_backspace();
+	iosif_putchar(c);
     }
-    iphone_disable_input();
+    iosif_disable_input();
 
 //    if (!cursor) curs_set(1); //xxx
     return c;
@@ -377,9 +377,9 @@ static void zgetline(char *s)
 {
     int c = 0;
     char *p = s;
-    iphone_enable_input();
+    iosif_enable_input();
     while (p < s + INPUT_BUFFER_SIZE - 1)
-//	if ((c = iphone_getchar(timeout_to_ms())) != '\n')
+//	if ((c = iosif_getchar(timeout_to_ms())) != '\n')
 	if ((c = unix_read_char(0)) != '\n' && c != ZC_RETURN)
 	{
 	    if (c == -1) {
@@ -411,12 +411,12 @@ static void zgetline(char *s)
     else
 	*p++ = '\n';
     *p++ = '\0';
-    iphone_disable_input();
+    iosif_disable_input();
   
     if (c == ZC_TIME_OUT || p < s + INPUT_BUFFER_SIZE - 1)
         return;
    
-    while (iphone_getchar(-1) != '\n')
+    while (iosif_getchar(-1) != '\n')
       ;
     printf("Line too long, truncated to %s\n", s - INPUT_BUFFER_SIZE);
 }
@@ -431,7 +431,7 @@ static bool ui_read_line(char *s, char *prompt, bool show_cursor,
 {
     unix_set_global_timeout(timeout);
     if (prompt)
-	iphone_puts(prompt);
+	iosif_puts(prompt);
     zgetline(s);
     translate_special_chars(s);
     if (*s == ZC_AUTOSAVE)
@@ -496,7 +496,7 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
   /* TODO: Truncate to width and max.  */
 
   /* copy to screen */
- // iphone_puts(read_line_buffer); // dumb_display_user_input
+ // iosif_puts(read_line_buffer); // dumb_display_user_input
   /* copy to the buffer and save the rest for next time.  */
   strcat((char*)buf, read_line_buffer);
   p = read_line_buffer + strlen(read_line_buffer) + 1;
@@ -514,14 +514,14 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
 extern char SAVE_PATH[];
 
 void	os_mark_recent_save() {
-    iphone_mark_recent_save();
+    iosif_mark_recent_save();
 }
 
 int os_read_file_name (char *file_name, const char *default_name, int flag) {
-    return iphone_prompt_file_name(file_name, default_name, flag);
+    return iosif_prompt_file_name(file_name, default_name, flag);
 }
 
-int iphone_prompt_file_name (char *file_name, const char *default_name, int flag)
+int iosif_prompt_file_name (char *file_name, const char *default_name, int flag)
 {
   char buffer[INPUT_BUFFER_SIZE*2], *buf; // prompt[INPUT_BUFFER_SIZE]
   char *dflt, *ext = NULL, *altext = NULL, *pext;
@@ -536,7 +536,7 @@ int iphone_prompt_file_name (char *file_name, const char *default_name, int flag
   buf = buffer + strlen(buffer);
   if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_PLAYBACK || flag == FILE_SCRIPT) {
     buf[0] = '\0';
-    if (!iphone_read_file_name (buf, dflt, flag))
+    if (!iosif_read_file_name (buf, dflt, flag))
         return FALSE;
     if (!buf[0])
 	strcpy(buf, dflt);
@@ -564,12 +564,12 @@ int iphone_prompt_file_name (char *file_name, const char *default_name, int flag
 	strcat(buf, ext);
   } else {
       buf[0] = '\0';
-      if (!iphone_read_file_name (buf, dflt, flag))
+      if (!iosif_read_file_name (buf, dflt, flag))
          return FALSE;
   }
 
   if (strlen(buf) > MAX_FILE_NAME) {
-    iphone_puts("\nFilename too long!\n");
+    iosif_puts("\nFilename too long!\n");
     return FALSE;
   }
   // restore filenames are abs, save are rel
@@ -589,7 +589,7 @@ int iphone_prompt_file_name (char *file_name, const char *default_name, int flag
 	fn = file_name;
     sprintf(overwritePrompt, "Overwrite existing file \"%s\"? ", fn);
     ui_read_misc_line(buf, overwritePrompt);
-    iphone_putchar('\n');
+    iosif_putchar('\n');
     return(tolower(buf[0]) == 'y');
   }
 #endif

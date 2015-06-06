@@ -596,7 +596,7 @@ int gli_get_key(glui32 *key, glui32 timeout)
     wint_t keycode;
     int status;
 
-    keycode = iphone_getchar(timeout ? timeout : -1);
+    keycode = iosif_getchar(timeout ? timeout : -1);
     if (keycode == ZC_AUTOSAVE) {
         do_autosave = 1;
         status = -1;

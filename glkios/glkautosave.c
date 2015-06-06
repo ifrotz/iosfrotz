@@ -153,7 +153,7 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
     s->style = win->style;
     s->size = win->size;
     if (win->type == wintype_Graphics)
-        iphone_save_glk_win_graphics_img(wingfxcount++, win->iphone_glkViewNum);
+        iosif_save_glk_win_graphics_img(wingfxcount++, win->iosif_glkViewNum);
     //s->size = (win->type == wintype_TextGrid) ? ((window_textgrid_t*)win->data)->linessize : win->size;
     s->method = win->method;
     s->splitwin = win->splitwin;
@@ -625,7 +625,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                             foundwin->type == wintype_TextBuffer ? "textbuffer" :
                             foundwin->type == wintype_TextGrid ? "textgrid" :
                             foundwin->type == wintype_Blank ? "blank" : "graphics", (long)cur->id);
-					iphone_win_puts(0, errbuf);
+					iosif_win_puts(0, errbuf);
 					return FALSE;
 				}
 				winid[winct-1].win = win;
@@ -655,9 +655,9 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                         wtb->inecho = win->echo_line_input;
                     }
                     if (win->mouse_request && (win->type == wintype_Graphics || win->type == wintype_TextGrid))
-                        iphone_enable_tap(win->iphone_glkViewNum);
+                        iosif_enable_tap(win->iosif_glkViewNum);
                     if (win->hyper_request && (win->type == wintype_TextGrid || win->type == wintype_TextBuffer))
-                        iphone_enable_tap(win->iphone_glkViewNum);
+                        iosif_enable_tap(win->iosif_glkViewNum);
                 }
 				if (foundwin->inbuf) {
 					window_textbuffer_t *wtb = (window_textbuffer_t*)win->data;
@@ -673,7 +673,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                 
 				if (cur->type != gidisp_Class_Stream) {
 					sprintf(errbuf, "\nUnexpected window stream type %d. Aborting restore.\n", cur->type);
-					iphone_win_puts(0, errbuf);
+					iosif_win_puts(0, errbuf);
 					return FALSE;
 				} else {
 					foundstr = &cur->obj.str;
@@ -709,12 +709,12 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                 
 				if (cur->type != type_Style) {
 					sprintf(errbuf, "\nUnexpected stream type %d. Aborting restore.\n", cur->type);
-					iphone_win_puts(0, errbuf);
+					iosif_win_puts(0, errbuf);
 					return FALSE;
 				} else {
 					gli_window_set_stylehints(win, (GLK_STYLE_HINTS *)&cur->obj.style);
 				}
-				iphone_set_glk_default_colors(win->iphone_glkViewNum);
+				iosif_set_glk_default_colors(win->iosif_glkViewNum);
 			} else if (found && win->type == wintype_Graphics) {
 				if (i+1 < objects_count && objects[i+1].type == type_Graphics) {
 					i++;
@@ -723,8 +723,8 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 					wgp->width = cur->obj.gfx.width;
 					wgp->height = cur->obj.gfx.height;
 					wgp->backcolor = cur->obj.gfx.backcolor;
-					iphone_set_background_color(win->iphone_glkViewNum, wgp->backcolor);
-                    iphone_restore_glk_win_graphics_img(wingfxcount++, win->iphone_glkViewNum);
+					iosif_set_background_color(win->iosif_glkViewNum, wgp->backcolor);
+                    iosif_restore_glk_win_graphics_img(wingfxcount++, win->iosif_glkViewNum);
 				}
 			} else if (found && win->type == wintype_Pair) {
 				// this will never happen
@@ -778,7 +778,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 	}
 	if (winct != winct2) {
 		sprintf(errbuf, "\n[Autorestore warning: window count mismatch %d!=%d]\n", winct, winct2);
-		iphone_win_puts(0, errbuf);
+		iosif_win_puts(0, errbuf);
 	}
     
 	// freakin' great, so let's re-iterate, simultaneously doing an iteration and compare
@@ -802,7 +802,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 				}
                 //break; // This incorrect break was in cellardoor impl --
 			} else {
-				iphone_win_puts(0, "\nCould not restore saved state. Sorry. Aborting restore.\n");
+				iosif_win_puts(0, "\nCould not restore saved state. Sorry. Aborting restore.\n");
 				return FALSE;
 			}
 			// restore RECT
@@ -813,7 +813,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 				i++;
 				cur = objects + i;
 				if (cur->type != gidisp_Class_Stream) {
-					iphone_win_puts(0, "\nMissing stream. Aborting restore.\n");
+					iosif_win_puts(0, "\nMissing stream. Aborting restore.\n");
 					return FALSE;
 				} else {
 					foundstr = &cur->obj.str;
@@ -832,7 +832,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 				cur = objects + i;
 				if (cur->type != type_Style) {
 					// style chunk is not where it should be
-					iphone_win_puts(0, "\nMissing style chunk. Aborting restore.\n");
+					iosif_win_puts(0, "\nMissing style chunk. Aborting restore.\n");
 					return FALSE;
 				}
 			} else if (win->type == wintype_Pair) {
@@ -841,7 +841,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 				cur = objects + i;
 				
 				if (cur->type != type_Pair) {
-					iphone_win_puts(0, "\nCorrupt win pair. Aborting restore.\n");
+					iosif_win_puts(0, "\nCorrupt win pair. Aborting restore.\n");
 					return FALSE;
 				} else {
 					struct glk_winpair_autosave *foundpair = &cur->obj.pair;
@@ -907,11 +907,11 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                         (cur->type == strtype_File) ? "strtype_File" :
                         (cur->type == strtype_Window) ? "strtype_Window" :
                         (cur->type == strtype_Memory) ? "strtype_Memory" : "UNKNOWN", (int)cur->id);
-				iphone_win_puts(0, errbuf);
+				iosif_win_puts(0, errbuf);
 			}
 #endif
 		} else if (cur->type == gidisp_Class_Fileref) {
-            //			iphone_win_puts(0, "\n[Autorestore warning: missing file stream]\n");
+            //			iosif_win_puts(0, "\n[Autorestore warning: missing file stream]\n");
             if (*cur->obj.fref.filename && strcmp(cur->obj.fref.filename, kFrotzAutoSaveFile)!=0) {
                 glui32 usage = (cur->obj.fref.textmode ? fileusage_TextMode : 0)
                 | (cur->obj.fref.filetype & fileusage_TypeMask);

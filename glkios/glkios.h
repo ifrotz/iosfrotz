@@ -77,7 +77,7 @@ struct glk_window_struct {
     intptr_t splitwin;
     int store;
 
-    int iphone_glkViewNum;
+    int iosif_glkViewNum;
     
     gidispatch_rock_t disprock;
     window_t *next, *prev; /* in the big linked list of windows */

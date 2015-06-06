@@ -249,7 +249,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
         } else
             gli_delete_fileref(fref);
         if (rstatus) {
-            iphone_win_puts(0, "Autorestore failed.\n");
+            iosif_win_puts(0, "Autorestore failed.\n");
             finished = 1;
         }
     }

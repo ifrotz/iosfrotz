@@ -80,7 +80,7 @@
                          "</p>%@<br/>\n"
                          "</body>\n",
                          baseFontSize+2, baseFontSize,
-                         (iphone_ifrotz_verbose_debug & 2) ?
+                         (iosif_ifrotz_verbose_debug & 2) ?
                          @"<b>Frotz</b> comes with a collection of bundled stories/games, and works with most stories written in the Z-Machine or glulx formats. "
                          "More stories are available from the Interactive Fiction Database (IFDB) and elsewhere on the Internet and can be "
                          "opened in Frotz via Safari or other apps or browsed to using the "
@@ -97,7 +97,7 @@
                          (!gLargeScreenDevice) ?
                          @"<strong>Please note that some games expect a screen at least 80 columns wide, and may produce clipped output</strong>, especially when printing fixed-width text or block quotations.  "
                          "Turning your device into landscape (sideways) orientation will usually allow you to view such content correctly.  " : @"",
-                         ((iphone_ifrotz_verbose_debug & 2) || !(iphone_ifrotz_verbose_debug & 4)) ? @"" :
+                         ((iosif_ifrotz_verbose_debug & 2) || !(iosif_ifrotz_verbose_debug & 4)) ? @"" :
                          @"<p><small><sup><b>*</b></sup> Note that App Store policy does not allow Frotz to download new content from the Internet, "
                          "so many more games are now bundled with Frotz to try to mitigate this unfortunate and restrictive policy.</small></p>"
                          ];

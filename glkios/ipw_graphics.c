@@ -44,30 +44,30 @@ void win_graphics_redraw(window_t *win)
 }
 
 void win_graphics_update(window_t *win) {
-    iphone_glk_window_graphics_update(win->iphone_glkViewNum);
+    iosif_glk_window_graphics_update(win->iosif_glkViewNum);
 }
 
 #ifdef GLK_MODULE_IMAGE
 
 glui32 glk_image_draw(winid_t win, glui32 image, glsi32 val1, glsi32 val2) {
-    if (!win || win->iphone_glkViewNum < 0
+    if (!win || win->iosif_glkViewNum < 0
         || (win->type != wintype_Graphics && win->type != wintype_TextBuffer))
         return FALSE;
     
-    return iphone_glk_image_draw(win->iphone_glkViewNum, image, val1, val2, 0, 0);
+    return iosif_glk_image_draw(win->iosif_glkViewNum, image, val1, val2, 0, 0);
 }
 
 glui32 glk_image_draw_scaled(winid_t win, glui32 image,  glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
-    if (!win || win->iphone_glkViewNum < 0
+    if (!win || win->iosif_glkViewNum < 0
         || (win->type != wintype_Graphics && win->type != wintype_TextBuffer))
         return FALSE;
 
-    return iphone_glk_image_draw(win->iphone_glkViewNum, image, val1, val2, width, height);
+    return iosif_glk_image_draw(win->iosif_glkViewNum, image, val1, val2, width, height);
 }
 
 glui32 glk_image_get_info(glui32 image, glui32 *width, glui32 *height)
 {
-    return iphone_glk_image_get_info(image, width, height);
+    return iosif_glk_image_get_info(image, width, height);
 }
 
 void glk_window_flow_break(winid_t win)
@@ -78,26 +78,26 @@ void glk_window_flow_break(winid_t win)
 void glk_window_erase_rect(winid_t win, 
     glsi32 left, glsi32 top, glui32 width, glui32 height)
 {
-    if (!win || win->iphone_glkViewNum < 0 ||  win->type != wintype_Graphics)
+    if (!win || win->iosif_glkViewNum < 0 ||  win->type != wintype_Graphics)
 	return;
-    iphone_glk_window_erase_rect(win->iphone_glkViewNum, left, top, width, height);
+    iosif_glk_window_erase_rect(win->iosif_glkViewNum, left, top, width, height);
 }
 
 void glk_window_fill_rect(winid_t win, glui32 color, 
     glsi32 left, glsi32 top, glui32 width, glui32 height)
 {
-    if (!win || win->iphone_glkViewNum < 0 ||  win->type != wintype_Graphics)
+    if (!win || win->iosif_glkViewNum < 0 ||  win->type != wintype_Graphics)
 	return;
-    iphone_glk_window_fill_rect(win->iphone_glkViewNum, color, left, top, width, height);
+    iosif_glk_window_fill_rect(win->iosif_glkViewNum, color, left, top, width, height);
 }
 
 void glk_window_set_background_color(winid_t win, glui32 color)
 {
-    if (!win || win->iphone_glkViewNum < 0 ||  win->type != wintype_Graphics)
+    if (!win || win->iosif_glkViewNum < 0 ||  win->type != wintype_Graphics)
 	return;
     window_graphics_t *wgp = (window_graphics_t*)win->data;
     wgp->backcolor = color;
-    iphone_set_background_color(win->iphone_glkViewNum, color);
+    iosif_set_background_color(win->iosif_glkViewNum, color);
 }
 
 #endif /* GLK_MODULE_IMAGE */

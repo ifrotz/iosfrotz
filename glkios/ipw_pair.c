@@ -102,14 +102,14 @@ void win_pair_rearrange(window_t *win, grect_t *box)
                     case wintype_TextBuffer:
                     case wintype_TextGrid:
                         if (dwin->vertical)
-                            split = dwin->size * iphone_fixed_font_width;
+                            split = dwin->size * iosif_fixed_font_width;
                         else
-                            split = dwin->size * iphone_fixed_font_height;
+                            split = dwin->size * iosif_fixed_font_height;
                         break;
                     case wintype_Graphics:
                         split = dwin->size;
                         if (!dwin->vertical) {
-                            if (win->bbox.right-win->bbox.left == iphone_screenwidth  && !gLargeScreenDevice)
+                            if (win->bbox.right-win->bbox.left == iosif_screenwidth  && !gLargeScreenDevice)
                                 split /= 2;
                         }
                         break;

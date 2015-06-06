@@ -1297,7 +1297,7 @@ resume_execution:
                 /* close out the network file */
                 netfile->close(vmg0_);
                 
-                iphone_mark_recent_save();
+                iosif_mark_recent_save();
                 autosave_done = 1;
             }
 

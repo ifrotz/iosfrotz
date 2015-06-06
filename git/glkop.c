@@ -716,7 +716,7 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                             opref = classes_get(*cx-'a', thisval);
                             if (!opref) {
                                 if (*cx=='b' || *cx=='c') /// stream; hack to make autorestore of saved game with active transcript (bug) not fatal
-                                    iphone_win_puts(0, "[Reference to nonexistent Glk stream or file.]\n");
+                                    iosif_win_puts(0, "[Reference to nonexistent Glk stream or file.]\n");
                                 else
                                     fatalError("Reference to nonexistent Glk object.");
                             }
@@ -1637,7 +1637,7 @@ git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize) {
         free(objects);
         return status;
     } else {
-        iphone_win_puts(0, "\n[Can't restore autosave - unknown Glk Class Save version number]\n");
+        iosif_win_puts(0, "\n[Can't restore autosave - unknown Glk Class Save version number]\n");
         return FALSE;
     }
 }

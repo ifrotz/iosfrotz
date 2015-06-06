@@ -99,8 +99,8 @@ void win_textbuffer_update(window_t *win)
 
 void win_textbuffer_putchar(window_t *win, wchar_t ch)
 {
-    if (win->iphone_glkViewNum != -1)
-        iphone_win_putchar(win->iphone_glkViewNum, ch);
+    if (win->iosif_glkViewNum != -1)
+        iosif_win_putchar(win->iosif_glkViewNum, ch);
 #if 0
     window_textbuffer_t *dwin = win->data;
     long lx;
@@ -156,7 +156,7 @@ void win_textbuffer_clear(window_t *win)
     window_textbuffer_t *dwin = win->data;
     dwin->numchars = 0;
 
-    iphone_erase_win(win->iphone_glkViewNum);
+    iosif_erase_win(win->iosif_glkViewNum);
 }
 
 void win_textbuffer_trim_buffer(window_t *win)
@@ -388,7 +388,7 @@ void win_textbuffer_cancel_line(window_t *win, event_t *ev)
         
     if (len > inmax)
         len = inmax;
-    len = iphone_peek_inputline(&dwin->chars[dwin->infence], len);
+    len = iosif_peek_inputline(&dwin->chars[dwin->infence], len);
         
     export_input_line(inbuf, inunicode, len, &dwin->chars[dwin->infence]);
 
@@ -424,8 +424,8 @@ static void import_input_line(window_textbuffer_t *dwin, void *buf,
     /* len will be nonzero. */
 
     if (unicode) {
-        if (dwin->owner->iphone_glkViewNum != -1)
-            iphone_set_input_line(buf, len);
+        if (dwin->owner->iosif_glkViewNum != -1)
+            iosif_set_input_line(buf, len);
         //put_text(dwin, buf, len, dwin->incurs, 0);
     }
     else {
@@ -435,8 +435,8 @@ static void import_input_line(window_textbuffer_t *dwin, void *buf,
             cx[ix] = UCS(((char *)buf)[ix]);
         }
         cx[ix] = 0;
-        if (dwin->owner->iphone_glkViewNum != -1)
-            iphone_set_input_line(cx, len);
+        if (dwin->owner->iosif_glkViewNum != -1)
+            iosif_set_input_line(cx, len);
         //put_text(dwin, cx, len, dwin->incurs, 0);
         free(cx);
     }

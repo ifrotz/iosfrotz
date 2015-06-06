@@ -70,7 +70,7 @@ glui32 glk_style_measure(window_t *win, glui32 styl, glui32 hint,
             *result = stylehint_just_LeftFlush;
             return TRUE;
         case stylehint_Size:
-            *result = iphone_fixed_font_height;
+            *result = iosif_fixed_font_height;
             return TRUE;
         case stylehint_Weight:
             *result = 0; //bcs ((styleattrs[styl] & A_BOLD) != 0);

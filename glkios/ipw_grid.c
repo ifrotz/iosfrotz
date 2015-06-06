@@ -114,8 +114,8 @@ void win_textgrid_rearrange(window_t *win, grect_t *box)
     window_textgrid_t *dwin = win->data;
     dwin->owner->bbox = *box;
     
-    newwid = (box->right - box->left) / iphone_fixed_font_width;
-    newhgt = (box->bottom - box->top) / iphone_fixed_font_height;
+    newwid = (box->right - box->left) / iosif_fixed_font_width;
+    newhgt = (box->bottom - box->top) / iosif_fixed_font_height;
     
     if (dwin->lines == NULL) {
         dwin->linessize = (newhgt+1);
@@ -244,7 +244,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
     orgx = dwin->owner->bbox.left;
     orgy = dwin->owner->bbox.top;
     
-    IPGlkGridArray *ipGrid = iphone_glk_getGridArray(dwin->owner->iphone_glkViewNum);
+    IPGlkGridArray *ipGrid = iosif_glk_getGridArray(dwin->owner->iosif_glkViewNum);
     for (jx=dwin->dirtybeg; jx<dwin->dirtyend; jx++) {
         tgline_t *ln = &(dwin->lines[jx]);
         if (drawall) {
@@ -279,7 +279,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
                     break;
                 wch = ucx[lnoffset(ln,ix)];
                 *(ipGrid->gridArray + jx*ipGrid->nCols + ix) = wch;
-                //            local_addnwstr(dwin->owner->iphone_glkViewNum, ucx + lnoffset(ln, beg), lnoffset(ln, ix) - lnoffset(ln, beg));
+                //            local_addnwstr(dwin->owner->iosif_glkViewNum, ucx + lnoffset(ln, beg), lnoffset(ln, ix) - lnoffset(ln, beg));
             }
         }
         
@@ -289,7 +289,7 @@ static void updatetext(window_textgrid_t *dwin, int drawall)
     if (ipGrid->pendingClose)
         abort();
     
-    iphone_win_puts(dwin->owner->iphone_glkViewNum, "\n\n");
+    iosif_win_puts(dwin->owner->iosif_glkViewNum, "\n\n");
     
     
     dwin->dirtybeg = -1;

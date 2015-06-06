@@ -1180,7 +1180,7 @@ glui32 restoreClassesChunk_glulxe(strid_t file, glui32 chunkSize) {
         free(objects);
         return status;
     } else {
-        iphone_win_puts(0, "\n[Can't restore autosave - unknown Glk Class Save version number]\n");
+        iosif_win_puts(0, "\n[Can't restore autosave - unknown Glk Class Save version number]\n");
         return FALSE;
     }
 }

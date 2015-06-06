@@ -127,7 +127,7 @@ frefid_t glk_fileref_create_temp(glui32 usage, glui32 rock)
     /* This is a pretty good way to do this on Unix systems. On Macs,
         it's pretty bad, but this library won't be used on the Mac 
         -- I hope. I have no idea about the DOS/Windows world. */
-    filename = iphone_get_temp_filename();
+    filename = iosif_get_temp_filename();
     if (filename) {
         fref = gli_new_fileref(filename, usage, rock);
         free(filename);
@@ -252,7 +252,7 @@ frefid_t glk_fileref_create_by_prompt(glui32 usage, glui32 fmode,
     
     sprintf(newbuf, "%s %s: ", prompt, prompt2);
 
-    ix =  iphone_prompt_file_name(buf, "", ipflag);
+    ix =  iosif_prompt_file_name(buf, "", ipflag);
 
     if (!ix) {
         /* The player cancelled input. */

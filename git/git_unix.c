@@ -30,9 +30,9 @@ glkunix_argumentlist_t glkunix_arguments[] =
 
 void fatalError (const char * s)
 {
-    iphone_puts("*** fatal error: ");
-    iphone_puts((char*)s);
-    iphone_puts(" ***\n");
+    iosif_puts("*** fatal error: ");
+    iosif_puts((char*)s);
+    iosif_puts(" ***\n");
     finished = 1;
 }
 

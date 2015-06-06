@@ -433,7 +433,7 @@ const int kCompletionViewTag = 21;
 
 -(void)setText:(NSString *)text {
     [super setText: text];
-    iphone_feed_input_line(text);
+    iosif_feed_input_line(text);
 
     if (m_completionLabel) {
         [m_completionLabel setText: nil];
@@ -448,7 +448,7 @@ const int kCompletionViewTag = 21;
 }
 
 -(void)delayedInput:(NSString*)text {
-    iphone_feed_input(text);
+    iosif_feed_input(text);
 }
 
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt {
@@ -485,7 +485,7 @@ const int kCompletionViewTag = 21;
         lastVisibleYPos[cwin] = sz.height;
         
         if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {// was below
-            //iphone_feed_input(text); // direct call causes odd performance issue (Bureaucracy)
+            //iosif_feed_input(text); // direct call causes odd performance issue (Bureaucracy)
             [self performSelector:@selector(delayedInput:) withObject:text afterDelay:0.04];
             return NO;
         }
@@ -575,7 +575,7 @@ const int kCompletionViewTag = 21;
     if ((ipzAllowInput & kIPZAllowInput)) {
         if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {
             [self setText: @""];
-            iphone_feed_input([NSString stringWithFormat:@"%c", ZC_BACKSPACE]);
+            iosif_feed_input([NSString stringWithFormat:@"%c", ZC_BACKSPACE]);
         }
         if (self.text.length == 1)
             m_lastCharDeleted = YES;
@@ -613,7 +613,7 @@ const int kCompletionViewTag = 21;
 - (void) upArrow: (UIKeyCommand *) keyCommand
 {
     if ((ipzAllowInput & kIPZNoEcho))
-        iphone_feed_input(@ZC_IPS_ARROW_UP);
+        iosif_feed_input(@ZC_IPS_ARROW_UP);
     else
         self.text = [m_inputHelper getPrevHistoryItem];
 }
@@ -621,23 +621,23 @@ const int kCompletionViewTag = 21;
 - (void) downArrow: (UIKeyCommand *) keyCommand
 {
     if ((ipzAllowInput & kIPZNoEcho))
-        iphone_feed_input(@ZC_IPS_ARROW_DOWN);
+        iosif_feed_input(@ZC_IPS_ARROW_DOWN);
     else
         self.text = [m_inputHelper getNextHistoryItem];
 }
 
 - (void) leftArrow: (UIKeyCommand *) keyCommand
 {
-    iphone_feed_input(@ZC_IPS_ARROW_LEFT);
+    iosif_feed_input(@ZC_IPS_ARROW_LEFT);
 }
 
 - (void) rightArrow: (UIKeyCommand *) keyCommand
 {
-    iphone_feed_input(@ZC_IPS_ARROW_RIGHT);
+    iosif_feed_input(@ZC_IPS_ARROW_RIGHT);
 }
 - (void) escapeKey: (UIKeyCommand *) keyCommand
 {
-    iphone_feed_input(@"\x1b");
+    iosif_feed_input(@"\x1b");
 }
 #endif
 

@@ -905,13 +905,13 @@ static void gli_set_style(stream_t *str, glui32 val)
                     istyle |= kFTCentered;
                 else if (just == stylehint_just_RightFlush)
                     istyle |= kFTRightJust;
-                iphone_set_text_attribs(str->win->iphone_glkViewNum, istyle, -1, TRUE);
+                iosif_set_text_attribs(str->win->iosif_glkViewNum, istyle, -1, TRUE);
                 
                 unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
                 unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
 
-                iphone_glk_set_text_colors(str->win->iphone_glkViewNum, textColor, bgColor);
-                //printf("stc v %d style %d text %x bg %x\n", str->win->iphone_glkViewNum, val, textColor, bgColor);
+                iosif_glk_set_text_colors(str->win->iosif_glkViewNum, textColor, bgColor);
+                //printf("stc v %d style %d text %x bg %x\n", str->win->iosif_glkViewNum, val, textColor, bgColor);
             }
             if (str->win->echostr && str->win->echostr != str)
                 gli_set_style(str->win->echostr, val);

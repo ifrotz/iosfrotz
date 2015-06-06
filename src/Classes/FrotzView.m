@@ -42,7 +42,7 @@
 
 -(void)storyViewTwoFingerTap:(UITapGestureRecognizer *) recognizer {
     if ((ipzAllowInput & kIPZNoEcho))
-        iphone_feed_input(@"\x1b"); // press ESC
+        iosif_feed_input(@"\x1b"); // press ESC
 }
 
 -(void)storyViewPinch:(UIPinchGestureRecognizer *) recognizer {

@@ -92,11 +92,11 @@ static void compute_content_box()
     if (pref_screenwidth)
         width = pref_screenwidth;
     else
-        width = iphone_screenwidth; // iphone_textview_width;
+        width = iosif_screenwidth; // iosif_textview_width;
     if (pref_screenheight)
         height = pref_screenheight;
     else
-        height = iphone_screenheight;//  iphone_textview_height;
+        height = iosif_screenheight;//  iosif_textview_height;
     
     content_box.left = 0;
     content_box.top = 0;
@@ -145,7 +145,7 @@ window_t *gli_new_window(glui32 type, glui32 rock)
     if (gli_register_obj)
         win->disprock = (*gli_register_obj)(win, gidisp_Class_Window);
     
-    win->iphone_glkViewNum = -1;
+    win->iosif_glkViewNum = -1;
 
     if (!gli_focuswin) // bcs
         gli_focuswin = win;
@@ -163,7 +163,7 @@ void gli_delete_window(window_t *win)
         (*gli_unregister_obj)(win, gidisp_Class_Window, win->disprock);
 
     if (win->type != wintype_Pair && win->type != wintype_Blank)
-        iphone_destroy_glk_view(win->iphone_glkViewNum);
+        iosif_destroy_glk_view(win->iosif_glkViewNum);
 
     win->magicnum = 0;
     
@@ -279,7 +279,7 @@ winid_t glk_window_open(winid_t splitwin, glui32 method, glui32 size,
     if (!splitwin) {
         gli_rootwin = newwin;
         if (wintype == wintype_TextGrid || wintype == wintype_TextBuffer || wintype == wintype_Graphics)
-            newwin->iphone_glkViewNum = iphone_new_glk_view(newwin);
+            newwin->iosif_glkViewNum = iosif_new_glk_view(newwin);
 
         gli_window_rearrange(newwin, &box);
         /* redraw everything, which is just the new first window */
@@ -309,7 +309,7 @@ winid_t glk_window_open(winid_t splitwin, glui32 method, glui32 size,
             gli_rootwin = pairwin;
         }
         if (wintype == wintype_TextGrid || wintype == wintype_TextBuffer || wintype == wintype_Graphics)
-            newwin->iphone_glkViewNum = iphone_new_glk_view(newwin);
+            newwin->iosif_glkViewNum = iosif_new_glk_view(newwin);
 
         gli_window_rearrange(pairwin, &box);
         /* redraw the new pairwin and all its contents */
@@ -732,8 +732,8 @@ void glk_window_get_size(window_t *win, glui32 *width, glui32 *height)
         case wintype_TextBuffer:
             wid = win->bbox.right - win->bbox.left;
             hgt = win->bbox.bottom - win->bbox.top;
-            wid /= iphone_fixed_font_width * kIOSGlkScaleFactor;
-            hgt /= iphone_fixed_font_height * kIOSGlkScaleFactor;
+            wid /= iosif_fixed_font_width * kIOSGlkScaleFactor;
+            hgt /= iosif_fixed_font_height * kIOSGlkScaleFactor;
             break;
         case wintype_Graphics:
             wid = win->bbox.right - win->bbox.left;
@@ -822,8 +822,8 @@ void gli_window_rearrange(window_t *win, grect_t *box)
             win_graphics_rearrange(win, box);
             break;
     }
-    if (win->iphone_glkViewNum >= 0) {
-        iphone_glk_view_rearrange(win->iphone_glkViewNum, win);
+    if (win->iosif_glkViewNum >= 0) {
+        iosif_glk_view_rearrange(win->iosif_glkViewNum, win);
     }
 }
 
@@ -880,7 +880,7 @@ void gli_windows_redraw()
     }
     else {
         /* There are no windows at all. */
-        iphone_erase_screen();
+        iosif_erase_screen();
 #if 0
 	int ix, jx;
         ix = (content_box.left+content_box.right) / 2 - 7;
@@ -921,7 +921,7 @@ void gli_windows_place_cursor()
                 break;
         }
 
-	cwin = gli_focuswin->iphone_glkViewNum;
+	cwin = gli_focuswin->iosif_glkViewNum;
 	cursor_row = ypos;
 	cursor_col = xpos;
 
@@ -1084,7 +1084,7 @@ void glk_request_mouse_event(window_t *win)
     {
         case wintype_Graphics:
         case wintype_TextGrid:
-            iphone_enable_tap(win->iphone_glkViewNum);
+            iosif_enable_tap(win->iosif_glkViewNum);
             win->mouse_request = TRUE;
             break;
         default:
@@ -1154,7 +1154,7 @@ void glk_cancel_mouse_event(window_t *win)
         case wintype_Graphics:
         case wintype_TextGrid:
             if (!win->hyper_request)
-                iphone_disable_tap(win->iphone_glkViewNum);
+                iosif_disable_tap(win->iosif_glkViewNum);
             break;
         default:
             /* do nothing */
@@ -1206,7 +1206,7 @@ void glk_window_clear(window_t *win)
             win_textgrid_clear(win);
             break;
         case wintype_Graphics:
-            iphone_glk_window_erase_rect(win->iphone_glkViewNum, win->bbox.left, win->bbox.top,
+            iosif_glk_window_erase_rect(win->iosif_glkViewNum, win->bbox.left, win->bbox.top,
 					 win->bbox.right-win->bbox.left, win->bbox.bottom-win->bbox.top);
             break;
     }
@@ -1315,7 +1315,7 @@ void glk_set_hyperlink_stream(strid_t str, glui32 linkval)
         case strtype_Window:
             str->win->hyperlink = linkval;
             if (str->win->type == wintype_TextGrid || str->win->type == wintype_TextBuffer) {
-                iphone_set_hyperlink_value(str->win->iphone_glkViewNum, linkval, TRUE);
+                iosif_set_hyperlink_value(str->win->iosif_glkViewNum, linkval, TRUE);
             }
             if (str->win->echostr && str->win->echostr != str)
                 glk_set_hyperlink_stream(str->win->echostr, linkval);
@@ -1333,7 +1333,7 @@ void glk_request_hyperlink_event(winid_t win)
     {
         case wintype_TextGrid:
         case wintype_TextBuffer:
-            iphone_enable_tap(win->iphone_glkViewNum);
+            iosif_enable_tap(win->iosif_glkViewNum);
             win->hyper_request = TRUE;
             break;
         default:
@@ -1353,7 +1353,7 @@ void glk_cancel_hyperlink_event(winid_t win)
         case wintype_TextBuffer:
         case wintype_TextGrid:
             if (!win->mouse_request)
-                iphone_disable_tap(win->iphone_glkViewNum);
+                iosif_disable_tap(win->iosif_glkViewNum);
             break;
         default:
             /* do nothing */
@@ -1495,5 +1495,5 @@ glui32 gli_window_style_distinguish(winid_t win, glui32 styl1, glui32 styl2)
 }
 
 void glk_game_loaded() {
-    iphone_glk_game_loaded();
+    iosif_glk_game_loaded();
 }

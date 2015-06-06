@@ -65,9 +65,9 @@ void glk_select(event_t *event)
     gli_input_guess_focus();
     
     if (gli_focuswin && gli_focuswin->char_request)
-        iphone_enable_single_key_input();
+        iosif_enable_single_key_input();
     else
-        iphone_enable_input();
+        iosif_enable_input();
     
     while (curevent->type == evtype_None && !finished) {
         wint_t key;
@@ -144,7 +144,7 @@ void glk_select(event_t *event)
     }
     
     if (curevent->type != evtype_Timer)
-        iphone_disable_input();
+        iosif_disable_input();
     
     /* An event has occurred; glk_select() is over. */
     gli_windows_trim_buffers();

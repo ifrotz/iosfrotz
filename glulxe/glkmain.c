@@ -93,7 +93,7 @@ static winid_t get_error_win()
 */
 void fatal_error_handler(char *str, char *arg, int useval, glsi32 val)
 {
-    winid_t win = iphone_glk_getGridArray(0)->win; // get_error_win();
+    winid_t win = iosif_glk_getGridArray(0)->win; // get_error_win();
   if (win) {
     glk_set_window(win);
   }
@@ -122,7 +122,7 @@ void fatal_error_handler(char *str, char *arg, int useval, glsi32 val)
 */
 void nonfatal_warning_handler(char *str, char *arg, int useval, glsi32 val)
 {
-    winid_t win = iphone_glk_getGridArray(0)->win; // get_error_win();
+    winid_t win = iosif_glk_getGridArray(0)->win; // get_error_win();
     strid_t oldstr = glk_stream_get_current();
     if (win) {
         glk_set_window(win);

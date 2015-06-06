@@ -35,9 +35,9 @@ extern int ipzAllowInput;
 extern int lastVisibleYPos[];
 extern BOOL cursorVisible;
 
-void iphone_clear_input(NSString *initStr);
-void iphone_feed_input(NSString *str);
-void iphone_feed_input_line(NSString *str);
+void iosif_clear_input(NSString *initStr);
+void iosif_feed_input(NSString *str);
+void iosif_feed_input_line(NSString *str);
 
 @protocol InputHelperDelegate
 -(void)hideInputHelper;

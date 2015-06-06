@@ -163,7 +163,7 @@
         if (![delegate scrollStoryViewOnePage:self fraction:1.0]) {
             if (!m_skipNextTap && ![delegate splashVisible]) {
                 if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) { // single key input
-                    iphone_feed_input(@" "); // press 'space'
+                    iosif_feed_input(@" "); // press 'space'
                 } else if (![delegate isKBShown]) {
                     [delegate activateKeyboard];
                 }

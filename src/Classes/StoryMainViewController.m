@@ -59,13 +59,13 @@
 #define kImageEscCode "I"
 #define kHyperlinkEscCode "L"
 
-int iphone_textview_width = kDefaultTextViewMinWidth;
-int iphone_textview_height = kDefaultTextViewHeight;
-int iphone_screenwidth = 320, iphone_screenheight = 480;
-int iphone_fixed_font_width = 5, iphone_fixed_font_height = 10;
+int iosif_textview_width = kDefaultTextViewMinWidth;
+int iosif_textview_height = kDefaultTextViewHeight;
+int iosif_screenwidth = 320, iosif_screenheight = 480;
+int iosif_fixed_font_width = 5, iosif_fixed_font_height = 10;
 
 int do_autosave = 0, autosave_done = 0, refresh_savedir = 0, restore_frame_count;
-int iphone_ifrotz_verbose_debug = 2; // (((!APPLE_FASCISM) << 1)|0); // 4
+int iosif_ifrotz_verbose_debug = 2; // (((!APPLE_FASCISM) << 1)|0); // 4
 static int discard_output_until_prompt = 0;
 
 FileBrowserState do_filebrowser = kFBHidden;
@@ -74,8 +74,8 @@ BOOL disable_complete = NO;
 int lastInputWindow = -1;
 int inputsSinceSaveRestore;
 
-char iphone_filename[MAX_FILE_NAME];
-char iphone_scriptname[MAX_FILE_NAME];
+char iosif_filename[MAX_FILE_NAME];
+char iosif_scriptname[MAX_FILE_NAME];
 
 StoryMainViewController *theSMVC;
 StoryView *theStoryView;
@@ -138,7 +138,7 @@ static void freeGlkImageCache() {
 }
 
 
-void iphone_ioinit() {
+void iosif_ioinit() {
     static BOOL didInitIO = NO;
     if (!didInitIO) {
         pthread_mutex_init(&winSizeMutex, NULL);
@@ -163,7 +163,7 @@ static int outputBufferLen = 0;
 static IPGlkGridArray glkGridArray[kMaxGlkViews];
 static NSMutableArray *glkInputs;
 
-void iphone_flush(bool lock) {
+void iosif_flush(bool lock) {
     if (lock)
         pthread_mutex_lock(&outputMutex);
     if (outputBufferLen) {
@@ -210,10 +210,10 @@ static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
 }
 
 
-void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned int bgColor) {
+void iosif_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned int bgColor) {
     pthread_mutex_lock(&outputMutex);
     
-    iphone_flush(NO);
+    iosif_flush(NO);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
 
@@ -227,19 +227,19 @@ void iphone_glk_set_text_colors(int viewNum, unsigned int textColor, unsigned in
     pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
+void iosif_set_text_attribs(int viewNum, int style, int color, bool lock) {
     if (lock)
         pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
     
     if (style != currTextStyle /*|| gStoryInterp==kGlxStory*/) {
-        iphone_flush(NO);
+        iosif_flush(NO);
         [bufferStr appendFormat: @ kOutputEscCode kStyleEscCode "%02x", style];
         currTextStyle = style;
     }
     if (color != -1 && color != currColor && gStoryInterp==kZStory) {
-        iphone_flush(NO);
+        iosif_flush(NO);
         // Why was this here?
     	//if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
         //    color = 0;
@@ -252,31 +252,31 @@ void iphone_set_text_attribs(int viewNum, int style, int color, bool lock) {
         pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_set_hyperlink_value(int viewNum, int val, bool lock) {
+void iosif_set_hyperlink_value(int viewNum, int val, bool lock) {
     if (lock)
         pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
-    iphone_flush(NO);
+    iosif_flush(NO);
     [bufferStr appendFormat: @ kOutputEscCode kHyperlinkEscCode "%08x", val];
     if (lock)
         pthread_mutex_unlock(&outputMutex);
 
 }
 
-void iphone_put_image(int viewNum, int imageNum, int imageAlign, bool lock) {
+void iosif_put_image(int viewNum, int imageNum, int imageAlign, bool lock) {
     if (lock)
         pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(viewNum, &isStatus);
     
-    iphone_flush(NO);
+    iosif_flush(NO);
     [bufferStr appendFormat: @kOutputEscCode kImageEscCode "%03d%1d", imageNum, imageAlign];
     if (lock)
         pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_win_putchar(int winNum, wchar_t c) {
+void iosif_win_putchar(int winNum, wchar_t c) {
     pthread_mutex_lock(&outputMutex);
     BOOL isStatus;
     NSMutableString *bufferStr = getBufferStrForWin(winNum, &isStatus);
@@ -288,7 +288,7 @@ void iphone_win_putchar(int winNum, wchar_t c) {
         [bufferStr setString: @"\n\n"];
     else if (winNum == 0) {
         if (c > 0xff || outputBufferLen >= sizeof(outputBuffer)/sizeof(outputBuffer[0])-1)
-            iphone_flush(NO);
+            iosif_flush(NO);
         if (c <= 0xff)
             outputBuffer[outputBufferLen++] = c;
         else
@@ -301,26 +301,26 @@ void iphone_win_putchar(int winNum, wchar_t c) {
     return;
 }
 
-void iphone_putchar(wchar_t c) {
-    iphone_win_putchar(cwin, c);
+void iosif_putchar(wchar_t c) {
+    iosif_win_putchar(cwin, c);
 }
 
-void iphone_puts(char *s) {
+void iosif_puts(char *s) {
     while (*s != '\0')
-        iphone_putchar(*s++);
+        iosif_putchar(*s++);
 }
 
-void iphone_win_puts(int winNum, char *s) {
+void iosif_win_puts(int winNum, char *s) {
     while (*s != '\0')
-        iphone_win_putchar(winNum, *s++);
+        iosif_win_putchar(winNum, *s++);
 }
 
-void iphone_win_putwcs(int winNum, wchar_t *s, int len) {
+void iosif_win_putwcs(int winNum, wchar_t *s, int len) {
     while (len-- > 0 && *s != 0)
-        iphone_win_putchar(winNum, *s++);
+        iosif_win_putchar(winNum, *s++);
 }
 
-void iphone_set_input_line(wchar_t *ws, int len) {
+void iosif_set_input_line(wchar_t *ws, int len) {
     int bufflen = 8 * len + 1;
     char* temp = malloc(bufflen);
     wcstombs(temp, ws, bufflen);
@@ -329,26 +329,26 @@ void iphone_set_input_line(wchar_t *ws, int len) {
     [theInputLine performSelectorOnMainThread:@selector(setText:) withObject:str waitUntilDone:YES];    
 }
 
-void iphone_clear_input(NSString *initStr) {
+void iosif_clear_input(NSString *initStr) {
     pthread_mutex_lock(&inputMutex);
     [ipzInputBufferStr setString: initStr ? initStr : @""];
     pthread_mutex_unlock(&inputMutex);
 }
 
-void iphone_feed_input(NSString *str) {
+void iosif_feed_input(NSString *str) {
     pthread_mutex_lock(&inputMutex);
     [ipzInputBufferStr appendString: str];
     pthread_mutex_unlock(&inputMutex);
 }
 
-void iphone_feed_input_line(NSString *str) {
+void iosif_feed_input_line(NSString *str) {
     pthread_mutex_lock(&inputMutex);
     [ipzLineInputStr setString: str ? str: @""];
     pthread_mutex_unlock(&inputMutex);
 }
 
-int iphone_peek_inputline(const wchar_t *inputbuf, int maxlen) {
-    iphone_flush(YES);
+int iosif_peek_inputline(const wchar_t *inputbuf, int maxlen) {
+    iosif_flush(YES);
     
     pthread_mutex_lock(&inputMutex);
 #if 1
@@ -365,9 +365,9 @@ int iphone_peek_inputline(const wchar_t *inputbuf, int maxlen) {
     return len;
 }
 
-int iphone_getchar(int timeout) {
+int iosif_getchar(int timeout) {
     struct timeval now, then;
-    iphone_flush(YES);
+    iosif_flush(YES);
     int c = 0;
     
     if (timeout > 0) {
@@ -418,21 +418,21 @@ int iphone_getchar(int timeout) {
     return -1;
 }
 
-IPGlkGridArray *iphone_glk_getGridArray(int viewNum) {
+IPGlkGridArray *iosif_glk_getGridArray(int viewNum) {
     return &glkGridArray[viewNum];
 }
 
-void iphone_glk_wininit() {
+void iosif_glk_wininit() {
     [theSMVC performSelectorOnMainThread:@selector(clearGlkViews) withObject:nil waitUntilDone:YES];
 }
 
-void iphone_glk_game_loaded() {
+void iosif_glk_game_loaded() {
     [theSMVC performSelectorOnMainThread:@selector(reloadImages) withObject:nil waitUntilDone:YES];
 }
 
 static int gNewGlkWinNum = -1;
 
-int iphone_new_glk_view(window_t *win) {
+int iosif_new_glk_view(window_t *win) {
     // This is not thread safe and should only be called from the thread running glk_main()!
     if (!win || numGlkViews >= kMaxGlkViews)
         return -1;
@@ -441,7 +441,7 @@ int iphone_new_glk_view(window_t *win) {
     if (!finished) {
         [theSMVC performSelectorOnMainThread:@selector(newGlkViewWithWin:) withObject:[NSValue valueWithPointer: win] waitUntilDone:YES]; // will increment numGlkViews
         if (gNewGlkWinNum < 0)
-            NSLog(@"error in iphone_new_glk_view!");
+            NSLog(@"error in iosif_new_glk_view!");
     }
     //    NSLog(@"new glk win %d, type=%d, win=%p", gNewGlkWinNum, win->type, win);
     if (gNewGlkWinNum >= 0) {
@@ -451,7 +451,7 @@ int iphone_new_glk_view(window_t *win) {
     return gNewGlkWinNum;
 }
 
-void iphone_destroy_glk_view(int viewNum) {
+void iosif_destroy_glk_view(int viewNum) {
     if (viewNum < 0 || viewNum > kMaxGlkViews)
         return;
     //    NSLog(@"destroy glk view %d", viewNum);
@@ -461,7 +461,7 @@ void iphone_destroy_glk_view(int viewNum) {
 }
 
 // delay grid allocation until here; we always call this shortly after new
-void iphone_glk_view_rearrange(int viewNum, window_t *win) {
+void iosif_glk_view_rearrange(int viewNum, window_t *win) {
     if (viewNum >= 0 && viewNum < numGlkViews) {
         if (win != glkGridArray[viewNum].win)
             abort();
@@ -475,8 +475,8 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
                 glkGridArray[viewNum].gridArray = nil;
                 free(ga);
             }
-            int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iphone_fixed_font_height;
-            int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iphone_fixed_font_width;
+            int nRows = glkGridArray[viewNum].nRows = (int)box.size.height / iosif_fixed_font_height;
+            int nCols = glkGridArray[viewNum].nCols = (int)box.size.width / iosif_fixed_font_width;
             if (nRows && nCols) {
                 glkGridArray[viewNum].gridArray = malloc(nRows*nCols*sizeof(wchar_t));
                 wchar_t sp = L' ';
@@ -491,14 +491,14 @@ void iphone_glk_view_rearrange(int viewNum, window_t *win) {
 }
 
 
-void iphone_erase_screen() {
+void iosif_erase_screen() {
     int saved_cwin = cwin;
-    iphone_flush(YES);
+    iosif_flush(YES);
     //NSLog(@"erase screen\n");
     if (!finished) {
         pthread_mutex_lock(&winSizeMutex);
         cwin = 1;
-        iphone_putchar(kClearEscChar);
+        iosif_putchar(kClearEscChar);
         cwin = saved_cwin;
         winSizeChanged = YES;
         pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
@@ -506,13 +506,13 @@ void iphone_erase_screen() {
     }
 }
 
-void iphone_set_glk_default_colors(int winNum) {
-    iphone_flush(YES);
-    iphone_win_putchar(winNum, kSetDefColorsChar);
+void iosif_set_glk_default_colors(int winNum) {
+    iosif_flush(YES);
+    iosif_win_putchar(winNum, kSetDefColorsChar);
 }
 
-void iphone_erase_win(int winnum) {
-    iphone_flush(YES);
+void iosif_erase_win(int winnum) {
+    iosif_flush(YES);
     //NSLog(@"erase mainwin\n");
     
 #if UseRichTextView
@@ -526,56 +526,56 @@ void iphone_erase_win(int winnum) {
     int saved_cwin = cwin;
     pthread_mutex_lock(&winSizeMutex);
     cwin = winnum;
-    iphone_putchar(kClearEscChar);
+    iosif_putchar(kClearEscChar);
     cwin = saved_cwin;
     winSizeChanged = YES;
     pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
     pthread_mutex_unlock(&winSizeMutex);
 }
 
-void iphone_erase_mainwin() {
-    iphone_erase_win(0);
+void iosif_erase_mainwin() {
+    iosif_erase_win(0);
 }
 
-void iphone_enable_tap(int viewNum) {
+void iosif_enable_tap(int viewNum) {
     [theSMVC performSelectorOnMainThread:@selector(enableTaps:) withObject:@(viewNum) waitUntilDone:YES];
     glkGridArray[viewNum].tapsEnabled = YES;
 }
 
-void iphone_disable_tap(int viewNum) {
+void iosif_disable_tap(int viewNum) {
     [theSMVC performSelectorOnMainThread:@selector(disableTaps:) withObject:@(viewNum) waitUntilDone:YES];
     glkGridArray[viewNum].tapsEnabled = NO;
 }
 
-void iphone_enable_input() {
+void iosif_enable_input() {
     pthread_mutex_lock(&outputMutex);
-    iphone_flush(NO);
+    iosif_flush(NO);
     if (ipzAllowInput == kIPZDisableInput)
         ipzAllowInput = kIPZRequestInput;
     pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_enable_single_key_input() {
+void iosif_enable_single_key_input() {
     pthread_mutex_lock(&outputMutex);
-    iphone_flush(NO);
+    iosif_flush(NO);
     if (ipzAllowInput == kIPZDisableInput)
         ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
     
     pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_disable_input() {
+void iosif_disable_input() {
     pthread_mutex_lock(&outputMutex);
-    iphone_flush(NO);
+    iosif_flush(NO);
     ipzAllowInput = kIPZDisableInput;
     pthread_mutex_unlock(&outputMutex);
 }
 
-void iphone_set_top_win_height(int height) {
+void iosif_set_top_win_height(int height) {
     
     // wait for output to drain so size won't take effect
     // until new output in window
-    iphone_flush(YES);
+    iosif_flush(YES);
     
     pthread_mutex_lock(&winSizeMutex);
     top_win_height = height;
@@ -584,11 +584,11 @@ void iphone_set_top_win_height(int height) {
     pthread_mutex_unlock(&winSizeMutex);
 }
 
-void iphone_mark_recent_save() {
+void iosif_mark_recent_save() {
     inputsSinceSaveRestore = 0;
 }
 
-char *iphone_get_temp_filename() {
+char *iosif_get_temp_filename() {
     char *templateName= strdup([[NSTemporaryDirectory() stringByAppendingPathComponent:@"frotztmp.XXXXXX"] fileSystemRepresentation]);
     char *tempFilename = mktemp(templateName);
     if (!tempFilename) {
@@ -598,8 +598,8 @@ char *iphone_get_temp_filename() {
     return tempFilename;
 }
 
-int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
-    *iphone_filename = 0;
+int iosif_read_file_name(char *file_name, const char *default_name,	int flag) {
+    *iosif_filename = 0;
     switch (flag) {
         case FILE_SAVE:
             do_filebrowser = kFBDoShowSave;
@@ -609,16 +609,16 @@ int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
             break;
         case FILE_SCRIPT:
             do_filebrowser = kFBDoShowScript;
-            strcpy(iphone_filename, default_name);
+            strcpy(iosif_filename, default_name);
             break;
         case FILE_RECORD:
         case FILE_PLAYBACK:
             do_filebrowser = flag == FILE_RECORD? kFBDoShowRecord : kFBDoShowPlayback;
-            strcpy(iphone_filename, default_name);
+            strcpy(iosif_filename, default_name);
             break;
         default:
             do_filebrowser = kFBHidden;
-            *iphone_filename = 0;
+            *iosif_filename = 0;
             return FALSE;
     }
     
@@ -628,11 +628,11 @@ int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
         usleep(100000);
     }
     
-    if (!*iphone_filename)
+    if (!*iosif_filename)
         return FALSE;
     
-    char *basefile = strrchr(iphone_filename, '/');
-    strcpy(file_name, basefile ? basefile+1 : iphone_filename);
+    char *basefile = strrchr(iosif_filename, '/');
+    strcpy(file_name, basefile ? basefile+1 : iosif_filename);
     
     //    if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
     //	; // ask before overwriting... // this is now done in the dialog itself
@@ -642,27 +642,27 @@ int iphone_read_file_name(char *file_name, const char *default_name,	int flag) {
 
 
 
-void iphone_disable_autocompletion() {
+void iosif_disable_autocompletion() {
     disable_complete = YES;
 }
 
-void iphone_enable_autocompletion() {
+void iosif_enable_autocompletion() {
     disable_complete = NO;
 }
 
-void iphone_start_script(char *scriptName) {
+void iosif_start_script(char *scriptName) {
     if (scriptName)
-        strcpy(iphone_scriptname, scriptName);
+        strcpy(iosif_scriptname, scriptName);
     else
-        *iphone_scriptname = '\0';
+        *iosif_scriptname = '\0';
 }
 
-void iphone_stop_script() {
-    *iphone_scriptname = '\0';
+void iosif_stop_script() {
+    *iosif_scriptname = '\0';
 }
 
 
-void iphone_recompute_screensize() {
+void iosif_recompute_screensize() {
     if (!theSMVC)
         return;
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
@@ -671,21 +671,21 @@ void iphone_recompute_screensize() {
 //    CGRect frame = [storyView frame];
     CGRect pFrame = [parentView frame];
     pFrame.size.height -= [theSMVC keyboardSize].height;
-    iphone_textview_width = (int)(pFrame.size.width / fontwid);
-    iphone_textview_height = (int)(pFrame.size.height / [[storyView font] leading])+1;
-    if (iphone_textview_width > MAX_COLS)
-        iphone_textview_width = MAX_COLS;
-    if (iphone_textview_height > MAX_ROWS)
-        iphone_textview_height = MAX_ROWS;    
+    iosif_textview_width = (int)(pFrame.size.width / fontwid);
+    iosif_textview_height = (int)(pFrame.size.height / [[storyView font] leading])+1;
+    if (iosif_textview_width > MAX_COLS)
+        iosif_textview_width = MAX_COLS;
+    if (iosif_textview_height > MAX_ROWS)
+        iosif_textview_height = MAX_ROWS;    
     
-    iphone_screenwidth = pFrame.size.width;
-    iphone_screenheight = pFrame.size.height;
-    iphone_fixed_font_width = fontwid;
-    iphone_fixed_font_height = [theSMVC statusFixedFontPixelHeight];
+    iosif_screenwidth = pFrame.size.width;
+    iosif_screenheight = pFrame.size.height;
+    iosif_fixed_font_width = fontwid;
+    iosif_fixed_font_height = [theSMVC statusFixedFontPixelHeight];
     
 }
 
-void iphone_save_glk_win_graphics_img(int ordNum, int viewNum) {
+void iosif_save_glk_win_graphics_img(int ordNum, int viewNum) {
     if (viewNum < 0 || viewNum >= kMaxGlkViews)
         return;
     window_t *win = glkGridArray[viewNum].win;
@@ -704,7 +704,7 @@ void iphone_save_glk_win_graphics_img(int ordNum, int viewNum) {
     }
 }
 
-void iphone_restore_glk_win_graphics_img(int ordNum, int viewNum) {
+void iosif_restore_glk_win_graphics_img(int ordNum, int viewNum) {
     if (viewNum < 0 || viewNum >= kMaxGlkViews)
         return;
     window_t *win = glkGridArray[viewNum].win;
@@ -732,7 +732,7 @@ void iphone_restore_glk_win_graphics_img(int ordNum, int viewNum) {
 }
 
 
-void iphone_set_background_color(int viewNum, glui32 color) {
+void iosif_set_background_color(int viewNum, glui32 color) {
     if (viewNum > kMaxGlkViews)
         return;
     glkGridArray[viewNum].bgColor = color;
@@ -741,7 +741,7 @@ void iphone_set_background_color(int viewNum, glui32 color) {
     [theSMVC performSelectorOnMainThread:@selector(setGlkBGColor:) withObject:@(viewNum) waitUntilDone:YES];
 }
 
-glui32 iphone_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
+glui32 iosif_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
     giblorb_map_t *map;
     giblorb_err_t err;
     giblorb_result_t blorbres;
@@ -786,18 +786,18 @@ typedef struct glkRectDrawArgs {
     glui32 width, height;
 } GlkRectDrawArgs;
 
-void iphone_glk_window_graphics_update(int viewNum) {
+void iosif_glk_window_graphics_update(int viewNum) {
     [theSMVC performSelectorOnMainThread:@selector(updateGlkWin:) withObject:@(viewNum) waitUntilDone:NO];
 }
 
-void iphone_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height) {
+void iosif_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height) {
 //    NSLog(@"glk_window_erase_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, 0, left, top, width, height };
 //    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
     [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
 }
 
-void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
+void iosif_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
 //    NSLog(@"glk_window_fill_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, color, left, top, width, height };
 //    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
@@ -807,7 +807,7 @@ void iphone_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 
 
 extern int gLastGlkEventWasArrange;
 
-glui32 iphone_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
+glui32 iosif_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height) {
     giblorb_map_t *map;
     giblorb_err_t err;
     
@@ -843,9 +843,9 @@ void run_zinterp(bool autorestore) {
     init_err ();
     if (init_memory () == 0) {
         init_screen();
-        script_reset(iphone_scriptname);
+        script_reset(iosif_scriptname);
         init_interpreter ();
-        iphone_ioinit();
+        iosif_ioinit();
         init_sound ();
         os_init_screen ();
         init_undo ();
@@ -896,12 +896,12 @@ void run_glxinterp(const char *story, bool autorestore) {
     
     char *argv[] = { "frotz", (char*)story, NULL, NULL, NULL };
     glkunix_startup_t  glkunix_startup = { 2,  argv };
-    iphone_ioinit();
+    iosif_ioinit();
     
     h_default_foreground = BLACK_COLOUR;
     h_default_background = WHITE_COLOUR;
     
-    iphone_recompute_screensize();
+    iosif_recompute_screensize();
     
     gli_initialize_misc();
     gli_initialize_windows();
@@ -1091,7 +1091,7 @@ static void setColorTable(RichTextView *v) {
     CGPoint pt = [recognizer locationInView: [recognizer view]];
     if (![self tapInView:[recognizer view] atPoint: pt]) {
         if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) { // single key input
-            iphone_feed_input(@" "); // press 'space'
+            iosif_feed_input(@" "); // press 'space'
         }
     }
 }
@@ -1377,7 +1377,7 @@ static void setColorTable(RichTextView *v) {
     if (img) {
         if (glkGridArray[viewNum].win->type == wintype_TextBuffer) {
 //            [[m_glkViews objectAtIndex: viewNum] appendImage: image];
-            iphone_put_image(viewNum, image, val1, NO);
+            iosif_put_image(viewNum, image, val1, NO);
 
         } else if (glkGridArray[viewNum].win->type == wintype_Graphics) {
             if (!width)
@@ -1419,7 +1419,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
                     iosEventX = hyperlink;
                     iosEventY = 0;
                     [self rememberLastContentOffsetAndAutoSave: m_storyView];
-                    iphone_feed_input(@"");
+                    iosif_feed_input(@"");
                     return YES;
                 }
             } else if (iosEventWin->mouse_request) {
@@ -1432,7 +1432,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
                     iosEventY /= sz.height;
                 }
                 [self rememberLastContentOffsetAndAutoSave: m_storyView];
-                iphone_feed_input(@"");
+                iosif_feed_input(@"");
                 return YES;
             }
         }
@@ -2284,7 +2284,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_inputLine updatePosition];
     
     if (gStoryInterp == kGlxStory) {
-        iphone_recompute_screensize();
+        iosif_recompute_screensize();
         screen_size_changed = 1;
     }
 }
@@ -2293,7 +2293,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
     if (gStoryInterp == kGlxStory) {
-        iphone_recompute_screensize();
+        iosif_recompute_screensize();
         screen_size_changed = 1;
     }
 }
@@ -2480,9 +2480,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             [self.navigationController setNavigationBarHidden:m_landscape ? YES:NO animated:YES];
     }
     if (file)
-        strcpy(iphone_filename, [file UTF8String]);
+        strcpy(iosif_filename, [file UTF8String]);
     else
-        *iphone_filename = '\0';
+        *iosif_filename = '\0';
     [self activateKeyboard];
     do_filebrowser = kFBHidden;
 }
@@ -2733,7 +2733,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 
-static int iphone_top_win_height = 1;
+static int iosif_top_win_height = 1;
 -(CGPoint)cursorOffset {
     return m_cursorOffset;
 }
@@ -2745,7 +2745,7 @@ static int iphone_top_win_height = 1;
     int prevHyperlink=0, hyperlink=0;
     int off = 0;
     int maxPossCols = MAX_COLS;
-    int numRows = iphone_top_win_height;
+    int numRows = iosif_top_win_height;
     int maxCols = 80; //h_screen_cols;
     window_textgrid_t *dwin = NULL;
     NSUInteger viewNum = [m_glkViews indexOfObject: view];
@@ -2890,7 +2890,7 @@ static int iphone_top_win_height = 1;
                     c = (unsigned char)screen_data[i * maxPossCols + j];
                 color = screen_colors[i * maxPossCols + j];
                 isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
-                if (currColor==0x22 || j >= h_screen_cols-1 && iphone_top_win_height <= 4 && firstColStyle) {
+                if (currColor==0x22 || j >= h_screen_cols-1 && iosif_top_win_height <= 4 && firstColStyle) {
                     isReverse = REVERSE_STYLE;
                     color = prevColor;
                 }
@@ -2948,7 +2948,7 @@ static int iphone_top_win_height = 1;
         }
         [buf appendString: @"                      "];
         off += 20;
-        if (1 || i < iphone_top_win_height-1) {
+        if (1 || i < iosif_top_win_height-1) {
             [buf appendString: @"\n"];
             ++off;
         }
@@ -2965,7 +2965,7 @@ static int iphone_top_win_height = 1;
 char *tempStatusLineScreenBuf() {
     static char buf[MAX_ROWS * MAX_COLS];
     int i, j=0;
-    for (i=0; i < iphone_top_win_height; ++i) {
+    for (i=0; i < iosif_top_win_height; ++i) {
         for (j=0; j < h_screen_cols; ++j) {
             char c = (char)screen_data[i * MAX_COLS + j];
             buf[i * (h_screen_cols+1) + j] = c;
@@ -3033,15 +3033,15 @@ char *tempStatusLineScreenBuf() {
     }
     int statusLen = [inputStatusStr length];
 
-    if (iphone_top_win_height == -2) {
+    if (iosif_top_win_height == -2) {
         topWinSize = prevTopWinHeight * (m_statusFixedFontPixelHeight+1);
         [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
-        iphone_top_win_height = prevTopWinHeight;
+        iosif_top_win_height = prevTopWinHeight;
         [storyView setTopMargin: topWinSize];
         grewStatus = 1;
     }
 
-    if (iphone_top_win_height < 0)
+    if (iosif_top_win_height < 0)
         prevTopWinHeight = -1;
     
     BOOL frozeDisplay = NO;
@@ -3052,7 +3052,7 @@ char *tempStatusLineScreenBuf() {
         frozeDisplay = YES;
     }
     
-    if (iphone_top_win_height < 0 || prevTopWinHeight != top_win_height
+    if (iosif_top_win_height < 0 || prevTopWinHeight != top_win_height
                 && (statusLen > 1 && !grewStatus || inputsSinceSaveRestore!=prevInputsSinceSaveRestore ||
                     top_win_height==0 || top_win_height > prevTopWinHeight)) {
         
@@ -3068,7 +3068,7 @@ char *tempStatusLineScreenBuf() {
         
         [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
         
-        iphone_top_win_height = top_win_height;
+        iosif_top_win_height = top_win_height;
         [storyView setTopMargin: topWinSize+0];
         prevTopWinHeight = top_win_height;
         //NSLog(@"set topwinheight %d", top_win_height);
@@ -3083,7 +3083,7 @@ char *tempStatusLineScreenBuf() {
     
     pthread_mutex_lock(&outputMutex);
     if (finished)
-        iphone_flush(NO);
+        iosif_flush(NO);
     textLen = [inputBufferStr length];
     
     BOOL clearStory = ([inputBufferStr hasPrefix: @kClearEscCode]);
@@ -3462,7 +3462,7 @@ char *tempStatusLineScreenBuf() {
     [dict setObject: bgColorStr forKey: @"backgroundColor"];
     [dict setObject: [NSNumber numberWithBool: !m_completionEnabled] forKey: @"completionDisabled"];
     [dict setObject: @(m_canEditStoryInfo) forKey: @"canEditStoryInfo"];
-    [dict setObject: @(iphone_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
+    [dict setObject: @(iosif_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
     
     [dict synchronize];    
@@ -3495,7 +3495,7 @@ static UIColor *scanColor(NSString *colorStr) {
             fontSize = m_fontSize;
         NSNumber *ivd = [dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ];
         if (ivd)
-            iphone_ifrotz_verbose_debug = [ivd longValue];
+            iosif_ifrotz_verbose_debug = [ivd longValue];
         if (fontname)
             [self setFont: fontname withSize: fontSize];
         else
@@ -3582,8 +3582,8 @@ static UIColor *scanColor(NSString *colorStr) {
 }
 
 static void setScreenDims(char *storyNameBuf) {
-    iphone_textview_width = kDefaultTextViewWidth;
-    iphone_textview_height = kDefaultTextViewHeight;
+    iosif_textview_width = kDefaultTextViewWidth;
+    iosif_textview_height = kDefaultTextViewHeight;
     
     if (gStoryInterp == kZStory) {
         char *s = strrchr(storyNameBuf, '/');
@@ -3593,11 +3593,11 @@ static void setScreenDims(char *storyNameBuf) {
             s = storyNameBuf;
         // Hack alert - pretend to be 80 cols for these games because they fail or display poorly with fewer.
         // Should detect this in a cleaner way (at least)
-        if (iphone_textview_width < 80 && (strncasecmp(s, "trinity", 7) == 0 || strncasecmp(s, "amfv", 4) == 0
+        if (iosif_textview_width < 80 && (strncasecmp(s, "trinity", 7) == 0 || strncasecmp(s, "amfv", 4) == 0
                                            || strncasecmp(s, "vgame", 5) == 0))
-            iphone_textview_width = 80;
+            iosif_textview_width = 80;
     } else 
-        iphone_recompute_screensize();
+        iosif_recompute_screensize();
 }
 
 -(void)setLaunchMessage:(NSString*)msg clear:(BOOL)clear {
@@ -3725,10 +3725,10 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void) resizeStatusWindow {
     if (gStoryInterp == kZStory) {
-        iphone_top_win_height = -2;
-        iphone_win_puts(1, "\n\n");
+        iosif_top_win_height = -2;
+        iosif_win_puts(1, "\n\n");
     } else if (gStoryInterp == kGlxStory) {
-        iphone_recompute_screensize();
+        iosif_recompute_screensize();
         screen_size_changed = 1;
     }
     [m_inputLine updatePosition];
@@ -3787,7 +3787,7 @@ static void setScreenDims(char *storyNameBuf) {
                 }
                 
                 h_version = hvers;
-                iphone_top_win_height = -1;
+                iosif_top_win_height = -1;
                 top_win_height = [dict[@"statusWinHeight"] longValue];
                 cwin = [dict[@"currentWindow"] longValue];
                 cursor_row = [dict[@"cursorRow"] longValue];
@@ -3797,9 +3797,9 @@ static void setScreenDims(char *storyNameBuf) {
                 NSString *savedScriptname = dict[@"scriptname"];
                 if (savedScriptname) {
                     savedScriptname = [self relativePathToAppAbsolutePath: savedScriptname];
-                    iphone_start_script((char*)[savedScriptname UTF8String]);
+                    iosif_start_script((char*)[savedScriptname UTF8String]);
                 } else
-                    iphone_stop_script();
+                    iosif_stop_script();
                 
                 int color = [dict[@"textColors"] longValue] & 0xff;
                 if (color == 0x21)
@@ -3819,22 +3819,22 @@ static void setScreenDims(char *storyNameBuf) {
                 statusScreenData = dict[@"statusWinData"];
                 statusScreenColors = dict[@"statusWinColors"];
                 setScreenDims(storyNameBuf);
-                h_screen_rows = kDefaultTextViewHeight; // iphone_textview_height;
-                h_screen_cols = iphone_textview_width;
+                h_screen_rows = kDefaultTextViewHeight; // iosif_textview_height;
+                h_screen_cols = iosif_textview_width;
                 h_screen_width = h_screen_cols;
                 h_screen_height = h_screen_rows;
                 
                 do_autosave = 0;
-                iphone_init_screen();
+                iosif_init_screen();
                 do_autosave = 1;
                 resize_screen();
-                iphone_ioinit();
+                iosif_ioinit();
                 [m_statusLine reset];
                 [m_storyView reset];
                 [m_storyView resetMargins];
                 [self clearGlkViews];
                 
-                iphone_flush(NO);
+                iosif_flush(NO);
                 if (!statusScreenData) {
                     [fileMgr removeItemAtPath: storySIPPath error:&error];
                     [dict release];
@@ -3843,7 +3843,7 @@ static void setScreenDims(char *storyNameBuf) {
                 }
                 [ipzStatusStr setString: @kClearEscCode];
                 [ipzBufferStr setString: @""];
-                iphone_clear_input(NULL);
+                iosif_clear_input(NULL);
                 [self printText: nil];
                 int len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
                 if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
@@ -3951,13 +3951,13 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void) launchStory {
     static char storyNameBuf[MAX_FILE_NAME];
-    iphone_top_win_height = -1;
+    iosif_top_win_height = -1;
     
     strcpy(storyNameBuf, [m_currentStory UTF8String]);
     if (strlen(storyNameBuf) == 0)
         return;
     
-    iphone_stop_script();
+    iosif_stop_script();
 
     // Make sure pending performSelector calls are cancelled
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
@@ -4049,7 +4049,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     disable_complete = NO;
     
-    iphone_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] leading]);
+    iosif_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] leading]);
     
     m_storyTID = 0;
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
@@ -4066,7 +4066,7 @@ static void setScreenDims(char *storyNameBuf) {
    // NSLog(@"abandon story %p %@\n", m_storyTID, m_currentStory);
     if ([m_currentStory length] > 0) {
         NSError *error = nil;
-        iphone_stop_script();
+        iosif_stop_script();
         script_reset(NULL);
         NSFileManager *fileManager = [NSFileManager defaultManager];
         [fileManager removeItemAtPath: activeStoryPath error:&error];
@@ -4089,7 +4089,7 @@ static void setScreenDims(char *storyNameBuf) {
         os_set_colour (DEFAULT_COLOUR, DEFAULT_COLOUR);
         
         //NSLog(@"abandon story clr inp %p\n", m_storyTID);
-        iphone_clear_input(@"\n\n");
+        iosif_clear_input(@"\n\n");
         [m_currentStory setString: @""];
         [self clearGlkViews];
         do_autosave = 0;
@@ -4115,7 +4115,7 @@ static void setScreenDims(char *storyNameBuf) {
         m_storyTID = 0;
     }
     
-    iphone_clear_input(NULL);
+    iosif_clear_input(NULL);
     [m_inputLine setText: @""];
     top_win_height = 0;
     [self dismissKeyboard];
@@ -4153,13 +4153,13 @@ static void setScreenDims(char *storyNameBuf) {
     
     [self updateAutosavePaths];
     
-    iphone_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
+    iosif_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
     
     if (m_currentStory && ([m_currentStory length] > 0)) {
         NSString *story = [m_currentStory storyKey];
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithCapacity:10];
         dict[@"storyPath"] = [self pathToAppRelativePath: m_currentStory];
-        dict[@"statusWinHeight"] = @(iphone_top_win_height);
+        dict[@"statusWinHeight"] = @(iosif_top_win_height);
         dict[@"currentWindow"] = @(cwin);
         dict[@"cursorRow"] = @(cursor_row);
         dict[@"cursorCol"] = @(cursor_col);
@@ -4168,8 +4168,8 @@ static void setScreenDims(char *storyNameBuf) {
         dict[@"currTextStyle"] = @(currTextStyle);
         dict[@"hflags"] = @(h_flags & FIXED_FONT_FLAG);
         
-        if (*iphone_scriptname) {
-            NSString *scriptPath = [self pathToAppRelativePath: @(iphone_scriptname)];
+        if (*iosif_scriptname) {
+            NSString *scriptPath = [self pathToAppRelativePath: @(iosif_scriptname)];
             dict[@"scriptname"] = scriptPath;
         }
         
@@ -4245,13 +4245,13 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
     if (textField == m_inputLine)
-        iphone_feed_input_line([textField.text stringByReplacingCharactersInRange:range withString:string]);
+        iosif_feed_input_line([textField.text stringByReplacingCharactersInRange:range withString:string]);
     return YES;
 }
 
 - (BOOL)textFieldShouldClear:(UITextField *)textField {
     if (textField == m_inputLine) {
-        iphone_feed_input_line(@"");
+        iosif_feed_input_line(@"");
         [m_inputLine hideEnterKey];
         [self hideInputHelper];
     }
@@ -4299,9 +4299,9 @@ static void setScreenDims(char *storyNameBuf) {
     if (gStoryInterp == kGlxStory && cwin >= 0)
         textView = m_glkViews[cwin];
     
-    iphone_feed_input(inputText);
-    iphone_feed_input(@"\n");
-    iphone_feed_input_line(@"");
+    iosif_feed_input(inputText);
+    iosif_feed_input(@"\n");
+    iosif_feed_input_line(@"");
     [m_inputLine addHistoryItem: inputText];
     
     CGRect textFieldFrame = [textField frame];

@@ -57,9 +57,9 @@ void os_fatal (const char *s)
 
    // os_reset_screen();
  
-    iphone_puts ("\nFatal error: ");
-    iphone_puts ((char*)s);
-    iphone_puts ("\n\n");
+    iosif_puts ("\nFatal error: ");
+    iosif_puts ((char*)s);
+    iosif_puts ("\n\n");
 
     finished = 2;
 
@@ -74,7 +74,7 @@ int autorestore = 0;
 
 int os_process_arguments (int argc, char *argv[])
 {
-    return iphone_main(argc, argv);
+    return iosif_main(argc, argv);
 }/* os_process_arguments */
 
 void os_set_default_file_names(char *basename) {
@@ -173,8 +173,8 @@ void os_init_screen (void)
         if (f_setup.undo_slots == 0)
             h_flags &= ~UNDO_FLAG;
 
-    h_screen_rows = kDefaultTextViewHeight; // iphone_textview_height;
-    h_screen_cols = iphone_textview_width;
+    h_screen_rows = kDefaultTextViewHeight; // iosif_textview_height;
+    h_screen_cols = iosif_textview_width;
 
     if (u_setup.screen_height != -1)
         h_screen_rows = u_setup.screen_height;
@@ -233,7 +233,7 @@ void os_init_screen (void)
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     
-    iphone_init_screen();    
+    iosif_init_screen();    
 
     //NSLog (@"uiinit f %d b %d\n", h_default_foreground, h_default_background);
 #if FROTZ_IOS_PORT

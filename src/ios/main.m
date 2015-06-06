@@ -2,7 +2,7 @@
 #import "FrotzAppDelegate.h"
 #include <locale.h>
 
-int iphone_main(int argc, char **argv)
+int iosif_main(int argc, char **argv)
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
