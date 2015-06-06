@@ -1404,7 +1404,7 @@ static void setColorTable(RichTextView *v) {
 }
 
 
-extern void gli_iphone_set_focus(window_t *winNum);
+extern void gli_ios_set_focus(window_t *winNum);
 
 -(BOOL)tapInView:(UIView*)view atPoint:(CGPoint)pt {
     if (m_glkViews) {
@@ -1459,7 +1459,7 @@ extern void gli_iphone_set_focus(window_t *winNum);
         if (winNum != NSNotFound) {
             window_t *win = glkGridArray[winNum].win;
             if (win && (win->char_request || win->line_request)) {
-                gli_iphone_set_focus(win); 	// bcs??? cross-thread unsafe
+                gli_ios_set_focus(win); 	// bcs??? cross-thread unsafe
                 cwin = winNum;
                 [m_inputLine updatePosition];
             }

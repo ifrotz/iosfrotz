@@ -1277,7 +1277,7 @@ void glk_set_terminators_line_event(window_t *win, glui32 *keycodes,
 
 #endif /* GLK_MODULE_LINE_TERMINATORS */
 
-void gli_iphone_set_focus(window_t *win) {
+void gli_ios_set_focus(window_t *win) {
     gli_focuswin = win;
     gli_windows_place_cursor();    
 }
