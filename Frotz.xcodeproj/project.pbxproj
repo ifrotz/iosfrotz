@@ -1347,6 +1347,8 @@
 				44C28D031238C41C00EE9FA3 /* URLPromptController.h */,
 				44C28D041238C41C00EE9FA3 /* URLPromptController.m */,
 				44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */,
+				443C9B480E46A518003A44D4 /* ui_utils.h */,
+				443C9B490E46A518003A44D4 /* ui_utils.m */,
 			);
 			name = UI;
 			path = src/Classes;
@@ -1521,7 +1523,6 @@
 				441EC82C0E10BD1100E74625 /* err.c */,
 				441EC82D0E10BD1100E74625 /* fastmem.c */,
 				441EC82E0E10BD1100E74625 /* files.c */,
-				441EC82F0E10BD1100E74625 /* frotz.h */,
 				441EC8300E10BD1100E74625 /* getopt.c */,
 				441EC8310E10BD1100E74625 /* hotkey.c */,
 				441EC8320E10BD1100E74625 /* input.c */,
@@ -1532,12 +1533,13 @@
 				441EC8380E10BD1100E74625 /* random.c */,
 				441EC8390E10BD1100E74625 /* redirect.c */,
 				441EC83A0E10BD1100E74625 /* screen.c */,
-				441EC83B0E10BD1100E74625 /* setup.h */,
 				441EC83C0E10BD1100E74625 /* sound.c */,
 				441EC83D0E10BD1100E74625 /* stream.c */,
 				441EC83E0E10BD1100E74625 /* table.c */,
 				441EC83F0E10BD1100E74625 /* text.c */,
 				441EC8400E10BD1100E74625 /* variable.c */,
+				441EC82F0E10BD1100E74625 /* frotz.h */,
+				441EC83B0E10BD1100E74625 /* setup.h */,
 			);
 			name = common;
 			path = src/common;
@@ -1546,15 +1548,13 @@
 		441EC8560E10BD3400E74625 /* ios */ = {
 			isa = PBXGroup;
 			children = (
-				441EC8570E10BD4400E74625 /* getopt.h */,
 				441EC85B0E10BD4400E74625 /* ui_audio_none.c */,
 				441EC85D0E10BD4400E74625 /* ui_init.c */,
 				441EC85F0E10BD4400E74625 /* ui_input.c */,
 				441EC8610E10BD4400E74625 /* ui_pic.c */,
 				441EC8630E10BD4400E74625 /* ui_setup.h */,
 				441EC8640E10BD4400E74625 /* ui_text.c */,
-				443C9B480E46A518003A44D4 /* ui_utils.h */,
-				443C9B490E46A518003A44D4 /* ui_utils.m */,
+				441EC8570E10BD4400E74625 /* getopt.h */,
 			);
 			name = ios;
 			path = src/ios;
