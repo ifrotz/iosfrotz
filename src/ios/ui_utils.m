@@ -70,7 +70,7 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     // Draw the image to the bitmap context. Once we draw, the memory
     // allocated for the context for rendering will then contain the
     // raw image data in the specified color space.
-    CGContextSetRGBFillColor(cgctx, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetRGBFillColor(cgctx, 1.0, 1.0, 1.0, 0.0);
     CGContextFillRect(cgctx, rect);
     CGContextDrawImage(cgctx, rect, inImage);
     
