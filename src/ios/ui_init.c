@@ -74,7 +74,8 @@ int autorestore = 0;
 
 int os_process_arguments (int argc, char *argv[])
 {
-    return iosif_main(argc, argv);
+    //return iosif_main(argc, argv);
+    return 0;
 }/* os_process_arguments */
 
 void os_set_default_file_names(char *basename) {

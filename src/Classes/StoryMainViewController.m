@@ -912,6 +912,8 @@ int hflagsRestore = 0;
 
 void run_zinterp(bool autorestore) {
     gStoryInterp = kZStory;
+    os_init_setup();
+
     os_set_default_file_names(story_name);
     if (autorestore)
         do_autosave = 1;

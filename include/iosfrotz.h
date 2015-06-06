@@ -117,7 +117,7 @@ void iosif_glk_game_loaded();
 
 IPGlkGridArray *iosif_glk_getGridArray(int viewNum);
 
-int iosif_main(int argc, char **argv);
+//int iosif_main(int argc, char **argv);
 #define XYZZY()
 extern int do_autosave, autosave_done, refresh_savedir;
 extern char AUTOSAVE_FILE[];

@@ -156,6 +156,7 @@ void z_piracy (void)
 
 }/* z_piracy */
 
+#if !FROTZ_IOS_PORT
 /*
  * main
  *
@@ -168,7 +169,7 @@ int cdecl main (int argc, char *argv[])
     os_init_setup ();
 
     if (os_process_arguments (argc, argv)) /* Allow the os to 'take over' running the interpreter */
-	return 0;			   /* if it needs to fork a subprocess or thread */
+        return 0;			   /* if it needs to fork a subprocess or thread */
 
     init_buffer ();
 
@@ -195,3 +196,5 @@ int cdecl main (int argc, char *argv[])
     return 0;
 
 }/* main */
+
+#endif // FROTZ_IOS_PORT
