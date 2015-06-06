@@ -571,6 +571,8 @@ void iosif_disable_input() {
     pthread_mutex_unlock(&outputMutex);
 }
 
+int ztop_win_height = 1; // hack; for use by frotz terp backend
+
 void iosif_set_top_win_height(int height) {
     
     // wait for output to drain so size won't take effect
@@ -578,7 +580,7 @@ void iosif_set_top_win_height(int height) {
     iosif_flush(YES);
     
     pthread_mutex_lock(&winSizeMutex);
-    top_win_height = height;
+    ztop_win_height = height;
     winSizeChanged = YES;
     pthread_cond_wait(&winSizeChangedCond, &winSizeMutex);
     pthread_mutex_unlock(&winSizeMutex);
@@ -640,6 +642,80 @@ int iosif_read_file_name(char *file_name, const char *default_name,	int flag) {
     return TRUE;
 }
 
+int iosif_prompt_file_name (char *file_name, const char *default_name, int flag)
+{
+    char buffer[INPUT_BUFFER_SIZE*2], *buf; // prompt[INPUT_BUFFER_SIZE]
+    char *dflt, *ext = NULL, *altext = NULL, *pext;
+    
+    if ((dflt = strrchr(default_name, '/'))) // only use filename conpoment in default_name prompt
+        dflt++;
+    else
+        dflt = (char*)default_name;
+    
+    strcpy(buffer, SAVE_PATH);
+    strcat(buffer, "/");
+    buf = buffer + strlen(buffer);
+    if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_PLAYBACK || flag == FILE_SCRIPT) {
+        buf[0] = '\0';
+        if (!iosif_read_file_name (buf, dflt, flag))
+            return FALSE;
+        if (!buf[0])
+            strcpy(buf, dflt);
+        if (!buf[0])
+            return FALSE;
+        pext = strrchr(buf, '.');
+        switch(flag) {
+            case FILE_SAVE:
+                ext = ".sav"; altext = ".qut";
+                break;
+            case FILE_SAVE_AUX:
+                ext = ".aux";
+                break;
+            case FILE_RECORD:
+            case FILE_PLAYBACK:
+                ext = ".rec";
+                break;
+            case FILE_SCRIPT:
+                ext = ".txt";
+                break;
+            default:
+                break;
+        }
+        if (pext == NULL || (strcmp(pext, ext)!=0 && (!altext || strcmp(pext, altext)!=0)))
+            strcat(buf, ext);
+    } else {
+        buf[0] = '\0';
+        if (!iosif_read_file_name (buf, dflt, flag))
+            return FALSE;
+    }
+    
+    if (strlen(buf) > MAX_FILE_NAME) {
+        iosif_puts("\nFilename too long!\n");
+        return FALSE;
+    }
+    // restore filenames are abs, save are rel
+    strcpy (file_name, buf[0]=='/' ? buf : buffer);
+    
+    /* Warn if overwriting a file.  */
+#if !FROTZ_IOS_PORT
+    FILE *fp;
+    if ((flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
+        && ((fp = fopen(file_name, "rb")) != NULL)) {
+        fclose (fp);
+        char overwritePrompt[MAX_FILE_NAME + 40];
+        char *fn = strrchr(file_name, '/');
+        if (fn)
+            fn++;
+        else
+            fn = file_name;
+        sprintf(overwritePrompt, "Overwrite existing file \"%s\"? ", fn);
+        ui_read_misc_line(buf, overwritePrompt);
+        iosif_putchar('\n');
+        return(tolower(buf[0]) == 'y');
+    }
+#endif
+    return TRUE;
+}
 
 
 void iosif_disable_autocompletion() {
@@ -853,7 +929,7 @@ void run_zinterp(bool autorestore) {
         if (autorestore) {
             refresh_cwin();
             frame_count = restore_frame_count;
-            split_window(h_version > 3 ? top_win_height : top_win_height-1);
+            split_window(h_version > 3 ? ztop_win_height : ztop_win_height-1);
             
             z_restore ();
 
@@ -3046,32 +3122,32 @@ char *tempStatusLineScreenBuf() {
     
     BOOL frozeDisplay = NO;
     
-    if (statusLen > 1 && top_win_height <=1 && prevTopWinHeight>=3) { // && [storyView textStyle]==kFTFixedWidth) {
+    if (statusLen > 1 && ztop_win_height <=1 && prevTopWinHeight>=3) { // && [storyView textStyle]==kFTFixedWidth) {
         [storyView setFreezeDisplay: YES];
         [statusLine setFreezeDisplay: YES];
         frozeDisplay = YES;
     }
     
-    if (iosif_top_win_height < 0 || prevTopWinHeight != top_win_height
+    if (iosif_top_win_height < 0 || prevTopWinHeight != ztop_win_height
                 && (statusLen > 1 && !grewStatus || inputsSinceSaveRestore!=prevInputsSinceSaveRestore ||
-                    top_win_height==0 || top_win_height > prevTopWinHeight)) {
+                    ztop_win_height==0 || ztop_win_height > prevTopWinHeight)) {
         
-        if (top_win_height > 1 && top_win_height > prevTopWinHeight)
+        if (ztop_win_height > 1 && ztop_win_height > prevTopWinHeight)
             grewStatus = 1;
         else
             grewStatus = 0;
         fast = YES;
-        topWinSize = top_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
+        topWinSize = ztop_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
         
-        if (!frozeDisplay && (prevTopWinHeight - top_win_height > 1 || top_win_height - prevTopWinHeight > 1))
+        if (!frozeDisplay && (prevTopWinHeight - ztop_win_height > 1 || ztop_win_height - prevTopWinHeight > 1))
             [self setupFadeWithDuration: 0.08];
         
         [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
         
-        iosif_top_win_height = top_win_height;
+        iosif_top_win_height = ztop_win_height;
         [storyView setTopMargin: topWinSize+0];
-        prevTopWinHeight = top_win_height;
-        //NSLog(@"set topwinheight %d", top_win_height);
+        prevTopWinHeight = ztop_win_height;
+        //NSLog(@"set topwinheight %d", ztop_win_height);
     }
     prevInputsSinceSaveRestore = inputsSinceSaveRestore;
 
@@ -3360,7 +3436,7 @@ char *tempStatusLineScreenBuf() {
         grewStatus = 0;
         CGSize sz = [storyView contentSize];
         float viewWidth = viewFrame.size.width;
-        if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == top_win_height) {
+        if (!(ipzAllowInput & kIPZNoEcho) && sz.width != viewWidth) { // && prevTopWinHeight == ztop_win_height) {
             sz.width = viewWidth;
             [storyView setContentSize: sz];
         }
@@ -3388,7 +3464,7 @@ char *tempStatusLineScreenBuf() {
             if (gStoryInterp == kGlxStory)
                 [m_inputLine setFont: ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
             else if (cwin != lastInputWindow || (ipzAllowInput & kIPZNoEcho)) {
-                [m_inputLine setFont: (top_win_height > 0 && cursor_row <= top_win_height) ? [statusLine fixedFont] :
+                [m_inputLine setFont: (ztop_win_height > 0 && cursor_row <= ztop_win_height) ? [statusLine fixedFont] :
                      ([storyView textStyle] & kFTFixedWidth) ? [storyView fixedFont] : [storyView font]];
                 NSString *t = m_inputLine.text; [m_inputLine setTextKeepCompletion: @" "]; [m_inputLine setTextKeepCompletion: t]; // *sigh* needed to force cursor to resize
                 lastInputWindow = cwin;
@@ -3788,7 +3864,7 @@ static void setScreenDims(char *storyNameBuf) {
                 
                 h_version = hvers;
                 iosif_top_win_height = -1;
-                top_win_height = [dict[@"statusWinHeight"] longValue];
+                ztop_win_height = [dict[@"statusWinHeight"] longValue];
                 cwin = [dict[@"currentWindow"] longValue];
                 cursor_row = [dict[@"cursorRow"] longValue];
                 cursor_col = [dict[@"cursorCol"] longValue];
@@ -3825,7 +3901,7 @@ static void setScreenDims(char *storyNameBuf) {
                 h_screen_height = h_screen_rows;
                 
                 do_autosave = 0;
-                iosif_init_screen();
+                os_frotz_init_screen();
                 do_autosave = 1;
                 resize_screen();
                 iosif_ioinit();
@@ -4117,7 +4193,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     iosif_clear_input(NULL);
     [m_inputLine setText: @""];
-    top_win_height = 0;
+    ztop_win_height = 0;
     [self dismissKeyboard];
     finished = 0;
 }

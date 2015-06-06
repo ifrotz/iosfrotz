@@ -233,7 +233,7 @@ void os_init_screen (void)
 	if (h_flags & COLOUR_FLAG) h_flags &= ~COLOUR_FLAG;
     }
     
-    iosif_init_screen();    
+    os_frotz_init_screen();
 
     //NSLog (@"uiinit f %d b %d\n", h_default_foreground, h_default_background);
 #if FROTZ_IOS_PORT

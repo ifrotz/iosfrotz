@@ -46,7 +46,7 @@ extern u_setup_t u_setup;
 #define MAX_ROWS 100
 #define MAX_COLS 100
 
-extern int top_win_height;
+extern int ztop_win_height;
 typedef unsigned short cell, cellcolor;
 extern cell *screen_data, *screen_colors;
 extern int cursor_row, cursor_col;
@@ -71,10 +71,8 @@ void iosif_enable_tap(int winNum);
 void iosif_disable_tap(int winNum);
 void iosif_putchar(wchar_t c);
 void iosif_win_putchar(int winNum, wchar_t c);
-void iosif_backspace();
 void iosif_disable_autocompletion();
 void iosif_enable_autocompletion();
-void iosif_init_screen();
 void iosif_erase_screen();
 void iosif_erase_mainwin();
 void iosif_erase_win(int winnum);

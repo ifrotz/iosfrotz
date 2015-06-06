@@ -315,7 +315,7 @@ zchar os_read_key (int timeout, int cursor)
     unix_set_global_timeout(timeout);
     c = (zchar) unix_read_char(0);
     if (cwin == 1 && c == ZC_BACKSPACE) {
-	iosif_backspace();
+	os_backspace();
 	iosif_putchar(c);
     }
     iosif_disable_input();
@@ -519,81 +519,6 @@ void	os_mark_recent_save() {
 
 int os_read_file_name (char *file_name, const char *default_name, int flag) {
     return iosif_prompt_file_name(file_name, default_name, flag);
-}
-
-int iosif_prompt_file_name (char *file_name, const char *default_name, int flag)
-{
-  char buffer[INPUT_BUFFER_SIZE*2], *buf; // prompt[INPUT_BUFFER_SIZE]
-  char *dflt, *ext = NULL, *altext = NULL, *pext;
-
-  if ((dflt = strrchr(default_name, '/'))) // only use filename conpoment in default_name prompt
-    dflt++;
-  else
-    dflt = (char*)default_name;
-
-  strcpy(buffer, SAVE_PATH);
-  strcat(buffer, "/");
-  buf = buffer + strlen(buffer);
-  if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD || flag == FILE_PLAYBACK || flag == FILE_SCRIPT) {
-    buf[0] = '\0';
-    if (!iosif_read_file_name (buf, dflt, flag))
-        return FALSE;
-    if (!buf[0])
-	strcpy(buf, dflt);
-    if (!buf[0])
-	return FALSE;
-    pext = strrchr(buf, '.');
-    switch(flag) {
-	case FILE_SAVE:
-	    ext = ".sav"; altext = ".qut";
-	    break;
-	case FILE_SAVE_AUX:
-	    ext = ".aux";
-	    break;
-	case FILE_RECORD:
-    case FILE_PLAYBACK:
-	    ext = ".rec";
-	    break;
-	case FILE_SCRIPT:
-	    ext = ".txt";
-	    break;
-	default:
-	    break;
-    }
-    if (pext == NULL || (strcmp(pext, ext)!=0 && (!altext || strcmp(pext, altext)!=0)))
-	strcat(buf, ext);
-  } else {
-      buf[0] = '\0';
-      if (!iosif_read_file_name (buf, dflt, flag))
-         return FALSE;
-  }
-
-  if (strlen(buf) > MAX_FILE_NAME) {
-    iosif_puts("\nFilename too long!\n");
-    return FALSE;
-  }
-  // restore filenames are abs, save are rel
-  strcpy (file_name, buf[0]=='/' ? buf : buffer);
-
-  /* Warn if overwriting a file.  */
-#if !FROTZ_IOS_PORT
-  FILE *fp;
-  if ((flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
-      && ((fp = fopen(file_name, "rb")) != NULL)) {
-    fclose (fp);
-    char overwritePrompt[MAX_FILE_NAME + 40];
-    char *fn = strrchr(file_name, '/');
-    if (fn)
-	fn++;
-    else
-	fn = file_name;
-    sprintf(overwritePrompt, "Overwrite existing file \"%s\"? ", fn);
-    ui_read_misc_line(buf, overwritePrompt);
-    iosif_putchar('\n');
-    return(tolower(buf[0]) == 'y');
-  }
-#endif
-  return TRUE;
 }
 
 /*

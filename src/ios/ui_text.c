@@ -77,7 +77,7 @@ static inline int frotz_to_richtext_style(int fstyle) {
     return style;
 }
 
-void iosif_init_screen() {
+void os_frotz_init_screen() {
     screen_cells = MAX_ROWS * MAX_COLS;
     int i;
     
@@ -202,7 +202,7 @@ void os_set_font (int new_font)
     
 }/* os_set_font */
 
-static void iosif_set_cell(int row, int col, cell c)
+static void os_set_cell(int row, int col, cell c)
 {
     int color = u_setup.current_color;
     if (color != 0x11 && (color >> 4) == (color & 0xf)) { // varicella workaround
@@ -234,19 +234,17 @@ static void scr_copy_cell(int dest_row, int dest_col,
     scr_color(dest_row)[dest_col] = scr_color(src_row)[src_col];
 }
 
-int top_win_height = 1; // hack; for use by iphone frontend
-
 
 /* put a character in the cell at the cursor and advance the cursor.  */
-void iosif_display_char(unsigned int c)
+static void ios_display_char(unsigned int c)
 {
     // hack to make the status line/uppper window auto-grow for games like anchorhead which
     // don't resize it big enough for the menus they want to display
-    if (cwin == 1 && cursor_row >= top_win_height && cursor_row < h_screen_rows) {
+    if (cwin == 1 && cursor_row >= ztop_win_height && cursor_row < h_screen_rows) {
         iosif_set_top_win_height(cursor_row+1);
     }
 
-    iosif_set_cell(cursor_row, cursor_col, make_cell(current_style, c <= 0xff ? c : '?'));
+    os_set_cell(cursor_row, cursor_col, make_cell(current_style, c <= 0xff ? c : '?'));
     iosif_putchar(c);
 
     if (++cursor_col == h_screen_cols) {
@@ -259,12 +257,12 @@ void iosif_display_char(unsigned int c)
     }
 }
 
-void iosif_backspace()
+void os_backspace()
 {
     cursor_col--;
     if (cursor_col < 0)
         cursor_col = 0;
-    iosif_set_cell(cursor_row, cursor_col, make_cell(current_style, ' '));
+    os_set_cell(cursor_row, cursor_col, make_cell(current_style, ' '));
 }
 
 /*
@@ -290,31 +288,31 @@ void os_display_char (unsigned int c)
             char c2 = *ptr++;
             char c3 = *ptr;
             
-            iosif_display_char(c1);
+            ios_display_char(c1);
             
             if (c2 != ' ')
-                iosif_display_char(c2);
+                ios_display_char(c2);
             if (c3 != ' ')
-                iosif_display_char(c3);
+                ios_display_char(c3);
             
         } else
-            iosif_display_char(c);
+            ios_display_char(c);
         return;
     }
     if (c >= ZC_ASCII_MIN && c <= ZC_ASCII_MAX) {
-        iosif_display_char(c);
+        ios_display_char(c);
         return;
     }
     if (c == ZC_BACKSPACE) {
-        iosif_backspace();
+        os_backspace();
         return;
     }
     if (c == ZC_INDENT) {
-        iosif_display_char(' '); iosif_display_char(' '); iosif_display_char(' ');
+        ios_display_char(' '); ios_display_char(' '); ios_display_char(' ');
         return;
     }
     if (c == ZC_GAP) {
-        iosif_display_char(' '); iosif_display_char(' ');
+        ios_display_char(' '); ios_display_char(' ');
         return;
     }
     
@@ -459,7 +457,7 @@ void os_erase_area (int top, int left, int bottom, int right, int windowNum)
     top--; left--; bottom--; right--;
     for (row = top; row <= bottom; row++)
         for (col = left; col <= right; col++)
-            iosif_set_cell(row, col, make_cell(current_style, ' '));
+            os_set_cell(row, col, make_cell(current_style, ' '));
 }/* os_erase_area */
 
 
@@ -467,11 +465,11 @@ void os_erase_area (int top, int left, int bottom, int right, int windowNum)
 void os_split_win(int height) {
     if (height > h_screen_height || height > MAX_ROWS)
         height = h_screen_height;
-    if (height > top_win_height && top_win_height > 1) { // >0 cond to help reduce bronze flicker
+    if (height > ztop_win_height && ztop_win_height > 1) { // >0 cond to help reduce bronze flicker
         int row, col;
-        for (row = top_win_height; row < h_screen_rows; row++)
+        for (row = ztop_win_height; row < h_screen_rows; row++)
             for (col = 0; col < h_screen_cols; col++)
-                iosif_set_cell(row, col, make_cell(current_style, ' '));
+                os_set_cell(row, col, make_cell(current_style, ' '));
     }
     iosif_set_top_win_height(height);
 }
