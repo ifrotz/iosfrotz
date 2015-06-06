@@ -49,7 +49,6 @@
 		441EC86B0E10BD4400E74625 /* ui_input.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC85F0E10BD4400E74625 /* ui_input.c */; };
 		441EC86D0E10BD4400E74625 /* ui_pic.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8610E10BD4400E74625 /* ui_pic.c */; };
 		441EC86F0E10BD4400E74625 /* ui_text.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8640E10BD4400E74625 /* ui_text.c */; };
-		441EC87B0E10BF3E00E74625 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 441EC85A0E10BD4400E74625 /* main.m */; };
 		442351D0125E77C000BFB245 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 442351CF125E77C000BFB245 /* notes.png */; };
 		443149C50E3B0077007A075F /* NavBack.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149C40E3B0077007A075F /* NavBack.png */; };
 		443149D80E3B0154007A075F /* NavForward.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149D70E3B0154007A075F /* NavForward.png */; };
@@ -419,6 +418,7 @@
 		44F7B1F51B20DAF300DDD2A3 /* ipw_pair.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D51261882100BFB245 /* ipw_pair.c */; };
 		44F7B1F61B20DAF300DDD2A3 /* ipwindow.c in Sources */ = {isa = PBXBuildFile; fileRef = 442358D71261882100BFB245 /* ipwindow.c */; };
 		44F7B1F71B20DAF300DDD2A3 /* test-multiwin.c in Sources */ = {isa = PBXBuildFile; fileRef = 446902E11265567300B283FF /* test-multiwin.c */; };
+		44F7B1F91B22C6B800DDD2A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F7B1F81B22C6B800DDD2A3 /* main.m */; };
 		44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */; };
 		44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393B0E612A3D00142D85 /* FrotzSettings.m */; };
 		44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393C0E612A3D00142D85 /* DisplayCell.m */; };
@@ -548,8 +548,7 @@
 		441EC83F0E10BD1100E74625 /* text.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = text.c; sourceTree = "<group>"; };
 		441EC8400E10BD1100E74625 /* variable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = variable.c; sourceTree = "<group>"; };
 		441EC8570E10BD4400E74625 /* getopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getopt.h; sourceTree = "<group>"; };
-		441EC8590E10BD4400E74625 /* iosfrotz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iosfrotz.h; sourceTree = "<group>"; };
-		441EC85A0E10BD4400E74625 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		441EC8590E10BD4400E74625 /* iosfrotz.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iosfrotz.h; path = ../../include/iosfrotz.h; sourceTree = "<group>"; };
 		441EC85B0E10BD4400E74625 /* ui_audio_none.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_audio_none.c; sourceTree = "<group>"; };
 		441EC85D0E10BD4400E74625 /* ui_init.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_init.c; sourceTree = "<group>"; };
 		441EC85F0E10BD4400E74625 /* ui_input.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ui_input.c; sourceTree = "<group>"; };
@@ -1190,6 +1189,7 @@
 		44F7B14F1B202A0800DDD2A3 /* libminizip.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libminizip.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B1721B202B7A00DDD2A3 /* libzlib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libzlib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglkios.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		44F7B1F81B22C6B800DDD2A3 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookmarkListController.h; sourceTree = "<group>"; };
 		44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookmarkListController.m; sourceTree = "<group>"; };
 		44FB393B0E612A3D00142D85 /* FrotzSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzSettings.m; sourceTree = "<group>"; };
@@ -1276,6 +1276,8 @@
 		080E96DDFE201D6D7F000001 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				441EC8590E10BD4400E74625 /* iosfrotz.h */,
+				44F7B1F81B22C6B800DDD2A3 /* main.m */,
 				447F88281044DC0B002CA22D /* AboutFrotz.h */,
 				447F88291044DC0B002CA22D /* AboutFrotz.m */,
 				44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */,
@@ -1545,8 +1547,6 @@
 			isa = PBXGroup;
 			children = (
 				441EC8570E10BD4400E74625 /* getopt.h */,
-				441EC8590E10BD4400E74625 /* iosfrotz.h */,
-				441EC85A0E10BD4400E74625 /* main.m */,
 				441EC85B0E10BD4400E74625 /* ui_audio_none.c */,
 				441EC85D0E10BD4400E74625 /* ui_init.c */,
 				441EC85F0E10BD4400E74625 /* ui_input.c */,
@@ -2520,6 +2520,7 @@
 				44690D43126A402500B283FF /* memory.c in Sources */,
 				44690D44126A402500B283FF /* opcodes.c in Sources */,
 				44690D45126A402500B283FF /* operands.c in Sources */,
+				44F7B1F91B22C6B800DDD2A3 /* main.m in Sources */,
 				44690D46126A402500B283FF /* peephole.c in Sources */,
 				44690D47126A402500B283FF /* savefile.c in Sources */,
 				44690D48126A402500B283FF /* saveundo.c in Sources */,
@@ -2595,7 +2596,6 @@
 				441EC8520E10BD1100E74625 /* table.c in Sources */,
 				441EC8530E10BD1100E74625 /* text.c in Sources */,
 				441EC8540E10BD1100E74625 /* variable.c in Sources */,
-				441EC87B0E10BF3E00E74625 /* main.m in Sources */,
 				441EC8670E10BD4400E74625 /* ui_audio_none.c in Sources */,
 				441EC8690E10BD4400E74625 /* ui_init.c in Sources */,
 				441EC86B0E10BD4400E74625 /* ui_input.c in Sources */,
