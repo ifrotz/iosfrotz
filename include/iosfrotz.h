@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#include "../src/common/frotz.h"
+#include "../frotz/common/frotz.h"
 
 #include "ui_setup.h"
 #include <stdio.h>
