@@ -14,7 +14,7 @@
 #else
 #import "FTPServ.h"
 #endif
-#import "../../HTTPServer/HTTPServer.h"
+#import "../HTTPServer/HTTPServer.h"
 #import "FrotzSettings.h"
 #import "FrotzCommonWebView.h"
 
