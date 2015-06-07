@@ -4,6 +4,7 @@
 
 #import "GlkView.h"
 #import "FrotzAppDelegate.h"
+#import "StoryInputLine.h"
 #import "FileBrowser.h"
 #import "ui_utils.h"
 

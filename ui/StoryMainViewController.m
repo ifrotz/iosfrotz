@@ -26,11 +26,13 @@
 #import "StatusLine.h"
 #import "StoryInputLine.h"
 #import "StoryView.h"
+#import "StoryDetailsController.h"
 #import "GlkView.h"
 
 #import "FileBrowser.h"
 #import <DropboxSDK/DropboxSDK.h>
 
+#import "ui_setup.h"
 #import "ui_utils.h"
 
 #include "glk.h"
@@ -912,7 +914,6 @@ int hflagsRestore = 0;
 
 void run_zinterp(bool autorestore) {
     gStoryInterp = kZStory;
-    os_init_setup();
 
     os_set_default_file_names(story_name);
     if (autorestore)
@@ -1382,8 +1383,8 @@ static void setColorTable(RichTextView *v) {
             imgView.frame = CGRectMake(0, 0, v.bounds.size.width, v.bounds.size.height);
             
             CGImageRef imgRef = CGBitmapContextCreateImage(cgctx);
-            [imgView layer].contents = (id)imgRef;
-            CGImageRelease(imgRef);
+            [imgView layer].contents = (id)CFBridgingRelease(imgRef);
+            //CGImageRelease(imgRef);
 
 #if 0
             void *data = CGBitmapContextGetData(cgctx);
@@ -2009,7 +2010,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void)textSelectedAnimDidFinish:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
     NSString *origText = [m_inputLine text];
-    NSString *text = (NSString*)context;
+    NSString *text = (NSString*)CFBridgingRelease(context);
     [UIView setAnimationDelegate: nil];
     m_animDuration = 0;
     //NSLog(@"textsel did fin: %@ %@", text, finished);
@@ -2023,7 +2024,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             [m_inputLine setText: text];
     }
     m_ignoreWordSelection = NO;
-    [text release];
+    //[text release];
     [m_storyView clearSelection];
 }
 
@@ -2033,8 +2034,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         // m_kbShown commented out so this still works with paired hardware keyboards
         NSString *origText = [m_inputLine text];
         //NSLog(@"textsel: %@", text);
-        [text retain];
-        [UIView beginAnimations: @"tsel" context: text];
+        //[text retain];
+        [UIView beginAnimations: @"tsel" context: (void*)CFBridgingRetain(text)];
         [UIView setAnimationDelay: 0.1];
         CGRect frame = [m_inputLine frame];
         CGRect origViewFrame = [view frame];
@@ -4469,7 +4470,7 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 
-static int matchWord(NSString *str, NSString *wordArray[]) {
+static int matchWord(NSString *str, NSString __strong *wordArray[]) {
     int i;
     for (i=0; wordArray[i]; ++i) {
         if ([wordArray[i] hasPrefix: str]) {

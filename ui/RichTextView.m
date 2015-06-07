@@ -1905,10 +1905,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 #endif
         // the only object retaining the tile is our reusableTiles set, so we have to retain/autorelease it
         // before returning it so that it's not immediately deallocated when we remove it from the set
-        [[tile retain] autorelease];
+        [tile retain];
         [m_reusableTiles removeObject:tile];
     }
-    return tile;
+    return [tile autorelease];
 }
 
 - (void)reloadData {

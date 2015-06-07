@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "iosfrotz.h"
+#include "ui_setup.h"
 #include "RichTextStyle.h"
 
 /* When color_enabled is FALSE, we still minimally keep track of colors by

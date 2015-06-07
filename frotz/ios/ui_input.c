@@ -26,6 +26,7 @@
 #include <sys/time.h>
 
 #include "iosfrotz.h"
+#include "ui_setup.h"
 
 static struct timeval global_timeout;
 

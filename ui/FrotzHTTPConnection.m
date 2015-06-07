@@ -555,7 +555,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 postInfoComponents = [[postInfoComponents lastObject] componentsSeparatedByString:@"\""];
                 postInfoComponents = [postInfoComponents[1] componentsSeparatedByString:@"\\"];
                 
-                NSURL *uri = [NSMakeCollectable(CFHTTPMessageCopyRequestURL(request)) autorelease];
+                NSURL *uri = CFBridgingRelease(CFHTTPMessageCopyRequestURL(request));
                 int partEndOffset = indexOfBytes(postDataChunk, dataStartIndex, [partSeparator UTF8String], partSepLen, &partialMatch);
                 if (partEndOffset >= 0) {
                     postDataLen = partEndOffset;

@@ -35,6 +35,7 @@
 #include <termios.h>
 
 #include "iosfrotz.h"
+#include "ui_setup.h"
 
 f_setup_t f_setup;
 u_setup_t u_setup;

@@ -4,17 +4,18 @@
 
 int main(int argc, char **argv)
 {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    os_init_setup(); // todo: move this into frotz-terp-specific section but called only once
 
-    NSString* resources = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/locale"];
-    static char path_locale[1024];
-    strcpy(path_locale, [resources cStringUsingEncoding:NSASCIIStringEncoding]);
-    setenv("PATH_LOCALE", path_locale, 1);
-    setlocale(LC_CTYPE, "en_US.UTF-8");
-    [pool drain];
+    @autoreleasepool {
 
-    UIApplicationMain(argc, argv, nil, @"FrotzAppDelegate");
-    [pool release];
+        NSString* resources = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/locale"];
+        static char path_locale[1024];
+        strcpy(path_locale, [resources cStringUsingEncoding:NSASCIIStringEncoding]);
+        setenv("PATH_LOCALE", path_locale, 1);
+        setlocale(LC_CTYPE, "en_US.UTF-8");
+
+        UIApplicationMain(argc, argv, nil, @"FrotzAppDelegate");
+    }
     fflush(stdout);
     fflush(stderr);
 

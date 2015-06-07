@@ -12,6 +12,7 @@
 #import "StatusLine.h"
 #import "StoryInputLine.h"
 #import "StoryView.h"
+#import "StoryDetailsController.h"
 #import <DropboxSDK/DropboxSDK.h>
 
 @interface FrotzWindow : UIWindow

@@ -15,9 +15,8 @@
 extern "C" {
 #endif
 
-#include "../frotz/common/frotz.h"
+#include "frotz.h"
 
-#include "ui_setup.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -41,7 +40,7 @@ extern char semi_stripped_story_name[FILENAME_MAX+1];
 extern char iosif_filename[MAX_FILE_NAME];
 
 extern f_setup_t f_setup;
-extern u_setup_t u_setup;
+//extern u_setup_t u_setup;
 
 #define MAX_ROWS 100
 #define MAX_COLS 100

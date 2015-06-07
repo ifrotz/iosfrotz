@@ -585,7 +585,7 @@ static NSString *prettyStoryName(StoryBrowser *sb, StoryInfo *si) {
 }
 
 static NSInteger sortPathsByFilename(id a, id b, void *context) {
-    StoryBrowser *sb = (StoryBrowser*)context;
+    StoryBrowser *sb = (__bridge StoryBrowser*)context;
     NSString *str1 = prettyStoryName(sb, a);
     NSString *str2 = prettyStoryName(sb, b);
     return [str1 caseInsensitiveCompare: str2];
