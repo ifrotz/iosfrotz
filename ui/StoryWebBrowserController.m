@@ -486,27 +486,27 @@ const NSString *kBookmarkTitlesKey = @"Titles";
         stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
-	NSMutableArray *zList = listOfZFilesInZIP(outFile);
-	if (!zList || [zList count] == 0) {
-	    alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
-						    message:@"Sorry, this archive contains no playable story files"
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	    stay = YES;
-	} else {
-	    NSString *storyFile;
-	    NSString *storyList = @"";
-	    for (storyFile in zList) {
-		if ([storyFile hasPrefix: @"SAVE"])
-		    continue;
-		if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0)
-		    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
-	    }
-	    alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:"
-						    message: storyList
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	}
-	NSFileManager *fileMgr = [NSFileManager defaultManager];
-	[fileMgr removeItemAtPath: outFile error: &error];
+        NSMutableArray *zList = [listOfZFilesInZIP(outFile) autorelease];
+        if (!zList || [zList count] == 0) {
+            alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
+                                               message:@"Sorry, this archive contains no playable story files"
+                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            stay = YES;
+        } else {
+            NSString *storyFile;
+            NSString *storyList = @"";
+            for (storyFile in zList) {
+                if ([storyFile hasPrefix: @"SAVE"])
+                    continue;
+                if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0)
+                    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
+            }
+            alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:"
+                                               message: storyList
+                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        }
+        NSFileManager *fileMgr = [NSFileManager defaultManager];
+        [fileMgr removeItemAtPath: outFile error: &error];
     } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
 	alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
 							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
@@ -789,7 +789,7 @@ static bool bypassBundle = NO;
     NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
     if (!bundledGamesPath || ![[NSFileManager defaultManager] fileExistsAtPath: bundledGamesPath])
         return NO;
-    NSMutableArray *zList = listOfZFilesInZIP(bundledGamesPath);
+    NSMutableArray *zList = [listOfZFilesInZIP(bundledGamesPath) autorelease];
     if (!zList || [zList count] == 0) 
         return NO;
     else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: m_expectedArchiveFiles[0]] != NSNotFound)

@@ -88,7 +88,7 @@ NSMutableArray *do_list(unzFile uf)
     uLong i;
     unz_global_info gi;
     int err;
-    NSMutableArray *zList = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray *zList = [[NSMutableArray alloc] init];
 
     err = unzGetGlobalInfo (uf,&gi);
     if (err!=UNZ_OK)
@@ -391,8 +391,8 @@ NSMutableArray *listOfZFilesInZIP(NSString *zipFileStr)
         uf = unzOpen(zipfilename);
 
     if (uf) {
-	zList = do_list(uf);
-	unzCloseCurrentFile(uf);
+        zList = do_list(uf);
+        unzCloseCurrentFile(uf);
     }
     return zList;
 }
