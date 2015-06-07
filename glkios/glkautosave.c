@@ -331,7 +331,7 @@ static void classes_normalize_pointers(glk_object_save_t *obj)
 		
 		if (win->inbuf)	win->inbuf	-= (glui32)GlulxRAM;
 		if (win->splitwin) {
-			win->splitwin = classes_find_id_for_object(gidisp_Class_Window, (void *)win->splitwin);
+			win->splitwin = classes_find_id_for_object(gidisp_Class_Window, (void *)(intptr_t)win->splitwin);
 		} else {
 			win->splitwin = kInvalidSplitWin; // definitely an invalid id
 		}
