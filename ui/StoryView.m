@@ -37,9 +37,8 @@
     CGPoint pt = [touch locationInView: [self superview]];
     
     if (m_tapTimer) {
-        [[m_tapTimer userInfo] release];
+        [m_tapTimer userInfo];
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
     
@@ -150,7 +149,6 @@
     int magnifyYThreshold = 50;
     if  ([delegate isLandscape])
         magnifyYThreshold = 20;
-    [savedTouch release];
     NotesViewController* notesController = [delegate notesController];
     
     if (notesController && [notesController isVisible])
@@ -172,7 +170,6 @@
     }
     if (m_tapTimer) {
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
     m_skipNextTap = NO;

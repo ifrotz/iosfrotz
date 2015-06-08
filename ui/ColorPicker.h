@@ -44,7 +44,7 @@
 @property (nonatomic, readonly, strong) HSVPicker *hsvPicker;
 @property (nonatomic, readonly, strong) HSVValuePicker *valuePicker;
 @property (nonatomic, readonly, strong) ColorTile *colorTile;
-@property (nonatomic, assign) id<ColorPickerDelegate> delegate;
+@property (nonatomic, weak) id<ColorPickerDelegate> delegate;
 - (void)updateAccessibility;
 @end
 

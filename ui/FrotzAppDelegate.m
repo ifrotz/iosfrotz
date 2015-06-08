@@ -141,7 +141,7 @@ bool gUseSplitVC;
 #endif
             [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
-        splitVC.viewControllers = @[m_navigationController, [[m_browser detailsController] navigationController]];
+        splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
 
         if ([m_window respondsToSelector:@selector(setRootViewController:)])
             [m_window setRootViewController: splitVC];
@@ -189,12 +189,9 @@ bool gUseSplitVC;
 - (void)transitionViewDidFinish:(TransitionView *)view {
     [m_window addSubview: [m_navigationController view]];
     [m_splash removeFromSuperview];
-    [m_splash release];
     [m_activityView stopAnimating];
     [m_activityView removeFromSuperview];
-    [m_activityView release];
     [m_transitionView removeFromSuperview];    
-    [m_transitionView release];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
@@ -232,7 +229,6 @@ bool gUseSplitVC;
             [m_browser addRecentStory: launchPath];
             StoryInfo *si = [[StoryInfo alloc] initWithPath: launchPath browser:m_browser];
             [m_browser setStoryDetails: si];
-            [si release];
             [m_browser performSelector:@selector(launchStory:) withObject:launchPath afterDelay:0.05];
         }
     } else {
@@ -241,18 +237,11 @@ bool gUseSplitVC;
                 message: [NSString stringWithFormat:@"%@", launchURL]
                 delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         [alert show];
-        [alert release];
     }
 
     return NO;
 }
 
-- (void)dealloc {
-    [m_browser release];
-    [m_navigationController release];
-    [m_window release];
-    [super dealloc];
-}
 
 
 @end

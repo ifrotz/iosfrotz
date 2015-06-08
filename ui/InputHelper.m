@@ -20,7 +20,6 @@ const CGFloat kHistoryLineHeight = 20.0;
                             @"in ",@"jump ", @"kick ", @"kill ", @"learn ", @"leave ", @"memorize ", @"no", @"off ", @"on ", @"push ", @"pull ", @"put ", @"read ", @"remove ", @"say ", @"search ", @"switch ",  @"take ", @"talk ", @"tell ", @"then ",
                             @"through ", @"throw ", @"tie ", @"to ", @"touch ", @"turn", @"under ", @"untie ", @"up ", @"wait ", @"wear ",@"window ", @"with ", @"quit ", @"yes", @", ", @". ", @"\"",
                             @"brief", @"diagnose", @"save", @"score", @"restart", @"restore", @"undo", @"verbose"];
-        [m_commonCommands retain];
         m_mode = 0;
         m_lastCommonWordPicked = 0;
         m_currHistoryItem = 0;
@@ -50,7 +49,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     
     NSArray* nibViews =  [[NSBundle mainBundle] loadNibNamed:@"FrotzWordPicker" owner:self options:nil];
     m_wordPicker = nibViews[0];
-    [m_wordPicker retain];
     
     NSArray *subViews = [m_wordPicker subviews];
     UIButton *b;
@@ -268,7 +266,7 @@ const CGFloat kHistoryLineHeight = 20.0;
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:MyIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier];
     }
     // Configure the cell
     NSString *item = m_mode == FrotzInputHelperModeMoreWords ? m_commonCommands[indexPath.row] : m_history[indexPath.row];
@@ -291,11 +289,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     }
 }
 
-- (void)dealloc {
-    [m_history release];
-    [m_commonCommands release];
-    [super dealloc];
-}
 
 
 - (void)viewDidLoad {

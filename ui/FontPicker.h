@@ -23,9 +23,9 @@
 }
 -(instancetype)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFont font:(UIFont*)aFont NS_DESIGNATED_INITIALIZER;
 
-@property(nonatomic,retain) NSString *family;
-@property(nonatomic,retain) NSString *fontName;
-@property(nonatomic,retain) UIFont *font;
+@property(nonatomic,strong) NSString *family;
+@property(nonatomic,strong) NSString *fontName;
+@property(nonatomic,strong) UIFont *font;
 @end
 
 @interface FontPicker : UITableViewController {

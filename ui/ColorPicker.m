@@ -12,7 +12,6 @@
 }
 
 - (instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
-- (void)dealloc;
 @property (nonatomic, readonly) int width;
 @property (nonatomic, readonly) int height;
 @end
@@ -79,10 +78,6 @@
     m_height = frame.size.height;
 }
 
-- (void)dealloc {
-//    [m_screenLayer release];
-    [super dealloc];
-}
 
 - (int)width {
     return m_width;
@@ -110,8 +105,8 @@
 	m_text.text = @"West of House\nThis is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n";
 	m_text.numberOfLines = 0;
 	[self addSubview: m_text];
-	m_flipFgImg = [[UIImage imageNamed: @"colorflipfg.png"] retain];
-	m_flipBgImg = [[UIImage imageNamed: @"colorflipbg.png"] retain];
+	m_flipFgImg = [UIImage imageNamed: @"colorflipfg.png"];
+	m_flipBgImg = [UIImage imageNamed: @"colorflipbg.png"];
 	m_imgView = [[UIImageView alloc] initWithImage: m_flipFgImg];
 	m_imgView.frame=CGRectMake(frame.size.width - m_flipFgImg.size.width - 1, frame.size.height - m_flipFgImg.size.height-1, m_flipFgImg.size.width, m_flipFgImg.size.height);
 	m_imgView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
@@ -160,26 +155,17 @@
 }
 
 -(void)viewDidUnload {
-    [m_text release];
     m_text = nil;
-    [m_imgView release];
     m_imgView = nil;
-    [m_flipFgImg release];
-    [m_flipBgImg release];
     m_flipFgImg = nil;
     m_flipBgImg = nil;
 }
 
 -(void)dealloc {
-    [m_text release];
     m_text = nil;
-    [m_imgView release];
     m_imgView = nil;
-    [m_flipFgImg release];
-    [m_flipBgImg release];
     m_flipFgImg = nil;
     m_flipBgImg = nil;
-    [super dealloc];
 }
 
 @end
@@ -258,7 +244,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 @implementation HSVValuePicker
 
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
-    [super initWithFrame: frame];
+    if (!(self = [super initWithFrame: frame])) return nil;
     m_colorPicker = colorPicker;
     return self;
 }
@@ -403,7 +389,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 @implementation HSVPicker
 
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
-    [super initWithFrame: frame];
+    if (!(self = [super initWithFrame: frame])) return nil;
 
     m_colorPicker = colorPicker;
     [self setFrame: frame];
@@ -583,7 +569,6 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     if (m_hsvData)
 	free(m_hsvData);
     m_hsvData = NULL;
-    [super dealloc];
 }
 
 -(void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
@@ -669,12 +654,10 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     UIImage *hsvCursorImage = [[UIImage alloc]
 	initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"hsv-crosshair" ofType:@"png" inDirectory: @"/"]];
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
-    [hsvCursorImage release];
     UIImage *valCursorImage = [[UIImage alloc]
                                initWithContentsOfFile: [[NSBundle mainBundle] pathForResource:
                              (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair") ofType:@"png" inDirectory: @"/"]];
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
-    [valCursorImage release];
     
     CGRect cursFrame = [m_hsvCursor frame];
     cursFrame.origin = CGPointMake(radius - 16.0f, radius - 16.0f);
@@ -746,33 +729,14 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 }
 
 -(void)viewDidUnload {
-    [m_hsvPicker release];
-    [m_valuePicker release];
-    [m_colorTile release];
-    [m_tileBorder release];
-    [m_background release];
-    [m_hsvCursor release];
-    [m_valueCursor release];
-    [m_textColor release];
-    [m_bgColor release];
     m_textColor = nil;
     m_bgColor = nil;
 }
 
 - (void)dealloc {
     NSLog(@"colorpicker view dealloc");
-    [m_hsvPicker release];
-    [m_valuePicker release];
-    [m_colorTile release];
-    [m_tileBorder release];
-    [m_background release];
-    [m_hsvCursor release];
-    [m_valueCursor release];
-    [m_textColor release];
-    [m_bgColor release];
     m_textColor = nil;
     m_bgColor = nil;
-    [super dealloc];
 }
 
 - (void)updateAccessibility {
@@ -801,14 +765,10 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor {
     if (textColor && m_textColor != textColor) {
-	if (m_textColor)
-	    [m_textColor release];
-	m_textColor = [textColor retain];
+	m_textColor = textColor;
     }
     if (bgColor && m_bgColor != bgColor) {
-	if (m_bgColor)
-	    [m_bgColor release];
-	m_bgColor = [bgColor retain];
+	m_bgColor = bgColor;
     }
     m_changeTextColor = changeTextColor;
 

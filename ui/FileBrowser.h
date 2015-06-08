@@ -52,7 +52,7 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
 - (instancetype)initWithDialogType:(FileBrowserState)dialogType NS_DESIGNATED_INITIALIZER;
 @property (nonatomic, copy) NSString *path;
 - (void)reloadData;
-@property (nonatomic, assign) id<FileSelected> delegate;
+@property (nonatomic, weak) id<FileSelected> delegate;
 - (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section;
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath;

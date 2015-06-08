@@ -230,7 +230,6 @@
 		44910FFE1259972F00409694 /* colorflipfg.png in Resources */ = {isa = PBXBuildFile; fileRef = 44910FFC1259972F00409694 /* colorflipfg.png */; };
 		449119D6125D306200409694 /* UIFontExt.m in Sources */ = {isa = PBXBuildFile; fileRef = 449119D5125D306200409694 /* UIFontExt.m */; };
 		449127E312643AA10013AD7C /* GlkView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449127E212643AA10013AD7C /* GlkView.m */; };
-		449516AB0F7DEDA90060F524 /* FTPServ.m in Sources */ = {isa = PBXBuildFile; fileRef = 449516AA0F7DEDA90060F524 /* FTPServ.m */; };
 		449A51D51052DA34001B884B /* glare.png in Resources */ = {isa = PBXBuildFile; fileRef = 449A51D41052DA34001B884B /* glare.png */; };
 		449A528710530749001B884B /* glarels.png in Resources */ = {isa = PBXBuildFile; fileRef = 449A528610530749001B884B /* glarels.png */; };
 		449C92461122188D006CCDF9 /* StoryView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449C92451122188D006CCDF9 /* StoryView.m */; };
@@ -2654,7 +2653,6 @@
 				44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */,
 				449C929611221CE9006CCDF9 /* FrotzView.m in Sources */,
 				4414E2DC104CDA21008C3F56 /* FrotzWordPicker.m in Sources */,
-				449516AB0F7DEDA90060F524 /* FTPServ.m in Sources */,
 				448164540E6D02C60022EDC0 /* GettingStarted.m in Sources */,
 				449127E312643AA10013AD7C /* GlkView.m in Sources */,
 				44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */,
@@ -3036,6 +3034,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
@@ -3077,6 +3076,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -3477,6 +3477,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -3544,6 +3545,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;

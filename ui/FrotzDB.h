@@ -18,6 +18,6 @@
 
 - (instancetype)init;
 - (void)donePressed;
-@property (nonatomic, assign) id delegate;
+@property (nonatomic, weak) id delegate;
 @end
 

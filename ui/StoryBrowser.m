@@ -66,11 +66,6 @@ const long kMinimumRequiredSpace = 2;
     return [path isEqualToString: [object path]];
 }
 
--(void)dealloc {
-    //    NSLog(@"StoryInfo dealloc %@", path);
-    [path release];
-    [super dealloc];
-}
 @end
 
 
@@ -99,9 +94,9 @@ void removeOldPngSplash(const char *filename) {
 
 -(void)setRecentPaths:(NSArray*)paths {
     [m_recents removeAllObjects];
-    for (NSString *path in paths) {
+    for (__strong NSString *path in paths) {
         path = [m_storyMainViewController relativePathToAppAbsolutePath: path];
-        [m_recents addObject: [[[StoryInfo alloc] initWithPath:path browser:self] autorelease]];
+        [m_recents addObject: [[StoryInfo alloc] initWithPath:path browser:self]];
     }
 }
 
@@ -112,7 +107,6 @@ void removeOldPngSplash(const char *filename) {
                                                          message: [NSString stringWithFormat:@"Frotz needs at least %lld MB to run so that game autosave and other features work correctly.\n\nFrotz will now terminate.", minSpace]
                                                         delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         [alert show];
-        [alert release];
         abortLaunchCondition = YES;
         return YES;
     }
@@ -152,14 +146,14 @@ void removeOldPngSplash(const char *filename) {
             }
         }
         
-        m_storyNames = [[[NSMutableArray alloc] init] retain];
-        m_unsupportedNames = [[[NSMutableArray alloc] init] retain];
-        m_paths = [[[NSMutableArray alloc] init] retain];
+        m_storyNames = [[NSMutableArray alloc] init];
+        m_unsupportedNames = [[NSMutableArray alloc] init];
+        m_paths = [[NSMutableArray alloc] init];
         
         [self addPath: [m_storyMainViewController resourceGamePath]];
         [self addPath: [m_storyMainViewController storyGamePath]];
         
-        m_defaultThumb = [[UIImage imageNamed: @"compass-small.png"] retain];
+        m_defaultThumb = [UIImage imageNamed: @"compass-small.png"];
         
         
 #ifdef NO_SANDBOX
@@ -192,11 +186,9 @@ void removeOldPngSplash(const char *filename) {
         UIBarButtonItem *temporaryBarButtonItem = [[UIBarButtonItem alloc] init];
         temporaryBarButtonItem.title = @"Story List";
         self.navigationItem.backBarButtonItem = temporaryBarButtonItem;
-        [temporaryBarButtonItem release];
         
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
-        [browserButtonItem release];
         
         m_nowPlayingButtonView = [UIButton buttonWithType: UIButtonTypeCustom];
 #ifdef NSFoundationVersionNumber_iOS_6_1
@@ -234,7 +226,7 @@ void removeOldPngSplash(const char *filename) {
             [defaultManager removeItemAtPath: metadataPath error: &error];
             [defaultManager copyItemAtPath:dfltMDPath toPath:metadataPath error:&error];
         }
-        m_metaDict = [[NSMutableDictionary dictionaryWithContentsOfFile: metadataPath] retain];
+        m_metaDict = [NSMutableDictionary dictionaryWithContentsOfFile: metadataPath];
         
         NSString *vers = m_metaDict ? m_metaDict[kMDFrotzVersionKey] : nil;
         
@@ -245,13 +237,11 @@ void removeOldPngSplash(const char *filename) {
             m_metaDict[kMDFrotzVersionKey] = @IPHONE_FROTZ_VERS;
             m_metaDict[kMDFullTitlesKey] = titleDict;
             m_metaDict[kMDThumbnailsKey] = thumbDict;
-            [titleDict release];
-            [thumbDict release];
             needMDDictUpdate = YES;
         }
         
         m_recents = [[NSMutableArray alloc] initWithCapacity:4];
-        m_storyInfoDict = [[NSMutableDictionary dictionaryWithContentsOfFile: siPath] retain];
+        m_storyInfoDict = [NSMutableDictionary dictionaryWithContentsOfFile: siPath];
         if (!m_storyInfoDict)
             m_storyInfoDict = [[NSMutableDictionary alloc] initWithCapacity: 2];
         if (m_storyInfoDict)
@@ -336,11 +326,11 @@ void removeOldPngSplash(const char *filename) {
             if (!dfltMetaData && (!tuidDict || !authorDict || !descriptDict))
                 dfltMetaData = [[NSDictionary alloc] initWithContentsOfFile: dfltMDPath];
             if (!tuidDict)
-                tuidDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDTUIDKey] copyItems:YES] autorelease];
+                tuidDict = [[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDTUIDKey] copyItems:YES];
             if (!authorDict)
-                authorDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDAuthorsKey] copyItems:YES] autorelease];
+                authorDict = [[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDAuthorsKey] copyItems:YES];
             if (!descriptDict)
-                descriptDict = [[[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDDescriptsKey] copyItems:YES] autorelease];
+                descriptDict = [[NSMutableDictionary alloc] initWithDictionary: dfltMetaData[kMDDescriptsKey] copyItems:YES];
             
             NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
             if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
@@ -413,12 +403,11 @@ void removeOldPngSplash(const char *filename) {
                     if (!isZblorb || !gLargeScreenDevice)
                         data = [self splashDataForStory: story];
                     if (!data && isZblorb)
-                        data = [imageDataFromBlorb([si path]) autorelease];
+                        data = imageDataFromBlorb([si path]);
                     if (data) {
                         UIImage *timg = [[UIImage alloc] initWithData: data];
                         UIImage *splashImage = scaledUIImage(timg, 0, 0);
                         UIImage *thumb = scaledUIImage(splashImage, 40, 32);
-                        [timg release];
                         if (thumb) {
                             [self addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
                             needMDDictUpdate = YES;
@@ -438,8 +427,6 @@ void removeOldPngSplash(const char *filename) {
         }
         if (needMDDictUpdate) {
             [self saveMetaData];
-            if (dfltMetaData)
-                [dfltMetaData release];
         }
     }
     return self;
@@ -449,7 +436,6 @@ void removeOldPngSplash(const char *filename) {
     NSFileManager *defaultManager = [NSFileManager defaultManager];
     UIAlertView *alert = nil;
     if (m_launchPath) {
-        [m_launchPath release];
         m_launchPath = nil;
     }
     if ([defaultManager fileExistsAtPath: path]) {
@@ -459,7 +445,7 @@ void removeOldPngSplash(const char *filename) {
         [defaultManager removeItemAtPath:destPath error:&error];
         if ([defaultManager copyItemAtPath:path toPath:destPath error:&error]) {
             [defaultManager removeItemAtPath:path error:&error]; // remove Inbox copy so future invocations won't auto-number
-            m_launchPath = [destPath retain];
+            m_launchPath = destPath;
         } else {
             NSLog(@"Frotz couldn't read launch URL path: %@", path);
             alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot read external URL"
@@ -474,7 +460,6 @@ void removeOldPngSplash(const char *filename) {
     }
     if (alert) {
         [alert show];
-        [alert release];
     }
 }
 
@@ -665,7 +650,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                         if (j < [m_paths count])
                             continue;
                     }
-                    StoryInfo *storyInfo = [[[StoryInfo alloc] initWithPath: [path stringByAppendingPathComponent: story] browser: self] autorelease];
+                    StoryInfo *storyInfo = [[StoryInfo alloc] initWithPath: [path stringByAppendingPathComponent: story] browser: self];
                     [m_storyNames addObject: storyInfo];
                     m_numStories++;
                 } else {
@@ -675,7 +660,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         }
         ++idx;
     }
-    [m_storyNames sortUsingFunction: sortPathsByFilename context: self];
+    [m_storyNames sortUsingFunction: sortPathsByFilename context: (__bridge void *)(self)];
 
 //    NSArray *sectionTitles = [self sectionIndexTitlesForTableView: [self tableView]];
 //    for (StoryInfo *storyInfo in m_storyNames) {
@@ -710,7 +695,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             if (!nc.topViewController.navigationItem.leftBarButtonItem) {
                 UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-                [backItem release];
             }
             [self didPressModalStoryListButton];
             [self.splitViewController presentModalViewController:nc animated:YES];
@@ -749,7 +733,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)saveNotes:(NSString*)notesText forStory:(NSString*)story {
     NSMutableDictionary *notesDict = m_storyInfoDict[kSIStoryNotes];
     if (!notesDict) {
-        notesDict = [[[NSMutableDictionary alloc] initWithCapacity: 4] autorelease];
+        notesDict = [[NSMutableDictionary alloc] initWithCapacity: 4];
         m_storyInfoDict[kSIStoryNotes] = notesDict;
     }
     if (notesText && [notesText length] > 0 || notesDict[story]) {
@@ -773,7 +757,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     else
     {
         NSLog(@"savesi: err %@", error);
-        [error release];
     }
 }
 
@@ -794,7 +777,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     else
     {
         NSLog(@"savemeta: err %@", error);
-        [error release];
     }
 }
 
@@ -823,7 +805,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (!hiddenDict) {
         if (!hide)
             return;
-        hiddenDict = [[[NSMutableDictionary alloc] initWithCapacity: 10] autorelease];
+        hiddenDict = [[NSMutableDictionary alloc] initWithCapacity: 10];
         m_metaDict[kMDHiddenStoriesKey] = hiddenDict;
     }
     if (hide)
@@ -858,11 +840,11 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     static NSDictionary *map = nil;
     NSString *story = [aStory lowercaseString];
     if (!map)
-        map = [@{@"beyondzo": @"beyondzork", @"borderzo": @"borderzone", @"bureaucr": @"bureaucracy", @"bureau": @"bureaucracy", @"cutthroa": @"cutthroats", @"enchante": @"enchanter",
+        map = @{@"beyondzo": @"beyondzork", @"borderzo": @"borderzone", @"bureaucr": @"bureaucracy", @"bureau": @"bureaucracy", @"cutthroa": @"cutthroats", @"enchante": @"enchanter",
                 @"hitchhik": @"hitchhiker", @"hgg": @"hitchhiker", @"hhgg": @"hitchhiker", @"h2g2": @"hitchhiker", @"hhgttg": @"hitchhiker",
                 @"hollywoo": @"hollywood", @"phobos": @"leather", @"nordandb": @"nordandbert", @"planetfa": @"planetfall", @"plundere": @"plundered",
                 @"seastalk": @"seastalker", @"sorceror": @"sorcerer", @"spellbr": @"spellbreaker",@"spellbre": @"spellbreaker", @"starcros": @"starcross",
-                @"stationf": @"stationfall", @"suspend": @"suspended", @"suspende": @"suspended", @"wishbrin": @"wishbringer"} retain];
+                @"stationf": @"stationfall", @"suspend": @"suspended", @"suspende": @"suspended", @"wishbrin": @"wishbringer"};
     NSString *longStory;
     longStory = map[story];
     if (longStory)
@@ -957,9 +939,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)viewDidUnload {
     return;
     NSLog(@"sb viewdidunload!");
-    [m_tableView release];
     m_tableView = nil;
-    [m_background release];
     m_background = nil;
 }
 
@@ -976,7 +956,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [self setView: m_background];
     [realView setFrame: [realView bounds]];
     m_tableView = realView;
-    [m_tableView retain];
     if ([m_tableView respondsToSelector: @selector(setAccessibilityLabel:)])
         [m_tableView setAccessibilityLabel: @"Select a story"];
     
@@ -1001,7 +980,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if ([m_storyMainViewController currentStory] && [[m_storyMainViewController currentStory] length] > 0) {
         StoryInfo *si = [[StoryInfo alloc] initWithPath: [m_storyMainViewController currentStory] browser: self];
         [self setStoryDetails: si];
-        [si release];
         [self showMainStoryController];
         
         [m_storyMainViewController autoRestoreSession];
@@ -1011,9 +989,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)filterContentForSearchText:(NSString*)searchText scope:(NSString*)scope
 {
     NSPredicate *resultPredicate = [NSPredicate predicateWithFormat:@"title contains[c] %@", searchText];
-    if (m_filteredNames)
-        [m_filteredNames release];
-    m_filteredNames = [[m_storyNames filteredArrayUsingPredicate:resultPredicate] retain];
+    m_filteredNames = [m_storyNames filteredArrayUsingPredicate:resultPredicate];
 }
 
 - (BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchString:(NSString *)searchString
@@ -1051,7 +1027,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [searchDisplayController setDelegate:self];
     [searchDisplayController setSearchResultsDataSource:self];
     
-    [searchBar release];
 
     if (m_postLaunch || m_launchPath)
         ;
@@ -1122,24 +1097,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void) dealloc {
-    if (m_launchPath)
-        [m_launchPath release];
-    [m_tableView release];
-    [m_storyNames release];
-    [m_unsupportedNames release];
-    [m_recents release];
     NSString *path;
     for (path in m_paths)
-        [path release];
-    [m_paths release];
+        path;
     
-    [m_editButtonItem release];
-    [m_nowPlayingButtonItem release];
-    [m_nowPlayingButtonView release];
-    [m_metaDict release];
-    [m_storyInfoDict release];
-    [m_defaultThumb release];
-    [super dealloc];
 }
 
 - (void)addPath: (NSString *)path {
@@ -1153,7 +1114,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             if (!nc.topViewController.navigationItem.leftBarButtonItem) {
                 UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-                [backItem release];
             }
             [self.splitViewController dismissModalViewControllerAnimated:NO];
             [self.splitViewController presentModalViewController:nc animated:YES];
@@ -1360,14 +1320,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (!storyInfo || !storyInfo.path || [storyInfo.path length]==0)
         return;
     if (m_recents) {
-        [storyInfo retain];
         if ((idx = [self recentRowFromStoryInfo: storyInfo]) != NSNotFound)
             [m_recents removeObjectAtIndex: idx];
         [m_recents insertObject: storyInfo atIndex: 0];
         if ([m_recents count] > 3)
             [m_recents removeLastObject];
         [self saveRecents];
-        [storyInfo release];
     }
 }
 
@@ -1375,7 +1333,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (storyPath && [storyPath length] > 0) {
         StoryInfo *si = [[StoryInfo alloc] initWithPath:storyPath browser: self];
         [self addRecentStoryInfo: si];
-        [si release];
     }
 }
 
@@ -1458,7 +1415,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 if (data) {
                     UIImage *image = scaledUIImage([UIImage imageWithData: data], 0, 0);
                     m_details.artwork = image;
-                    [data release];
                 }
             }
         }
@@ -1502,24 +1458,20 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
     if (storyInfo) {
-        [storyInfo retain];
         [self setStoryDetails: storyInfo];
         if (gLargeScreenDevice && self.splitViewController) {
             [m_details refresh];
         }
         else
             [[self navigationController] pushViewController:m_details animated:YES];
-        [storyInfo release];
     }
 }
 
 -(void)launchStoryInfo:(StoryInfo*)storyInfo {
     if (storyInfo) {
-        [storyInfo retain];
         [self addRecentStoryInfo: storyInfo];
         [self setStoryDetails: storyInfo];
         [self launchStory: [storyInfo path]];
-        [storyInfo release];
     }
 }
 
@@ -1609,7 +1561,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"storyCell"];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:@"storyCell"] autorelease];
+        cell = [[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:@"storyCell"];
     }
     cell.image = nil;
     cell.text = @"";

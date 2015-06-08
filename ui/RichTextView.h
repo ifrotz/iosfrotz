@@ -9,9 +9,9 @@
 @class RichTextAE;
 
 @interface RichTextTile : UIView {
-    RichTextView *m_textView;
+    RichTextView *__weak m_textView;
 }
-@property(nonatomic, assign) RichTextView *textView;
+@property(nonatomic, weak) RichTextView *textView;
 @end
 
 @protocol RTSelected
@@ -66,7 +66,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     UIView *m_tileContainerView;
     CGFloat m_fontHeight, m_fixedFontHeight, m_fixedFontWidth, m_fontMinWidth, m_fontMaxWidth;
     CGFloat m_firstVisibleRow, m_firstVisibleColumn, m_lastVisibleRow, m_lastVisibleColumn;
-    UIViewController<UIScrollViewDelegate> *m_controller;
+    UIViewController<UIScrollViewDelegate> *__weak m_controller;
     
     CGFloat m_origY;
     BOOL m_prevLineNotTerminated;
@@ -80,7 +80,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     BOOL m_selectionDisabled;
     BOOL m_hyperlinkTest;
     
-    NSObject<RTSelected>* m_selectionDelegate;
+    NSObject<RTSelected>* __weak m_selectionDelegate;
     
     BOOL m_freezeDisplay;
     CGRect m_delayedFrame;
@@ -88,7 +88,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     RichDataGetImageCallback m_richDataGetImageCallback;
 }
 
-@property(nonatomic, retain) NSString *text;
+@property(nonatomic, strong) NSString *text;
 @property(nonatomic, assign) CGSize tileSize;
 @property(nonatomic, readonly) NSMutableArray* textRuns;
 @property(nonatomic, assign) CGPoint lastPt;
@@ -96,7 +96,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) unsigned int textColorIndex;
 @property(nonatomic, assign) unsigned int bgColorIndex;
 @property(nonatomic, assign) int hyperlinkIndex;
-@property(nonatomic, assign) UIViewController<UIScrollViewDelegate>* controller;
+@property(nonatomic, weak) UIViewController<UIScrollViewDelegate>* controller;
 @property(nonatomic, assign) unsigned int topMargin;
 @property(nonatomic, assign) unsigned int leftMargin;
 @property(nonatomic, assign) unsigned int rightMargin;
@@ -105,7 +105,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) int lastAEIndexAccessed;
 //@property(nonatomic, assign) int selectedRun;
 //@property(nonatomic, assign) NSRange selectedColumnRange;
-@property(nonatomic, assign) NSObject<RTSelected>* selectionDelegate;
+@property(nonatomic, weak) NSObject<RTSelected>* selectionDelegate;
 @property(nonatomic, assign) BOOL selectionDisabled;
 @property(nonatomic, assign, getter=displayFrozen) BOOL freezeDisplay;
 @property(nonatomic, assign) RichDataGetImageCallback richDataGetImageCallback;
@@ -145,7 +145,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (void)repositionAfterReflow;
 - (void)reloadImages;
 - (void)dealloc;
-@property (nonatomic, assign) UIViewController<UIScrollViewDelegate> *delegate;
+@property (nonatomic, weak) UIViewController<UIScrollViewDelegate> *delegate;
 @property (nonatomic, copy) UIFont *font;
 @property (nonatomic, copy) UIFont *fixedFont;
 @property (nonatomic, readonly) CGSize fixedFontSize;

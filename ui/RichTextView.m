@@ -46,7 +46,6 @@ void removeAnim(UIView *view);
     int m_aeIndex;
     int m_runCount;
 }
--(void)dealloc;
 @property(assign) int textIndex;
 @property(assign) int aeIndex;
 @property(assign) int runCount;
@@ -165,7 +164,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     }
     if (index > 1)
         c = m_colorArray[index-1];
-    return [[c retain] autorelease];
+    return c;
 }
 
 -(void)setBgColorIndex:(unsigned int)index {
@@ -176,13 +175,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_currentBGColorIndex = index;
     	if (index == 0 || index > [m_colorArray count]) {
             if (m_currBgColor != m_bgColor) {
-                [m_currBgColor release];
-                m_currBgColor = [m_bgColor retain];
+                m_currBgColor = m_bgColor;
             }
         } else {
-            if (m_currBgColor)
-                [m_currBgColor release];
-            m_currBgColor = [m_colorArray[index-1] retain];
+            m_currBgColor = m_colorArray[index-1];
         }
         m_prevLineNotTerminated = NO;
     }
@@ -367,8 +363,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 - (void)setTextColor:(UIColor*)color {
     if (m_fgColor != color) {
-        [m_fgColor release];
-        m_fgColor = [color retain];
+        m_fgColor = color;
         //	if (m_selectionView) [m_selectionView setBackgroundColor: m_fgColor];
     }
     [self reloadData];
@@ -377,15 +372,12 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 - (void)setBackgroundColor:(UIColor *)color {
     [super setBackgroundColor: color];
     if (m_bgColor != color) {
-        [m_bgColor release];
-        m_bgColor = [color retain];
+        m_bgColor = color;
         [super setBackgroundColor: m_bgColor];
-        if (m_currBgColor)
-            [m_currBgColor release];
         if (m_currentBGColorIndex > 1 && m_currentBGColorIndex <= [m_colorArray count])
-            m_currBgColor = [m_colorArray[m_currentBGColorIndex-1] retain];
+            m_currBgColor = m_colorArray[m_currentBGColorIndex-1];
         else
-            m_currBgColor = [m_bgColor retain];
+            m_currBgColor = m_bgColor;
         
         [m_tileContainerView setBackgroundColor: m_bgColor];
     }
@@ -592,29 +584,12 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     NSLog(@"rtv %@ dealloc", self);
     if (m_selectionView) {
         [m_selectionView removeFromSuperview];
-        [m_selectionView release];
         m_selectionView = nil;
     }
     [self clearAE];
-    [m_accessibilityElements release];
     m_accessibilityElements = nil;
 
-    [m_textRuns release];
-    [m_textPos release];
-    [m_textStyles release];
-    [m_textLineNum release];
-    [m_colorIndex release];
-    if (m_hyperlinks)
-        [m_hyperlinks release];
 
-    [m_lineYPos release];
-    [m_lineWidth release];
-    [m_imageviews release];
-    [m_imageIDs release];
-    [m_colorArray release];
-    [m_reusableTiles release];
-    [m_tileContainerView release];
-    m_textRuns = nil;
     m_textPos = nil;
     m_textStyles = nil;
     m_textLineNum = nil;
@@ -628,13 +603,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     m_reusableTiles = nil;
     m_tileContainerView = nil;
     
-    [m_fgColor release];
-    [m_bgColor release];
-    if (m_currBgColor)
-        [m_currBgColor release];
     m_currBgColor = nil;
     m_fgColor = m_bgColor = nil;
-    [super dealloc];
 }
 
 -(void)clearSelection {
@@ -680,12 +650,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     m_numLines = 0;
 
 
-    if (m_currBgColor)
-        [m_currBgColor release];
     if (m_currentBGColorIndex > 1 && m_currentBGColorIndex <= [m_colorArray count])
-        m_currBgColor = [m_colorArray[m_currentBGColorIndex-1] retain];
+        m_currBgColor = m_colorArray[m_currentBGColorIndex-1];
     else
-        m_currBgColor = [m_bgColor retain];
+        m_currBgColor = m_bgColor;
     [super setBackgroundColor: m_currBgColor];
     [m_tileContainerView setBackgroundColor: m_currBgColor];
     
@@ -1345,11 +1313,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 - (void)restoreFromSaveDataDict: (NSDictionary*)saveData {
-    [m_textRuns release];
-    [m_textStyles release];
-    [m_colorIndex release];
-    if (m_hyperlinks)
-        [m_hyperlinks release];
     
     NSArray *savedTextRuns = saveData[@"textRuns"];
     m_textRuns = [savedTextRuns mutableCopy];
@@ -1442,7 +1405,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             UIImage *image = m_richDataGetImageCallback(imageNum);
             UIImageView *imageView = [[UIImageView alloc] initWithImage: image];
             [m_imageviews addObject: imageView];
-            [imageView release];
         }
         [self reflowText];
         [self setFreezeDisplay:NO];
@@ -1484,7 +1446,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         if (m_topMargin+ m_lastPt.y > self.contentSize.height-m_fontHeight-m_extraLineSpacing-m_bottomMargin)
             [self setContentSize: CGSizeMake(self.contentSize.width, m_topMargin+ m_lastPt.y + m_bottomMargin)];
         [m_imageviews addObject: imageView];
-        [imageView release];
 
         if (!m_hyperlinks && m_hyperlinkIndex)
             [self populateZeroHyperlinks];
@@ -1578,7 +1539,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         m_numLines = [m_textLineNum[index] intValue];
         [self wordWrapTextSize:newText atPoint:&m_lastPt font:font style:m_currentTextStyle fgColor:nil bgColor:nil withRect:frame
                         lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
-        m_textRuns[index] = [[newText copy] autorelease];
+        m_textRuns[index] = [newText copy];
     } else {
         if (!m_hyperlinks && m_hyperlinkIndex)
             [self populateZeroHyperlinks];
@@ -1586,7 +1547,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [m_textLineNum addObject: @(m_numLines)];
         [self wordWrapTextSize:text atPoint:&m_lastPt font:font style:m_currentTextStyle fgColor:nil bgColor:nil withRect:frame
                        lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
-        [m_textRuns addObject: [[text copy] autorelease]];
+        [m_textRuns addObject: [text copy]];
         [m_colorIndex addObject: [NSNumber numberWithInt: (m_currentBGColorIndex << 16) | m_currentTextColorIndex]];
         [m_textPos addObject: [NSValue valueWithCGPoint: m_lastPt]];
         [m_textStyles addObject: style];
@@ -1905,10 +1866,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 #endif
         // the only object retaining the tile is our reusableTiles set, so we have to retain/autorelease it
         // before returning it so that it's not immediately deallocated when we remove it from the set
-        [tile retain];
         [m_reusableTiles removeObject:tile];
     }
-    return [tile autorelease];
+    return tile;
 }
 
 - (void)reloadData {
@@ -1954,7 +1914,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     
     if (!tile) {
         // the scroll view will handle setting the tile's frame, so we don't have to worry about it
-        tile = [[[RichTextTile alloc] initWithFrame:CGRectZero] autorelease];
+        tile = [[RichTextTile alloc] initWithFrame:CGRectZero];
         [tile setBackgroundColor: m_currBgColor ? m_currBgColor : m_bgColor];
         [tile setTextView: self];
         
@@ -2056,7 +2016,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [label setFont:[UIFont boldSystemFontOfSize:40]];
         [label setText:[NSString stringWithFormat:@"%d", totalTiles]];
         [tile addSubview:label];
-        [label release];
         //        [[tile layer] setBorderWidth:2];
         //        [[tile layer] setBorderColor:[[UIColor greenColor] CGColor]];
     }
@@ -2137,8 +2096,6 @@ static NSString *kCommand = @"Command";
     BOOL hadAE = m_accessibilityElements != nil;
     
     int count = [m_textRuns count];
-    if (m_accessibilityElements)
-        [m_accessibilityElements release];
     
     m_accessibilityElements = [[NSMutableArray alloc] initWithCapacity: count];
     
@@ -2159,7 +2116,6 @@ static NSString *kCommand = @"Command";
             [e setRunCount: runCount];
             
             [m_accessibilityElements addObject: e];
-            [e release];
             startIndex = i+1;
         }
         ++i;
@@ -2222,7 +2178,6 @@ static NSString *kCommand = @"Command";
     [e setTextIndex: count-1];
     [e setRunCount: 1];
     [m_accessibilityElements addObject: e];
-    [e release];
 }
 
 - (void)markWaitForInput {
@@ -2482,10 +2437,6 @@ static NSString *kCommand = @"Command";
     //    return [super accessibilityFrame];
 }
 
--(void)dealloc {
-    //    NSLog(@"rtae dealloc idx=%d", m_textIndex);
-    [super dealloc];
-}
 
 @end
 

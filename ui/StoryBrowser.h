@@ -32,11 +32,10 @@
 }
 -(instancetype)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)browser NS_DESIGNATED_INITIALIZER;
 -(BOOL)isEqual:(id)object;
--(void)dealloc;
 @property (nonatomic, readonly, copy) NSString *title;
 
 @property(nonatomic,copy) NSString *path;
-@property(nonatomic,assign) StoryBrowser *browser;
+@property(nonatomic,weak) StoryBrowser *browser;
 @end
 
 @interface StoryBrowser : UITableViewController <UIActionSheetDelegate, UISplitViewControllerDelegate, UIPopoverControllerDelegate,UISearchBarDelegate, UISearchDisplayDelegate> {
@@ -151,9 +150,9 @@
 - (void)storyInfoChanged;
 - (void)updateAccessibility;
 
-@property(nonatomic,retain) UIPopoverController *popoverController;
-@property(nonatomic,retain) UIBarButtonItem *popoverBarButton;
-@property(nonatomic,retain) UISearchDisplayController *searchDisplayController;
+@property(nonatomic,strong) UIPopoverController *popoverController;
+@property(nonatomic,strong) UIBarButtonItem *popoverBarButton;
+@property(nonatomic,strong) UISearchDisplayController *searchDisplayController;
 @end
 
 extern NSString *storyGamePath;

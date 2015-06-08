@@ -26,11 +26,10 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     NSString *path;
     NSDate *modDate;
 }
-@property(nonatomic,retain) NSString *path;
-@property(nonatomic,retain) NSDate *modDate;
+@property(nonatomic,strong) NSString *path;
+@property(nonatomic,strong) NSDate *modDate;
 -(NSComparisonResult)compare:(FileInfo*)other;
 -(instancetype)initWithPath:(NSString*)path NS_DESIGNATED_INITIALIZER;
--(void)dealloc;
 @end
 
 @implementation FileInfo
@@ -51,11 +50,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     return -[self.modDate compare: other.modDate];
 }
 
--(void)dealloc {
-    [path release];
-    [modDate release];
-    [super dealloc];
-}
 @end
 
 
@@ -243,7 +237,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
                                                            delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Save", nil];
             [alert show];
-            [alert release];
             return;
         }
         [m_textField endEditing: YES];
@@ -271,7 +264,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 -(void)viewDidAppear:(BOOL)animated {
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(didPressCancel:)];
     self.navigationItem.leftBarButtonItem = backItem;
-    [backItem release];
     
     UIBarButtonItem* editItem = [self editButtonItem];
     [editItem setStyle: UIBarButtonItemStylePlain];
@@ -338,25 +330,13 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     return m_delegate;
 }
 
-- (void)dealloc {
-    [m_path release];
-    [m_files release];
-    [m_extensions release];
-    [m_textField release];
-    [m_backgroundView release];
-    if (m_saveButton)
-        [m_saveButton release];
-    [m_tableViewController release];
-    [super dealloc];
-}
 
 - (NSString *)path {
-    return [[m_path retain] autorelease];
+    return m_path;
 }
 
 - (void)setPath: (NSString *)path {
     if (m_path != path) {
-        [m_path release];
         m_path = [path copy];
     }
     
@@ -403,7 +383,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
                     continue;
                 FileInfo *fi = [[FileInfo alloc] initWithPath: path];
                 [m_files addObject: fi];
-                [fi release];
             }
         }
     }
@@ -439,9 +418,9 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     if (cell == nil) {
         cell = [UITableViewCell alloc];
         if ([cell respondsToSelector: @selector(initWithStyle:reuseIdentifier:)])
-            cell = [[cell initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"saveGameCell"] autorelease];
+            cell = [cell initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"saveGameCell"];
         else
-            cell = [[cell initWithFrame:CGRectZero reuseIdentifier:@"saveGameCell"] autorelease];
+            cell = [cell initWithFrame:CGRectZero reuseIdentifier:@"saveGameCell"];
     }
     
     NSString *file = [[m_files[indexPath.row] path] lastPathComponent], *cellText = nil;
@@ -485,10 +464,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
                 textView.text = text;
                 textView.editable = NO;
                 [self.view addSubview: textView];
-                [text release];    
-                [textView release];
-                self.navigationItem.leftBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
-                                                                                                       target:self action:@selector(doneWithTextFile:)] autorelease];
+                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+                                                                                                       target:self action:@selector(doneWithTextFile:)];
                 self.navigationItem.rightBarButtonItem = nil;
                 return;
             }

@@ -118,7 +118,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     self.navigationItem.rightBarButtonItem = m_activButtonItem;
 
     [m_toolBar setItems: @[m_backButtonItem, spaceButtonItem, m_reloadButtonItem, spaceButtonItem, m_cancelButtonItem, spaceButtonItem, m_URLButtonItem, spaceButtonItem, m_forwardButtonItem]];
-    [spaceButtonItem release];
     
     [m_background addSubview: m_toolBar];
     [m_background bringSubviewToFront: m_toolBar];
@@ -151,7 +150,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     self.navigationItem.titleView = [m_frotzInfoController view];
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(browserDidPressBackButton)];
     self.navigationItem.leftBarButtonItem = backItem;
-    [backItem release];
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
     {
@@ -279,20 +277,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     return m_backButtonItem;
 }
 
--(void)dealloc {
-    [m_activityView release];
-    [m_backButtonItem release];
-    [m_forwardButtonItem release];
-    [m_cancelButtonItem release];
-    [m_reloadButtonItem release];
-    [m_URLButtonItem release];
-    [m_urlBarController release];
-    [m_bookmarkListController release];
-    [m_activButtonItem release];
-    [m_webView release];
-    [m_background release];
-    [super dealloc];
-}
 -(UIWebView*)webView {
     return m_webView;
 }
@@ -448,13 +432,11 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	    }
 	}
 	
-	[m_receivedData release];
 	m_receivedData = nil;
 
 	if (m_delayedRequest) {
 	    m_state = kSWBFetchingStory;
 	    [self loadZFile: m_delayedRequest];
-	    [m_delayedRequest release];
 	    m_delayedRequest = nil;
 	} else {
 	    m_state = kSWBIdle;
@@ -468,15 +450,11 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     if (tempbuf[0]=='<' && tempbuf[1]=='!') {
         NSString *str = [[NSString alloc] initWithData: m_receivedData encoding:NSUTF8StringEncoding];
         [m_webView loadHTMLString: str baseURL:nil];
-        [str release];
         isBadLoad = YES;
     }
     else
         [m_receivedData writeToFile: outFile atomically: NO];
-    [connection release];
-    [m_receivedData release];
     m_receivedData = nil;
-    [request release];
     m_currentRequest = nil;
     UIAlertView *alert = nil;
     if (isBadLoad) {
@@ -486,7 +464,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
         stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
-        NSMutableArray *zList = [listOfZFilesInZIP(outFile) autorelease];
+        NSMutableArray *zList = listOfZFilesInZIP(outFile);
         if (!zList || [zList count] == 0) {
             alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
                                                message:@"Sorry, this archive contains no playable story files"
@@ -512,7 +490,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
         [alert show];
-        [alert release];
     }
 
     [m_activityView stopAnimating];
@@ -525,10 +502,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     [m_activityView stopAnimating];
-    [connection release];
-    [m_receivedData release];
 //    NSLog(@"m_currentRequest release connDidFailWithError");
-    [m_currentRequest release];
     m_receivedData = nil;
     m_currentRequest = nil;
     m_state = kSWBIdle;
@@ -539,7 +513,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
 						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     [alert show];
-    [alert release];
 }
 
 - (BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story {
@@ -664,8 +637,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	    NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
 	    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
 	    if (connection) {
-		m_delayedRequest = [delayedRequest retain];
-		m_receivedData = [[NSMutableData data] retain];
+		m_delayedRequest = delayedRequest;
+		m_receivedData = [NSMutableData data];
 		m_state = kSWBFetchingImage;
 		loadingPic = YES;
 //		[connection release];
@@ -673,7 +646,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
 							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
 		[alert show];
-		[alert release];
 	    }
 
 	}
@@ -687,25 +659,24 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 
 - (BOOL)savePicData:(NSData*)picData forStory:(NSString*)story{
     BOOL saveMeta = NO;
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-    if (picData) {
-	UIImage *image = [UIImage imageWithData: picData];
-	if (image) {
-	    NSLog(@"saving pic data for %@", story);
-	    UIImage *thumb = scaledUIImage(image, 40, 32);
-	    if (thumb) {
-		[m_storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
-		saveMeta = YES;
-	    }
-	    UIImage *splash = scaledUIImage(image, 0, 0);
-	    if (splash) {
-		[m_storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
-	    }
-	}
+    @autoreleasepool {
+        if (picData) {
+            UIImage *image = [UIImage imageWithData: picData];
+            if (image) {
+                NSLog(@"saving pic data for %@", story);
+                UIImage *thumb = scaledUIImage(image, 40, 32);
+                if (thumb) {
+                    [m_storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
+                    saveMeta = YES;
+                }
+                UIImage *splash = scaledUIImage(image, 0, 0);
+                if (splash) {
+                    [m_storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
+                }
+            }
+        }
+        return saveMeta;
     }
-    [pool drain];
-    return saveMeta;
 }
 
 - (void)loadZMeta:(NSURLRequest*)request {
@@ -744,7 +715,6 @@ static bool bypassBundle = NO;
                                                             message: [m_storyBrowser fullTitleForStory: storyFile]
                                                            delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
             [alert show];
-            [alert release];
             [self browserDidPressBackButton];
         } else {
             UIAlertView *alert;
@@ -755,10 +725,8 @@ static bool bypassBundle = NO;
                 alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Could not extract story from bundled archive"
                                                   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
             [alert show];
-            [alert release];
         }
         if (m_expectedArchiveFiles) {
-            [m_expectedArchiveFiles release];
             m_expectedArchiveFiles = nil;
         }
         [m_activityView stopAnimating];
@@ -769,18 +737,17 @@ static bool bypassBundle = NO;
     [m_activityView startAnimating];
     
     //NSLog(@"Load %@", request);
-    m_currentRequest = [request retain];
+    m_currentRequest = request;
     //    NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
     if (connection) {
-        m_receivedData = [[NSMutableData data] retain];
+        m_receivedData = [NSMutableData data];
         m_state = kSWBFetchingStory;
         //	[connection release];
     } else {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not retrieve file"
                                                        delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         [alert show];
-        [alert release];
     }
 }
 
@@ -789,7 +756,7 @@ static bool bypassBundle = NO;
     NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
     if (!bundledGamesPath || ![[NSFileManager defaultManager] fileExistsAtPath: bundledGamesPath])
         return NO;
-    NSMutableArray *zList = [listOfZFilesInZIP(bundledGamesPath) autorelease];
+    NSMutableArray *zList = listOfZFilesInZIP(bundledGamesPath);
     if (!zList || [zList count] == 0) 
         return NO;
     else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: m_expectedArchiveFiles[0]] != NSNotFound)
@@ -846,7 +813,6 @@ static bool bypassBundle = NO;
             NSString *urlPath = [urlGame path];
             NSString *urlQuery = [urlGame query];
             if (m_expectedArchiveFiles) {
-                [m_expectedArchiveFiles release];
                 m_expectedArchiveFiles = nil;
             }
             if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
@@ -895,16 +861,12 @@ static bool bypassBundle = NO;
                                                            delegate:self cancelButtonTitle:@"Dismiss" 
                                                   otherButtonTitles: m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0 ? @"Open in Safari":nil, nil];
             [alert show];
-            [alert release];
             return NO;
         }
 #endif
         [self performSelector: @selector(loadZMeta:) withObject: request afterDelay: 0.25];
         return NO;
     }
-    [request retain];
-    if (m_currentRequest)
-        [m_currentRequest release];
     m_currentRequest = request;
     //    NSLog(@"m_currentRequest retain shouldStart %@", m_currentRequest);
     [m_urlBarController setText: [[m_currentRequest mainDocumentURL] absoluteString]];
@@ -977,11 +939,9 @@ static bool bypassBundle = NO;
     }
     if (alert) {
         [alert show];
-        [alert release];
     }
     //    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
     
-    [m_currentRequest release];
     m_currentRequest = nil;
 }
 

@@ -31,7 +31,7 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
     int m_currHistoryItem;
 }
 - (instancetype)init;
-@property (nonatomic, assign) NSObject<FrotzInputDelegate> *delegate;
+@property (nonatomic, weak) NSObject<FrotzInputDelegate> *delegate;
 - (void)clearHistory;
 @property (nonatomic, readonly) int historyCount;
 @property (nonatomic, readonly) int menuCount;

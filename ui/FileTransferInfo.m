@@ -21,6 +21,16 @@
 #include <ifaddrs.h>
 #include <unistd.h>
 
+BOOL isHiddenFile(NSString *file) {
+    return ([file isEqualToString: @"metadata.plist"] || [file isEqualToString: @"storyinfo.plist"] || [file isEqualToString: @"dbcache.plist"]
+            || [file isEqualToString: @".DS_Store"]
+            || [file isEqualToString: @"alabstersettings"]
+            || [file isEqualToString: @"bookmarks.plist"]
+            || [file isEqualToString: @kFrotzOldAutoSaveFile] || [file isEqualToString: @kFrotzAutoSavePListFile]
+            || [file isEqualToString: @kFrotzAutoSaveActiveFile]
+            || [file isEqualToString:@"Splashes"] || [file isEqualToString: @"Inbox"] || [file hasPrefix: @"release_"]);
+}
+
 
 @implementation FileTransferInfo
 
@@ -67,7 +77,7 @@
 
     m_webView = [FrotzCommonWebViewController sharedWebView];
     
-    m_startButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
+    m_startButton = [UIButton buttonWithType: UIButtonTypeRoundedRect];
     [m_startButton addTarget:self action:@selector(toggleServer) forControlEvents: UIControlEventTouchUpInside];
 }
 
@@ -242,7 +252,6 @@
                                                         message: error ? [error localizedFailureReason] : @"A network error occurred"
                                                        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
         [alert show];
-        [alert release];
     }
 }
 
@@ -277,16 +286,12 @@
 - (void)dealloc {
     if (m_httpserv || m_ftpserv)
         [self stopServer];
-    [m_ftpserv release];
     m_ftpserv = nil;
-    [m_httpserv release];
     m_httpserv = nil;
-    [m_startButton release];
     m_startButton = nil;
     
     [FrotzCommonWebViewController releaseSharedWebView];
     m_webView = nil;
-    [super dealloc];
 }
 
 

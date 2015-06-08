@@ -10,6 +10,8 @@
 #include <sys/errno.h>
 #include <unistd.h>
 
+// This file is no longer used, deprecated in favor of the newer FTPServer implementation
+
 #import "FTPServ.h"
 #import "iosfrotz.h"
 
@@ -185,16 +187,6 @@ void logMessage(char *x) {
     return 0;
 }
 
-BOOL isHiddenFile(NSString *file) {
-    return ([file isEqualToString: @"metadata.plist"] || [file isEqualToString: @"storyinfo.plist"] || [file isEqualToString: @"dbcache.plist"]
-            || [file isEqualToString: @".DS_Store"]
-            || [file isEqualToString: @"alabstersettings"]
-            || [file isEqualToString: @"bookmarks.plist"]
-            || [file isEqualToString: @kFrotzOldAutoSaveFile] || [file isEqualToString: @kFrotzAutoSavePListFile]
-            || [file isEqualToString: @kFrotzAutoSaveActiveFile]
-            || [file isEqualToString:@"Splashes"] || [file isEqualToString: @"Inbox"] || [file hasPrefix: @"release_"]);
-}
-
 // given FTP path name, split it into volRefNum (card identifier) and 
 // name2 (directory on the card)
 
@@ -255,7 +247,6 @@ BOOL isHiddenFile(NSString *file) {
         NSLog(@"closeconn1 %d", [m_incomingConnection fileDescriptor]);
         [m_incomingConnection closeFile];
         [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:m_incomingConnection];
-        [m_incomingConnection release];
         m_pasvSock = 0; //aaa-1;
         m_incomingConnection = nil;
         if (ret < 0) {
@@ -266,7 +257,6 @@ BOOL isHiddenFile(NSString *file) {
         
     } else {
         //close(csock);
-        [csock release];
     }
     
     [self sendResponse: m_commandConnection buf:"226 Directory sent OK."];
@@ -299,7 +289,6 @@ BOOL isHiddenFile(NSString *file) {
         [m_incomingConnection closeFile];
         m_pasvSock = 0; //aaa-1;
     } else {
-        [csock release];
         //close(csock);
     }
     [self sendResponse: m_commandConnection buf:  "226 Directory sent OK."];
@@ -371,7 +360,6 @@ errOut:
         [m_incomingConnection closeFile];
         m_pasvSock = 0; //aaa-1;
     } else {
-        [csock release];
         //	close(csock);
     }
 }
@@ -428,7 +416,6 @@ errOut:
         [m_incomingConnection closeFile];
         m_pasvSock = 0; //aaa-1;
     } else {
-        [csock release];
         //	close(csock);
     }
 }
@@ -669,10 +656,8 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         @catch (NSException *e) {
             NSLog(@"cmd socket %d caught except", sock);
             [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:connectionHandle];
-            [m_commandConnection release];
             m_commandConnection = nil;
             m_socket = 0; //aaa-1;
-            [self release];
         }
     }
     else {
@@ -701,7 +686,6 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         m_pasvHost = ntohl(addr.sin_addr.s_addr);
     }
     
-    [m_incomingConnection retain];
     NSLog(@"got passive connection host %x, sock %d", m_pasvHost, m_pasvSock);
     
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
@@ -742,7 +726,6 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         }
         [[NSNotificationCenter defaultCenter] removeObserver:self name:/*NSFileHandleReadCompletionNotification*/nil object:connectionHandle];
         [connectionHandle closeFile];
-        [connectionHandle release]; //???
         m_pasvSock = 0; //aaa -1;
         m_incomingConnection = nil;
     }
@@ -763,7 +746,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         m_saveFile = NULL;
         
         m_rootPath = rootPath;
-        m_commandConnection = [incomingConnection retain];
+        m_commandConnection = incomingConnection;
         m_socket = [m_commandConnection fileDescriptor];
         
         struct sockaddr_in addr;
@@ -802,7 +785,7 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     signal(SIGPIPE, SIG_IGN);
     if ((self = [self init])) {
         m_port = port;
-        m_rootPath = [rootPath retain];
+        m_rootPath = rootPath;
     }
     return self;
 }
@@ -873,11 +856,9 @@ startFailed:
     }
     if (m_netService) {
         [m_netService stop];
-        [m_netService release];
         m_netService = nil;
     }
     if (m_listenHandle) {
-        [m_listenHandle release];
         m_listenHandle = nil;
     }
     if (m_listenSocket > 0) {
@@ -893,16 +874,12 @@ startFailed:
 }
 
 -(void)dealloc {
-    [m_rootPath release];
     m_rootPath = nil;
-    [super dealloc];
 }
 
 -(BOOL)shutdown {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [m_netService stop];
-    [m_netService release];
-    [m_listenHandle release];
     close(m_listenSocket);
     m_listenSocket = -1;
     m_netService = nil;

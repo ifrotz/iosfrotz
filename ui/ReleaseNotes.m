@@ -26,7 +26,7 @@
         self.title = NSLocalizedString(@"Release Notes", @"");
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
         NSString *docPath = array[0];
-        m_relNotesPath = [[docPath stringByAppendingPathComponent: @kRelNotesFilename] retain];
+        m_relNotesPath = [docPath stringByAppendingPathComponent: @kRelNotesFilename];
         [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:1.0];
     }
     return self;
@@ -36,7 +36,7 @@
 -(void)loadView {
     [super loadView];
     if (!m_rateButton ) {
-        m_rateButton = [[UIButton buttonWithType: UIButtonTypeRoundedRect] retain];
+        m_rateButton = [UIButton buttonWithType: UIButtonTypeRoundedRect];
         [m_rateButton setTitle: @"Rate Frotz" forState:UIControlStateNormal];
         [m_rateButton setTitleColor: [UIColor cyanColor] forState:UIControlStateNormal];
         [[m_rateButton layer] setOpacity:0.8];
@@ -69,18 +69,17 @@
     if ((r = [contents rangeOfString: @"--bcs"]).length > 0) { // sanity check so we don't load an error page or something
         [contents writeToFile:m_relNotesPath atomically:YES encoding:NSUTF8StringEncoding error:&error];OO
     }
-    [contents release];
-    [m_data release];
     m_data = nil;
-    [connection release];
+    m_request = nil;
+    m_connection = nil;
     if (webView && r.length > 0)
         [self showReleaseNotes];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    [m_data release];
+    m_request = nil;
     m_data = nil;
-    [connection release];
+    m_connection = nil;
 }
 
 - (void)updateReleaseNotesAuto {
@@ -105,8 +104,8 @@
         NSURL *myURL = [NSURL URLWithString: [NSString stringWithFormat:@"%@?q=%@,%@", @FROTZ_REL_URL kRelNotesFilename,
                                                 devModel, devVers]];
         m_request = [NSURLRequest requestWithURL: myURL];    
-        m_data = [[NSMutableData data] retain];
-        [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
+        m_data = [NSMutableData data];
+        m_connection = [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
     } else
         [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:60*60];
 #endif
@@ -284,16 +283,10 @@
 }
 
 - (void)dealloc {
-    if (m_data)
-        [m_data release];
-    if (m_rateButton)
-        [m_rateButton release];
     m_rateButton = nil;
     m_data =  nil;
-    [m_relNotesPath release];
     m_relNotesPath = nil;
     [FrotzCommonWebViewController releaseSharedWebView];
-    [super dealloc];
 }
 
 

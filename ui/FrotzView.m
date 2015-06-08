@@ -28,11 +28,10 @@
     if (self) {
         NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
         if (osVersStr && ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 0] == '1')) { // 1x
-            UIPinchGestureRecognizer *pinch = [[[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)] autorelease];
+            UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)];
             [self addGestureRecognizer:pinch];
             
-            UITapGestureRecognizer *tap = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewTwoFingerTap:)]
-                                               autorelease];
+            UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewTwoFingerTap:)];
             tap.numberOfTouchesRequired = 2;
             [self addGestureRecognizer:tap];
         }
@@ -118,7 +117,6 @@
                 [img setAlpha: 0.50];
                 [view setAlpha: 1.0];
                 [[view superview] addSubview: img];
-                [img release];
             }
 	    }
 	    [view setTransform: scaled];

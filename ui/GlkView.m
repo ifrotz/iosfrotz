@@ -36,9 +36,7 @@
     //    CGPoint pt = [touch locationInView: [self superview]];
     
     if (m_tapTimer) {
-        [[m_tapTimer userInfo] release];
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
     
@@ -129,7 +127,6 @@
     UITouchPhase phase = savedTouch.phase;
     
     BOOL r = [self handleMagnifyTouchWithPhase: phase atPoint:pt];
-    [savedTouch release];
     if (r) {
         
         NotesViewController* notesController = [delegate notesController];
@@ -151,7 +148,6 @@
     
     if (m_tapTimer) {
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
     m_skipNextTap = NO;

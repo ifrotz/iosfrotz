@@ -16,9 +16,8 @@
     
     [delegate hideInputHelper];
     if (m_tapTimer) {
-        [[m_tapTimer userInfo] release];
+        [m_tapTimer userInfo];
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
     UITouchPhase phase = [touch phase];
@@ -46,10 +45,8 @@
     UITouchPhase phase = savedTouch.phase;
 	
     [self handleMagnifyTouchWithPhase: phase atPoint:pt];
-    [savedTouch release];
     if (m_tapTimer) {
         [m_tapTimer invalidate];
-        [m_tapTimer release];
         m_tapTimer = nil;
     }
 }

@@ -23,8 +23,6 @@ static UIWebView *sWebView;
 }
 
 +(void)releaseSharedWebView {
-    if (sWebView)
-        [sWebView release];
     sWebView = nil;
 }
 

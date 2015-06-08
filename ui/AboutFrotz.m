@@ -106,7 +106,6 @@
 
 - (void)dealloc {
     [FrotzCommonWebViewController releaseSharedWebView];
-    [super dealloc];
 }
 
 

@@ -14,7 +14,7 @@
 
 @interface FrotzImageView : UIImageView  <UIAlertViewDelegate>
 {
-    StoryDetailsController *m_detailsController;
+    StoryDetailsController *__weak m_detailsController;
     NSTimer *m_tapTimer;
     CGRect m_savedBounds;
 }
@@ -22,7 +22,7 @@
 @property (nonatomic, getter=isMagnified, readonly) BOOL magnified;
 -(void)magnifyImage:(BOOL)toggle;
 -(void)doPaste;
-@property (nonatomic,assign) StoryDetailsController *detailsController;
+@property (nonatomic,weak) StoryDetailsController *detailsController;
 @end
 
 @interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate, UIActionSheetDelegate> {
@@ -50,7 +50,7 @@
     StoryInfo *m_storyInfo;
     UIImage *m_artwork;
 
-    StoryBrowser *m_browser;
+    StoryBrowser *__weak m_browser;
     FrotzInfo *m_frotzInfoController;
     
     CGSize m_artSizeLandscape, m_artSizePortrait;
@@ -68,17 +68,17 @@
 -(IBAction)dismissKeyboard;
 -(IBAction)showRestartMenu;
 
-@property(nonatomic,assign) StoryBrowser* storyBrowser;
-@property(nonatomic,retain) NSString* storyTitle;
-@property(nonatomic,retain) NSString* author;
-@property(nonatomic,retain) NSString* descriptionHTML;
-@property(nonatomic,retain) StoryInfo* storyInfo;
-@property(nonatomic,retain,setter=setTUID:) NSString* tuid;
-@property(nonatomic,retain) UIImage* artwork;
-@property(nonatomic,retain) UIView* contentView;
-@property(nonatomic,retain) UIWebView* descriptionWebView;
-@property(nonatomic,retain) UIView* flipper;
-@property(nonatomic,retain) UIView* infoButton;
+@property(nonatomic,weak) StoryBrowser* storyBrowser;
+@property(nonatomic,strong) NSString* storyTitle;
+@property(nonatomic,strong) NSString* author;
+@property(nonatomic,strong) NSString* descriptionHTML;
+@property(nonatomic,strong) StoryInfo* storyInfo;
+@property(nonatomic,strong,setter=setTUID:) NSString* tuid;
+@property(nonatomic,strong) UIImage* artwork;
+@property(nonatomic,strong) UIView* contentView;
+@property(nonatomic,strong) UIWebView* descriptionWebView;
+@property(nonatomic,strong) UIView* flipper;
+@property(nonatomic,strong) UIView* infoButton;
 @property(nonatomic,assign) BOOL willResume;
 
 @end

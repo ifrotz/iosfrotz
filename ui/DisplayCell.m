@@ -37,11 +37,9 @@ NSString *kDisplayCell_ID = @"DisplayCell_ID";
 {
     if (view) {
         [view removeFromSuperview];
-        [view release];
     }
     view = inView;
     if (inView) {
-        [self.view retain];
         [self.contentView addSubview:inView];
         [self.contentView bringSubviewToFront:inView];
     }
@@ -71,13 +69,6 @@ NSString *kDisplayCell_ID = @"DisplayCell_ID";
     view.frame = uiFrame;
 }
 
-- (void)dealloc
-{
-    [nameLabel release];
-    [view release];
-	
-    [super dealloc];
-}
 
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {

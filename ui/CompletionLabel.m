@@ -133,10 +133,6 @@
     [self removeFromSuperview];
 }
 
-- (void)dealloc {
-    [m_label release];
-    [super dealloc];
-}
 
 
 @end

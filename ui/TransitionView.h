@@ -22,9 +22,9 @@
 {
     BOOL transitioning;
     BOOL wasEnabled;
-    id<TransitionViewDelegate> delegate;
+    id<TransitionViewDelegate> __weak delegate;
 }
-@property (assign) id<TransitionViewDelegate> delegate;
+@property (weak) id<TransitionViewDelegate> delegate;
 @property (readonly, getter=isTransitioning) BOOL transitioning;
 
 -(void)replaceSubview:(UIView *)oldView withSubview:(UIView *)newView transition:(NSString *)transition direction:(NSString *)direction duration:(NSTimeInterval)duration;

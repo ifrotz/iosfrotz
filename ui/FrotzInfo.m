@@ -41,7 +41,7 @@
     [view setFrame: frame];
     view.backgroundColor = [UIColor clearColor];
     [view addSubview: m_titleTextView];
-    m_infoButton = [[UIButton buttonWithType: UIButtonTypeInfoLight] retain];
+    m_infoButton = [UIButton buttonWithType: UIButtonTypeInfoLight];
     [m_infoButton setFrame: CGRectMake(74, 0, 32, 44)];
     [self updateAccessibility];
     [view addSubview: m_infoButton];
@@ -80,14 +80,6 @@
     return m_navItem;
 }
 
-- (void)dealloc {
-    [m_doneButton release];
-    [m_infoButton release];
-    [m_pane1 release];
-    [m_pane2 release];
-    [m_settings release];
-    [super dealloc];
-}
 
 -(void)setupFade {
     [UIView beginAnimations:nil context:NULL];

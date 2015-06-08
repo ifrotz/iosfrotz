@@ -64,10 +64,10 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
             }
         }
         if (fontName) {
-            [m_fonts addObject: [[[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font] autorelease]];
+            [m_fonts addObject: [[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font]];
             if (//[font isFixedPitch] || // this doesn't seem to ever return true forcing us to do nasty name comparisons
                 [familyName hasPrefix: @"Courier"] || [familyName hasPrefix: @"American Typewriter"])
-                [m_fixedFonts addObject: [[[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font] autorelease]];
+                [m_fixedFonts addObject: [[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font]];
         }
     }
     [m_fonts sortUsingFunction: sortFontsByFamilyName context: nil];
@@ -102,7 +102,7 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:MyIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:MyIdentifier];
     }
     // Configure the cell
     FrotzFontInfo *f = (m_fixedFontsOnly ? m_fixedFonts : m_fonts)[indexPath.row];
@@ -149,11 +149,6 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
  */
 
 
-- (void)dealloc {
-    [m_fonts release];
-    [m_fixedFonts release];
-    [super dealloc];
-}
 
 - (void)viewWillAppear:(BOOL)animated {
     

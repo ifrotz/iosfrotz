@@ -30,11 +30,6 @@
     return m_delegate;
 }
 
-- (void)dealloc
-{
-    [m_textbar release];
-    [super dealloc];
-}
 
 - (void)setText:(NSString*)text {
     [m_textbar setText: text];
@@ -56,7 +51,6 @@
 
     contentView.backgroundColor = [UIColor whiteColor];
     self.view = contentView;
-    [contentView release];
     
     m_textbar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.0, 0.0, appFrame.size.width, kSearchBarHeight)];
     
@@ -66,7 +60,6 @@
     [m_textbar bringSubviewToFront:imgView];
     CGSize isz = [img size];
     [imgView setFrame: CGRectMake(11, 9, isz.width, isz.height)];
-    [imgView release];
 
     m_textbar.placeholder = @"URL";
     m_textbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;

@@ -90,7 +90,6 @@ enum ControlTableSections
                                                             message: @"The file server will be disabled when you exit settings"
                                                            delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
             [alert show];
-            [alert release];
             return;
         }
     }
@@ -161,25 +160,17 @@ enum ControlTableSections
 - (void)dealloc
 {
     [m_tableView setDelegate:nil];
-    [m_tableView release];
     m_tableView = nil;
     
-    [m_gettingStarted release];
-    [m_aboutFrotz release];
-    [m_releaseNotes release];
     m_gettingStarted = nil;
     m_aboutFrotz = nil;
     m_releaseNotes = nil;
     
-    [m_colorPicker release];
-    [m_fontPicker release];
     m_colorPicker = nil;
     m_fontPicker = nil;
     
-    [m_frotzDB release];
     m_frotzDB = nil;
     
-    [super dealloc];
 }
 
 - (void)create_UISwitch
@@ -247,13 +238,9 @@ enum ControlTableSections
 }
 
 -(void)viewDidUnload {
-    [m_gettingStarted release];
-    [m_aboutFrotz release];
-    [m_fileTransferInfo release];
     m_gettingStarted = nil;
     m_aboutFrotz = nil;
     m_fileTransferInfo = nil;
-    [m_tableView release];
     m_tableView = nil;
 }
 
@@ -311,7 +298,6 @@ enum ControlTableSections
 	
     UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
     self.navigationItem.rightBarButtonItem = doneItem;
-    [doneItem release];    
 
     self.title = NSLocalizedString(@"Settings", @"");
     if (m_storyDelegate)
@@ -413,7 +399,7 @@ enum ControlTableSections
     cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
 	
     if (cell == nil) {
-	cell = [[[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID] autorelease];
+	cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
     }
     cell.textAlignment = UITextAlignmentLeft;
     cell.text = nil;
@@ -565,7 +551,6 @@ enum ControlTableSections
 			message: @"Do you want to reset all color and font settings to their defaults?"
 			delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
 		[alert show];
-		[alert release];
 	    }
 	    break;
 
@@ -582,7 +567,6 @@ enum ControlTableSections
 	if (!viewController.navigationItem.rightBarButtonItem) {
 	    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
 	    viewController.navigationItem.rightBarButtonItem = doneItem;
-	    [doneItem release];
 	}
 	m_subPagePushed = YES;
 	[[self navigationController] pushViewController: viewController animated: YES];

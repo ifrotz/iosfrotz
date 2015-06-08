@@ -71,8 +71,8 @@ extern NSString *kDisplayCell_ID;
 	UIView	*view;
 }
 
-@property (nonatomic, retain) UIView *view;
-@property (nonatomic, retain) UILabel *nameLabel;
+@property (nonatomic, strong) UIView *view;
+@property (nonatomic, strong) UILabel *nameLabel;
 
 - (void)setView:(UIView *)inView;
 

@@ -47,28 +47,19 @@
 
 -(void)viewDidUnload {
     [m_tableView setDelegate: nil];
-    [m_tableView release];
     m_tableView = nil;
-    [m_headerLabel release];
     m_headerLabel = nil;
-    [m_folderLabel release];
     m_folderLabel = nil;
-    [m_textField release];
     m_textField = nil;
 }
 
 - (void)dealloc
 {
     [m_tableView setDelegate:nil];
-    [m_tableView release];
     m_tableView = nil;
-    [m_headerLabel release];
     m_headerLabel = nil;
-    [m_folderLabel release];
     m_folderLabel = nil;
-    [m_textField release];
     m_textField = nil;
-    [super dealloc];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -166,14 +157,12 @@
 					    "your account before changing folders so the change can take effect."
 					    delegate:self cancelButtonTitle:@"OK" otherButtonTitles:  nil];
 		[alert show];
-		[alert release];
 		textField.text = [smvc dbTopPath];
 	    } else {
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change Dropbox Sync Folder?"
 					    message: @"Any Frotz files previously synched with Dropbox will be moved to the new location."
 					    delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Change", nil];
 		[alert show];
-		[alert release];
 	    }
 	} else{
 	    [smvc setDBTopPath: m_textField.text];		
@@ -297,7 +286,7 @@
     cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
 	
     if (cell == nil) {
-        cell = [[[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID] autorelease];
+        cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
     }
     cell.textAlignment = UITextAlignmentLeft;
     cell.textLabel.text = nil;
@@ -369,7 +358,6 @@
                         message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
                         delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
                 [alert show];
-			[alert release];
 		    }
 		    break;
 		}

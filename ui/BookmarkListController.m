@@ -60,13 +60,9 @@
     UIBarButtonItem *editButtonItem =  [self editButtonItem]; //[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
     UIBarButtonItem *cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
     [toolBar setItems: @[addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem]];
-    [addButtonItem release];
-    [cancelButtonItem release];
-    [spaceButtonItem release];
     
     [self.view addSubview: toolBar];
     [self.view bringSubviewToFront: toolBar];
-    [toolBar release];
 }
 
 -(UITableView*)tableView {
@@ -120,7 +116,7 @@
     static NSString *myID = @"IFBookmarks";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:myID];
     if (cell == nil) {
-	cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:myID] autorelease];
+	cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:myID];
     }
     // Configure the cell
     cell.textLabel.text = nil;
@@ -182,11 +178,6 @@
     return (indexPath.row < [m_sites count]);
 }
 
-- (void)dealloc {
-    [m_sites release];
-    [m_titles release];
-    [super dealloc];
-}
 
 
 - (void)viewDidLoad {

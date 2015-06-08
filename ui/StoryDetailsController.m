@@ -16,7 +16,6 @@
 - (void)releaseTapTimer {
     if (m_tapTimer) {
         [m_tapTimer invalidate];
-        [m_tapTimer release];
     }
     m_tapTimer = nil;
 }
@@ -118,7 +117,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             NSPropertyListFormat plFmt;
             NSDictionary *dict = [NSPropertyListSerialization propertyListFromData:data mutabilityOption:kCFPropertyListImmutable 
                                                                             format:&plFmt errorDescription:&errorStr];
-            if (errorStr) [errorStr release];
             if (dict && [dict respondsToSelector:@selector(objectForKey:)]) {
                 NSArray *resources = dict[kWebSubResourcesKey];
                 if (resources && [resources count]==1) {
@@ -158,7 +156,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Paste artwork?" message:@"This will replace previous artwork"
                                                    delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Paste", nil];
     [alert show];
-    [alert release];
 }
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
@@ -208,21 +205,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 @synthesize descriptionHTML = m_descriptionHTML;
 @synthesize willResume = m_willResume;
 
--(void)dealloc {
-    [m_title release];
-    [m_author release];
-    [m_tuid release];
-    [m_descriptionHTML release];
-    [m_titleField release];
-    [m_authorField release];
-    [m_TUIDField release];
-    [m_contentView release];
-    [m_artwork release];
-    [m_descriptionWebView release];
-    [m_flipper release];
-    [m_frotzInfoController release];
-    [super dealloc];
-}
 
 -(void)clear {
     self.storyTitle = @"";
@@ -548,9 +530,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)setStoryTitle:(NSString*)title {
     if (m_title == title)
         return;
-    if (m_title)
-        [m_title release];
-    m_title = [title retain];
+    m_title = title;
     if (m_titleField)
         [m_titleField setText: m_title];
 }
@@ -562,9 +542,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)setAuthor:(NSString*)author {
     if (m_author == author)
         return;
-    if (m_author)
-        [m_author release];
-    m_author = [author retain];
+    m_author = author;
     if (m_authorField)
         [m_authorField setText: m_author];
 }
@@ -576,9 +554,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)setTUID:(NSString*)tuid {
     if (m_tuid == tuid)
         return;
-    if (m_tuid)
-        [m_tuid release];
-    m_tuid = [tuid retain];
+    m_tuid = tuid;
     if (m_TUIDField)
         [m_TUIDField setText: m_tuid];
     
@@ -591,9 +567,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)setArtwork:(UIImage*)artwork {
     if (m_artwork == artwork)
         return;
-    if (m_artwork)
-        [m_artwork release];
-    m_artwork = [artwork retain];
+    m_artwork = artwork;
     [self refresh];
 }
 
@@ -638,7 +612,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [actionView showFromRect:m_restartButton.frame inView:m_contentView animated:YES];
     else
         [actionView showInView: m_contentView];
-    [actionView release];
 }
 
 -(IBAction)IFDBButtonPressed {

@@ -99,17 +99,10 @@
 }
 
 -(void)dealloc {
-    if (m_inputHelper)
-        [m_inputHelper release];
-    if (m_completionLabel)
-        [m_completionLabel release];
     self.rightView = nil;
     self.leftView = nil;
-    if (m_enterAndClearView)
-        [m_enterAndClearView release];
     m_completionLabel = nil;
     m_inputHelper = nil;
-    [super dealloc];
 }
 
 -(UIView*) inputHelperView {

@@ -70,7 +70,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
     NSString *fullPath;
     if ([path isEqualToString: @"/Games/"] || [path hasPrefix: @"/Saves/"] && [path hasSuffix: @".d/"]) {
         [outdata appendFormat: @"<html><head>\n<meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=/\"></head>\n<body></body></html>\n"];
-        return [outdata autorelease];
+        return outdata;
     } if ([path isEqualToString:@"/"]) {
         isRoot = YES;
         fullPath = rootPath;
@@ -102,7 +102,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         }
         [sb refresh];
         [outdata appendFormat: @"<html><head>\n<meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=/\"></head>\n<body></body></html>\n"];
-        return [outdata autorelease];
+        return outdata;
     }
     if (![defaultManager fileExistsAtPath: fullPath]) {
         int origFullLength = [fullPath length], origLength = [path length], truncated = 0;
@@ -117,7 +117,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         path = [path substringToIndex: origLength - truncated];
         [outdata appendFormat: @"<html><head>\n<meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=%@%s\"></head>\n<body></body></html>\n",
          path, [path length] <= 1 ? "/":""];
-        return [outdata autorelease];
+        return outdata;
     }
     if (![path hasSuffix: @"/"])
         path = [path stringByAppendingString: @"/"];
@@ -338,7 +338,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         } else
             [outdata appendString: @"<p>It is pitch black.  You are likely to be eaten by a grue.</p>\n"];
         
-        for (NSString *fname in array)
+        for (__strong NSString *fname in array)
         {
             BOOL isDir = NO;
             if (isHiddenFile(fname))
@@ -362,7 +362,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
     [outdata appendString:@"</body></html>\n"];
     
     //NSLog(@"outData: %@", outdata);
-    return [outdata autorelease];
+    return outdata;
 }
 
 /**
@@ -401,9 +401,9 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 {
 	NSLog(@"httpResponseForURI: method:%@ path:%@ self: %@", method, path, self);
 	
-	NSData *requestData = [(NSData *)CFHTTPMessageCopySerializedMessage(request) autorelease];
+	NSData *requestData = (NSData *)CFBridgingRelease(CFHTTPMessageCopySerializedMessage(request));
 	
-	NSString *requestStr = [[[NSString alloc] initWithData:requestData encoding:NSASCIIStringEncoding] autorelease];
+	NSString *requestStr = [[NSString alloc] initWithData:requestData encoding:NSASCIIStringEncoding];
 	NSLog(@"\n=== Request ====================\n%@\n================================", requestStr);
 	NSFileManager *defaultManager = [NSFileManager defaultManager];
 	if (requestContentLength > 0)  // Process POST data
@@ -426,10 +426,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		}
 		
 		for (int n = 1; n < [multipartData count] - 1; n++)
-			NSLog(@"%@", [[[NSString alloc] initWithBytes:[multipartData[n] bytes] length:[multipartData[n] length] encoding:NSUTF8StringEncoding] autorelease]);
+			NSLog(@"%@", [[NSString alloc] initWithBytes:[multipartData[n] bytes] length:[multipartData[n] length] encoding:NSUTF8StringEncoding]);
 		
-		[postInfo release];
-		[multipartData release];
         
 		multipartData = nil ;
 		requestContentLength = 0;
@@ -464,16 +462,16 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		}
 		
 		if ([path hasPrefix: @"/Games/"]) {
-		    return [[[HTTPDataResponse alloc] initWithData:
+		    return [[HTTPDataResponse alloc] initWithData:
                      [@"<html><head>\n<meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=/\"></head>\n<body></body></html>\n"
-                      dataUsingEncoding: NSUTF8StringEncoding]] autorelease];
+                      dataUsingEncoding: NSUTF8StringEncoding]];
 		}
 	}
 	
 	NSString *filePath = [self filePathForURI:path];
 	BOOL isDir = NO;
 	if ([defaultManager fileExistsAtPath:filePath isDirectory: &isDir] && !isDir) {
-	    HTTPFileResponse *fileResponse = [[[HTTPFileResponse alloc] initWithFilePath:filePath] autorelease];
+	    HTTPFileResponse *fileResponse = [[HTTPFileResponse alloc] initWithFilePath:filePath];
 	    if ([filePath hasSuffix: @".sav"])
             [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"sav"]];
 	    else if ([filePath hasSuffix: @".qut"])
@@ -488,7 +486,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 filePath = [resourceGamePath stringByAppendingPathComponent: gameName];
                 if ([defaultManager fileExistsAtPath:filePath isDirectory: &isDir] && !isDir)
                 {
-                    return [[[HTTPFileResponse alloc] initWithFilePath:filePath] autorelease];
+                    return [[HTTPFileResponse alloc] initWithFilePath:filePath];
                 }
             }
 	    }
@@ -497,14 +495,14 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
             NSString *story = [[[path stringByDeletingPathExtension] lowercaseString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
             NSData *imgData = [[server delegate] thumbDataForStory: story];
             if (imgData)
-                return [[[HTTPDataResponse alloc] initWithData:imgData] autorelease];
+                return [[HTTPDataResponse alloc] initWithData:imgData];
             return nil;
 	    }
 	    if ([self isBrowseable:path])
 	    {
 		    //NSLog(@"folder: %@", folder);
 		    NSData *browseData = [[self createBrowseableIndex:path] dataUsingEncoding:NSUTF8StringEncoding];
-		    return [[[HTTPDataResponse alloc] initWithData:browseData] autorelease];
+		    return [[HTTPDataResponse alloc] initWithData:browseData];
 	    }
 	}
 	
@@ -547,8 +545,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 [multipartData addObject:newData];
             else {
                 postHeaderOK = TRUE;
-                partSeparator =      [[[NSString alloc] initWithBytes:[multipartData[0] bytes] length:[multipartData[0] length] encoding:NSUTF8StringEncoding] autorelease];
-                partSeparator = [[@"\r\n" stringByAppendingString: partSeparator] retain];
+                partSeparator =      [[NSString alloc] initWithBytes:[multipartData[0] bytes] length:[multipartData[0] length] encoding:NSUTF8StringEncoding];
+                partSeparator = [@"\r\n" stringByAppendingString: partSeparator];
                 NSString* postInfo = [[NSString alloc] initWithBytes:[multipartData[1] bytes] length:[multipartData[1] length] encoding:NSUTF8StringEncoding];
                 int partSepLen = [partSeparator length];
                 NSArray* postInfoComponents = [postInfo componentsSeparatedByString:@"; filename="];
@@ -565,17 +563,17 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 BOOL isDir = NO;
                 if (![[NSFileManager defaultManager] fileExistsAtPath: destPath isDirectory: &isDir] && [destPath hasSuffix: @".d"])
                     [[NSFileManager defaultManager] createDirectoryAtPath: destPath attributes:nil];
-                filename = [[destPath stringByAppendingPathComponent:[postInfoComponents lastObject]] retain];
+                filename = [destPath stringByAppendingPathComponent:[postInfoComponents lastObject]];
                 NSRange fileDataRange = {dataStartIndex, postDataLen - dataStartIndex};
                 
                 [[NSFileManager defaultManager] createFileAtPath:filename contents:[postDataChunk subdataWithRange:fileDataRange] attributes:nil];
-                fileHandle = [[NSFileHandle fileHandleForUpdatingAtPath:filename] retain];
+                fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:filename];
                 
                 
                 if (partEndOffset >= 0) {
                     if (partialMatch) {
-                        leftOverMatch = [[postDataChunk
-                                          subdataWithRange: NSMakeRange(partEndOffset, [postDataChunk length] - partEndOffset)] retain];
+                        leftOverMatch = [postDataChunk
+                                          subdataWithRange: NSMakeRange(partEndOffset, [postDataChunk length] - partEndOffset)];
                     } else {
                         [self handlePostMultipartData: [postDataChunk 
                                                         subdataWithRange: NSMakeRange(partEndOffset + partSepLen, [postDataChunk length] - partEndOffset - partSepLen)]];
@@ -586,7 +584,6 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 if (fileHandle)
                     [fileHandle seekToEndOfFile];
                 
-                [postInfo release];
                 [[server delegate] refresh];
                 break;
             }
@@ -596,7 +593,6 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
             NSMutableData *newChunk = [NSMutableData dataWithData: leftOverMatch];
             [newChunk appendData: postDataChunk];
             postDataChunk = newChunk;
-            [leftOverMatch release];
             leftOverMatch = nil;
         }
         if (partSeparator) {
@@ -607,8 +603,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 if (fileHandle && partEndOffset > 0)
                     [fileHandle writeData: [postDataChunk subdataWithRange: NSMakeRange(0, partEndOffset)]];
                 if (partialMatch) {
-                    leftOverMatch = [[postDataChunk
-                                      subdataWithRange: NSMakeRange(partEndOffset, [postDataChunk length] - partEndOffset)] retain];
+                    leftOverMatch = [postDataChunk
+                                      subdataWithRange: NSMakeRange(partEndOffset, [postDataChunk length] - partEndOffset)];
                 } else {
                     [self handlePostMultipartData: [postDataChunk
                                                     subdataWithRange: NSMakeRange(partEndOffset + partSepLen, [postDataChunk length] - partEndOffset - partSepLen)]];
@@ -635,7 +631,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 }
 
 - (void)handlePostMultipartData:(NSData *)data {
-    NSString *str = [[[NSString alloc] initWithBytes: [data bytes] length: [data length] encoding:NSUTF8StringEncoding] autorelease];
+    NSString *str = [[NSString alloc] initWithBytes: [data bytes] length: [data length] encoding:NSUTF8StringEncoding];
     NSArray* partComponents = [str componentsSeparatedByString:partSeparator];
     for (NSString *part in partComponents) {
         NSArray* partHeaderComponents = [part componentsSeparatedByString:@"form-data; name="];
@@ -655,12 +651,6 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
             [fileHandle writeData:leftOverMatch];
         [fileHandle closeFile];
     }
-    if (leftOverMatch)
-        [leftOverMatch release];
-    if (partSeparator)
-        [partSeparator release];
-    if (filename)
-        [filename release];
     fileHandle = nil;
     partSeparator = nil;
     filename = nil;
@@ -669,9 +659,6 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 
 -(void)dealloc {
     [self doneWithBody];
-    if (multipartData)
-        [multipartData release];
-    [super dealloc];
 }
 
 

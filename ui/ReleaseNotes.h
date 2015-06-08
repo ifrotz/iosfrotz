@@ -13,6 +13,7 @@
 @interface ReleaseNotes : FrotzCommonWebViewController {
     NSObject *m_controller;
     NSURLRequest *m_request;
+    NSURLConnection *m_connection;
     NSMutableData *m_data;
     NSString *m_relNotesPath;
     UIButton *m_rateButton;

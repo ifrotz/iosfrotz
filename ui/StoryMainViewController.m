@@ -135,7 +135,6 @@ static void freeGlkViewImageCache(int vn) {
 }
 
 static void freeGlkImageCache() {
-    [glkImageCache release];
     glkImageCache = nil;
 }
 
@@ -174,14 +173,12 @@ void iosif_flush(bool lock) {
             NSString *tmp = [[NSString alloc] initWithBytes:outputBuffer length: outputBufferLen*sizeof(unichar) encoding:NSUTF16LittleEndianStringEncoding];
                         // CString:outputBuffer encoding:NSISOLatin1StringEncoding];
             [ipzBufferStr appendString: tmp];
-            [tmp release];
         } else {
             char latinBuf[2048];
             for (int l = 0; l <= outputBufferLen; ++l)
                 latinBuf[l] = (char)outputBuffer[l];
             NSString *tmp = [[NSString alloc] initWithCString:latinBuf encoding:NSISOLatin1StringEncoding];
             [ipzBufferStr appendString: tmp];
-            [tmp release];
         }
         outputBufferLen = 0;
         *outputBuffer = '\0';
@@ -201,7 +198,7 @@ static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
             if ([glkInputs count] == 0)
                 [glkInputs addObject: ipzBufferStr];
             else
-                [glkInputs addObject: [[[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding] autorelease]];
+                [glkInputs addObject: [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding]];
         }
         bufferStr = glkInputs[winNum];
     } else {
@@ -1018,24 +1015,24 @@ void run_glxinterp(const char *story, bool autorestore) {
 }
 
 void run_interp(const char *story, bool autorestore) {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
     
-    winSizeChanged = NO;
-    finished = 0;
+        winSizeChanged = NO;
+        finished = 0;
+        
+        NSMutableString *str = [NSMutableString stringWithUTF8String: story];
+        story_name  = (char*)[str UTF8String];
+        NSString *ext = [[str pathExtension] lowercaseString];
+        if ([ext isEqualToString: @"blb"]
+            || [ext isEqualToString: @"gam"]
+            || [ext isEqualToString: @"t3"]
+            || [ext isEqualToString: @"gblorb"]
+            || [ext isEqualToString: @"ulx"])
+            run_glxinterp(story, autorestore);
+        else
+            run_zinterp(autorestore);
     
-    NSMutableString *str = [NSMutableString stringWithUTF8String: story];
-    story_name  = (char*)[str UTF8String];
-    NSString *ext = [[str pathExtension] lowercaseString];
-    if ([ext isEqualToString: @"blb"]
-        || [ext isEqualToString: @"gam"]
-        || [ext isEqualToString: @"t3"]
-        || [ext isEqualToString: @"gblorb"]
-        || [ext isEqualToString: @"ulx"])
-        run_glxinterp(story, autorestore);
-    else
-        run_zinterp(autorestore);
-    
-    [pool release];
+    }
 }
 
 void *interp_cover_normal(void *arg) {
@@ -1097,8 +1094,8 @@ static void setColorTable(RichTextView *v) {
         docPath = [array[0] copy];
         chdir([docPath UTF8String]);
         
-        storyGamePath = [[docPath stringByAppendingPathComponent: @kFrotzGameDir] retain];
-        storyTopSavePath = [[docPath stringByAppendingPathComponent: @kFrotzSaveDir] retain];
+        storyGamePath = [docPath stringByAppendingPathComponent: @kFrotzGameDir];
+        storyTopSavePath = [docPath stringByAppendingPathComponent: @kFrotzSaveDir];
         
         
         if (![fileMgr fileExistsAtPath: storyGamePath]) {
@@ -1112,16 +1109,16 @@ static void setColorTable(RichTextView *v) {
         resourceGamePath = [resourcePath stringByAppendingPathComponent: @kFrotzGameDir];
         
         frotzPrefsPath  = nil;
-        storySIPPath    = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile] retain];
-        storySIPPathOld = [storySIPPath retain];
-        storySIPSavePath= [[storyTopSavePath stringByAppendingPathComponent: @kFrotzOldAutoSaveFile] retain];
-        activeStoryPath = [[storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSaveActiveFile] retain];
+        storySIPPath    = [storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile];
+        storySIPPathOld = storySIPPath;
+        storySIPSavePath= [storyTopSavePath stringByAppendingPathComponent: @kFrotzOldAutoSaveFile];
+        activeStoryPath = [storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSaveActiveFile];
         
         strcpy(SAVE_PATH, [storyTopSavePath UTF8String]);
         
         strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
         
-        m_currentStory = [[NSMutableString stringWithString: @""] retain];
+        m_currentStory = [NSMutableString stringWithString: @""];
         
         inputsSinceSaveRestore = 0;
         
@@ -1153,7 +1150,6 @@ static void setColorTable(RichTextView *v) {
         if (v != m_storyView && (NSNull*)v != null)
             [v removeFromSuperview];
     
-    [m_glkViews release];
     for (int i=0; i < kMaxGlkViews; ++i)
         recentScrollToVisYPos[i] = 0;
     m_glkViews = nil;
@@ -1216,7 +1212,7 @@ static void setColorTable(RichTextView *v) {
                 [scrollView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
                 
                 if (isOS32) {
-                    UITapGestureRecognizer *tap = [[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(glkGraphicsWinTap:)] autorelease];
+                    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(glkGraphicsWinTap:)];
                     tap.numberOfTapsRequired = 1;
                     [newView addGestureRecognizer:tap];
                 }
@@ -1673,7 +1669,6 @@ extern void gli_ios_set_focus(window_t *winNum);
                                                               action:@selector(toggleKeyboardLongPress:)];
             //Broken because there is no customView in a UIBarButtonSystemItemUndo item
             [kbdToggleItemView addGestureRecognizer:longPressGesture];
-            [longPressGesture release];
             [self showKeyboardLockStateInView: kbdToggleItemView];
         }
     }
@@ -2112,30 +2107,11 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void)dealloc {
-    [m_kbdToggleItem release];
 
-    [m_storyView release];
-    [m_statusLine release];
-    [m_inputLine release];
-    [m_background release];
     m_background = nil;
-    if (m_notesController)
-        [m_notesController release];
     m_notesController = nil;
     
-    [m_currentStory release];
-    [m_fontname release];
     
-    [storyGamePath release];
-    [resourceGamePath release];
-    [storyTopSavePath release];
-    [storySavePath release];
-    [storySIPPath release];
-    [activeStoryPath release];
-    [storySIPSavePath release];
-    [m_defaultBGColor release];
-    [m_defaultFGColor release];
-    [super dealloc];
 }
 
 -(StoryBrowser*)storyBrowser {
@@ -2543,14 +2519,11 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [self.navigationController pushViewController: fileBrowser animated: YES];
     }
     
-    [fileBrowser release];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
     if (gUseSplitVC) {
-        UINavigationController *nc = browser.navigationController;
         [self.navigationController dismissModalViewControllerAnimated:YES];
-        [nc release];
     }
     else {
         if ([self.navigationController topViewController]==browser)
@@ -2580,8 +2553,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void) setBackgroundColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
     if (makeDefault && color != m_defaultBGColor) {
-        [m_defaultBGColor release];
-        m_defaultBGColor = [color retain];
+        m_defaultBGColor = color;
     }
     if (!m_storyView)
         return;
@@ -2603,8 +2575,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void) setTextColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
     if (makeDefault && color != m_defaultFGColor) {
-        [m_defaultFGColor release];
-        m_defaultFGColor = [color retain];
+        m_defaultFGColor = color;
     }
     if (!m_storyView)
         return;
@@ -2642,7 +2613,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void) setFont: (NSString*) fontname withSize:(int)size {
     if (fontname) {
-        [m_fontname release];
         m_fontname = [fontname copy];
     } // else keep existing font, just change size
     if (size)
@@ -2755,15 +2725,12 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void)updateAutosavePaths {
-    if (storySIPPath)
-        [storySIPPath release];
-    storySIPPath    = [[storySavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile] retain];
+    storySIPPath    = [storySavePath stringByAppendingPathComponent: @kFrotzAutoSavePListFile];
     if (storySIPSavePath) {
-        [storySIPSavePath release];
         storySIPSavePath = nil;
     }
     if (storySavePath) {
-        storySIPSavePath= [[storySavePath stringByAppendingPathComponent: @kFrotzAutoSaveFile] retain];
+        storySIPSavePath= [storySavePath stringByAppendingPathComponent: @kFrotzAutoSaveFile];
         strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
     }
 }
@@ -2779,28 +2746,25 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 -(void) setCurrentStory: (NSString*)storyPath {
     id fileMgr = [NSFileManager defaultManager];
     if (m_currentStory != storyPath) {
-        [m_currentStory release];
         m_currentStory = nil;
         BOOL isDir = NO;
         if (storyPath && [storyPath length] > 0) {
             if ([fileMgr fileExistsAtPath: storyPath isDirectory:&isDir] && !isDir)
-                m_currentStory = [[NSMutableString stringWithString: storyPath] retain];
+                m_currentStory = [NSMutableString stringWithString: storyPath];
             else {
                 NSString *altPath = [storyGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
                 if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
-                    m_currentStory = [[NSMutableString stringWithString: altPath] retain];
+                    m_currentStory = [NSMutableString stringWithString: altPath];
                 else {
                     altPath = [resourceGamePath stringByAppendingPathComponent: [storyPath lastPathComponent]];
                     if ([fileMgr fileExistsAtPath: altPath isDirectory:&isDir] && !isDir)
-                        m_currentStory = [[NSMutableString stringWithString: altPath] retain];
+                        m_currentStory = [NSMutableString stringWithString: altPath];
                 }
             }
         }
     }
     if (m_currentStory) {
-        if (storySavePath)
-            [storySavePath release];
-        storySavePath = [[storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]] retain];
+        storySavePath = [storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
         if (![fileMgr fileExistsAtPath: storySavePath])
             [fileMgr createDirectoryAtPath: storySavePath attributes: nil];
     	strcpy(SAVE_PATH, [storySavePath UTF8String]);
@@ -3011,7 +2975,6 @@ static int iosif_top_win_height = 1;
             if (c==' ')
                 [buf appendString: @" "];
             else if (c==kClearEscChar) {
-                [buf release];
                 [view clear];
                 return;
             }		
@@ -3036,7 +2999,6 @@ static int iosif_top_win_height = 1;
     [view setTextStyle: slStyle];
     if (hasAccessibility)
         [view setAccessibilityValue: view.text];
-    [buf release];
     if (cwin==1)
         [m_inputLine updatePosition];
 }
@@ -3486,7 +3448,6 @@ char *tempStatusLineScreenBuf() {
                 finished = -1;
                 UIAlertView *dialog = [[UIAlertView alloc] initWithTitle:@"Unreadable story file" message: @"Frotz doesn't understand the format of this file" delegate:self cancelButtonTitle:@"Drat" otherButtonTitles:nil];
                 [dialog show];
-                [dialog release];
             }
             [storyView setFreezeDisplay:NO];
             [storyView setTextStyle: kFTBold];
@@ -3611,7 +3572,6 @@ static UIColor *scanColor(NSString *colorStr) {
             NSData *slData = [NSPropertyListSerialization dataFromPropertyList:storyLocDict format:NSPropertyListBinaryFormat_v1_0
                                                               errorDescription:&errString];
             [slData writeToFile:activeStoryPath atomically:NO];
-            [storyLocDict release];
         }
     }
 }
@@ -3628,7 +3588,6 @@ static UIColor *scanColor(NSString *colorStr) {
             if (gUseSplitVC) {
                 StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath browser:m_storyBrowser];
                 [m_storyBrowser setStoryDetails: si];	
-                [si release];
             }
         }
     }
@@ -3640,7 +3599,7 @@ static UIColor *scanColor(NSString *colorStr) {
     }
     
     if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
-    	NSDictionary *dict = [[NSDictionary dictionaryWithContentsOfFile: storySIPPath] retain];
+    	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile: storySIPPath];
         if (dict) {
             storyPath = dict[@"storyPath"];
             storyPath = [self relativePathToAppAbsolutePath: storyPath];
@@ -3649,7 +3608,6 @@ static UIColor *scanColor(NSString *colorStr) {
                 m_autoRestoreDict = dict;
                 return YES;
             }
-            [dict release];
         }
     }
     if (storyPath) { //  save file not found
@@ -3684,7 +3642,7 @@ static void setScreenDims(char *storyNameBuf) {
         [m_storyView clear];
         [m_statusLine clear];
     }
-    m_launchMessage = [msg retain];
+    m_launchMessage = msg;
 }
 
 -(void)launchMessageAnimDidFinish:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
@@ -3724,11 +3682,9 @@ static void setScreenDims(char *storyNameBuf) {
         [UIView setAnimationDelay: delay];
         [UIView setAnimationDuration: duration];
         [msgView setAlpha: 0.0];
-        [msgView release];
         [UIView setAnimationDelegate: self];
         [UIView setAnimationDidStopSelector: @selector(launchMessageAnimDidFinish:finished:context:)];
         [UIView commitAnimations];
-        [m_launchMessage release];
         m_launchMessage = nil;
     }
 }
@@ -3821,7 +3777,6 @@ static void setScreenDims(char *storyNameBuf) {
     [self displayLaunchMessageWithDelay: 3.0 duration:1.0 alpha:0.85];
     if (m_splashImageView) { // stale
         [m_splashImageView removeFromSuperview];
-        [m_splashImageView release];
         m_splashImageView = nil;
     }
     if ([fileMgr fileExistsAtPath: storySIPPath] && [fileMgr fileExistsAtPath: storySIPSavePath]) {
@@ -3916,7 +3871,6 @@ static void setScreenDims(char *storyNameBuf) {
                 iosif_flush(NO);
                 if (!statusScreenData) {
                     [fileMgr removeItemAtPath: storySIPPath error:&error];
-                    [dict release];
                     m_autoRestoreDict = nil;
                     return NO;
                 }
@@ -3957,8 +3911,6 @@ static void setScreenDims(char *storyNameBuf) {
                     } else
                         storyText = @"";
                     [m_storyView setText: storyText];
-                    if (newText)
-                        [newText release];
                 }
 #else
                 [m_storyView setText: [dict objectForKey: @"storyWinContents"]];
@@ -3969,7 +3921,6 @@ static void setScreenDims(char *storyNameBuf) {
                 } else
                     hflagsRestore = 0;
                 
-                [dict release];
                 m_autoRestoreDict = nil;
                 
                 if ([storySIPPath isEqualToString: storySIPPathOld]) {
@@ -3994,7 +3945,6 @@ static void setScreenDims(char *storyNameBuf) {
                 [self performSelector:@selector(printText:) withObject:nil afterDelay:0.1];
                 return YES;
             }
-            [dict release];
             m_autoRestoreDict = nil;
         }
         NSLog(@"autoRestoreFailed");
@@ -4005,7 +3955,6 @@ static void setScreenDims(char *storyNameBuf) {
 - (void)transitionViewDidFinish:(TransitionView *)transitionView {
     if (m_splashImageView) {
         [m_splashImageView removeFromSuperview];
-        [m_splashImageView release];
         m_splashImageView = nil;
     }
     [transitionView removeFromSuperview];
@@ -4056,7 +4005,6 @@ static void setScreenDims(char *storyNameBuf) {
     
     if (m_splashImageView) { // stale
         [m_splashImageView removeFromSuperview];
-        [m_splashImageView release];
         m_splashImageView = nil;
     }
     
@@ -4067,13 +4015,12 @@ static void setScreenDims(char *storyNameBuf) {
         if (!isZblorb || !gLargeScreenDevice)
             data = [storyBrowser splashDataForStory: story];
         if (!data && isZblorb)
-            data = [imageDataFromBlorb([self currentStory]) autorelease];
+            data = imageDataFromBlorb([self currentStory]);
         
         if (data) {
             UIImage *timg = [[UIImage alloc] initWithData: data];
             UIImage *splashImage = scaledUIImage(timg, 0, 0);
             m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
-            [timg release];
 
             UIImage *thumb = scaledUIImage(splashImage, 40, 32);
             if (thumb) {
@@ -4271,7 +4218,6 @@ static void setScreenDims(char *storyNameBuf) {
                                                           errorDescription:&errString];
         [scData writeToFile:storySIPPath atomically:NO];
         
-        [dict release];
         
         if (m_notesController) {
             NSString *notesText = [m_notesController text];
@@ -4443,10 +4389,6 @@ static void setScreenDims(char *storyNameBuf) {
 
 
 -(void)resetSettingsToDefault {
-    if (m_defaultBGColor)
-        [m_defaultBGColor release];
-    if (m_defaultFGColor)
-        [m_defaultFGColor release];
     m_defaultBGColor = [[UIColor alloc] initWithRed: 1.0 green:1.0 blue:0.9 alpha:1.0];
     m_defaultFGColor = [[UIColor alloc] initWithRed: 0.0 green:0.0 blue:0.1 alpha:1.0];
     if (currColor == 0 || currColor == 0x11 || currColor == 0x29) // don't override current game's custom colors
@@ -4607,11 +4549,10 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
     session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating
     [DBSession setSharedSession:session];
-    [session release];
     
     NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
     
-    m_dbCachedMetadata = [[NSMutableDictionary dictionaryWithContentsOfFile: dbcPath] retain];
+    m_dbCachedMetadata = [NSMutableDictionary dictionaryWithContentsOfFile: dbcPath];
     if (!m_dbCachedMetadata)
         m_dbCachedMetadata = [[NSMutableDictionary alloc] initWithCapacity: 4];
     m_dbTopPath = m_dbCachedMetadata[kDBTopPath];
@@ -4642,7 +4583,6 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     else
     {
         NSLog(@"savedbc: err %@", error);
-        [error release];
     }
 }
 
@@ -4657,7 +4597,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 -(void)cacheTimestamp:(NSDate*)timeStamp forSaveFile:(NSString*)saveFile {
     NSMutableDictionary *timeStampDict = m_dbCachedMetadata[kTimestampKey];
     if (!timeStampDict) {
-        timeStampDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
+        timeStampDict = [[NSMutableDictionary alloc] initWithCapacity:32];
         [m_dbCachedMetadata setValue: timeStampDict forKey: kTimestampKey];
     }
     if (timeStamp)
@@ -4679,7 +4619,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
         return;
     NSMutableDictionary *hashDict = m_dbCachedMetadata[kHashKey];
     if (!hashDict) {
-        hashDict = [[[NSMutableDictionary alloc] initWithCapacity:32] autorelease];
+        hashDict = [[NSMutableDictionary alloc] initWithCapacity:32];
         [m_dbCachedMetadata setValue: hashDict forKey: kHashKey];
     }
     [hashDict setValue: hash forKey:path];
@@ -4709,7 +4649,6 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
                                "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
                                                        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
-        [alert release];
         
         [self.restClient loadMetadata: [self dbTopPath]];
     }
@@ -4999,8 +4938,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
             // For that to work we'd have to move each top-level subfolder individually.  Oh well.
             [self.restClient moveFrom: [self dbTopPath] toPath: path];
         }
-        [m_dbTopPath release];
-        m_dbTopPath = [path retain];
+        m_dbTopPath = path;
     	m_dbCachedMetadata[kDBTopPath] = m_dbTopPath;
         [self saveDBCacheDict];
         if ([[DBSession sharedSession] isLinked])
@@ -5063,6 +5001,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 @end
 
 void removeAnim(UIView *view) {
+#if 0 // the iOS bug this was needed to work around doesn't seem to exist anymore
     //    [[UIAnimator sharedAnimator] removeAnimationsForTarget:view];
     static id c;
     static SEL s,r;
@@ -5075,5 +5014,6 @@ void removeAnim(UIView *view) {
     }
     if (c && [c respondsToSelector: s])
         [[c performSelector: s] performSelector:r withObject:view];
+#endif
 }
 

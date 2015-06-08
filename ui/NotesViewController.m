@@ -177,15 +177,12 @@ static const int kNotesTitleHeight = 24;
                 [m_delegate.navigationController pushViewController: fileBrowser animated: YES];
             }
         }
-        [fileBrowser release];
     }
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
     if (gUseSplitVC) {
-        UINavigationController *nc = browser.navigationController;
         [m_delegate.navigationController dismissModalViewControllerAnimated:YES];
-        [nc release];
     }
     else {
         [m_delegate.navigationController popViewControllerAnimated:YES];
@@ -365,12 +362,7 @@ static const int kNotesTitleHeight = 24;
 }
 
 - (void)dealloc {
-    [m_notesView release];
-    [m_notesTitle release];
-    [m_notesView release];
-    [m_scrollView release];
     m_scrollView = nil;
-    [super dealloc];
 }
 
 @end
