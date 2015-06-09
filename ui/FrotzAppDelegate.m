@@ -136,12 +136,13 @@ bool gUseSplitVC;
             [m_navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
         UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
+        [m_browser storyMainViewController].storyNavController = navigationController;
 #ifdef NSFoundationVersionNumber_iOS_6_1
         if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1)
 #endif
             [navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
 
-        splitVC.viewControllers = [NSArray arrayWithObjects: m_navigationController, [[m_browser detailsController] navigationController], nil];
+        splitVC.viewControllers = @[m_navigationController, [[m_browser detailsController] navigationController]];
 
         if ([m_window respondsToSelector:@selector(setRootViewController:)])
             [m_window setRootViewController: splitVC];

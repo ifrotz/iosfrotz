@@ -114,6 +114,7 @@ extern StoryInputLine *theInputLine;
     BOOL m_dbActive;
 }
 
+@property (nonatomic, strong) UINavigationController* storyNavController;
 @property (nonatomic, strong) StoryBrowser *storyBrowser;
 @property (nonatomic, readonly, copy) NSString *storyGamePath;
 @property (nonatomic, readonly, copy) NSString *resourceGamePath;

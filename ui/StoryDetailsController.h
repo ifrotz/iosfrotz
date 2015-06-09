@@ -80,5 +80,7 @@
 @property(nonatomic,strong) UIView* flipper;
 @property(nonatomic,strong) UIView* infoButton;
 @property(nonatomic,assign) BOOL willResume;
+@property(nonatomic,strong) UINavigationController* detailsNavigationController;
+
 
 @end

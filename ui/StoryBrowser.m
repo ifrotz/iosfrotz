@@ -142,6 +142,7 @@ void removeOldPngSplash(const char *filename) {
             UINavigationController *nc = [m_details navigationController];
             if (!nc) {
                 nc = [[UINavigationController alloc] initWithRootViewController: m_details];
+                m_details.detailsNavigationController = nc;
                 [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];
             }
         }
