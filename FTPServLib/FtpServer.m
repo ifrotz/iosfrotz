@@ -84,18 +84,15 @@
     // Clear out connections list
     NSMutableArray *myConnections = [[NSMutableArray alloc] init];
     self.connections = myConnections;
-    [myConnections release];
     
     AsyncSocket *myListenSocket = [[AsyncSocket alloc] initWithDelegate:self];
     self.listenSocket = myListenSocket;
-    [myListenSocket release];
     
     NSLog(@"Listening on %u", portNumber);
     [listenSocket acceptOnPort:self.portNumber error:&error];					// start listening on this port.
     
     NSMutableArray *myConnectedSockets = [[NSMutableArray alloc] initWithCapacity:1];
     self.connectedSockets = myConnectedSockets;
-    [myConnectedSockets release];
 
 }
 // ----------------------------------------------------------------------------------------------------------
@@ -123,7 +120,7 @@
 // ----------------------------------------------------------------------------------------------------------
 {
 	
-	FtpConnection *newConnection = [[[ FtpConnection alloc ] initWithAsyncSocket:newSocket forServer:self] autorelease];			// Create an ftp connection
+	FtpConnection *newConnection = [[ FtpConnection alloc ] initWithAsyncSocket:newSocket forServer:self];			// Create an ftp connection
 
 
 
@@ -194,16 +191,7 @@
 	if(listenSocket)
 	{
 		[listenSocket disconnect];
-		[listenSocket release];
 	}
-	
-	[connectedSockets release];
-	[notificationObject release];
-	[connections release];
-	[commands release];
-	[baseDir release];
-	[super dealloc];
-	
 }
 
 

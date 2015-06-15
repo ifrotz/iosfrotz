@@ -5,11 +5,14 @@
 
 #import "FrotzHTTPConnection.h"
 #import "HTTPServer.h"
+#import "HTTPMessage.h"
 #import "HTTPResponse.h"
 #import "AsyncSocket.h"
 #import "FileTransferInfo.h"
 #import "StoryBrowser.h"
 #import "ui_utils.h"
+#import "../HTTPServer/Responses/HTTPFileResponse.h"
+#import "../HTTPServer/Responses/HTTPDataResponse.h"
 
 @implementation FrotzHTTPConnection
 
@@ -65,7 +68,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         isRemove = YES;
         path = [path substringFromIndex: 8];
     }
-    NSString *rootPath = [[server documentRoot] path];
+    NSString *rootPath = [[config server] documentRoot];
+
     NSMutableString *outdata = [NSMutableString new];
     NSString *fullPath;
     if ([path isEqualToString: @"/Games/"] || [path hasPrefix: @"/Saves/"] && [path hasSuffix: @".d/"]) {
@@ -78,7 +82,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         fullPath = [NSString stringWithFormat: @"%@%@", rootPath, path];
     }
     NSFileManager *defaultManager = [NSFileManager defaultManager];
-    StoryBrowser *sb = (StoryBrowser*)[server delegate];
+    StoryBrowser *sb = theStoryBrowser;
     if (isRemove) {
         BOOL isDir = NO;
         NSError *error = nil;
@@ -399,12 +403,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
  **/
 - (NSObject<HTTPResponse> *)httpResponseForMethod:(NSString *)method URI:(NSString *)path
 {
-	NSLog(@"httpResponseForURI: method:%@ path:%@ self: %@", method, path, self);
-	
-	NSData *requestData = (NSData *)CFBridgingRelease(CFHTTPMessageCopySerializedMessage(request));
-	
-	NSString *requestStr = [[NSString alloc] initWithData:requestData encoding:NSASCIIStringEncoding];
-	NSLog(@"\n=== Request ====================\n%@\n================================", requestStr);
+    NSString *requestStr = nil;
+    NSData *postData = [request body];
+    if (postData)
+    {
+        requestStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
+    }
+    
 	NSFileManager *defaultManager = [NSFileManager defaultManager];
 	if (requestContentLength > 0)  // Process POST data
 	{
@@ -434,11 +439,11 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 		NSError *ferror = nil;
 		if ([fn hasSuffix: @".png"] || [fn hasSuffix:@".jpg"] || [fn hasSuffix: @".PNG"] || [fn hasSuffix:@".JPG"]) {
 		    NSString *ext = [[fn pathExtension] lowercaseString];
-		    NSString *rootPath = [[server documentRoot] path];
+		    NSString *rootPath = [[config server] documentRoot];
 		    NSString *oldPath = [NSString stringWithFormat:@"%@%@%@", rootPath, [path stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding], fn];
             NSString *story = [[[[path lastPathComponent] stringByDeletingPathExtension] stringByDeletingPathExtension ]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-		    StoryBrowser *sb = (StoryBrowser*)[server delegate];
-		    story = [sb canonicalStoryName:story];
+            StoryBrowser *sb = theStoryBrowser;
+            story = [sb canonicalStoryName:story];
 		    if (story) {
                 NSString *newPath = [NSString stringWithFormat:@"%@/Splashes/%@.%@", rootPath, story, ext];
                 [defaultManager removeItemAtPath: newPath error:&ferror];
@@ -471,29 +476,30 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 	NSString *filePath = [self filePathForURI:path];
 	BOOL isDir = NO;
 	if ([defaultManager fileExistsAtPath:filePath isDirectory: &isDir] && !isDir) {
-	    HTTPFileResponse *fileResponse = [[HTTPFileResponse alloc] initWithFilePath:filePath];
-	    if ([filePath hasSuffix: @".sav"])
-            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"sav"]];
-	    else if ([filePath hasSuffix: @".qut"])
-            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"qut"]];
+        HTTPFileResponse *fileResponse = [[HTTPFileResponse alloc] initWithFilePath:filePath forConnection:self];
+        //xxxxx
+//	    if ([filePath hasSuffix: @".sav"])
+//            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"sav"]];
+//	    else if ([filePath hasSuffix: @".qut"])
+//            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"qut"]];
 	    return fileResponse;
     }
 	else {
 	    if ([path hasPrefix: @"/Games/"]) {
             NSString *gameName = [path lastPathComponent];
-            NSString *resourceGamePath = [[server delegate] resourceGamePath];
+            NSString *resourceGamePath = [theStoryBrowser resourceGamePath];
             if (resourceGamePath) {
                 filePath = [resourceGamePath stringByAppendingPathComponent: gameName];
                 if ([defaultManager fileExistsAtPath:filePath isDirectory: &isDir] && !isDir)
                 {
-                    return [[HTTPFileResponse alloc] initWithFilePath:filePath];
+                    return [[HTTPFileResponse alloc] initWithFilePath:filePath forConnection:self];
                 }
             }
 	    }
 	    if ([path hasPrefix: @"/icon="]) {
             path = [path substringFromIndex: 6];
             NSString *story = [[[path stringByDeletingPathExtension] lowercaseString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-            NSData *imgData = [[server delegate] thumbDataForStory: story];
+            NSData *imgData = [theStoryBrowser thumbDataForStory: story];
             if (imgData)
                 return [[HTTPDataResponse alloc] initWithData:imgData];
             return nil;
@@ -514,7 +520,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
  * This method is called to handle data read from a POST.
  * The given data is part of the POST body.
  **/
-- (void)processDataChunk:(NSData *)postDataChunk
+//- (void)processDataChunk:(NSData *)postDataChunk
+- (void)processBodyData:(NSData *)postDataChunk
 {
     // Override me to do something useful with a POST.
     // If the post is small, such as a simple form, you may want to simply append the data to the request.
@@ -553,13 +560,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 postInfoComponents = [[postInfoComponents lastObject] componentsSeparatedByString:@"\""];
                 postInfoComponents = [postInfoComponents[1] componentsSeparatedByString:@"\\"];
                 
-                NSURL *uri = CFBridgingRelease(CFHTTPMessageCopyRequestURL(request));
+                NSURL *uri = [request url]; //xxxx CFBridgingRelease(CFHTTPMessageCopyRequestURL(request));
                 int partEndOffset = indexOfBytes(postDataChunk, dataStartIndex, [partSeparator UTF8String], partSepLen, &partialMatch);
                 if (partEndOffset >= 0) {
                     postDataLen = partEndOffset;
                 }
                 NSLog(@"process data write file docpath=%@ fn=%@ self=%@", [uri relativeString], [postInfoComponents lastObject], self);
-                NSString *destPath = [[[server documentRoot] path] stringByAppendingPathComponent: [[uri relativeString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                NSString *destPath = [[[config server] documentRoot] stringByAppendingPathComponent: [[uri relativeString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
                 BOOL isDir = NO;
                 if (![[NSFileManager defaultManager] fileExistsAtPath: destPath isDirectory: &isDir] && [destPath hasSuffix: @".d"])
                     [[NSFileManager defaultManager] createDirectoryAtPath: destPath attributes:nil];
@@ -584,7 +591,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 if (fileHandle)
                     [fileHandle seekToEndOfFile];
                 
-                [[server delegate] refresh];
+                [theStoryBrowser refresh];
                 break;
             }
         }
@@ -624,7 +631,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         if (filename) {
             if (value && [value length] > 0 && [value rangeOfString: @"/"].length == 0) {
                 NSString *story = [filename storyKey];
-                [[server delegate] addTitle: value forStory: story];
+                [theStoryBrowser addTitle: value forStory: story];
             }
         }
     }

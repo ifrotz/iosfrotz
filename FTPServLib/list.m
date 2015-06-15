@@ -36,7 +36,7 @@ NSString* createList(NSString* directoryPath, BOOL shortForm)
 	NSNumber*			fileSize;
 	NSDate*				fileModified;
 	NSString*			fileDateFormatted;
-	NSDateFormatter*    dateFormatter = [[[ NSDateFormatter alloc ] init ] autorelease ];
+	NSDateFormatter*    dateFormatter = [[ NSDateFormatter alloc ] init ];
 	
 	BOOL				fileIsDirectory;
 
@@ -59,7 +59,6 @@ NSString* createList(NSString* directoryPath, BOOL shortForm)
         [dateFormatter setDateFormat:@"MMM dd HH:mm"]; 
         NSLocale *englishLocale = [[NSLocale alloc] initWithLocaleIdentifier:@"en"]; 
         [dateFormatter setLocale:englishLocale]; 
-        [englishLocale release];
     }
 	
 	//NSLog(@"Get LS for %@", directoryPath );
@@ -106,7 +105,7 @@ NSString* createList(NSString* directoryPath, BOOL shortForm)
     if (!shortForm)
         [returnString insertString: [NSString stringWithFormat:@"total %d", numberOfFiles] atIndex:0];
 	//	NSLog(returnString );
-	return [returnString autorelease];																				// FIXME - release count
+	return returnString;																				// FIXME - release count
 	
 }
 // ----------------------------------------------------------------------------------------------------------
@@ -135,7 +134,7 @@ NSMutableString* int2BinString(int x)
 	
 	[ returnString appendString:byte2String(hi) ];
 	[ returnString appendString:byte2String(lo) ];
-	return [ returnString autorelease ];
+	return returnString;
 }
 
 
@@ -164,7 +163,7 @@ NSMutableString *byte2String(int x )
 		x = x<<1;
 	}
 	
-	return [returnString autorelease];
+	return returnString;
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -205,6 +204,6 @@ NSMutableString *bin2perms(NSString *binaryValue)
 		
 	}
 	
-	return [ returnString autorelease ];
+	return returnString;
 }
 

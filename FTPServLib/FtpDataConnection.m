@@ -33,7 +33,7 @@
 	self = [super init ];
 	if (self)
 	{
-		dataSocket = [newSocket retain ];						// Hang onto the socket that was generated - the FDC is retained by FC
+		dataSocket = newSocket;						// Hang onto the socket that was generated - the FDC is retained by FC
 		ftpConnection = aConnection;
 	
 		[ dataSocket setDelegate:self ];
@@ -54,18 +54,6 @@
 	return self;
 }
 // ----------------------------------------------------------------------------------------------------------
--(void)dealloc
-// ----------------------------------------------------------------------------------------------------------
-{
-
-	[dataSocket release];
-	[dataListeningSocket release];
-	[dataConnection release];
-//	[receivedData release];
-	
-	
-	[super dealloc];
-}
 // ----------------------------------------------------------------------------------------------------------
 -(void)writeString:(NSString*)dataString
 // ----------------------------------------------------------------------------------------------------------
@@ -141,11 +129,11 @@
 	[ dataSocket readDataWithTimeout:READ_TIMEOUT tag:FTP_CLIENT_REQUEST ];	
 	
 	
-	receivedData = [ data retain];								// make autoreleased copy of data
+	receivedData = data;								// make autoreleased copy of data
 	
 	// notify connection data came through,  ( will write data for us )
 	[ftpConnection didReceiveDataRead ];						// notify, the connection, so it knows to write the data
-	[ receivedData release ];									// let go, not our business anymore
+										// let go, not our business anymore
 	connectionState = clientSent;
 }
 

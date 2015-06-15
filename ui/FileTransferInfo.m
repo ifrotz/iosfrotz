@@ -218,8 +218,8 @@ BOOL isHiddenFile(NSString *file) {
         [m_httpserv setType:@"_http._tcp."];
         [m_httpserv setConnectionClass:[FrotzHTTPConnection class]];
         [m_httpserv setPort: 8000];
-        [m_httpserv setDocumentRoot:[NSURL fileURLWithPath: [m_controller rootPath]]];
-        [m_httpserv setDelegate: [m_controller storyBrowser]];
+        [m_httpserv setDocumentRoot: [m_controller rootPath]]; // [[NSURL fileURLWithPath: [m_controller rootPath]] absoluteString]];
+        //[m_httpserv setDelegate: [m_controller storyBrowser]];
     }
     
     if (m_httpserv && [m_httpserv start:&error]) {

@@ -59,15 +59,15 @@
 - (void)closeConnection:(id)theConnection;
 - (NSString*)createList:(NSString*)directoryPath shortForm:(BOOL)shortForm;
 
-@property (readwrite, retain) AsyncSocket *listenSocket;
-@property (readwrite, retain) NSMutableArray *connectedSockets;
-@property (readwrite, retain) id server;
-@property (readwrite, retain) id notificationObject;
+@property (readwrite, strong) AsyncSocket *listenSocket;
+@property (readwrite, strong) NSMutableArray *connectedSockets;
+@property (readwrite, strong) id server;
+@property (readwrite, strong) id notificationObject;
 @property (readwrite) int portNumber;
-@property (readwrite, retain) id delegate;
-@property (readwrite, retain) NSMutableArray *connections;
-@property (readwrite, retain) NSDictionary *commands;
-@property (readwrite, retain) NSString *baseDir;
+@property (readwrite, strong) id delegate;
+@property (readwrite, strong) NSMutableArray *connections;
+@property (readwrite, strong) NSDictionary *commands;
+@property (readwrite, strong) NSString *baseDir;
 @property (readwrite) Boolean changeRoot;
 @property (readwrite) int clientEncoding;
 

@@ -25,11 +25,11 @@
 
 @interface FtpDataConnection : NSObject {
 	AsyncSocket			*dataSocket;
-	FtpConnection		*ftpConnection;						// connection which generated data socket we are tied to
+	FtpConnection		*__weak ftpConnection;						// connection which generated data socket we are tied to
 	
 	AsyncSocket			*dataListeningSocket;
 	id					dataConnection;	
-	NSData              *receivedData;
+	NSData              *__weak receivedData;
 	int					connectionState;
 	
 }
@@ -47,7 +47,7 @@
 
 -(void)onSocket:(AsyncSocket *)sock willDisconnectWithError:(NSError *)err;
 
-@property (readonly) NSData *receivedData;
+@property (weak, readonly) NSData *receivedData;
 @property (readwrite) int connectionState;
 
 

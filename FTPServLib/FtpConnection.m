@@ -34,7 +34,7 @@
 	self = [super init ];
 	if (self)
 	{
-		connectionSocket = [newSocket retain ];
+		connectionSocket = newSocket;
 		server = myServer;
 		[ connectionSocket setDelegate:self ];
 		[ connectionSocket writeData:DATASTR(@"220 Frotz File Transfer Server " IPHONE_FROTZ_VERS ". Login with any user name.\r\n") withTimeout:-1 tag:0 ];					// send out the welcome message to the client
@@ -61,32 +61,20 @@
 	{
 		[connectionSocket setDelegate:nil];
 		[connectionSocket disconnect];
-		[connectionSocket release];
 	}
 	
 	if(dataListeningSocket){														// 12/2/10 - think this code  is now redundant, dataListeningSocket, does it do anything anymore...?
 		[dataListeningSocket setDelegate:nil];
 		[dataListeningSocket disconnect];
-		[dataListeningSocket release];
 		
 	}
 	if(dataSocket)
 	{
 		[dataSocket setDelegate:nil];
 		[dataSocket disconnect];
-		[dataSocket release];
-		
 	}
-	if(dataConnection)[dataConnection release];
-	//	[msgComponents release];
-	if(queuedData)[queuedData release];
-	if(currentFile)[currentFile release];
-	if(currentUser)[currentUser release];
-	[currentDir release];
-	if(currentFileHandle) [currentFileHandle release];
-	
-	[super dealloc];
 }
+
 #pragma mark STATE 
 // ----------------------------------------------------------------------------------------------------------
 //-(void)setTransferMode:(int)mode
@@ -119,16 +107,13 @@
 	
 	if (dataSocket)																			// Code changed 2010-02-12 - As per Jon's fix. stops memory leak on socket and connection
 	{ 
-		[dataSocket release]; 
-		dataSocket = nil; 
+		dataSocket = nil;
 	} 
 	dataSocket = [ [ AsyncSocket alloc ] initWithDelegate:self ];                           // 	create our socket for Listening or Direct Connection 
 	if (dataConnection) 
 	{ 
-		[dataConnection release]; 
-		dataConnection = nil; 
+		dataConnection = nil;
 	} 
-
 
 	
 	switch (transferMode) {
@@ -155,12 +140,13 @@
 			dataConnection = [[ FtpDataConnection alloc ] initWithAsyncSocket:dataSocket forConnection:self withQueuedData:queuedData ];	
 			break;
 			
-		case pasvftp:
+        case pasvftp: {
 			dataPort = [ self choosePasvDataPort ];
 			NSString *address = [ [connectionSocket localHost ] stringByReplacingOccurrencesOfString:@"." withString:@"," ]; // autoreleased
 			responseString = [ NSString stringWithFormat:@"227 Entering Passive Mode (%@,%d,%d)",address, dataPort >>8, dataPort & 0xff];				
 			[ dataSocket acceptOnPort: dataPort error:&error  ];
 			dataConnection = nil;  // will pickup from the listening socket
+        }
 			break;
 			
 		case epsvftp:
@@ -271,7 +257,7 @@
 	[ dataString appendData:[AsyncSocket CRLFData] ];												
 	
 	[ connectionSocket writeData:dataString withTimeout:READ_TIMEOUT tag:FTP_CLIENT_REQUEST ];
-	[dataString release];
+    dataString = nil;
 	[ connectionSocket readDataToData:[AsyncSocket CRLFData] withTimeout:READ_TIMEOUT tag:FTP_CLIENT_REQUEST ];	// start reading again		
 	//	[ connectionSocket readDataWithTimeout:READ_TIMEOUT tag:FTP_CLIENT_REQUEST ];
 }
@@ -282,7 +268,7 @@
 	NSMutableString *message = [[NSMutableString alloc] initWithString:dataString];
 	CFStringNormalize((CFMutableStringRef)message, kCFStringNormalizationFormC);
 	NSMutableData *data = [[ message dataUsingEncoding:server.clientEncoding ] mutableCopy];				// Autoreleased
-	[message release];
+    message = nil;
 
 	if (dataConnection )
 	{//	NSLog(@"FC:sendData");
@@ -293,7 +279,7 @@
 	{
 		[ queuedData addObject:data ];
 	}
-	[data release];
+    data = nil;
 	
 }
 // ----------------------------------------------------------------------------------------------------------
@@ -358,7 +344,6 @@
 	{
 		
 //		NSLog(@"Closing File Handle");
-		[currentFile release];
 		currentFile = nil;
 	}
 	else
@@ -375,7 +360,6 @@
 //		NSLog(@"Closing File Handle");
 		
 		[ currentFileHandle closeFile ];								// Close the file handle
-		[ currentFileHandle release ];
 		currentFileHandle = nil;
 		[ server didReceiveFileListChanged];
 	}
@@ -394,7 +378,7 @@
 // ----------------------------------------------------------------------------------------------------------
 {	
 	NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length] - 2)];				// remove last 2 chars
-	NSString *crlfmessage = [[[NSString alloc] initWithData:strData encoding:server.clientEncoding] autorelease];
+    NSString *crlfmessage = [[NSString alloc] initWithData:strData encoding:server.clientEncoding];
 	NSString *message;
 	
 	//	message = [ crlfmessage stringByReplacingOccurrencesOfString:@"\r\n" withString:@""];		// gets autoreleased
@@ -412,6 +396,8 @@
 -(void)processCommand // assumes data has been place in Array msgComponents
 // ----------------------------------------------------------------------------------------------------------
 {
+  @autoreleasepool {
+        
 	NSString *commandString =  msgComponents[0];
 	
 	if ([ commandString length ] > 0)																// If there is a command here
@@ -448,7 +434,8 @@
 	{
 		// Write out an error msg
 	}
-	
+  } // autorelease pool
+
 }
 
 // ==========================================================================================================
@@ -480,9 +467,7 @@
 // ----------------------------------------------------------------------------------------------------------
 {
 	// send out confirmation message -- 331 password required for
-	if ( currentUser != nil )
-		[currentUser release];
-	currentUser =  [arguments[1] retain];
+    currentUser =  arguments[1];
 	NSString *outputString = [ NSString stringWithFormat:@"230 Login successful." ];
 	[ sender sendMessage:outputString];
 }
@@ -540,7 +525,7 @@
 
 //	NSLog( @"doList currentDir(%@) changeRoot%d", lsDir, server.changeRoot );
 //	NSLog(@"Will list %@ ",lsDir);
-	listText = [ [ server createList:lsDir shortForm:NO] retain ];						// Can list directory so do it	
+    listText = [ server createList:lsDir shortForm:NO];
 //	if ([self canChangeDirectoryTo:lsDir]) {									
 //		listText = [ [ server createList:lsDir] retain ];						// Can list directory so do it
 //	}
@@ -553,7 +538,6 @@
 	[ sender sendMessage:@"150 Here comes the directory listing."];	
 
 	[ sender sendDataString:listText  ];	
-	[listText release ];
 }
 // ----------------------------------------------------------------------------------------------------------
 -(void)doPwd:(id)sender arguments:(NSArray*)arguments
@@ -745,14 +729,12 @@
     
 //	NSLog( @"doList currentDir(%@) changeRoot%d", lsDir, server.changeRoot );
 //	NSLog(@"Will list %@ ",lsDir);
-	listText = [ [ server createList:lsDir shortForm:YES] retain ];						// Can list directory so do it	
+    listText = [ server createList:lsDir shortForm:YES];
 //	NSLog( @"doNLst sending this. %@", listText );
     
 	[ sender sendMessage:@"150 Here comes the directory listing."];	
     
 	[ sender sendDataString:listText  ];	
-	[listText release ];
-    
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -773,7 +755,7 @@
 		// CREATE and then OPEN NEW FILE FOR WRITING
 		if ([fs createFileAtPath:self.currentFile contents:nil attributes:nil]==YES)								
 		{
-			currentFileHandle = [[ NSFileHandle fileHandleForWritingAtPath:currentFile] retain];				// Open the file handle to write to
+			currentFileHandle = [ NSFileHandle fileHandleForWritingAtPath:currentFile];				// Open the file handle to write to
 			cmdstr   = [ NSString stringWithFormat:@"150 Opening BINARY mode data connection for '%@'.",filename ];	// autoreleased
 		}
 		else
@@ -830,12 +812,12 @@
 			}
 			else																						// SEND FILE
 			{	// FIXME URGENT - need to stop loading whole file into memory to send
-				NSMutableData   *fileData = [[ NSMutableData dataWithContentsOfFile:filePath ] retain];										// FIXME - open in bits ? seems risky opening file in one piece
+				NSMutableData   *fileData = [ NSMutableData dataWithContentsOfFile:filePath ];										// FIXME - open in bits ? seems risky opening file in one piece
 				cmdstr = [ NSString stringWithFormat:@"150 Opening BINARY mode data connection for '%@'.",filename ];
 				[sender sendMessage:cmdstr];
 				
 				[ sender sendData:fileData  ];																								// Send file
-				[fileData release ];
+				fileData = nil;
 			}		
 		}
 	}
@@ -1050,7 +1032,7 @@
 		}
 		else
 		{
-			return [[filename copy] autorelease ];											// Don't want to hang onto a variable, user should retain if needed.
+			return [filename copy];											// Don't want to hang onto a variable, user should retain if needed.
 		}
 
 	}
@@ -1121,7 +1103,7 @@
 	NSString *testDirectory, *expandedPath;
 	
 
-	expandedPath = [[self rootedPath:newDirectory ] retain ];
+	expandedPath = [self rootedPath:newDirectory ];
 
 	// TEST IF ALLOWED TO USE THAT DIRECTORY ( ie is it in allowable filesystem )
 	
@@ -1149,7 +1131,7 @@
 		  
 	self.currentDir = [ testDirectory stringByStandardizingPath ];								// make a copy, and retain release
 	
-	[ expandedPath release];
+	expandedPath = nil;
 	return true;														// its fine.  would have failed before if not possible
 }
 // ----------------------------------------------------------------------------------------------------------
@@ -1240,3 +1222,4 @@
 	
 }
 @end
+

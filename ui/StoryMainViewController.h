@@ -50,6 +50,7 @@ void iosif_feed_input_line(NSString *str);
 extern StoryView *theStoryView;
 extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
+extern StoryBrowser *theStoryBrowser;
 
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate, UIActionSheetDelegate,
                 TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,InputHelperDelegate, UIScrollViewDelegate,

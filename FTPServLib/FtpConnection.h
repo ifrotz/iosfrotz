@@ -59,9 +59,9 @@
 
 @property(readwrite)int transferMode;
 
-@property(readwrite, retain ) NSString *currentFile;
-@property(readwrite, retain ) NSString *currentDir;
-@property(readwrite, retain ) NSString *rnfrFilename;
+@property(readwrite, strong ) NSString *currentFile;
+@property(readwrite, strong ) NSString *currentDir;
+@property(readwrite, strong ) NSString *rnfrFilename;
 
 @property (nonatomic, readonly, copy) NSString *connectionAddress;
 

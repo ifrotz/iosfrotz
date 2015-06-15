@@ -80,6 +80,7 @@ char iosif_filename[MAX_FILE_NAME];
 char iosif_scriptname[MAX_FILE_NAME];
 
 StoryMainViewController *theSMVC;
+StoryBrowser *theStoryBrowser;
 StoryView *theStoryView;
 StatusLine *theStatusLine;
 StoryInputLine *theInputLine;
@@ -2119,7 +2120,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void)setStoryBrowser:(StoryBrowser*)browser {
-    m_storyBrowser = browser;
+    theStoryBrowser = m_storyBrowser = browser;
 }
 
 
