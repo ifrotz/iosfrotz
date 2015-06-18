@@ -581,7 +581,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(void)dealloc {
-    NSLog(@"rtv %@ dealloc", self);
     if (m_selectionView) {
         [m_selectionView removeFromSuperview];
         m_selectionView = nil;

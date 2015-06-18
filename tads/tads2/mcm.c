@@ -118,6 +118,8 @@ mcmcxdef *mcmcini(mcmcx1def *globalctx, uint pages,
 /* uninitialize a client context */
 void mcmcterm(mcmcxdef *ctx)
 {
+    IF_DEBUG(ctx = (mcmcxdef *)((uchar *)ctx - sizeof(ulong)));
+
     /* delete the context memory */
     mchfre(ctx);
 }
@@ -251,6 +253,8 @@ void mcmterm(mcmcx1def *ctx)
      *   allocated out of the block, so it's the same as the block pointer.
      *   Freeing the context frees this last/first chunk. 
      */
+    IF_DEBUG(ctx = (mcmcx1def *)((uchar *)ctx - sizeof(ulong)));
+
     mchfre(ctx);
 }
 
