@@ -111,14 +111,11 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [m_backgroundView setAutoresizesSubviews: YES];
     self.view = m_backgroundView;
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
-        BOOL isLandscape = UIDeviceOrientationIsLandscape([self interfaceOrientation]);
-
         m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width - (ShowSaveButton ? 56: 0), 30)];
         
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height /*28*/,
                                           origFrame.size.width,
-                                          origFrame.size.height-m_textField.bounds.size.height -
-                                          (gUseSplitVC ? 70: isLandscape ? 160 : 216))];
+                                          origFrame.size.height-m_textField.bounds.size.height)];
         [m_textField setReturnKeyType: UIReturnKeyDone];
         [m_textField setBackgroundColor: [UIColor whiteColor]];
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
@@ -149,6 +146,33 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     } else
     	[m_tableView setFrame: CGRectMake(0, 00 /*28*/, origFrame.size.width, origFrame.size.height)];
     [m_backgroundView addSubview: m_tableView];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidChangeFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
+
+}
+
+-(void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)keyboardDidChangeFrame:(NSNotification*)aNotification
+{
+    NSDictionary* info = [aNotification userInfo];
+    UIWindow *window = [m_tableView window];
+    CGRect kbFrame = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect kbIntersectFrame = [window convertRect:CGRectIntersection(window.frame, kbFrame) toView:m_tableView];
+    kbIntersectFrame = CGRectIntersection(m_tableView.bounds, kbIntersectFrame);
+    
+    // get point before contentInset change
+    CGPoint pointBefore = m_tableView.contentOffset;
+    UIEdgeInsets contentInsets = UIEdgeInsetsMake(0.0, 0.0, kbIntersectFrame.size.height, 0.0);
+    m_tableView.contentInset = contentInsets;
+    m_tableView.scrollIndicatorInsets = contentInsets;
+    // get point after contentInset change
+    CGPoint pointAfter = m_tableView.contentOffset;
+    // avoid jump by settings contentOffset
+    m_tableView.contentOffset = pointBefore;
+    // and now animate smoothly
+    [m_tableView setContentOffset:pointAfter animated:YES];
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
@@ -162,14 +186,15 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
-        BOOL isLandscape = UIDeviceOrientationIsLandscape(toInterfaceOrientation);
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           m_backgroundView.frame.size.width,
-                                          m_backgroundView.frame.size.height-m_textField.bounds.size.height - (gUseSplitVC ? (isLandscape ? 220 : 70): (isLandscape ? 160 : 216)))];
+                                          m_backgroundView.frame.size.height-m_textField.bounds.size.height)];
     }
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+    if (m_alertView)
+        return NO;
     NSIndexPath *indexPath = [m_tableView indexPathForSelectedRow];
     if (indexPath != nil)
         [m_tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -204,6 +229,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    if (m_alertView)
+        return NO;
     if ([[textField text] length] > 0) {
         [self commit: textField];
         return YES;
@@ -234,9 +261,11 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
             }
         }
         if (exists && m_dialogType != kFBDoShowScript) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
-                                                           delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Save", nil];
-            [alert show];
+            if (!m_alertView) {
+                m_alertView = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
+                                                               delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Save", nil];
+                [m_alertView show];
+            }
             return;
         }
         [m_textField endEditing: YES];
@@ -481,6 +510,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
 // Called when a button is clicked. The view will be automatically dismissed after this call returns
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    m_alertView = nil;
     if (buttonIndex == 1) { 
         [m_textField endEditing: YES];
     }

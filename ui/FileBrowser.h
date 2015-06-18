@@ -36,18 +36,19 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
 
 @interface FileBrowser : UIViewController <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
 {
-	UITableViewController *m_tableViewController;
-	NSMutableArray *m_extensions;
-	NSMutableArray *m_files;
-	NSString *m_path;
-	int m_rowCount;
-	id m_delegate;
-	FileBrowserState m_dialogType;
-	UIView *m_backgroundView;
-	UITableView *m_tableView;
-	UITextField *m_textField;
-	UIButton *m_saveButton;
-	int m_textFileCount;
+    UITableViewController *m_tableViewController;
+    NSMutableArray *m_extensions;
+    NSMutableArray *m_files;
+    NSString *m_path;
+    int m_rowCount;
+    id m_delegate;
+    FileBrowserState m_dialogType;
+    UIView *m_backgroundView;
+    UITableView *m_tableView;
+    UITextField *m_textField;
+    UIButton *m_saveButton;
+    UIAlertView *m_alertView;
+    int m_textFileCount;
 }
 - (instancetype)initWithDialogType:(FileBrowserState)dialogType NS_DESIGNATED_INITIALIZER;
 @property (nonatomic, copy) NSString *path;
