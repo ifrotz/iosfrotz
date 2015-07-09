@@ -151,8 +151,8 @@ extern bool gUseSplitVC;
 
 #define UseFullSizeStatusLineFont 1
 
-#define IPHONE_FROTZ_VERS "1.7.1"
-#define FROTZ_BETA 0
+#define IPHONE_FROTZ_VERS "1.7.2+"
+#define FROTZ_BETA 1
 
 #define APPLE_FASCISM (!FROTZ_BETA)
 

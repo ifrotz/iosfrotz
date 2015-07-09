@@ -70,7 +70,6 @@
 		44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */ = {isa = PBXBuildFile; fileRef = 44550B1A1277FC2B00CDEA97 /* glulx.png */; };
 		445D05971B2CCE2300CAF2B5 /* FtpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D013991372707D00B7F616 /* FtpConnection.m */; };
 		445E9394160FF5080098DBE7 /* glarels5@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445E9393160FF5080098DBE7 /* glarels5@2x.png */; };
-		445E9396160FFF420098DBE7 /* DropboxSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 445E9395160FFF420098DBE7 /* DropboxSDK.framework */; };
 		445FFBBB15E9ED3F00ECB161 /* Icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 445FFBB715E9ED3F00ECB161 /* Icon-72.png */; };
 		445FFBBC15E9ED3F00ECB161 /* Icon-72@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 445FFBB815E9ED3F00ECB161 /* Icon-72@2x.png */; };
 		445FFBBD15E9ED3F00ECB161 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 445FFBB915E9ED3F00ECB161 /* Icon.png */; };
@@ -391,6 +390,7 @@
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
 		44E145CA114C303B001926E1 /* compass-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 44E145C9114C303B001926E1 /* compass-small.png */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
+		44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */; };
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
 		44F69D0019C118E000ECADD0 /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 44F69CFF19C118E000ECADD0 /* Launch Screen.xib */; };
 		44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4454850C1B1FBAB900E8EE7B /* libtads.a */; };
@@ -475,16 +475,6 @@
 		44FDFBAA1999D02D00B44B03 /* icon-keyboard-locked.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */; };
 		44FDFBAB1999D02D00B44B03 /* icon-keyboard-locked@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		445485001B1E68BB00E8EE7B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 445484CC1B1E61A900E8EE7B;
-			remoteInfo = CocoaHTTPServer;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		4431B76C0E204F52001E5DAD /* CopyFiles */ = {
@@ -752,7 +742,6 @@
 		44550A7E1277B39300CDEA97 /* TO-DO.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "TO-DO.txt"; sourceTree = "<group>"; };
 		44550B1A1277FC2B00CDEA97 /* glulx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = glulx.png; path = resources/glulx.png; sourceTree = "<group>"; };
 		445E9393160FF5080098DBE7 /* glarels5@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glarels5@2x.png"; path = "resources/glarels5@2x.png"; sourceTree = "<group>"; };
-		445E9395160FFF420098DBE7 /* DropboxSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DropboxSDK.framework; path = "dropbox-ios-sdk-1.3.2/DropboxSDK.framework"; sourceTree = "<group>"; };
 		445FFBB715E9ED3F00ECB161 /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72.png"; sourceTree = "<group>"; };
 		445FFBB815E9ED3F00ECB161 /* Icon-72@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72@2x.png"; sourceTree = "<group>"; };
 		445FFBB915E9ED3F00ECB161 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -1293,6 +1282,7 @@
 		44E145C9114C303B001926E1 /* compass-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "compass-small.png"; path = "resources/compass-small.png"; sourceTree = "<group>"; };
 		44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReleaseNotes.h; sourceTree = "<group>"; };
 		44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReleaseNotes.m; sourceTree = "<group>"; };
+		44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DropboxSDK.framework; path = "dropbox-ios-sdk-1.3.13/DropboxSDK.framework"; sourceTree = "<group>"; };
 		44F2F5B611447AE0001AE868 /* CompletionLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompletionLabel.h; sourceTree = "<group>"; };
 		44F2F5B711447AE0001AE868 /* CompletionLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CompletionLabel.m; sourceTree = "<group>"; };
 		44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordSelectionProtocol.h; sourceTree = "<group>"; };
@@ -1340,7 +1330,7 @@
 				447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */,
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
-				445E9396160FFF420098DBE7 /* DropboxSDK.framework in Frameworks */,
+				44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1642,7 +1632,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				445E9395160FFF420098DBE7 /* DropboxSDK.framework */,
+				44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */,
 				44320C7717E9874700549CBD /* Reveal.framework */,
 				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
 				4474905F0E85BA4C00A5310F /* CFNetwork.framework */,
@@ -2451,7 +2441,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				445485011B1E68BB00E8EE7B /* PBXTargetDependency */,
 			);
 			name = Frotz;
 			productName = Frotz;
@@ -3231,14 +3220,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		445485011B1E68BB00E8EE7B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 445484CC1B1E61A900E8EE7B /* CocoaHTTPServer */;
-			targetProxy = 445485001B1E68BB00E8EE7B /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -3252,7 +3233,7 @@
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.2\"",
+					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 					"/Users/craig/Desktop/Reveal.app/Contents/SharedSupport/iOS-Libraries",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3263,6 +3244,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -3276,7 +3258,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
-				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Debug;
@@ -3294,7 +3275,7 @@
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.2\"",
+					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 					"/Users/craig/Desktop/Reveal.app/Contents/SharedSupport/iOS-Libraries",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3303,6 +3284,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -3316,7 +3298,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
-				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Release;
@@ -3356,6 +3337,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Debug;
 		};
@@ -3385,8 +3367,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
@@ -3416,8 +3400,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = "Release armv6";
 		};
@@ -3447,8 +3433,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 			};
 			name = Distribution;
 		};
@@ -3536,6 +3524,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
@@ -3583,6 +3572,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
@@ -3630,6 +3620,7 @@
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
@@ -3665,16 +3656,18 @@
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /Applications;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
-				PROVISIONING_PROFILE = "0C397DD6-5E69-418E-ABF1-EB27480FC871";
-				"PROVISIONING_PROFILE[sdk=*]" = "0C397DD6-5E69-418E-ABF1-EB27480FC871";
+				PROVISIONING_PROFILE = "";
+				"PROVISIONING_PROFILE[sdk=*]" = "";
 				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
 				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = " armv7 armv7s";
 			};
 			name = Distribution;
 		};
@@ -3691,7 +3684,7 @@
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.2\"",
+					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 					"/Users/craig/Desktop/Reveal.app/Contents/SharedSupport/iOS-Libraries",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3700,6 +3693,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -3714,7 +3708,6 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				VALID_ARCHS = "armv7 armv7s";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Distribution;
@@ -3736,14 +3729,16 @@
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /Applications;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
+				VALID_ARCHS = " armv7 armv7s";
 			};
 			name = "Release armv6";
 		};
@@ -3759,7 +3754,7 @@
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.2\"",
+					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 					"/Users/craig/Desktop/Reveal.app/Contents/SharedSupport/iOS-Libraries",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3768,6 +3763,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-Wno-deprecated-declarations";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -3787,7 +3783,6 @@
 				);
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
-				VALID_ARCHS = armv6;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = "Release armv6";
@@ -4336,6 +4331,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4373,6 +4369,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4410,6 +4407,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4490,6 +4488,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4527,6 +4526,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4564,6 +4564,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4902,15 +4903,17 @@
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /Applications;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
-				PROVISIONING_PROFILE = "8D4FD0E2-974A-4512-A3D6-D76F52817DBD";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "8D4FD0E2-974A-4512-A3D6-D76F52817DBD";
+				PROVISIONING_PROFILE = "";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
+				VALID_ARCHS = " armv7 armv7s";
 			};
 			name = Debug;
 		};
@@ -4932,14 +4935,16 @@
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /Applications;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
+				VALID_ARCHS = " armv7 armv7s";
 			};
 			name = Release;
 		};

@@ -414,7 +414,12 @@
 			if ( [ self respondsToSelector:action ])												// If we respond to this method
 			{	
 				// DO COMMAND
-				[self performSelector:action withObject:self withObject:msgComponents ];			// Preform method with arguments
+//				[self performSelector:action withObject:self withObject:msgComponents ];			// Preform method with arguments
+                // Do performSelector 'manually' to avoid ARC warning. Safe since called selectors do not return retained values.
+                IMP imp = [self methodForSelector:action];
+                void (*func)(id, SEL, NSArray *) = (void *)imp;
+                func(self, action, msgComponents);
+
 			}
 			else
 			{			// UNKNOWN COMMAND
