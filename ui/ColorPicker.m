@@ -170,9 +170,9 @@
 
 @end
 
-void RGBtoHSV(float r, float g, float b, float *h, float *s, float *v)
+void RGBtoHSV(CGFloat r, CGFloat g, CGFloat b, CGFloat *h, CGFloat *s, CGFloat *v)
 {
-    float min, max, delta;
+    CGFloat min, max, delta;
     min = r;
     if (g < min)
         min = g;
@@ -203,9 +203,9 @@ void RGBtoHSV(float r, float g, float b, float *h, float *s, float *v)
         *h += 1.0f;
 }
 
-void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
+void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat v)
 {
-    float f, p, q, t;
+    CGFloat f, p, q, t;
     if(s == 0) { // grey
 	*r = *g = *b = v;
 	return;
@@ -214,7 +214,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 	h = 0.0f;
     h *= 6.0f;
     int sector = ((int)h) % 6;
-    f = h - (float)sector;			// factorial part of h
+    f = h - (CGFloat)sector;			// factorial part of h
     p = v * (1 - s);
     q = v * (1 - s * f);
     t = v * (1 - s * (1-f));
@@ -267,12 +267,12 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 		y = 0;
 	else if (y >= m_height)
 		y = m_height;
-    float value = 1.0f - (float)y / (float)m_height;
+    CGFloat value = 1.0f - (CGFloat)y / (CGFloat)m_height;
     
-    float rgba[4] = {0.0, 0.0, 0.0, 1.0};
+    CGFloat rgba[4] = {0.0, 0.0, 0.0, 1.0};
     UIColor *color;
     
-    float hue, saturation;
+    CGFloat hue, saturation;
     
     hue = [m_colorPicker hue];
     saturation = [m_colorPicker saturation];
@@ -308,8 +308,8 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
     void *bitmapData = NULL;
     if (!m_imageRef) {
 	int x, y, i = 0, j;
-	float r, g, b;
-	float h, s, v;
+	CGFloat r, g, b;
+	CGFloat h, s, v;
 
 	CGContextRef    bmcontext = NULL;
 	CGColorSpaceRef colorSpace;
@@ -342,7 +342,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 	{
 	    for (x=0; x < m_leftMargin; x++)
 		c[i++] = 0xffffffffUL;
-	    v = (float)y / (float)m_height;
+	    v = (CGFloat)y / (CGFloat)m_height;
 	    HSVtoRGB(&r, &g, &b, h, s, v);
 	    // iPhone is little endian, want alpha last in memoryt
 	    wColor = 0xff000000UL | (((int)(b * 255.0f) & 0xff) << 16) | (((int)(g * 255.0f) & 0xff) << 8) | (((int)(r * 255.0f) & 0xff));
@@ -413,13 +413,13 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
     unsigned int *c;
     int x, y, i = 0;
-    float h, s, v;
+    CGFloat h, s, v;
 
     c = m_hsvData;
 
-    float cx = m_width / 2.0f;
-    float cy = m_height / 2.0f;
-    float radius, theta, dx, dy;
+    CGFloat cx = m_width / 2.0f;
+    CGFloat cy = m_height / 2.0f;
+    CGFloat radius, theta, dx, dy;
     v = 1.0f;
 
     for (y=m_height-1; y >= 0; y--)
@@ -443,7 +443,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 			theta -= M_PI;
 		}
 	    }
-	    s = radius / (float)cx;
+	    s = radius / (CGFloat)cx;
 	    if (s <= 1.0f) {
 		h = theta  / (2.0f * M_PI);
 		c[i] = 0xff000000UL|(((((int)(h * 255.0f)) << 16) | (((int)(s * 255.0f)) << 8) | ((int)(v * 255.0f))));
@@ -460,8 +460,8 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 - (void)drawRect:(CGRect)rect {
     int x, y, i = 0;
-    float r, g, b;
-    float h, s, v;
+    CGFloat r, g, b;
+    CGFloat h, s, v;
 
     unsigned int wColor, hsv;
 
@@ -500,8 +500,8 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 	    hsv = m_hsvData[i];
 	    
 	    if ((hsv & 0xff000000UL)) {
-		h = (float)((hsv & 0x00ff0000UL) >> 16) / 255.0f;
-		s = (float)((hsv & 0x0000ff00UL) >> 8) / 255.0f;
+		h = (CGFloat)((hsv & 0x00ff0000UL) >> 16) / 255.0f;
+		s = (CGFloat)((hsv & 0x0000ff00UL) >> 8) / 255.0f;
 		HSVtoRGB(&r, &g, &b, h, s, v);
 	    
 		wColor = 0xff000000UL | (((int)(b * 255.0f)) << 16) | (((int)(g * 255.0f)) << 8) | ((int)(r * 255.0f));
@@ -543,7 +543,7 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 -(void)mousePositionToColor:(CGPoint)point {
     unsigned int *c = [self hsvData];    
-    float rgba[4] = {0.0, 0.0, 0.0, 1.0};
+    CGFloat rgba[4] = {0.0, 0.0, 0.0, 1.0};
     unsigned int color;
     unsigned int x = (int)point.x;
     unsigned int y = (int)point.y;
@@ -552,10 +552,10 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
     color = c[(m_height-1-y) * m_width + x];
 
-    float hue = (float)((color & 0xff0000) >> 16) / 255.0f;
-    float saturation = (float)((color & 0xff00) >> 8) / 255.0f;
-    float value; // = (float)(color & 0xff) / 255.0f;
-    float alpha = (float)((color & 0xff000000) >> 24) / 255.0f;
+    CGFloat hue = (CGFloat)((color & 0xff0000) >> 16) / 255.0f;
+    CGFloat saturation = (CGFloat)((color & 0xff00) >> 8) / 255.0f;
+    CGFloat value; // = (CGFloat)(color & 0xff) / 255.0f;
+    CGFloat alpha = (CGFloat)((color & 0xff000000) >> 24) / 255.0f;
     
     if (alpha != 0.0f) {
 	value = [m_colorPicker value];
@@ -785,8 +785,8 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 -(void) updateHSVCursors {
     UIColor *color = m_changeTextColor ? m_textColor : m_bgColor;
-    const float *rgba = CGColorGetComponents([color CGColor]);
-    float hue = 0, saturation = 0, value = 0;
+    const CGFloat *rgba = CGColorGetComponents([color CGColor]);
+    CGFloat hue = 0, saturation = 0, value = 0;
     RGBtoHSV(rgba[0], rgba[1], rgba[2], &hue, &saturation, &value);
     [self updateColorWithHue:hue Saturation:saturation Value:value];
 }
@@ -800,16 +800,16 @@ void HSVtoRGB(float *r, float *g, float *b, float h, float s, float v)
 
 -(void) setColor: (UIColor *)color {
     [self setColorOnly: color];
-    const float *rgba = CGColorGetComponents([color CGColor]);
-    float hue = 0, saturation = 0, value = 0;
+    const CGFloat *rgba = CGColorGetComponents([color CGColor]);
+    CGFloat hue = 0, saturation = 0, value = 0;
     RGBtoHSV(rgba[0], rgba[1], rgba[2], &hue, &saturation, &value);
     [self updateColorWithHue:hue Saturation:saturation Value:value];
 }
 
 -(void)setColorValue: (UIColor*)color {
     [self setColorOnly: color];
-    const float *rgba = CGColorGetComponents([color CGColor]);
-    float hue = 0, saturation = 0, value = 0;
+    const CGFloat *rgba = CGColorGetComponents([color CGColor]);
+    CGFloat hue = 0, saturation = 0, value = 0;
     RGBtoHSV(rgba[0], rgba[1], rgba[2], &hue, &saturation, &value);
     // keep only changed value
     hue = m_hue;

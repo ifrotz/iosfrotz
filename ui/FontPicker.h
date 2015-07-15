@@ -9,11 +9,11 @@
 #import <UIKit/UIKit.h>
 
 @protocol FrotzFontDelegate
--(void) setFont: (NSString*)font withSize:(int)size;
+-(void) setFont: (NSString*)font withSize:(NSInteger)size;
 -(void) setFixedFont: (NSString*)font;
 -(NSMutableString*) font;
 -(NSMutableString*) fixedFont;
--(int) fontSize;
+-(NSInteger) fontSize;
 @end
 
 @interface FrotzFontInfo : NSObject {

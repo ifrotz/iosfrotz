@@ -49,7 +49,7 @@
     NSObject<FrotzSettingsInfoDelegate> *m_infoDelegate;
     NSObject<FrotzSettingsStoryDelegate, FrotzFontDelegate>	*m_storyDelegate;
     
-    int m_selectedRow, m_selectedSection;
+    NSInteger m_selectedRow, m_selectedSection;
 
     UISwitch		    *m_switchCtl, *m_switchCtl2;
     UISlider		    *m_sliderCtl;    

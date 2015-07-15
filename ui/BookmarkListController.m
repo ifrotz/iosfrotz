@@ -122,7 +122,7 @@
     cell.textLabel.text = nil;
     cell.detailTextLabel.text = nil;
     cell.accessoryType = UITableViewCellAccessoryNone;
-    int row = [indexPath row];
+    NSInteger row = [indexPath row];
     if (row < [m_sites count]) {
 	cell.textLabel.text = m_sites[row];
 	if (row < [m_titles count])
@@ -142,7 +142,7 @@
 
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    int row = indexPath.row;
+    NSInteger row = indexPath.row;
     if (row < [m_sites count] && editingStyle == UITableViewCellEditingStyleDelete) {
 	[m_sites removeObjectAtIndex: row];
 	if (row < [m_titles count])
@@ -154,9 +154,9 @@
 }
 
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-    int fromRow = fromIndexPath.row;
-    int toRow = toIndexPath.row;
-    int count = [m_sites count];
+    NSInteger fromRow = fromIndexPath.row;
+    NSInteger toRow = toIndexPath.row;
+    NSUInteger count = [m_sites count];
     if (fromRow < count && toRow < count) {
 	NSString *url = m_sites[fromRow];
 	NSString *title = (fromRow < [m_titles count]) ? m_titles[fromRow] : nil;

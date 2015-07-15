@@ -244,7 +244,7 @@ static const int httpLogLevel = HTTP_LOG_LEVEL_WARN;
 			// this case, we didn't find the boundary, so the data is related to the current part.
 			// we leave the sizeToLeavePending amount of bytes to make sure we don't include 
 			// boundary part in processed data.
-			NSUInteger sizeToPass = workingData.length - offset - sizeToLeavePending;
+			NSInteger sizeToPass = workingData.length - offset - sizeToLeavePending;
 
 			// if we parse BASE64 encoded data, or Quoted-Printable data, we will make sure we don't break the format
 			int leaveTrailing = [self numberOfBytesToLeavePendingWithData:data length:sizeToPass encoding:currentEncoding];
@@ -261,7 +261,7 @@ static const int httpLogLevel = HTTP_LOG_LEVEL_WARN;
 			NSData* decodedData = [MultipartFormDataParser decodedDataFromData:[NSData dataWithBytesNoCopy:(char*)workingData.bytes + offset length:workingData.length - offset - sizeToLeavePending freeWhenDone:NO] encoding:currentEncoding];
 			
 			if( [delegate respondsToSelector:@selector(processContent:WithHeader:)] ) {
-				HTTPLogVerbose(@"MultipartFormDataParser: Processed %"FMTNSINT" bytes of body",sizeToPass);
+				HTTPLogVerbose(@"MultipartFormDataParser: Processed %i bytes of body",(int)sizeToPass);
 
 				[delegate processContent: decodedData WithHeader:currentHeader];
 			}

@@ -84,7 +84,7 @@ void removeOldPngSplash(const char *filename) {
 @synthesize searchDisplayController = m_searchDisplayController;
 
 -(NSArray*)recentPaths {
-    int count = [m_recents count];
+    NSUInteger count = [m_recents count];
     NSArray *array = [NSArray arrayWithObjects:
                       count > 0 ? [m_recents[0] path]: nil,
                       count > 1 ? [m_recents[1] path]: nil,
@@ -1222,7 +1222,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section {
-    int nRecents = [m_recents count];
+    NSUInteger nRecents = [m_recents count];
     if (tableView == self.searchDisplayController.searchResultsTableView) {
         if (m_filteredNames)
             return [m_filteredNames count];
@@ -1293,10 +1293,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             }
             if (doDelete) {
                 NSMutableArray *indexPaths = [NSMutableArray arrayWithObject: indexPath];
-                int recentIndex = [m_recents indexOfObject: storyInfo];
+                NSUInteger recentIndex = [m_recents indexOfObject: storyInfo];
                 if ([m_recents count] > 0)
                     m_isDeleting = YES;
-                if (recentIndex != NSNotFound && recentIndex >= 0 && recentIndex < [m_recents count]) {
+                if (recentIndex != NSNotFound && recentIndex < [m_recents count]) {
                     NSUInteger indexes[] = { 0, recentIndex };
                     [m_recents removeObjectAtIndex: recentIndex];
                     [indexPaths addObject: [NSIndexPath indexPathWithIndexes: indexes length:2]];
@@ -1317,7 +1317,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)addRecentStoryInfo:(StoryInfo*)storyInfo {
-    int idx;
+    NSUInteger idx;
     if (!storyInfo || !storyInfo.path || [storyInfo.path length]==0)
         return;
     if (m_recents) {
@@ -1480,7 +1480,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static int lastRow = -1;
+    static NSInteger lastRow = -1;
     BOOL secondTap = NO;
     if (self.popoverController)
         [self.popoverController dismissPopoverAnimated: YES];
@@ -1517,8 +1517,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return imageData;
 }
 
--(int)indexRowFromStoryInfo:(StoryInfo*)storyInfo {
-    int row = [m_storyNames indexOfObject: storyInfo];
+-(NSUInteger)indexRowFromStoryInfo:(StoryInfo*)storyInfo {
+    NSUInteger row = [m_storyNames indexOfObject: storyInfo];
     if (row == NSNotFound) {
         int i = 0;
         NSString *story = [[storyInfo path] lastPathComponent];
@@ -1532,8 +1532,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return row;
 }
 
--(int)recentRowFromStoryInfo:(StoryInfo*)storyInfo {
-    int row = [m_recents indexOfObject: storyInfo];
+-(NSUInteger)recentRowFromStoryInfo:(StoryInfo*)storyInfo {
+    NSUInteger row = [m_recents indexOfObject: storyInfo];
     if (row == NSNotFound) {
         int i = 0;
         NSString *story = [[storyInfo path] lastPathComponent];
@@ -1612,7 +1612,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         cell.indentationWidth = imgIndentWidth + 1;
         cell.indentationLevel = 1;
         
-        int titleLen = [title length];
+        NSUInteger titleLen = [title length];
         CGFloat fontsize = 20;
         CGFloat fudge = gUseSplitVC ? 2 : 0;
         if (gLargeScreenDevice && !gUseSplitVC)
@@ -1642,7 +1642,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (StoryInfo *)storyInfoForIndexPath:(NSIndexPath*)indexPath tableView:(UITableView*)tableView {
     if (!indexPath)
         return nil;
-    int row = indexPath.row;
+    NSInteger row = indexPath.row;
     if (tableView == self.searchDisplayController.searchResultsTableView) {
         if (m_filteredNames && row < [m_filteredNames count])
             row = [self indexRowFromStoryInfo: m_filteredNames[row]];

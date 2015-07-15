@@ -16,9 +16,9 @@
     UIView *m_tileBorder;
     UIImageView *m_hsvCursor;
     UIImageView *m_valueCursor;
-    float m_hue;
-    float m_saturation;
-    float m_value;
+    CGFloat m_hue;
+    CGFloat m_saturation;
+    CGFloat m_value;
     id<ColorPickerDelegate> m_delegate;
     CGColorSpaceRef m_colorSpace;
 

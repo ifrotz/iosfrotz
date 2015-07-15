@@ -22,8 +22,8 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
 	
     CGSize screenSize = [[UIScreen mainScreen] applicationFrame].size;
     
-    int origWidth = CGImageGetWidth(inImage);
-    int origHeight = CGImageGetHeight(inImage);
+    size_t origWidth = CGImageGetWidth(inImage);
+    size_t origHeight = CGImageGetHeight(inImage);
     UIImage *img = nil;
     if (newWidth == 0 && newHeight == 0) {
         if (!gLargeScreenDevice &&
@@ -107,7 +107,7 @@ UIImage *drawUIImageInImage(UIImage *image, int x, int y, size_t scaleWidth, siz
 
 void drawCGImageInCGContext(CGContextRef cgctx, CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight)
 {
-    int destHeight = CGBitmapContextGetHeight(cgctx);
+    size_t destHeight = CGBitmapContextGetHeight(cgctx);
     CGImageRef inImage = imageRef;
     if (!inImage)
         return;
@@ -279,8 +279,8 @@ CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh)
     CGContextRef    context = NULL;
     CGColorSpaceRef colorSpace;
     void *          bitmapData;
-    int             bitmapByteCount;
-    int             bitmapBytesPerRow;
+    size_t             bitmapByteCount;
+    size_t             bitmapBytesPerRow;
     
     // Declare the number of bytes per row. Each pixel in the bitmap in this
     // example is represented by 4 bytes; 8 bits each of red, green, blue, and

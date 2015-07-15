@@ -27,16 +27,16 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
     NSObject<FrotzInputDelegate> *m_delegate;
     FrotzWordPicker *m_wordPicker;
     FrotzInputHelperMode m_mode;
-    int m_lastCommonWordPicked;
-    int m_currHistoryItem;
+    NSInteger m_lastCommonWordPicked;
+    NSUInteger m_currHistoryItem;
 }
 - (instancetype)init;
 @property (nonatomic, weak) NSObject<FrotzInputDelegate> *delegate;
 - (void)clearHistory;
-@property (nonatomic, readonly) int historyCount;
-@property (nonatomic, readonly) int menuCount;
+@property (nonatomic, readonly) NSUInteger historyCount;
+@property (nonatomic, readonly) NSUInteger menuCount;
 - (NSString*)historyItem:(int)item;
-- (int)addHistoryItem:(NSString*)historyItem;
+- (NSUInteger)addHistoryItem:(NSString*)historyItem;
 @property (nonatomic, getter=getNextHistoryItem, readonly, copy) NSString *nextHistoryItem;
 @property (nonatomic, getter=getPrevHistoryItem, readonly, copy) NSString *prevHistoryItem;
 @property (nonatomic, readonly, strong) UIView *helperView;

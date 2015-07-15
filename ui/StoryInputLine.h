@@ -28,7 +28,7 @@
 -(void)resetState;
 @property (nonatomic, readonly) BOOL updatePosition;
 -(BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
--(int)addHistoryItem:(NSString*)historyItem;
+-(NSUInteger)addHistoryItem:(NSString*)historyItem;
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
 @property (nonatomic, readonly, strong) UIView *inputHelperView;

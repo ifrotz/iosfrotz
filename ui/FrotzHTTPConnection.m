@@ -109,7 +109,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
         return outdata;
     }
     if (![defaultManager fileExistsAtPath: fullPath]) {
-        int origFullLength = [fullPath length], origLength = [path length], truncated = 0;
+        NSUInteger origFullLength = [fullPath length], origLength = [path length], truncated = 0;
         do {
             fullPath = [fullPath stringByDeletingLastPathComponent];
             if ([defaultManager fileExistsAtPath: fullPath])
@@ -539,9 +539,9 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
     {		
         const char* crlfString = "\r\n";
         
-        int postDataLen = [postDataChunk length];
-        int crlfLen = strlen(crlfString);
-        int i = 0;
+        NSUInteger postDataLen = [postDataChunk length];
+        size_t crlfLen = strlen(crlfString);
+        NSInteger i = 0;
         while ((i = indexOfBytes(postDataChunk, i, crlfString, crlfLen, &partialMatch)) >= 0) {
             NSRange newDataRange = {dataStartIndex, i - dataStartIndex};
             dataStartIndex = i + crlfLen;
@@ -555,13 +555,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 partSeparator =      [[NSString alloc] initWithBytes:[multipartData[0] bytes] length:[multipartData[0] length] encoding:NSUTF8StringEncoding];
                 partSeparator = [@"\r\n" stringByAppendingString: partSeparator];
                 NSString* postInfo = [[NSString alloc] initWithBytes:[multipartData[1] bytes] length:[multipartData[1] length] encoding:NSUTF8StringEncoding];
-                int partSepLen = [partSeparator length];
+                NSUInteger partSepLen = [partSeparator length];
                 NSArray* postInfoComponents = [postInfo componentsSeparatedByString:@"; filename="];
                 postInfoComponents = [[postInfoComponents lastObject] componentsSeparatedByString:@"\""];
                 postInfoComponents = [postInfoComponents[1] componentsSeparatedByString:@"\\"];
                 
                 NSURL *uri = [request url]; //xxxx CFBridgingRelease(CFHTTPMessageCopyRequestURL(request));
-                int partEndOffset = indexOfBytes(postDataChunk, dataStartIndex, [partSeparator UTF8String], partSepLen, &partialMatch);
+                NSInteger partEndOffset = indexOfBytes(postDataChunk, dataStartIndex, [partSeparator UTF8String], partSepLen, &partialMatch);
                 if (partEndOffset >= 0) {
                     postDataLen = partEndOffset;
                 }
@@ -603,9 +603,9 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
             leftOverMatch = nil;
         }
         if (partSeparator) {
-            int partSepLen = [partSeparator length];
+            NSUInteger partSepLen = [partSeparator length];
             partialMatch = NO;
-            int partEndOffset = indexOfBytes(postDataChunk, 0, [partSeparator UTF8String], partSepLen, &partialMatch);
+            NSInteger partEndOffset = indexOfBytes(postDataChunk, 0, [partSeparator UTF8String], partSepLen, &partialMatch);
             if (partEndOffset >= 0) {
                 if (fileHandle && partEndOffset > 0)
                     [fileHandle writeData: [postDataChunk subdataWithRange: NSMakeRange(0, partEndOffset)]];

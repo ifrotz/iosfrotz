@@ -25,7 +25,7 @@
 
 -(void)clearButtonPressed:(id)sender {
     NSString *text = [self text];
-    int len = [text length];
+    NSUInteger len = [text length];
     NSRange r = [text rangeOfString: @" " options:NSBackwardsSearch range:NSMakeRange(0, len)];
     if (r.length)
         [self setText: [text substringToIndex: r.location]];
@@ -124,7 +124,7 @@
 
 -(void)inputHelperString:(NSString*)string {
     [self hideInputHelper];
-    int len = [self.text length];
+    NSUInteger len = [self.text length];
     if (len > 0) {
         if ([self.text characterAtIndex:len-1]!=' ' && !ispunct([self.text characterAtIndex:len-1]))
             string = [@" " stringByAppendingString: string];
@@ -177,7 +177,7 @@
 
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event {
     UITouchPhase phase = [touch phase];
-    int tapCount = [touch tapCount];
+    NSUInteger tapCount = [touch tapCount];
     FrotzInputHelperMode mode = [m_inputHelper mode];
     //    NSLog(@"touch phase %d tapc %d mode %d\n", phase, tapCount, mode);
     if (phase == UITouchPhaseCancelled) {
@@ -207,8 +207,8 @@
     CGPoint ihpt = [self helperLaunchPosition];
     
     if (phase == UITouchPhaseEnded) {
-        float xdist = fabsf(m_touchBeganPosition.x - currentTouchPosition.x);
-        float ydist = fabsf(m_touchBeganPosition.y - currentTouchPosition.y);
+        CGFloat xdist = ABS(m_touchBeganPosition.x - currentTouchPosition.x);
+        CGFloat ydist = ABS(m_touchBeganPosition.y - currentTouchPosition.y);
         if (tapCount == 0 &&  ydist >= 70 && xdist <= 40 && m_touchBeganPosition.y > currentTouchPosition.y) {// Check for upward swipe
             if (self.text.length > 0)
                 [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.02];
@@ -257,7 +257,7 @@
     return retValue;
 }
 
--(int)addHistoryItem:(NSString*)historyItem {
+-(NSUInteger)addHistoryItem:(NSString*)historyItem {
     return [m_inputHelper addHistoryItem:  historyItem];
 }
 
@@ -508,7 +508,7 @@ const int kCompletionViewTag = 21;
     }
     NSString *word = [self text];
     NSString *prevString = nil;
-    int len = [word length];
+    NSUInteger len = [word length];
     NSRange r = [word rangeOfString: @" " options:NSBackwardsSearch range:NSMakeRange(0, len)];
     if (r.length)
         prevString = [word substringToIndex: r.location+1];

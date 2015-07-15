@@ -352,17 +352,17 @@ int iosif_peek_inputline(const wchar_t *inputbuf, int maxlen) {
     
     pthread_mutex_lock(&inputMutex);
 #if 1
-    int len = [ipzLineInputStr length];
+    NSUInteger len = [ipzLineInputStr length];
     CFRange r = {0,len};
     CFIndex usedBufferLength;
     len = (int)CFStringGetBytes((CFStringRef)ipzLineInputStr, r, kCFStringEncodingUTF32, '?', FALSE,
                            (UInt8 *)inputbuf, maxlen*sizeof(wchar_t), &usedBufferLength);
 #else
     [ipzLineInputStr getCString:(char*)inputbuf maxLength:maxlen encoding:NSUTF32StringEncoding];
-    int len = wcslen(inputbuf);
+    size_t len = wcslen(inputbuf);
 #endif
     pthread_mutex_unlock(&inputMutex);
-    return len;
+    return (int)len;
 }
 
 int iosif_getchar(int timeout) {
@@ -430,7 +430,7 @@ void iosif_glk_game_loaded() {
     [theSMVC performSelectorOnMainThread:@selector(reloadImages) withObject:nil waitUntilDone:YES];
 }
 
-static int gNewGlkWinNum = -1;
+static NSInteger gNewGlkWinNum = -1;
 
 int iosif_new_glk_view(window_t *win) {
     // This is not thread safe and should only be called from the thread running glk_main()!
@@ -448,7 +448,7 @@ int iosif_new_glk_view(window_t *win) {
         glkGridArray[gNewGlkWinNum].win = win;
         glkGridArray[gNewGlkWinNum].bgColor = 0xffffff;
     }
-    return gNewGlkWinNum;
+    return (int)gNewGlkWinNum;
 }
 
 void iosif_destroy_glk_view(int viewNum) {
@@ -757,7 +757,7 @@ void iosif_recompute_screensize() {
     iosif_screenwidth = pFrame.size.width;
     iosif_screenheight = pFrame.size.height;
     iosif_fixed_font_width = fontwid;
-    iosif_fixed_font_height = [theSMVC statusFixedFontPixelHeight];
+    iosif_fixed_font_height = (int)[theSMVC statusFixedFontPixelHeight];
     
 }
 
@@ -1484,7 +1484,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 -(BOOL)tapInView:(UIView*)view atPoint:(CGPoint)pt {
     if (m_glkViews) {
-        int winNum = [m_glkViews indexOfObject: view];
+        NSUInteger winNum = [m_glkViews indexOfObject: view];
         if (winNum != NSNotFound) {
             iosEventWin = glkGridArray[winNum].win;
             RichTextView *rtv = (RichTextView*)view;
@@ -1531,12 +1531,12 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 -(void)focusGlkView:(UIView*)view {
     if (m_glkViews) {
-        int winNum = [m_glkViews indexOfObject: view];
+        NSUInteger winNum = [m_glkViews indexOfObject: view];
         if (winNum != NSNotFound) {
             window_t *win = glkGridArray[winNum].win;
             if (win && (win->char_request || win->line_request)) {
                 gli_ios_set_focus(win); 	// bcs??? cross-thread unsafe
-                cwin = winNum;
+                cwin = (int)winNum;
                 [m_inputLine updatePosition];
             }
         }
@@ -2471,7 +2471,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     } else if (contentOffset.y <  contentSize.height - height) {
         contentOffset.y = contentSize.height - height;
     } else {
-        int viewNum = [m_glkViews indexOfObject:view];
+        NSUInteger viewNum = [m_glkViews indexOfObject:view];
         if (viewNum == NSNotFound)
             viewNum = 0;
         if (lastVisibleYPos[viewNum] < contentOffset.y)
@@ -2612,7 +2612,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_landscape = landscape;
 }
 
--(void) setFont: (NSString*) fontname withSize:(int)size {
+-(void) setFont: (NSString*) fontname withSize:(NSInteger)size {
     if (fontname) {
         m_fontname = [fontname copy];
     } // else keep existing font, just change size
@@ -2629,7 +2629,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     bool normalSizedStatusFont = UseFullSizeStatusLineFont && isOS32;
 	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
     [m_storyView setFontFamily: [font familyName] size: m_fontSize];
-    int fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
+    NSInteger fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
     [m_storyView reflowText];
     if (normalSizedStatusFont) {
@@ -2650,8 +2650,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_statusLine reflowText];
     
     if (gStoryInterp == kGlxStory) {
-        int c = [m_glkViews count];
-        for (int k = 0; k < c; ++k) {
+        NSUInteger c = [m_glkViews count];
+        for (NSUInteger k = 0; k < c; ++k) {
             RichTextView *rtv = m_glkViews[k];
             if (glkGridArray[k].win->type == wintype_TextGrid) {
                 [rtv setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
@@ -2680,7 +2680,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void) setFixedFont: (NSString*)font {
-    int fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
+    NSInteger fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFont: [UIFont fontWithName: font size: fixedFontSize]];
 }
 
@@ -2688,7 +2688,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     return [[m_storyView fixedFont] fontName];
 }
 
--(int) fontSize {
+-(NSInteger) fontSize {
     return m_fontSize;
 }
 
@@ -3031,7 +3031,7 @@ char *tempStatusLineScreenBuf() {
     static int continuousPrintCount = 0;
     static int grewStatus = 0;
     static int prevInputsSinceSaveRestore;
-    int textLen;
+    NSUInteger textLen;
     CGRect viewFrame = [m_storyView frame];
     BOOL fast = NO;
     RichTextView *storyView = nil;
@@ -3044,7 +3044,7 @@ char *tempStatusLineScreenBuf() {
     int viewNum = 0;
     BOOL glkViewIsGrid = NO;
     if (gStoryInterp == kGlxStory && [m_glkViews count] > 1) {
-        int glkInputsCount = glkInputs ? [glkInputs count] : 0;
+        NSUInteger glkInputsCount = glkInputs ? [glkInputs count] : 0;
         
         int vn = 0;
         for (RichTextView *v in m_glkViews) {
@@ -3073,7 +3073,7 @@ char *tempStatusLineScreenBuf() {
         storyView = m_storyView;
         statusLine = m_statusLine;
     }
-    int statusLen = [inputStatusStr length];
+    NSUInteger statusLen = [inputStatusStr length];
 
     if (iosif_top_win_height == -2) {
         topWinSize = prevTopWinHeight * (m_statusFixedFontPixelHeight+1);
@@ -3161,7 +3161,7 @@ char *tempStatusLineScreenBuf() {
                     unsigned int intRGB;
                     float floatRGB[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
                     UIColor *color = nil;
-                    int skip = escCodeRange.location+2;
+                    NSUInteger skip = escCodeRange.location+2;
                     NSScanner *scanner = [NSScanner scannerWithString: colorStr];
                     BOOL isBGColor = ([colorStr characterAtIndex:0] == 'b');
                     [scanner setScanLocation: 1];
@@ -3170,7 +3170,7 @@ char *tempStatusLineScreenBuf() {
                         floatRGB[1] = (float)((intRGB & 0xff00) >> 8) / 255.0f;
                         floatRGB[2] = (float)((intRGB & 0xff)) / 255.0f;
                         color = [UIColor colorWithRed: floatRGB[0] green:floatRGB[1] blue:floatRGB[2] alpha:1.0];
-                        int colIndex = [storyView getOrAllocColorIndex: color];
+                        NSUInteger colIndex = [storyView getOrAllocColorIndex: color];
                         if (isBGColor)
                             [storyView setBgColorIndex: colIndex];
                         else {
@@ -3246,7 +3246,7 @@ char *tempStatusLineScreenBuf() {
                 escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             }
 #endif
-            int iBufLen = [inputBufferStr length];
+            NSUInteger iBufLen = [inputBufferStr length];
             if (discard_output_until_prompt)
                 ; // do nothing
             else if (iBufLen < 256)
@@ -3531,12 +3531,12 @@ static UIColor *scanColor(NSString *colorStr) {
     
     if (dict) {
         NSString *fontname =  [dict objectForKey: @"font"];
-        int fontSize= [[dict objectForKey: @"fontSize"] longValue];
+        NSInteger fontSize= [[dict objectForKey: @"fontSize"] longValue];
         if (!fontSize)
             fontSize = m_fontSize;
         NSNumber *ivd = [dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ];
         if (ivd)
-            iosif_ifrotz_verbose_debug = [ivd longValue];
+            iosif_ifrotz_verbose_debug = (int)[ivd longValue];
         if (fontname)
             [self setFont: fontname withSize: fontSize];
         else
@@ -3696,7 +3696,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     NSMutableString *text = [[NSMutableString alloc] initWithCapacity: 10240];
     NSString *tag = nil;
-    int len = [htmlString length], i = 0, j, k;
+    NSUInteger len = [htmlString length], i = 0, j, k;
     unichar c;
     NSRange r = [htmlString rangeOfString: @"</style>"];
     if (r.length)
@@ -3823,11 +3823,11 @@ static void setScreenDims(char *storyNameBuf) {
                 
                 h_version = hvers;
                 iosif_top_win_height = -1;
-                ztop_win_height = [dict[@"statusWinHeight"] longValue];
-                cwin = [dict[@"currentWindow"] longValue];
-                cursor_row = [dict[@"cursorRow"] longValue];
-                cursor_col = [dict[@"cursorCol"] longValue];
-                restore_frame_count = [dict[@"frameCount"] longValue];
+                ztop_win_height = (int)[dict[@"statusWinHeight"] longValue];
+                cwin = (int)[dict[@"currentWindow"] longValue];
+                cursor_row = (int)[dict[@"cursorRow"] longValue];
+                cursor_col = (int)[dict[@"cursorCol"] longValue];
+                restore_frame_count = (int)[dict[@"frameCount"] longValue];
                 
                 NSString *savedScriptname = dict[@"scriptname"];
                 if (savedScriptname) {
@@ -3849,7 +3849,7 @@ static void setScreenDims(char *storyNameBuf) {
                     currColor = u_setup.current_color = color;
                 NSNumber *currStyle = dict[@"currTextStyle"];
                 if (currStyle)
-                    currTextStyle = u_setup.current_text_style = [currStyle integerValue];
+                    currTextStyle = u_setup.current_text_style = (int)[currStyle integerValue];
 
                 statusScreenData = dict[@"statusWinData"];
                 statusScreenColors = dict[@"statusWinColors"];
@@ -3879,7 +3879,7 @@ static void setScreenDims(char *storyNameBuf) {
                 [ipzBufferStr setString: @""];
                 iosif_clear_input(NULL);
                 [self printText: nil];
-                int len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
+                NSUInteger len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
                 if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
                     len = maxLen;
                 memcpy(screen_data, (char*)[statusScreenData bytes], len);
@@ -4404,11 +4404,11 @@ static void setScreenDims(char *storyNameBuf) {
     [m_storyBrowser unHideAll];
 }
 
--(int)statusFixedFontPixelWidth {
-    return (int)m_statusFixedFontWidth;
+-(NSInteger)statusFixedFontPixelWidth {
+    return (NSInteger)m_statusFixedFontWidth;
 }
 
--(int)statusFixedFontPixelHeight {
+-(NSInteger)statusFixedFontPixelHeight {
     return m_statusFixedFontPixelHeight+1;
 }
 
@@ -4445,7 +4445,8 @@ extern int glulxCompleteWord(const char *word, char *result);
         nil };
     static NSString *nonVerbsOnlyArray[] = { @"out", @"up", @"in", @"me", @"to", @"no", @"it", @"on", @"of", @"yes", @"all", @"down", @"off", @"but", @"from", @"with", @"about", @"door", @"memo", @"star",
         @"lock", @"window", @"score", @"switch", @"table", @"under", @"light", @"lantern", nil };
-    int len = [str length], match;
+    NSUInteger len = [str length];
+    int match;
     BOOL startsWithPunct = NO;
 
     char resultbuf[32] = { 0 };
@@ -4462,7 +4463,7 @@ extern int glulxCompleteWord(const char *word, char *result);
         }
     }
     NSString *candString = nil;
-    int prevlen = prevString ? [prevString length] : 0;
+    NSUInteger prevlen = prevString ? [prevString length] : 0;
     if (prevlen) {
         NSRange r = [prevString rangeOfString:@"." options:NSBackwardsSearch];
         if (r.length > 0 && r.location >= prevlen-3)
@@ -4750,9 +4751,9 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     NSError *error = nil;
     NSArray *localSaveFiles = [[defaultManager contentsOfDirectoryAtPath:localSavePath error:&error] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     
-    int localCount = [localSaveFiles count];
-    int dbCount = [dbSaveFiles count];
-    int localIndex = 0, dbIndex = 0, i = 0;
+    NSUInteger localCount = [localSaveFiles count];
+    NSUInteger dbCount = [dbSaveFiles count];
+    NSUInteger localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSF, *dbSF;
     while (localIndex < localCount && dbIndex < dbCount) {
         locSF = localSaveFiles[localIndex];
@@ -4839,9 +4840,9 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
     [localSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
     [dbSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
     
-    int localCount = [localSaveDirs count];
-    int dbCount = [dbSaveDirs count];
-    int localIndex = 0, dbIndex = 0, i = 0;
+    NSUInteger localCount = [localSaveDirs count];
+    NSUInteger dbCount = [dbSaveDirs count];
+    NSUInteger localIndex = 0, dbIndex = 0, i = 0;
     NSString *locSD, *dbSD;
     while (localIndex < localCount && dbIndex < dbCount) {
         locSD = localSaveDirs[localIndex];
@@ -4961,7 +4962,7 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 - (void)restClient:(DBRestClient*)client loadMetadataFailedWithError:(NSError*)error {
     NSLog(@"Error loading metadata: %@ : %@", error.userInfo, error);
-    int errCode = [error code];
+    NSInteger errCode = [error code];
     if (errCode == 404) {
         NSString *topPath = [self dbTopPath];
         NSString *path = (error.userInfo)[@"path"];

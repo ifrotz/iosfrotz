@@ -42,13 +42,13 @@ void removeAnim(UIView *view);
 
 @interface  RichTextAE : UIAccessibilityElement
 {
-    int m_textIndex;
-    int m_aeIndex;
-    int m_runCount;
+    NSInteger m_textIndex;
+    NSInteger m_aeIndex;
+    NSUInteger m_runCount;
 }
-@property(assign) int textIndex;
-@property(assign) int aeIndex;
-@property(assign) int runCount;
+@property(assign) NSInteger textIndex;
+@property(assign) NSInteger aeIndex;
+@property(assign) NSUInteger runCount;
 @end
 
 @interface UIAnimator
@@ -118,14 +118,14 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return m_currentTextStyle;
 }
 
--(void)setHyperlinkIndex:(int)hyperlinkIndex {
+-(void)setHyperlinkIndex:(NSInteger)hyperlinkIndex {
     if (m_hyperlinkIndex != hyperlinkIndex) {
         m_hyperlinkIndex = hyperlinkIndex;
         m_prevLineNotTerminated = NO;
     }
 }
 
--(int)hyperlinkIndex {
+-(NSInteger)hyperlinkIndex {
     return m_hyperlinkIndex;
 }
 
@@ -138,7 +138,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     }
 }
 
--(void)setTextColorIndex:(unsigned int)index {
+-(void)setTextColorIndex:(NSUInteger)index {
     if (index==1) index=0;
     if (index > [m_colorArray count])
         index = 0;
@@ -148,13 +148,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     }
 }
 
--(unsigned int)textColorIndex {
+-(NSUInteger)textColorIndex {
     return m_currentTextColorIndex;
 }
 
 -(UIColor*)getCurrentTextColor {
     UIColor *c = m_fgColor;
-    unsigned int index = m_currentTextColorIndex;
+    NSUInteger index = m_currentTextColorIndex;
     NSUInteger colorCount = [m_colorIndex count];
     if ((index <= 1 || index-1 >= m_currentTextColorIndex < [m_colorArray count])
         && colorCount > 0) {
@@ -167,7 +167,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return c;
 }
 
--(void)setBgColorIndex:(unsigned int)index {
+-(void)setBgColorIndex:(NSUInteger)index {
     if (index==1) index=0;
     if (index > [m_colorArray count])
         index = 0;
@@ -183,7 +183,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_prevLineNotTerminated = NO;
     }
 }
--(unsigned int)bgColorIndex {
+
+-(NSUInteger)bgColorIndex {
     return m_currentBGColorIndex;
 }
 
@@ -207,13 +208,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 -(void)setText:(NSString*)text {
     [self clear];
-    int length = [text length];
+    NSUInteger length = [text length];
     m_currentTextStyle = kFTNormal;
     
     NSRange p = NSMakeRange(0, length);
     NSRange r = [text rangeOfString: @"\n\n"];
     while (r.length) {
-        int nlPos = r.location;
+        NSUInteger nlPos = r.location;
         ++r.location;
         while ([text characterAtIndex: r.location] == '\n')
             ++r.location;
@@ -245,7 +246,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return pt;
 }
 
--(BOOL)setFontFamily:(NSString*)familyName size:(int)newSize {
+-(BOOL)setFontFamily:(NSString*)familyName size:(NSInteger)newSize {
     UIFont *normalFont = nil, *boldFont = nil, *italicFont = nil, *boldItalicFont = nil;
     
     NSArray *fonts = [UIFont fontNamesForFamilyName: familyName];
@@ -290,7 +291,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 
--(BOOL)setFixedFontFamily:(NSString*)familyName size:(int)newSize {
+-(BOOL)setFixedFontFamily:(NSString*)familyName size:(NSInteger)newSize {
     UIFont *normalFont = nil, *boldFont = nil, *italicFont = nil, *boldItalicFont = nil;
     
     NSArray *fonts = [UIFont fontNamesForFamilyName: familyName];
@@ -698,8 +699,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         [m_colorArray removeAllObjects];
 }
 
-- (int)getOrAllocColorIndex:(UIColor*)color {
-    int idx = [m_colorArray indexOfObject: color];
+- (NSUInteger)getOrAllocColorIndex:(UIColor*)color {
+    NSUInteger idx = [m_colorArray indexOfObject: color];
     if (idx == NSNotFound) {
         idx = [m_colorArray count];
         [m_colorArray addObject: color];
@@ -712,11 +713,11 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     CGRect frame = self.frame;
     int curImageIndex = 0;
     myRect.size.width = frame.size.width;
-    int i, l = [m_textRuns count];
+    NSUInteger i, l = [m_textRuns count];
     CGPoint lastUniqPt = CGPointMake(0,0);
     CGFloat prevY = 0;
     CGPoint pt, nextPos;
-    int lastUniqIndex = 0;
+    NSInteger lastUniqIndex = 0;
     unsigned int savedTempLeftMargin = m_tempLeftMargin;
     unsigned int savedTempRightMargin = m_tempRightMargin;
     CGFloat savedTempLeftYThresh = m_tempLeftYThresh;
@@ -769,9 +770,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                 if (image) {
                     int imageAlign = style;
                     //NSLog(@"i=%d style=%x place img %@ pt=(%f,%f)", i, style, image, pt.x, pt.y);
-                    int lineNum = [m_textLineNum[i] integerValue];;
+                    NSInteger lineNum = [m_textLineNum[i] integerValue];;
                     prevY = lineNum > 0 ? [m_lineYPos[lineNum-1] floatValue] : 0;
-                    int saveLineNum = m_numLines;
+                    NSInteger saveLineNum = m_numLines;
                     m_numLines = lineNum;
                     [self placeImage:image imageView:nil atPoint:pt withAlignment:imageAlign prevLineY:prevY newTextPoint:&pt inDraw:YES textStyle:textStyle];
                     m_numLines = saveLineNum;
@@ -822,7 +823,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 -(BOOL)findHotText:(NSString *)text charOffset:(int)charsDone pos:(CGPoint)pos minX:(CGFloat)minXPos hotPoint:(CGPoint*)hotPoint font:(UIFont*)font fontHeight:(CGFloat)fontHeight
              width:(CGFloat) width {
-    int maxChars = [text length];
+    NSUInteger maxChars = [text length];
     NSRange termRange = NSMakeRange(0, 0);
     NSRange range = NSMakeRange(0,  maxChars), prevRange;
     NSCharacterSet *cs = [NSCharacterSet characterSetWithCharactersInString: @" \t/\\,:!?;\"{}[]-=+@#^&*()`~<>"];
@@ -880,7 +881,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     CGContextSetTextDrawingMode(context, doDraw ? kCGTextFill: kCGTextInvisible);
     const char *s = [text cStringUsingEncoding:NSMacOSRomanStringEncoding];
-    int l = s ? strlen(s) : 0;
+    size_t l = s ? strlen(s) : 0;
     if (!s) { // encoding failed because of missing characters
         // s = [text cStringUsingEncoding: NSISOLatin1StringEncoding];
         // l = strlen(s);
@@ -927,8 +928,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     return p.x - x;
 }
 
--(void)updateLine:(int)lineNum withYPos:(CGFloat)yPos {
-    int count = [m_lineYPos count];
+-(void)updateLine:(NSInteger)lineNum withYPos:(CGFloat)yPos {
+    NSUInteger count = [m_lineYPos count];
     if (lineNum > 0 && lineNum-1 < count && yPos == [m_lineYPos[lineNum-1] floatValue])
         NSLog(@"dup line ypos");
     if (lineNum < count) {
@@ -943,8 +944,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     }
 }
 
-- (void)updateLine:(int)lineNum withDescent:(CGFloat)desent {
-    int count = [m_lineDescent count];
+- (void)updateLine:(NSInteger)lineNum withDescent:(CGFloat)desent {
+    NSUInteger count = [m_lineDescent count];
     if (lineNum < count) {
         m_lineDescent[lineNum] = @(desent);
     }
@@ -956,8 +957,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
    
 }
 
--(void)updateLine:(int)lineNum width:(CGFloat)width {
-    int count = [m_lineWidth count];
+-(void)updateLine:(NSInteger)lineNum width:(CGFloat)width {
+    NSUInteger count = [m_lineWidth count];
     if (lineNum < count) {
         if ([m_lineWidth[lineNum] floatValue] == 0)
             m_lineWidth[lineNum] = @(width);
@@ -969,16 +970,17 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)ipos font:(UIFont*)font style:(RichTextStyle)style 
-                fgColor:(UIColor*)fgColor bgColor:(UIColor*)bgColor withRect:(CGRect)rect lineNumber:(int)lineNum
+                fgColor:(UIColor*)fgColor bgColor:(UIColor*)bgColor withRect:(CGRect)rect lineNumber:(NSInteger)lineNum
                 nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw
 {
     CGSize textSize;
     CGFloat fontHeight = [font leading];
+    CGFloat fontFudge = 0.0001; // fudge to prevent rounding error from clipping drawing
     CGFloat width = rect.size.width - m_rightMargin;
     CGFloat textWidth = 0;
     CGPoint pos = *ipos;
     NSString *restOfString = nil;
-    int len = [text length];
+    NSUInteger len = [text length];
     CGContextRef context = nil;
     CGFloat minXPos = doDraw ? -rect.origin.x : 0;
     CGFloat minYPos = doDraw ? -rect.origin.y : 0;
@@ -1037,6 +1039,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 if (text)
                     text = [[NSString stringWithUTF8String: linenum] stringByAppendingString: text];
                 len = [text length];
+                NSLog(@": %@", text);
+                if ((int)pos.y-minYPos==865)
+                    NSLog(@"f");
             }
 #endif
 
@@ -1056,13 +1061,14 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 //text = nil;
                 break; //continue;
             }
-            int maxChars = (width - pos.x) / m_fontMinWidth;
+            NSInteger maxChars = (width - pos.x) / m_fontMinWidth;
             if (len < maxChars || isFixed) {
                 if (isFixed) {
                     textSize.height = fontHeight;
                     textSize.width = RTDrawFixedWidthText(context, text, 0, 0, NO);
                 } else 
-                    textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontHeight + (noWrap ? 0 :fontHeight))
+                    textSize = [text sizeWithFont:font constrainedToSize:
+                                CGSizeMake(width - pos.x, fontFudge+fontHeight + (noWrap ? 0 :fontFudge + fontHeight))
                                     lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeWordWrap];
                 textWidth = textSize.width;
                 CGFloat xPos = pos.x;
@@ -1092,7 +1098,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         }
                         if (!isFixed) {
                             //NSLog(@"xpos2 = %f, actual = %f, text=%@", pos.x, minXPos+xPos, text);
-                            textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
+                            textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
                         }
                         else {
                             // Set fill and stroke colors
@@ -1114,7 +1120,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 maxChars = len;
             }
             
-            int minChars = (width-pos.x) / m_fontMaxWidth;
+            NSInteger minChars = (width-pos.x) / m_fontMaxWidth;
             if (minChars > len)
                 minChars = len;
             if (minChars > maxChars-20)
@@ -1132,14 +1138,14 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     termRange = [text rangeOfCharacterFromSet:cs options:0 range: range];
                     if (termRange.length <= 0)
                         break;
-                    textSize = [[text substringToIndex:termRange.location] sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x - m_fontMinWidth-1, fontHeight*2) lineBreakMode:UILineBreakModeWordWrap];
+                    textSize = [[text substringToIndex:termRange.location] sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x - m_fontMinWidth-1, fontHeight*2+fontFudge) lineBreakMode:UILineBreakModeWordWrap];
                     // (The -m_fontMinWidth-1 is to prevent trailing hyphens from being clipped.  The sizeWithFont function
                     // won't wrap a trailing hyphen to the next line even if it won't fit in the given width.)
                     range.location = termRange.location+1;
                     range.length = maxChars - (termRange.location+1);
-                    if (textSize.height <= fontHeight)
+                    if (textSize.height <= fontHeight+fontFudge)
                         textWidth = textSize.width;
-                } while (textSize.height <= fontHeight);
+                } while (textSize.height <= fontHeight+fontFudge);
                 termRange = prevRange;
             }
             if (termRange.length > 0) {
@@ -1164,7 +1170,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         [fgColor set];
                     }
                     if (!isFixed)
-                        textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
+                        textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
                     else {
                         textSize.height = fontHeight;
                         textSize.width = RTDrawFixedWidthText(context, subtext, minXPos+xPos, -fontAscender-pos.y, YES);
@@ -1172,7 +1178,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 }
                 else {
                     if (!isFixed)
-                        textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontHeight) lineBreakMode:UILineBreakModeClip];
+                        textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontFudge+fontHeight) lineBreakMode:UILineBreakModeClip];
                     else {
                         textSize.height = fontHeight;
                         textSize.width = RTDrawFixedWidthText(context, subtext, 0, 0, NO);			
@@ -1204,21 +1210,21 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     if (doDraw) {
                         if (bgColor) {
                             [bgColor set];
-                            textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, fontHeight*maxLines)
+                            textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, fontFudge+fontHeight*maxLines)
                                             lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
                             CGFloat t = (textSize.height + m_extraLineSpacing > curLineHeight) ? textSize.height + m_extraLineSpacing : curLineHeight;
                             CGContextFillRect(context, CGRectMake(minXPos, pos.y, width + m_leftMargin, t));
                             [fgColor set];
                         }
                         if (!isFixed)
-                            textSize = [text drawInRect:CGRectMake(minXPos+pos.x, pos.y, width-pos.x, fontHeight*maxLines) withFont:font
+                            textSize = [text drawInRect:CGRectMake(minXPos+pos.x, pos.y, width-pos.x, fontFudge+fontHeight*maxLines) withFont:font
                                           lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
                         else {
                             textSize.width = RTDrawFixedWidthText(context, text, minXPos+pos.x, -fontAscender-pos.y, YES);
                         }
                     }
                     else
-                        textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width, fontHeight*maxLines)
+                        textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width, fontFudge+fontHeight*maxLines)
                                         lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
                     textWidth = textSize.width;
                     CGFloat t = (textSize.height + m_extraLineSpacing > curLineHeight) ? textSize.height + m_extraLineSpacing : curLineHeight;
@@ -1326,10 +1332,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     else
         m_hyperlinks = nil;
 
-    int count = [m_textRuns count];
-    const int kMaxSavedRuns = 80;
+    NSUInteger count = [m_textRuns count];
+    const NSUInteger kMaxSavedRuns = 80;
     if (count > kMaxSavedRuns) {
-        int i = count - kMaxSavedRuns;
+        NSInteger i = count - kMaxSavedRuns;
         while (i < count-(kMaxSavedRuns-10)) {
             if ([m_textRuns[i] hasSuffix: @"\n"])
                 break;
@@ -1390,7 +1396,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 
     NSNumber *style = saveData[@"currentStyle"];
     if (style)
-        m_currentTextStyle = [style integerValue];
+        m_currentTextStyle = (RichTextStyle)[style integerValue];
     [self reflowText];
 }
 
@@ -1421,7 +1427,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         UIImageView *imageView = [[UIImageView alloc] initWithImage: image];
         [m_imageIDs addObject: @(imageNum)];
         
-        int i = [m_textPos count]-1;
+        NSInteger i = [m_textPos count]-1;
         CGFloat prevY = -(m_fontHeight+m_extraLineSpacing);
         if (m_numLines > 0 && m_numLines-1 < [m_lineYPos count])
             prevY = [m_lineYPos[m_numLines-1] floatValue];
@@ -1449,7 +1455,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         if (!m_hyperlinks && m_hyperlinkIndex)
             [self populateZeroHyperlinks];
         [m_textRuns addObject: @""];
-        [m_colorIndex addObject: [NSNumber numberWithInt: (m_currentBGColorIndex << 16) | m_currentTextColorIndex]];
+        [m_colorIndex addObject: [NSNumber numberWithInt: (int)((m_currentBGColorIndex << 16) | m_currentTextColorIndex)]];
         [m_textPos addObject: [NSValue valueWithCGPoint: m_prevPt]];
         [m_textStyles addObject: @(imageAlign)];
         if (m_hyperlinks)
@@ -1458,7 +1464,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     }
 }
 
--(void)recalcPositionsStartingAt:(int)index {
+-(void)recalcPositionsStartingAt:(NSInteger)index {
     CGPoint pt, nextPoint;
     CGRect frame= [self frame];
     if (index >= [m_textPos count])
@@ -1500,7 +1506,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(void)appendText:(NSString*)text {
-    int length = [text length];
+    NSUInteger length = [text length];
     if (length == 0)
         return;
     if (length >= 4) {
@@ -1529,8 +1535,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     if (m_numLines==0)
         [self updateLine: m_numLines withYPos: m_lastPt.y];
 
-    int index = [m_textRuns count];
-    int origLine = m_numLines;
+    NSUInteger index = [m_textRuns count];
+    NSInteger origLine = m_numLines;
     if (m_prevLineNotTerminated) {
         --index;
         NSString *newText = [m_textRuns[index] stringByAppendingString: text];
@@ -1547,7 +1553,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [self wordWrapTextSize:text atPoint:&m_lastPt font:font style:m_currentTextStyle fgColor:nil bgColor:nil withRect:frame
                        lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
         [m_textRuns addObject: [text copy]];
-        [m_colorIndex addObject: [NSNumber numberWithInt: (m_currentBGColorIndex << 16) | m_currentTextColorIndex]];
+        [m_colorIndex addObject: [NSNumber numberWithInt: (int)((m_currentBGColorIndex << 16) | m_currentTextColorIndex)]];
         [m_textPos addObject: [NSValue valueWithCGPoint: m_lastPt]];
         [m_textStyles addObject: style];
         if (m_hyperlinks)
@@ -1558,7 +1564,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     m_lastPt = nextPoint;
 
     if ((m_currentTextStyle & (kFTCentered|kFTRightJust)) && m_numLines > origLine) {
-        int prevIndex = index;
+        NSUInteger prevIndex = index;
         while (prevIndex > 0 && [m_textLineNum[prevIndex] intValue] >= origLine)
             --prevIndex;
         [self recalcPositionsStartingAt: prevIndex];
@@ -1743,7 +1749,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     [m_lineYPos removeAllObjects];
     [m_lineDescent removeAllObjects];
     [m_lineWidth removeAllObjects];
-    int len = [m_textRuns count];
+    NSUInteger len = [m_textRuns count];
     m_lastPt = CGPointMake(m_leftMargin, 0);
     m_tempLeftMargin = m_leftMargin;
     m_tempRightMargin = m_rightMargin;
@@ -1818,7 +1824,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         } else {
             textStyle = style;
             UIFont *font = [self fontForStyle: style];
-            int origLine = m_numLines;
+            NSInteger origLine = m_numLines;
             [self wordWrapTextSize:text atPoint:&m_lastPt font:font style:style fgColor:nil bgColor:nil withRect:frame
                            lineNumber:m_numLines nextPos:&nextPoint hotPoint:nil doDraw:NO];
             
@@ -2065,11 +2071,11 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(void)rememberTopLineForReflow {
-    int i, l = [m_textRuns count];
+    NSUInteger i, l = [m_textRuns count];
     CGFloat topY = self.contentOffset.y;
     
     CGPoint lastUniqPt = CGPointMake(0,0), pt;
-    int lastUniqIndex = 0;
+    NSInteger lastUniqIndex = 0;
     for (i=0; i < l; ++i) {
         pt = [m_textPos[i] CGPointValue];
         if (pt.y > topY)
@@ -2094,7 +2100,7 @@ static NSString *kCommand = @"Command";
         return;
     BOOL hadAE = m_accessibilityElements != nil;
     
-    int count = [m_textRuns count];
+    NSUInteger count = [m_textRuns count];
     
     m_accessibilityElements = [[NSMutableArray alloc] initWithCapacity: count];
     
@@ -2130,13 +2136,13 @@ static NSString *kCommand = @"Command";
     if (!hasAccessibility)
         return nil;
     
-    int count = [m_textRuns count];
+    NSUInteger count = [m_textRuns count];
     if (!count)
         return nil;
     RichTextAE *e = m_accessibilityElements[[m_accessibilityElements count]-1];
-    int startIndex = e.textIndex;
+    NSInteger startIndex = e.textIndex;
     if (startIndex+ e.runCount <= count) {
-        int runCount = count - startIndex;
+        NSInteger runCount = count - startIndex;
         e.runCount = runCount;
         NSString *text = @"";
         NSString *firstText = m_textRuns[startIndex];
@@ -2166,7 +2172,7 @@ static NSString *kCommand = @"Command";
         return;
     
     RichTextAE *e = [[RichTextAE alloc] initWithAccessibilityContainer: self];
-    int count = [m_textRuns count];
+    NSUInteger count = [m_textRuns count];
     [e setAccessibilityHint: self.accessibilityHint];
     [e setAccessibilityTraits: self.accessibilityTraits];
     NSString *text = m_textRuns[count-1];
@@ -2185,9 +2191,9 @@ static NSString *kCommand = @"Command";
         UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
         if (&UIAccessibilityAnnouncementNotification) {
             NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
-            int count = [m_accessibilityElements count];
+            NSUInteger count = [m_accessibilityElements count];
             if (m_lastAEIndexAnnounced < count) {
-                for (int i = m_lastAEIndexAnnounced; i < count; ++i) {
+                for (NSInteger i = m_lastAEIndexAnnounced; i < count; ++i) {
                     [text appendString: [m_accessibilityElements[i] accessibilityValue]];
                 }
                 m_lastAEIndexAnnounced = count;
@@ -2262,7 +2268,7 @@ static NSString *kCommand = @"Command";
 -(void) accessibilityScrollToVisible {
     if (!hasAccessibility)
         return;
-    int index = m_lastAEIndexAccessed;
+    NSInteger index = m_lastAEIndexAccessed;
     RichTextAE *e = m_accessibilityElements[index];
     CGRect frame = e.accessibilityFrame;
     frame = [self.window convertRect: frame toView:self];
@@ -2282,10 +2288,10 @@ static NSString *kCommand = @"Command";
     return m_textPos;
 }
 
--(int) getTextRunAtPoint:(CGPoint)touchPoint {
-    int i, l = [m_textRuns count];
+-(NSInteger) getTextRunAtPoint:(CGPoint)touchPoint {
+    NSUInteger i, l = [m_textRuns count];
     CGPoint lastUniqPt = CGPointMake(0,0), pt, nextPos;
-    int lastUniqIndex = 0;
+    NSInteger lastUniqIndex = 0;
     for (i=0; i < l; ++i) {
         CGPoint pt = [m_textPos[i] CGPointValue];
         pt.y += m_topMargin;
@@ -2322,7 +2328,7 @@ static NSString *kCommand = @"Command";
     if (!m_hyperlinks)
         return 0;
     m_hyperlinkTest = YES;
-    int i = [self getTextRunAtPoint: point];
+    NSInteger i = [self getTextRunAtPoint: point];
     m_hyperlinkTest = NO;
     if (i >= 0 && i < [m_hyperlinks count])
         return [m_hyperlinks[i] intValue];
@@ -2334,7 +2340,7 @@ static NSString *kCommand = @"Command";
     UITouch* touch = [touches anyObject];
     CGPoint touchPoint = [touch locationInView: self];
     
-    int tapCount = [touch tapCount];
+    NSUInteger tapCount = [touch tapCount];
     if (tapCount == 1 && [touch phase]==UITouchPhaseBegan && m_selectionView && [m_selectionView superview]) {
         m_selectedRun = -1;
         m_selectedColumnRange = NSMakeRange(0, 0);
@@ -2405,11 +2411,11 @@ static NSString *kCommand = @"Command";
     
     // update frame lazily when accessed, so we don't have to recalculate them all
     // when you reorient the device
-    int startIndex = m_textIndex;
-    int runCount = m_runCount;
+    NSInteger startIndex = m_textIndex;
+    NSUInteger runCount = m_runCount;
     NSArray *textPos = [v getTextPos];
-    int count = [textPos count];
-    int endIndex = startIndex + runCount-1;
+    NSUInteger count = [textPos count];
+    NSInteger endIndex = startIndex + runCount-1;
     if (!count || startIndex >= count || endIndex >= count)
         return CGRectZero;
     CGPoint p = [textPos[startIndex] CGPointValue];

@@ -106,7 +106,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         
     } else {
         CGRect frame = [tableView frame];
-        int nLines;
+        NSUInteger nLines;
         BOOL isLandscape = UIInterfaceOrientationIsLandscape([self interfaceOrientation]);
         int maxLines = gLargeScreenDevice ? (isLandscape ? 14 : 24) : (isLandscape ? 6 : 7);
         if (![m_delegate isFirstResponder])
@@ -142,7 +142,7 @@ const CGFloat kHistoryLineHeight = 20.0;
             [tableView setFrame: frame];
             [tableView setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
 
-            int scrollTo = m_mode == FrotzInputHelperModeMoreWords ? m_lastCommonWordPicked : [self historyCount] - 1;
+            NSInteger scrollTo = m_mode == FrotzInputHelperModeMoreWords ? m_lastCommonWordPicked : [self historyCount] - 1;
             if (scrollTo >= 0)
                 [tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow: scrollTo inSection:0] 
                                  atScrollPosition: m_mode == FrotzInputHelperModeMoreWords ? UITableViewScrollPositionMiddle:UITableViewScrollPositionBottom animated:NO];
@@ -165,11 +165,11 @@ const CGFloat kHistoryLineHeight = 20.0;
     m_currHistoryItem = 0;
 }
 
-- (int)historyCount {
+- (NSUInteger)historyCount {
     return [m_history count];
 }
 
-- (int)menuCount {
+- (NSUInteger)menuCount {
     return m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands count] : [m_history count];
 }
 
@@ -182,8 +182,8 @@ const CGFloat kHistoryLineHeight = 20.0;
     return nil;
 }
 
-- (int)addHistoryItem:(NSString*)historyItem; {
-    int idx;
+- (NSUInteger)addHistoryItem:(NSString*)historyItem; {
+    NSUInteger idx;
     NSString *hItem = historyItem;
     while ([hItem hasPrefix: @" "])
         hItem = [hItem stringByReplacingCharactersInRange: NSMakeRange(0,1) withString: @""];
@@ -206,7 +206,7 @@ const CGFloat kHistoryLineHeight = 20.0;
 }
 
 - (NSString*)getNextHistoryItem {
-    int count = [m_history count];
+    NSUInteger count = [m_history count];
     if (!count)
         return @"";
     if (m_currHistoryItem < count-1) {
@@ -218,7 +218,7 @@ const CGFloat kHistoryLineHeight = 20.0;
 }
 
 - (NSString*)getPrevHistoryItem {
-    int count = [m_history count];
+    NSUInteger count = [m_history count];
     if (!count)
         return @"";
     if (m_currHistoryItem > 0) {

@@ -33,7 +33,7 @@
 
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event {
     static NSTimeInterval lastTimestamp;
-    int tapCount = [touch tapCount];
+    NSUInteger tapCount = [touch tapCount];
     CGPoint pt = [touch locationInView: [self superview]];
     
     if (m_tapTimer) {

@@ -81,7 +81,7 @@
     }
     if (gUseSplitVC) {
         UITouch *touch = [touches anyObject];
-        int tapCount = [touch tapCount];
+        NSUInteger tapCount = [touch tapCount];
         if ([self isMagnified] && tapCount == 1)
             [self magnifyImage: NO];
         else if (tapCount == 2)

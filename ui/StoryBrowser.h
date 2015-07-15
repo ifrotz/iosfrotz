@@ -139,8 +139,8 @@
 - (void)launchBrowserWithURL:(NSString*)url;
 - (void)launchBrowser;
 - (NSInteger)numberOfSectionsInTableView: (UITableView*)tableView;
-- (int)indexRowFromStoryInfo:(StoryInfo*)recentStory;
-- (int)recentRowFromStoryInfo:(StoryInfo*)storyInfo;
+- (NSUInteger)indexRowFromStoryInfo:(StoryInfo*)recentStory;
+- (NSUInteger)recentRowFromStoryInfo:(StoryInfo*)storyInfo;
 - (NSString*)tableView:(UITableView*)tableView titleForHeaderInSection:(NSInteger)section;
 - (NSInteger)tableView:(UITableView*)tableView numberOfRowsInSection:(NSInteger)section;
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath;

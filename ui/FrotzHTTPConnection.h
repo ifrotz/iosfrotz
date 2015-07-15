@@ -9,7 +9,7 @@
 
 @interface FrotzHTTPConnection : HTTPConnection
 {
-	int dataStartIndex;
+	NSInteger dataStartIndex;
 	NSMutableArray* multipartData;
 	BOOL postHeaderOK;
 	NSFileHandle *fileHandle;

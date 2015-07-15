@@ -24,7 +24,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     NSMutableString *m_text;
     CGFloat m_fontSize, m_fixedFontSize;
     CGSize m_tileSize;
-    int m_numLines;
+    NSInteger m_numLines;
     NSMutableArray *m_textRuns;   // text fragments
     NSMutableArray *m_textStyles; // bit set, bold, italic, etc.
     NSMutableArray *m_colorIndex; // fg/bg color for run
@@ -43,7 +43,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     NSMutableArray *m_colorArray;
     UIColor *m_fgColor, *m_bgColor;
     UIColor *m_currBgColor; // weak ref
-    int m_firstVisibleTextRunIndex;
+    NSInteger m_firstVisibleTextRunIndex;
     CGFloat m_savedTopYOffset;    
     
     unsigned int m_topMargin, m_leftMargin, m_rightMargin, m_bottomMargin;
@@ -59,8 +59,8 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     UIFont *m_fixedItalicFont, *m_fixedBoldItalicFont;
     
     RichTextStyle m_currentTextStyle;
-    unsigned int m_currentTextColorIndex, m_currentBGColorIndex;
-    int m_hyperlinkIndex;
+    NSUInteger m_currentTextColorIndex, m_currentBGColorIndex;
+    NSInteger m_hyperlinkIndex;
     
     NSMutableSet *m_reusableTiles;    
     UIView *m_tileContainerView;
@@ -72,9 +72,9 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     BOOL m_prevLineNotTerminated;
     
     NSMutableArray *m_accessibilityElements;
-    int m_lastAEIndexAccessed, m_lastAEIndexAnnounced;
+    NSInteger m_lastAEIndexAccessed, m_lastAEIndexAnnounced;
     
-    int m_selectedRun;
+    NSInteger m_selectedRun;
     NSRange m_selectedColumnRange;
     UILabelWA *m_selectionView;
     BOOL m_selectionDisabled;
@@ -93,17 +93,17 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, readonly) NSMutableArray* textRuns;
 @property(nonatomic, assign) CGPoint lastPt;
 @property(nonatomic, assign) RichTextStyle textStyle;
-@property(nonatomic, assign) unsigned int textColorIndex;
-@property(nonatomic, assign) unsigned int bgColorIndex;
-@property(nonatomic, assign) int hyperlinkIndex;
+@property(nonatomic, assign) NSUInteger textColorIndex;
+@property(nonatomic, assign) NSUInteger bgColorIndex;
+@property(nonatomic, assign) NSInteger hyperlinkIndex;
 @property(nonatomic, weak) UIViewController<UIScrollViewDelegate>* controller;
 @property(nonatomic, assign) unsigned int topMargin;
 @property(nonatomic, assign) unsigned int leftMargin;
 @property(nonatomic, assign) unsigned int rightMargin;
 @property(nonatomic, assign) unsigned int bottomMargin;
 @property(nonatomic, assign) unsigned int lineSpacing;
-@property(nonatomic, assign) int lastAEIndexAccessed;
-//@property(nonatomic, assign) int selectedRun;
+@property(nonatomic, assign) NSInteger lastAEIndexAccessed;
+//@property(nonatomic, assign) NSInteger selectedRun;
 //@property(nonatomic, assign) NSRange selectedColumnRange;
 @property(nonatomic, weak) NSObject<RTSelected>* selectionDelegate;
 @property(nonatomic, assign) BOOL selectionDisabled;
@@ -118,15 +118,15 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (RichTextTile *)tileForRow:(int)row column:(int)column;
 - (BOOL)findHotText:(NSString *)text charOffset:(int)charsDone pos:(CGPoint)pos minX:(CGFloat)minXPos hotPoint:(CGPoint*)hotPoint font:(UIFont*)font fontHeight:(CGFloat)fontHeight
  width:(CGFloat) width;
-- (void)updateLine:(int)lineNum withYPos:(CGFloat)yPos;
-- (void)updateLine:(int)lineNum withDescent:(CGFloat)desent;
-- (void)updateLine:(int)lineNum width:(CGFloat)width;
+- (void)updateLine:(NSInteger)lineNum withYPos:(CGFloat)yPos;
+- (void)updateLine:(NSInteger)lineNum withDescent:(CGFloat)desent;
+- (void)updateLine:(NSInteger)lineNum width:(CGFloat)width;
 - (BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)pos font:(UIFont*)font style:(RichTextStyle)style fgColor:(UIColor*)fgColor
-   bgColor:(UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(int)lineNum nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
+   bgColor:(UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(NSInteger)lineNum nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
 - (void)appendText:(NSString*)text;
 - (void)appendImage:(int)imageNum withAlignment:(int)imageAlign;
 - (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint inDraw:(BOOL)inDraw textStyle:(RichTextStyle)textStyle;
-- (int) getTextRunAtPoint:(CGPoint)touchPoint;
+- (NSInteger) getTextRunAtPoint:(CGPoint)touchPoint;
 - (int)hyperlinkAtPoint:(CGPoint)point;
 - (void)populateZeroHyperlinks;
 @property (nonatomic, readonly, strong) RichTextTile *dequeueReusableTile;
@@ -149,12 +149,12 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property (nonatomic, copy) UIFont *font;
 @property (nonatomic, copy) UIFont *fixedFont;
 @property (nonatomic, readonly) CGSize fixedFontSize;
-- (BOOL)setFontFamily:(NSString*)fontFamily size:(int)newSize;
-- (BOOL)setFixedFontFamily:(NSString*)familyName size:(int)newSize;
+- (BOOL)setFontFamily:(NSString*)fontFamily size:(NSInteger)newSize;
+- (BOOL)setFixedFontFamily:(NSString*)familyName size:(NSInteger)newSize;
 - (void)setFontSize:(CGFloat)newFontSize;
 - (void)setTextColor:(UIColor*)color;
 @property (nonatomic, readonly) CGRect visibleRect;
-- (int)getOrAllocColorIndex:(UIColor*)color;
+- (NSUInteger)getOrAllocColorIndex:(UIColor*)color;
 - (void)populateAccessibilityElements;
 - (void)clearAE;
 @property (nonatomic, readonly, strong) RichTextAE *updateAE;
