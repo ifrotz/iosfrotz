@@ -394,7 +394,6 @@
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
 		44F69D0019C118E000ECADD0 /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 44F69CFF19C118E000ECADD0 /* Launch Screen.xib */; };
 		44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4454850C1B1FBAB900E8EE7B /* libtads.a */; };
-		44F7B1011B2014E600DDD2A3 /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */; };
 		44F7B1021B20176A00DDD2A3 /* fio.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A219EB7C6F00036AA6 /* fio.c */; };
 		44F7B1231B2021BF00DDD2A3 /* FtpDataConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139B1372707D00B7F616 /* FtpDataConnection.m */; };
 		44F7B1241B2021BF00DDD2A3 /* FtpServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139E1372707D00B7F616 /* FtpServer.m */; };
@@ -1322,7 +1321,6 @@
 				44F7B1271B2021DF00DDD2A3 /* libFTPServ.a in Frameworks */,
 				44F7B16D1B202B4900DDD2A3 /* libminizip.a in Frameworks */,
 				44F7B1991B202C1B00DDD2A3 /* libzlib.a in Frameworks */,
-				44F7B1011B2014E600DDD2A3 /* libstdc++.dylib in Frameworks */,
 				1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */,
 				1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */,
 				2892E4100DC94CBA00A64D0F /* CoreGraphics.framework in Frameworks */,
@@ -3227,6 +3225,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -3245,17 +3245,16 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CFLAGS = "-Wno-deprecated-declarations";
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DVMGLOB_STRUCT",
-					"-DOS_DECLARATIVE_TLS",
-					"-DTC_TARGET_T3",
-					"-DTADSNET",
+				OTHER_CFLAGS = (
+					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lc++",
+				);
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
@@ -3269,6 +3268,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -3285,17 +3286,16 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CFLAGS = "-Wno-deprecated-declarations";
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DVMGLOB_STRUCT",
-					"-DOS_DECLARATIVE_TLS",
-					"-DTC_TARGET_T3",
-					"-DTADSNET",
+				OTHER_CFLAGS = (
+					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lc++",
+				);
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
@@ -3478,14 +3478,16 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
 					"-DOS_DECLARATIVE_TLS",
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
-					"-DGLKUNIX",
-					"-DGLK_TIMERS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3525,14 +3527,16 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
 					"-DOS_DECLARATIVE_TLS",
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
-					"-DGLKUNIX",
-					"-DGLK_TIMERS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3573,14 +3577,16 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
 					"-DOS_DECLARATIVE_TLS",
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
-					"-DGLKUNIX",
-					"-DGLK_TIMERS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3621,14 +3627,16 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-DGLKUNIX",
+					"-DGLK_TIMERS",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DVMGLOB_STRUCT",
 					"-DOS_DECLARATIVE_TLS",
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
-					"-DGLKUNIX",
-					"-DGLK_TIMERS",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3678,6 +3686,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
@@ -3694,17 +3704,16 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CFLAGS = "-Wno-deprecated-declarations";
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DVMGLOB_STRUCT",
-					"-DOS_DECLARATIVE_TLS",
-					"-DTC_TARGET_T3",
-					"-DTADSNET",
+				OTHER_CFLAGS = (
+					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lc++",
+				);
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -3748,6 +3757,8 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -3764,18 +3775,15 @@
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CFLAGS = "-Wno-deprecated-declarations";
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-DVMGLOB_STRUCT",
-					"-DOS_DECLARATIVE_TLS",
-					"-DTC_TARGET_T3",
-					"-DTADSNET",
+				OTHER_CFLAGS = (
+					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
 				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
+					"-lc++",
 					"-weak_library",
 					/usr/lib/libSystem.B.dylib,
 					"-weak_framework",
