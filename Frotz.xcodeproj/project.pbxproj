@@ -3723,6 +3723,7 @@
 					"-DOS_DECLARATIVE_TLS",
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
+				);
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
