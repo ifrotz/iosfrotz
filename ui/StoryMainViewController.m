@@ -1093,17 +1093,17 @@ static void setColorTable(RichTextView *v) {
         
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
         docPath = [array[0] copy];
-        chdir([docPath UTF8String]);
+        chdir([docPath fileSystemRepresentation]);
         
         storyGamePath = [docPath stringByAppendingPathComponent: @kFrotzGameDir];
         storyTopSavePath = [docPath stringByAppendingPathComponent: @kFrotzSaveDir];
         
         
         if (![fileMgr fileExistsAtPath: storyGamePath]) {
-            [fileMgr createDirectoryAtPath: storyGamePath attributes: nil];
+            [fileMgr createDirectoryAtPath: storyGamePath attributes: [NSDictionary dictionary]];
         }
         if (![fileMgr fileExistsAtPath: storyTopSavePath]) {
-            [fileMgr createDirectoryAtPath: storyTopSavePath attributes: nil];
+            [fileMgr createDirectoryAtPath: storyTopSavePath attributes: [NSDictionary dictionary]];
         }
         
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
@@ -1115,9 +1115,9 @@ static void setColorTable(RichTextView *v) {
         storySIPSavePath= [storyTopSavePath stringByAppendingPathComponent: @kFrotzOldAutoSaveFile];
         activeStoryPath = [storyTopSavePath stringByAppendingPathComponent: @kFrotzAutoSaveActiveFile];
         
-        strcpy(SAVE_PATH, [storyTopSavePath UTF8String]);
+        strcpy(SAVE_PATH, [storyTopSavePath fileSystemRepresentation]);
         
-        strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
+        strcpy(AUTOSAVE_FILE,  [storySIPSavePath fileSystemRepresentation]);  // used by interpreter from z_save
         
         m_currentStory = [NSMutableString stringWithString: @""];
         
@@ -2533,7 +2533,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             [self.navigationController setNavigationBarHidden:m_landscape ? YES:NO animated:YES];
     }
     if (file)
-        strcpy(iosif_filename, [file UTF8String]);
+        strcpy(iosif_filename, [file fileSystemRepresentation]);
     else
         *iosif_filename = '\0';
     [self activateKeyboard];
@@ -2732,7 +2732,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     if (storySavePath) {
         storySIPSavePath= [storySavePath stringByAppendingPathComponent: @kFrotzAutoSaveFile];
-        strcpy(AUTOSAVE_FILE,  [storySIPSavePath UTF8String]);  // used by interpreter from z_save
+        strcpy(AUTOSAVE_FILE,  [storySIPSavePath fileSystemRepresentation]);  // used by interpreter from z_save
     }
 }
 
@@ -2767,8 +2767,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_currentStory) {
         storySavePath = [storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
         if (![fileMgr fileExistsAtPath: storySavePath])
-            [fileMgr createDirectoryAtPath: storySavePath attributes: nil];
-    	strcpy(SAVE_PATH, [storySavePath UTF8String]);
+            [fileMgr createDirectoryAtPath: storySavePath attributes: [NSDictionary dictionary]];
+    	strcpy(SAVE_PATH, [storySavePath fileSystemRepresentation]);
         
         if (![fileMgr fileExistsAtPath: storySIPPathOld]) {
             [self updateAutosavePaths];
@@ -3832,7 +3832,7 @@ static void setScreenDims(char *storyNameBuf) {
                 NSString *savedScriptname = dict[@"scriptname"];
                 if (savedScriptname) {
                     savedScriptname = [self relativePathToAppAbsolutePath: savedScriptname];
-                    iosif_start_script((char*)[savedScriptname UTF8String]);
+                    iosif_start_script((char*)[savedScriptname fileSystemRepresentation]);
                 } else
                     iosif_stop_script();
                 
