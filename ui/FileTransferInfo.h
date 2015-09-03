@@ -20,6 +20,8 @@
 
 #define FTPPORT 2121
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface FileTransferInfo : FrotzCommonWebViewController {
     NSObject<FrotzSettingsStoryDelegate> *m_controller;
     UIWebView *m_webView;
@@ -37,8 +39,10 @@
 -(void)startServer;
 -(void)stopServer;
 @property (nonatomic, readonly) BOOL serverIsRunning;
-@property (nonatomic, readonly, copy) NSString *localIPAddress;
+@property (nonatomic, readonly, copy, nullable) NSString *localIPAddress;
 -(void)updateMessage;
 @end
 
 BOOL isHiddenFile(NSString *file);
+
+NS_ASSUME_NONNULL_END

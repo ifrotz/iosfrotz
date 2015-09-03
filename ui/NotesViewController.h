@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "FileBrowser.h"
 
-@protocol LockableKeyboard
+@protocol LockableKeyboard <NSObject>
 -(void)showKeyboardLockState;
 @end
 
@@ -23,11 +23,10 @@
     UIImageView *m_notesBGView;
     UIResponder *m_chainResponder;
     
-    UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> *m_delegate;
+    UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> __weak *m_delegate;
 }
 
--(NotesViewController*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
--(void)dealloc;
+-(instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *text;
 -(void)setFrame:(CGRect)frame;
@@ -48,7 +47,6 @@
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
 -(void)viewWillAppear:(BOOL)animated;
 -(void)viewWillDisappear:(BOOL)animated;
--(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>*)delegate;
--(UIViewController<TextFileBrowser,FileSelected>*)delegate;
+@property (nonatomic, weak) UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>* delegate;
 -(void)workaroundFirstResponderBug;
 @end

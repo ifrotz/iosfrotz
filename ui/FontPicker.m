@@ -25,6 +25,8 @@
 @end
 
 @implementation FontPicker
+@synthesize delegate = m_delegate;
+@synthesize fixedFontsOnly = m_fixedFontsOnly;
 
 static NSInteger sortFontsByFamilyName(id a, id b, void *context) {
     FrotzFontInfo *fa = (FrotzFontInfo*)a;
@@ -72,18 +74,6 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     }
     [m_fonts sortUsingFunction: sortFontsByFamilyName context: nil];
     [m_fixedFonts sortUsingFunction: sortFontsByFamilyName context: nil];
-}
-
-- (void)setFixedFontsOnly:(BOOL)fixed {
-    m_fixedFontsOnly = fixed;
-}
-
--(NSObject*)delegate {
-    return m_delegate;
-}
-
--(void)setDelegate:(NSObject<FrotzFontDelegate>*)delegate {
-    m_delegate = delegate;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {

@@ -10,7 +10,7 @@
 
 
 @implementation UIFont (FontExt)
--(int)fontTraits {
+-(UIFontTraits)fontTraits {
     NSString *name = [self fontName];
     int traits = UINormalFontMask;
     if ([name rangeOfString:@"bold" options: NSCaseInsensitiveSearch].length > 0)

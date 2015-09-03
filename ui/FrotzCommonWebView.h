@@ -9,9 +9,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface FrotzCommonWebViewController : UIViewController {
-}
+@interface FrotzCommonWebViewController : UIViewController
 
-+(UIWebView*)sharedWebView;
++(nonnull UIWebView*)sharedWebView;
 +(void)releaseSharedWebView;
 @end

@@ -62,6 +62,8 @@ Copyright (C) 2008 Apple Inc. All Rights Reserved.
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 // cell identifier for this custom cell
 extern NSString *kDisplayCell_ID;
 
@@ -71,12 +73,12 @@ extern NSString *kDisplayCell_ID;
 	UIView	*view;
 }
 
-@property (nonatomic, strong) UIView *view;
+@property (nonatomic, strong, nullable) UIView *view;
 @property (nonatomic, strong) UILabel *nameLabel;
-
-- (void)setView:(UIView *)inView;
 
 @end
 
 #define kPageControlHeight              20.0
 #define kPageControlWidth               160.0
+
+NS_ASSUME_NONNULL_END

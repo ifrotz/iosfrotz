@@ -10,6 +10,7 @@
 #import "StoryMainViewController.h"
 #import "FrotzView.h"
 
+NS_ASSUME_NONNULL_BEGIN
 
 @interface StoryView : FrotzView {
     BOOL m_isMagnifying;
@@ -20,7 +21,8 @@
 - (void)appendText:(NSString*)text;
 - (BOOL)handleTouch: (UITouch*)touch withEvent: (UIEvent*)event;
 - (void)skipNextTap;
-- (NSString*)lookForTruncatedWord:(NSString*)word;
+- (nullable NSString*)lookForTruncatedWord:(NSString*)word;
 @property (nonatomic, assign) BOOL tapInputEnabled;
 @end
 
+NS_ASSUME_NONNULL_END

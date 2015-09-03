@@ -37,6 +37,9 @@
 #define kFontSizeStr "Font size (%d)"
 
 @implementation FrotzSettingsController
+@synthesize storyDelegate = m_storyDelegate;
+@synthesize infoDelegate = m_infoDelegate;
+@synthesize settingsActive = m_settingsShown;
 
 enum ControlTableSections
 {
@@ -133,22 +136,10 @@ enum ControlTableSections
     return self;
 }
 
-- (void)setInfoDelegate:(id<FrotzSettingsInfoDelegate>)delegate {
-    m_infoDelegate = delegate;
-}
-
-- (id<FrotzSettingsInfoDelegate>)infoDelegate {
-    return m_infoDelegate;
-}
-
 - (void)setStoryDelegate:(id<FrotzSettingsStoryDelegate,FrotzFontDelegate>)delegate {
     m_storyDelegate = delegate;
     [m_fontPicker setDelegate: m_storyDelegate];
     [m_frotzDB setDelegate: m_storyDelegate];
-}
-
-- (id<FrotzSettingsStoryDelegate, FrotzFontDelegate>)storyDelegate {
-    return m_storyDelegate;
 }
 
 - (NSString*)rootPath {
@@ -227,10 +218,6 @@ enum ControlTableSections
             [m_storyDelegate setFont: [m_storyDelegate font] withSize: value];
     }
     lastValue = value;
-}
-
-- (BOOL)settingsActive {
-    return m_settingsShown;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {

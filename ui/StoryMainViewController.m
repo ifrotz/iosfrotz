@@ -148,10 +148,10 @@ void iosif_ioinit() {
         pthread_mutex_init(&inputMutex, NULL);
         pthread_cond_init(&winSizeChangedCond, NULL);
         winSizeChanged = 0;
-        ipzBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-        ipzStatusStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-        ipzInputBufferStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
-        ipzLineInputStr = [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding];
+        ipzBufferStr = [[NSMutableString alloc] init];
+        ipzStatusStr = [[NSMutableString alloc] init];
+        ipzInputBufferStr = [[NSMutableString alloc] init];
+        ipzLineInputStr = [[NSMutableString alloc] init];
         didInitIO = YES;
     }
 }
@@ -199,7 +199,7 @@ static NSMutableString *getBufferStrForWin(int winNum, BOOL *isStatus) {
             if ([glkInputs count] == 0)
                 [glkInputs addObject: ipzBufferStr];
             else
-                [glkInputs addObject: [[NSMutableString alloc] initWithBytes:nil length:0 encoding:NSISOLatin1StringEncoding]];
+                [glkInputs addObject: [[NSMutableString alloc] init]];
         }
         bufferStr = glkInputs[winNum];
     } else {
@@ -1073,6 +1073,10 @@ static void setColorTable(RichTextView *v) {
 
 
 @implementation StoryMainViewController 
+@synthesize font = m_fontname;
+@synthesize fontSize = m_fontSize;
+@synthesize completionEnabled = m_completionEnabled;
+@synthesize canEditStoryInfo = m_canEditStoryInfo;
 
 - (StoryMainViewController*)init {
     self = [super init];
@@ -1100,10 +1104,10 @@ static void setColorTable(RichTextView *v) {
         
         
         if (![fileMgr fileExistsAtPath: storyGamePath]) {
-            [fileMgr createDirectoryAtPath: storyGamePath attributes: nil];
+            [fileMgr createDirectoryAtPath: storyGamePath attributes: @{}];
         }
         if (![fileMgr fileExistsAtPath: storyTopSavePath]) {
-            [fileMgr createDirectoryAtPath: storyTopSavePath attributes: nil];
+            [fileMgr createDirectoryAtPath: storyTopSavePath attributes: @{}];
         }
         
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
@@ -2675,10 +2679,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_inputLine setFont: font];
 }
 
--(NSString*) font {
-    return m_fontname;
-}
-
 -(void) setFixedFont: (NSString*)font {
     NSInteger fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFont: [UIFont fontWithName: font size: fixedFontSize]];
@@ -2686,10 +2686,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(NSString*) fixedFont {
     return [[m_storyView fixedFont] fontName];
-}
-
--(NSInteger) fontSize {
-    return m_fontSize;
 }
 
 -(StoryView*) storyView {
@@ -2767,7 +2763,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_currentStory) {
         storySavePath = [storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
         if (![fileMgr fileExistsAtPath: storySavePath])
-            [fileMgr createDirectoryAtPath: storySavePath attributes: nil];
+            [fileMgr createDirectoryAtPath: storySavePath attributes: @{}];
     	strcpy(SAVE_PATH, [storySavePath UTF8String]);
         
         if (![fileMgr fileExistsAtPath: storySIPPathOld]) {
@@ -4346,22 +4342,6 @@ static void setScreenDims(char *storyNameBuf) {
     }
 #endif
     
-}
-
--(BOOL)isCompletionEnabled {
-    return m_completionEnabled;
-}
-
--(void)setCompletionEnabled:(BOOL)on {
-    m_completionEnabled = on;
-}
-
--(BOOL)canEditStoryInfo {
-    return m_canEditStoryInfo;
-}
-
--(void)setCanEditStoryInfo: (BOOL)on {
-    m_canEditStoryInfo = on;
 }
 
 -(StoryInputLine*)inputLine {

@@ -9,14 +9,7 @@
 #import "BookmarkListController.h"
 
 @implementation BookmarkListController
-
--(void)setDelegate:(id<BookmarkDelegate>)del {
-    m_delegate = del;
-}
-
--(id<BookmarkDelegate>)delegate {
-    return m_delegate;
-}
+@synthesize delegate = m_delegate;
 
 - (instancetype)initWithStyle:(UITableViewStyle)style {
     if ((self = [super initWithStyle:style])) {

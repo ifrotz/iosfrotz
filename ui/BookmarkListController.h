@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol BookmarkDelegate
+@protocol BookmarkDelegate <NSObject>
 -(void)enterURL:(NSString*)url;
 -(NSString*)currentURL;
 -(NSString*)currentURLTitle;
@@ -21,7 +21,7 @@
 @interface BookmarkListController : UITableViewController {
     NSMutableArray *m_sites;
     NSMutableArray *m_titles;
-    id<BookmarkDelegate> m_delegate;
+    id<BookmarkDelegate> __weak m_delegate;
     UITableView *m_tableView;
 }
 @property (nonatomic, weak) id<BookmarkDelegate> delegate;

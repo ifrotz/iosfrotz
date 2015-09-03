@@ -33,6 +33,7 @@ BOOL isHiddenFile(NSString *file) {
 
 
 @implementation FileTransferInfo
+@synthesize serverIsRunning = m_running;
 
 - (instancetype)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller {
     if ((self = [super init])) {
@@ -277,10 +278,6 @@ BOOL isHiddenFile(NSString *file) {
         [self stopServer];
     else
         [self startServer];
-}
-
--(BOOL)serverIsRunning {
-    return m_running;
 }
 
 - (void)dealloc {
