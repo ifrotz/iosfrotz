@@ -3126,7 +3126,7 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
@@ -3186,7 +3186,6 @@
 					"-DTC_TARGET_T3",
 					"-DTADSNET",
 				);
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-lc++",
