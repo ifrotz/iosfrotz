@@ -63,7 +63,7 @@
                          IPHONE_FROTZ_VERS
                          " for iOS.</b></p>"
                          "<p><b>Frotz</b> for iOS was developed by Craig Smith, based on Unix Frotz 2.43 by David Griffith and Galen Hazelwood.  \n"
-                         "Frotz was originally written by Stefan Jokisch in 1995-1997.  ZIP archive support based on minizip 1.01e by Gilles Vollant and zlib 1.2.3 by Jean-loup Gailly and Mark Adler. \n"
+                         "Frotz was originally written by Stefan Jokisch in 1995-1997.  ZIP archive support based on minizip 1.01e by Gilles Vollant. \n"
                          "Frotz 1.5 introduced (beta) Glulx game support, using the Git engine by Iain Merrick, and the Glk I/O system by Andrew Plotkin. \n"
                          "Game splash screens include artwork by	Andrew Bossi, Trey Radcliff, and Mike Green, distributed under Creative Commons with attribution."
                          "</p>\n"
