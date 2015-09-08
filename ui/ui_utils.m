@@ -386,7 +386,7 @@ BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
 
 
 BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid) {
-    const char *filename = [blorbFile UTF8String];
+    const char *filename = [blorbFile fileSystemRepresentation];
     BOOL found = NO;
     FILE *fp;
     if ((fp = os_path_open(filename, "rb")) == NULL)
@@ -497,7 +497,7 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
 }
 
 NSData *imageDataFromBlorb(NSString *blorbFile) {
-    const char *filename = [blorbFile UTF8String];
+    const char *filename = [blorbFile fileSystemRepresentation];
     NSData *data = nil;
     FILE *fp;
     if ((fp = os_path_open(filename, "rb")) == NULL)
