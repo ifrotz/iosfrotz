@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "FrotzWordPicker.h"
 
-@protocol FrotzInputDelegate
+@protocol FrotzInputDelegate <NSObject>
 -(void)inputHelperString:(NSString*)string;
 -(BOOL)isFirstResponder;
 @end
@@ -24,14 +24,14 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
 @interface FrotzInputHelper : UITableViewController {
     NSMutableArray *m_history;
     NSArray *m_commonCommands;
-    NSObject<FrotzInputDelegate> *m_delegate;
+    id<FrotzInputDelegate> __weak m_delegate;
     FrotzWordPicker *m_wordPicker;
     FrotzInputHelperMode m_mode;
     NSInteger m_lastCommonWordPicked;
     NSUInteger m_currHistoryItem;
 }
 - (instancetype)init;
-@property (nonatomic, weak) NSObject<FrotzInputDelegate> *delegate;
+@property (nonatomic, weak) id<FrotzInputDelegate> delegate;
 - (void)clearHistory;
 @property (nonatomic, readonly) NSUInteger historyCount;
 @property (nonatomic, readonly) NSUInteger menuCount;

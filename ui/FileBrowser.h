@@ -20,18 +20,19 @@
 
 #import <UIKit/UIKit.h>
 
+@class FileBrowser;
 
 typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoShowRestore, kFBDoShowSave, kFBDoShowScript, kFBDoShowViewScripts, kFBDoShowRecord, kFBDoShowPlayback  };
 
-@protocol TextFileBrowser
+@protocol TextFileBrowser <NSObject>
 -(NSString*)textFileBrowserPath;
 @end
 
 
-@protocol FileSelected
+@protocol FileSelected <NSObject>
 @optional
--(void)fileBrowser:(id)browser fileSelected: (NSString*)filePath;
--(void)fileBrowser:(id)browser deleteFile: (NSString*)filePath;
+-(void)fileBrowser:(FileBrowser*)browser fileSelected: (NSString*)filePath;
+-(void)fileBrowser:(FileBrowser*)browser deleteFile: (NSString*)filePath;
 @end
 
 @interface FileBrowser : UIViewController <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
@@ -41,7 +42,7 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
     NSMutableArray *m_files;
     NSString *m_path;
     NSUInteger m_rowCount;
-    id m_delegate;
+    id<FileSelected> __weak m_delegate;
     FileBrowserState m_dialogType;
     UIView *m_backgroundView;
     UITableView *m_tableView;
@@ -54,9 +55,6 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
 @property (nonatomic, copy) NSString *path;
 - (void)reloadData;
 @property (nonatomic, weak) id<FileSelected> delegate;
-- (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section;
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
-- (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath;
 @property (nonatomic, readonly, copy) NSString *selectedFile;
 - (void)commit:(id)sender;
 - (void)doneWithTextFile:(id)sender;

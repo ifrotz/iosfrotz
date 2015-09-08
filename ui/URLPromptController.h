@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol URLPromptDelegate
+@protocol URLPromptDelegate <NSObject>
 -(void)promptURL;
 -(void)enterURL:(NSString*)url;
 -(void)dismissURLPrompt;
@@ -18,7 +18,7 @@
 @interface URLPromptController : UIViewController <UISearchBarDelegate>
 {
     UISearchBar	*m_textbar;
-    id<URLPromptDelegate> m_delegate;
+    id<URLPromptDelegate> __weak m_delegate;
 }
 -(void)setText:(NSString*)text;
 -(void)setPlaceholder:(NSString*)text;

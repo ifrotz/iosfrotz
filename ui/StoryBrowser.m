@@ -577,10 +577,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return [str1 caseInsensitiveCompare: str2];
 }
 
-- (NSMutableArray*)storyNames {
+- (NSArray*)storyNames {
     if (!m_numStories)
         [self refresh];
-    return m_storyNames;
+    return [m_storyNames copy];
 }
 
 -(BOOL)storyIsInstalled:(NSString*)story {
@@ -598,8 +598,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return nil;
 }
 
-- (NSMutableArray*)unsupportedStoryNames {
-    return m_unsupportedNames;
+- (NSArray*)unsupportedStoryNames {
+    return [m_unsupportedNames copy];
 }
 
 -(void)refresh {

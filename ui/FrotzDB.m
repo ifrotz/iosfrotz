@@ -20,6 +20,7 @@
 #define kFontSizeStr "Font size (%d)"
 
 @implementation FrotzDBController
+@synthesize delegate = m_delegate;
 
 -(void)donePressed {
 
@@ -35,14 +36,6 @@
     {
     }
     return self;
-}
-
-- (void)setDelegate:(id)delegate {
-    m_delegate = delegate;
-}
-
-- (id)delegate {
-    return m_delegate;
 }
 
 -(void)viewDidUnload {
