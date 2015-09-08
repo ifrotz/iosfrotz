@@ -14,7 +14,7 @@
 @property(nonatomic, weak) RichTextView *textView;
 @end
 
-@protocol RTSelected
+@protocol RTSelected <NSObject>
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
 @end
 
@@ -80,7 +80,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
     BOOL m_selectionDisabled;
     BOOL m_hyperlinkTest;
     
-    NSObject<RTSelected>* __weak m_selectionDelegate;
+    id<RTSelected> __weak m_selectionDelegate;
     
     BOOL m_freezeDisplay;
     CGRect m_delayedFrame;
@@ -105,7 +105,7 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) NSInteger lastAEIndexAccessed;
 //@property(nonatomic, assign) NSInteger selectedRun;
 //@property(nonatomic, assign) NSRange selectedColumnRange;
-@property(nonatomic, weak) NSObject<RTSelected>* selectionDelegate;
+@property(nonatomic, weak) id<RTSelected> selectionDelegate;
 @property(nonatomic, assign) BOOL selectionDisabled;
 @property(nonatomic, assign, getter=displayFrozen) BOOL freezeDisplay;
 @property(nonatomic, assign) RichDataGetImageCallback richDataGetImageCallback;
@@ -144,7 +144,6 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (void)reflowText;
 - (void)repositionAfterReflow;
 - (void)reloadImages;
-- (void)dealloc;
 @property (nonatomic, weak) UIViewController<UIScrollViewDelegate> *delegate;
 @property (nonatomic, copy) UIFont *font;
 @property (nonatomic, copy) UIFont *fixedFont;

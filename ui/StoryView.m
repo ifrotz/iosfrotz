@@ -6,6 +6,7 @@
 #import "FrotzAppDelegate.h"
 #import "FileBrowser.h"
 #import "ui_utils.h"
+#include <execinfo.h>
 
 #include <stdlib.h>
 @implementation StoryView
@@ -198,8 +199,6 @@
     
 }
 
-
-#include <execinfo.h>
 
 -(void)setFrame:(CGRect)frame {
 

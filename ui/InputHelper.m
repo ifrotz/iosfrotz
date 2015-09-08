@@ -12,6 +12,7 @@
 const CGFloat kHistoryLineHeight = 20.0;
 
 @implementation FrotzInputHelper
+@synthesize delegate = m_delegate;
 
 - (instancetype)init {
     if ((self = [super initWithStyle:UITableViewStylePlain])) {
@@ -150,14 +151,6 @@ const CGFloat kHistoryLineHeight = 20.0;
         } else
             [self hideInputHelper];
     }
-}
-
--(NSObject<FrotzInputDelegate>*)delegate {
-    return m_delegate;
-}
-
--(void)setDelegate:(NSObject<FrotzInputDelegate>*)delegate {
-    m_delegate = delegate;
 }
 
 - (void)clearHistory {

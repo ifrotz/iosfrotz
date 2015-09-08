@@ -299,7 +299,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 [outdata appendString: @"<tr height=\"1\"><td colspan=\"6\"><hr/></td></tr>\n"];
             }		
         }
-        NSMutableArray *unsupportedNames = [sb unsupportedStoryNames];
+        NSArray *unsupportedNames = [sb unsupportedStoryNames];
         if (unsupportedNames && [unsupportedNames count] > 0) {
             [outdata appendString: @"<td colspan=\"6\"><b><span style='color:red;'>The following items have file extensions not currently supported by Frotz</span></b></td>\n"];
             int ucount = 0;

@@ -19,14 +19,13 @@
     CGFloat m_hue;
     CGFloat m_saturation;
     CGFloat m_value;
-    id<ColorPickerDelegate> m_delegate;
+    id<ColorPickerDelegate> __weak m_delegate;
     CGColorSpaceRef m_colorSpace;
 
     UIColor *m_textColor, *m_bgColor;
     BOOL m_changeTextColor;
 }
 - (instancetype)init;
-- (void)dealloc;
 @property (nonatomic, readonly) CGColorSpaceRef colorSpace CF_RETURNS_NOT_RETAINED;
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor;
 - (void)setColor: (UIColor *)color;
@@ -38,9 +37,9 @@
 @property (nonatomic, getter=isTextColorMode, readonly) BOOL textColorMode;
 @property (nonatomic, readonly, copy) UIColor *textColor;
 @property (nonatomic, readonly, copy) UIColor *bgColor;
-@property (nonatomic, readonly) float hue;
-@property (nonatomic, readonly) float saturation;
-@property (nonatomic, readonly) float value;
+@property (nonatomic, readonly) CGFloat hue;
+@property (nonatomic, readonly) CGFloat saturation;
+@property (nonatomic, readonly) CGFloat value;
 @property (nonatomic, readonly, strong) HSVPicker *hsvPicker;
 @property (nonatomic, readonly, strong) HSVValuePicker *valuePicker;
 @property (nonatomic, readonly, strong) ColorTile *colorTile;

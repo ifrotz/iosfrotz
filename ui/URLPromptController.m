@@ -10,6 +10,7 @@
 #include "iosfrotz.h"
 
 @implementation URLPromptController
+@synthesize delegate = m_delegate;
 
 - (instancetype)init
 {
@@ -20,14 +21,6 @@
     }
     
     return self;
-}
-
--(void)setDelegate:(id<URLPromptDelegate>)del {
-    m_delegate = del;
-}
-
--(id<URLPromptDelegate>)delegate {
-    return m_delegate;
 }
 
 

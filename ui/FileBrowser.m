@@ -53,7 +53,11 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 @end
 
 
-@implementation FileBrowser 
+@implementation FileBrowser
+@synthesize delegate = m_delegate;
+@synthesize path = m_path;
+@synthesize textFileCount = m_textFileCount;
+
 - (instancetype)initWithDialogType:(FileBrowserState)dialogType {
     if ((self = [super init]) != nil) {
         m_tableViewController = [[UITableViewController alloc] init];
@@ -351,19 +355,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         [m_delegate fileBrowser:self fileSelected: nil];
 }
 
--(void)setDelegate:(id<FileSelected>)delegate {
-    m_delegate = delegate;
-}
-
-- (id<FileSelected>)delegate {
-    return m_delegate;
-}
-
-
-- (NSString *)path {
-    return m_path;
-}
-
 - (void)setPath: (NSString *)path {
     if (m_path != path) {
         m_path = [path copy];
@@ -419,10 +410,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [m_files sortUsingSelector:@selector(compare:)];
     m_rowCount = [m_files count];
     [m_tableView reloadData];
-}
-
-- (int)textFileCount {
-    return m_textFileCount;
 }
 
 - (NSString*)tableView:(UITableView*)tableView titleForHeaderInSection:(NSInteger)section {

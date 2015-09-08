@@ -54,7 +54,6 @@
 }
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker;
 @property (nonatomic, readonly) unsigned int *hsvData;
-- (void)dealloc;
 - (void)drawRect:(CGRect)rect;
 - (void)mousePositionToColor:(CGPoint)point;
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event;
@@ -594,6 +593,13 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 @end
 
 @implementation ColorPicker
+@synthesize delegate = m_delegate;
+@synthesize hue = m_hue;
+@synthesize value = m_value;
+@synthesize saturation = m_saturation;
+@synthesize textColor = m_textColor;
+@synthesize bgColor = m_bgColor;
+
 - (instancetype)init {
     if ((self = [super init])!=nil) {
     	self.title = NSLocalizedString(@"Select Color", @"");
@@ -846,22 +852,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 	[m_delegate colorPicker: self selectedColor: m_changeTextColor ? m_textColor : m_bgColor];
 }
 
--(float)hue {
-    return m_hue;
-}
--(float)saturation {
-    return m_saturation;
-}
--(float)value {
-    return m_value;
-}
--(UIColor *) textColor {
-    return m_textColor;
-}
--(UIColor *) bgColor {
-    return m_bgColor;
-}
-
 - (HSVPicker *)hsvPicker {
     return m_hsvPicker;
 }
@@ -872,11 +862,4 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     return m_colorTile;
 }
 
-- (id<ColorPickerDelegate>)delegate {
-    return m_delegate;
-}
-
-- (void)setDelegate: (id<ColorPickerDelegate>)delegate {
-    m_delegate = delegate;
-}
 @end

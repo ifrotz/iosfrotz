@@ -26,10 +26,11 @@
 @end
 
 @implementation NotesViewController
+@synthesize delegate = m_delegate;
 
 - (NotesViewController*)initWithFrame:(CGRect)frame {
-    m_frame = frame;
     if ((self = [super init])) {
+        m_frame = frame;
         // Initialization code
     }
     return self;
@@ -148,14 +149,6 @@ static const int kNotesTitleHeight = 24;
     //    [m_notesView addSubview: scriptBrowseButton];
     
     [m_notesBGView addSubview: m_notesView];
-}
-
--(void)setDelegate:(UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>*)delegate {
-    m_delegate = delegate;
-}
-
--(UIViewController<TextFileBrowser,FileSelected, LockableKeyboard>*)delegate {
-    return m_delegate;
 }
 
 -(void)notesAction:(id)sender {

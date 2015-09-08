@@ -9,7 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "FrotzCommonWebView.h"
 
-@interface AboutFrotz : FrotzCommonWebViewController {
-}
+@interface AboutFrotz : FrotzCommonWebViewController
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 @end

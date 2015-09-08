@@ -5,7 +5,25 @@
 //  Created by Craig Smith on 6/1/11.
 //  Copyright 2011 Craig Smith. All rights reserved.
 //
-typedef enum { kFTNormal=0, kFTBold=1, kFTItalic=2, kFTFixedWidth=4, kFTFontStyleMask=7, kFTReverse=8, kFTNoWrap=16,
-    kFTRightJust=32, kFTCentered=64, kFTImage=512, kFTInMargin=1024 } RichTextStyle;
+
+#include <CoreFoundation/CFBase.h>
+
+
+typedef CF_OPTIONS(unsigned int, RichTextStyle) { RichTextStyleNormal=0, RichTextStyleBold=1,
+    RichTextStyleItalic=2, RichTextStyleFixedWidth=4, RichTextStyleFontStyleMask=7,
+    RichTextStyleReverse=8, RichTextStyleNoWrap=16, RichTextStyleRightJustification=32,
+    RichTextStyleCentered=64, RichTextStyleImage=512, RichTextStyleInMargin=1024 };
 enum { kFTImageNumShift = 20 };
 
+#pragma mark compatibility macros
+#define kFTNormal RichTextStyleNormal
+#define kFTBold RichTextStyleBold
+#define kFTItalic RichTextStyleItalic
+#define kFTFixedWidth RichTextStyleFixedWidth
+#define kFTFontStyleMask RichTextStyleFontStyleMask
+#define kFTReverse RichTextStyleReverse
+#define kFTNoWrap RichTextStyleNoWrap
+#define kFTRightJust RichTextStyleRightJustification
+#define kFTCentered RichTextStyleCentered
+#define kFTImage RichTextStyleImage
+#define kFTInMargin RichTextStyleInMargin

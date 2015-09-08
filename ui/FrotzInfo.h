@@ -10,9 +10,10 @@
 #import "FrotzSettings.h"
 //#import "ColorPicker.h"
 
+NS_ASSUME_NONNULL_BEGIN
 
-@protocol KeyboardOwner
--(id)dismissKeyboard;
+@protocol KeyboardOwner <NSObject>
+-(nullable id)dismissKeyboard;
 @end
 
 @interface FrotzInfo : UIViewController <FrotzSettingsInfoDelegate> {
@@ -42,3 +43,5 @@
 -(void)updateAccessibility;
 -(void)updateTitle;
 @end
+
+NS_ASSUME_NONNULL_END
