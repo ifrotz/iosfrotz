@@ -243,7 +243,7 @@ winid_t glk_window_open(winid_t splitwin, glui32 method, glui32 size,
         gli_strict_warning(L"window_open: unable to create window");
         return 0;
     }
-    newwin->splitwin = (glui32)splitwin;
+    newwin->splitwin = (intptr_t)splitwin;
     newwin->method = method;
     newwin->size = size;
 

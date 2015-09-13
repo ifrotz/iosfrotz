@@ -341,8 +341,11 @@ BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
         if (fread(zblorbbuf, 1, 12, fp)!=12)
             break;
         z = zblorbbuf;
-        if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l')
+        if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l') {
+            if (fread(zblorbbuf+12, 1, 36, fp) != 36)
+               break;
             goto foundGLUL;
+        }
         if (*z++ != 'F') break;
         if (*z++ != 'O') break;
         if (*z++ != 'R') break;

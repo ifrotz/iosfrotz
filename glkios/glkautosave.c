@@ -38,7 +38,7 @@ struct glk_window_autosave {
     glui32 method;
     glui32 splitwin;
     
-    char *inbuf; // textbuffer type only
+    glui32 inbuf; // textbuffer type only
     int inmax;
 };
 
@@ -55,14 +55,14 @@ struct glk_stream_autosave {
     glui32 readcount, writecount;
     int readable, writable;
     
-    unsigned char *buf;
-    unsigned char *bufptr;
-    unsigned char *bufend;
-    unsigned char *bufeof;
-    glui32 *ubuf;
-    glui32 *ubufptr;
-    glui32 *ubufend;
-    glui32 *ubufeof;
+    glui32 buf;
+    glui32 bufptr;
+    glui32 bufend;
+    glui32 bufeof;
+    glui32 ubuf;
+    glui32 ubufptr;
+    glui32 ubufend;
+    glui32 ubufeof;
     glui32 buflen;
 };
 
@@ -119,6 +119,8 @@ typedef struct glk_object_save glk_object_save_t;
 
 static int wingfxcount = 0;
 
+static glui32 classes_find_id_for_object(int classid, void *obj);
+
 static void saveWin(window_t *win, struct glk_window_autosave *s) {
     s->magicnum = win->magicnum;
     s->rock = win->rock;
@@ -144,10 +146,10 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
     }
     if (win->type == wintype_TextBuffer) {
         window_textbuffer_t *wtb = (window_textbuffer_t*)win->data;
-        s->inbuf = wtb->inbuf;
+        s->inbuf = wtb->inbuf ? (unsigned char*)wtb->inbuf - GlulxRAM : 0;
         s->inmax = wtb->inmax;
     } else {
-        s->inbuf = NULL;
+        s->inbuf = 0;
         s->inmax = 0;
     }
     s->style = win->style;
@@ -156,7 +158,11 @@ static void saveWin(window_t *win, struct glk_window_autosave *s) {
         iosif_save_glk_win_graphics_img(wingfxcount++, win->iosif_glkViewNum);
     //s->size = (win->type == wintype_TextGrid) ? ((window_textgrid_t*)win->data)->linessize : win->size;
     s->method = win->method;
-    s->splitwin = win->splitwin;
+    if (win->splitwin) {
+        s->splitwin = classes_find_id_for_object(gidisp_Class_Window, (void *)(intptr_t)win->splitwin);
+    } else {
+        s->splitwin = kInvalidSplitWin; // definitely an invalid id
+    }
 }
 
 static void saveStream(stream_t *str, struct glk_stream_autosave *s) {
@@ -171,14 +177,14 @@ static void saveStream(stream_t *str, struct glk_stream_autosave *s) {
     s->readable = str->readable;
     s->writable = str->writable;
     
-    s->buf = str->buf;
-    s->bufptr = str->bufptr;
-    s->bufend = str->bufend;
-    s->bufeof = str->bufeof;
-    s->ubuf = str->ubuf;
-    s->ubufptr = str->ubufptr;
-    s->ubufend = str->ubufend;
-    s->ubufeof = str->ubufeof;
+    s->buf = str->buf ? str->buf - GlulxRAM : 0;
+    s->bufptr = str->bufptr ? str->bufptr - GlulxRAM : 0;
+    s->bufend = str->bufend ? str->bufend - GlulxRAM : 0;
+    s->bufeof = str->bufeof ? str->bufeof - GlulxRAM : 0;
+    s->ubuf = str->ubuf ? (unsigned char*)str->ubuf - GlulxRAM : 0;
+    s->ubufptr = str->ubufptr ? (unsigned char*)str->ubufptr - GlulxRAM : 0;
+    s->ubufend = str->ubufend ? (unsigned char*)str->ubufend - GlulxRAM : 0;
+    s->ubufeof = str->ubufeof ? (unsigned char*)str->ubufeof - GlulxRAM : 0;
     
     s->buflen = str->buflen;
 }
@@ -297,63 +303,6 @@ static void classes_push_cref(int classid, classref_t *cref)
     }
 }
 
-static void classes_denormalize_pointers(glui32 objclass, void *obj)
-{
-	if (objclass == gidisp_Class_Window) {
-		struct glk_window_autosave *win = (struct glk_window_autosave *)obj;
-		
-		if (win->inbuf)	win->inbuf 	+= (glui32)GlulxRAM;
-        
-	} else if (objclass == gidisp_Class_Stream) {
-		struct glk_stream_autosave *str = (struct glk_stream_autosave *)obj;
-        
-		if (str->buf)		str->buf     += (glui32)GlulxRAM;
-		if (str->bufptr)	str->bufptr  += (glui32)GlulxRAM;
-		if (str->bufend)	str->bufend  += (glui32)GlulxRAM;
-		if (str->bufeof)	str->bufeof  += (glui32)GlulxRAM;
-        
-		if (str->ubuf)		str->ubuf    += (glui32)GlulxRAM;
-		if (str->ubufptr)	str->ubufptr += (glui32)GlulxRAM;
-		if (str->ubufend)	str->ubufend += (glui32)GlulxRAM;
-		if (str->ubufeof)	str->ubufeof += (glui32)GlulxRAM;
-	} else if (objclass == gidisp_Class_Fileref) {
-        ;
-	} else if (objclass == gidisp_Class_Schannel) {
-		;
-	}
-}
-
-static void classes_normalize_pointers(glk_object_save_t *obj)
-{
-    
-	if (obj->type == gidisp_Class_Window) {
-		struct glk_window_autosave *win = &obj->obj.win;
-		
-		if (win->inbuf)	win->inbuf	-= (glui32)GlulxRAM;
-		if (win->splitwin) {
-			win->splitwin = classes_find_id_for_object(gidisp_Class_Window, (void *)(intptr_t)win->splitwin);
-		} else {
-			win->splitwin = kInvalidSplitWin; // definitely an invalid id
-		}
-	} else if (obj->type == gidisp_Class_Stream) {
-		struct glk_stream_autosave *str = &obj->obj.str;
-        
-		if (str->buf) 		str->buf     -= (glui32)GlulxRAM;
-		if (str->bufptr)	str->bufptr  -= (glui32)GlulxRAM;
-		if (str->bufend)	str->bufend  -= (glui32)GlulxRAM;
-		if (str->bufeof)	str->bufeof  -= (glui32)GlulxRAM;
-        
-		if (str->ubuf)		str->ubuf    -= (glui32)GlulxRAM;
-		if (str->ubufptr)	str->ubufptr -= (glui32)GlulxRAM;
-		if (str->ubufend)	str->ubufend -= (glui32)GlulxRAM;
-		if (str->ubufeof)	str->ubufeof -= (glui32)GlulxRAM;
-	} else if (obj->type == gidisp_Class_Fileref) {
-		;
-	} else if (obj->type == gidisp_Class_Schannel) {
-		;
-	}
-}
-
 static glui32 classes_iter(glk_object_save_t **objs)
 {
 	classtable_t *ctab;
@@ -418,7 +367,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
 		//!!!cur->obj.win = *win;
 		win->store = TRUE;
 		cur->iscurrent = FALSE; //(win == win_cur);
-		classes_normalize_pointers(cur);
         
 		ct++;
 		// get stream for window
@@ -435,7 +383,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
 			saveStream(win->str, &cur->obj.str);
 			win->str->store = TRUE;
 			cur->iscurrent = (win->str == str_cur);
-			classes_normalize_pointers(cur);
 			ct++;
             
 			// write STYLE chunk
@@ -467,7 +414,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
 			// set the children to their ids so we can find the pair on reload
 			cur->obj.pair.child1 = classes_find_id_for_object(gidisp_Class_Window, pairwin->child1);
 			cur->obj.pair.child2 = classes_find_id_for_object(gidisp_Class_Window, pairwin->child2);
-			//!!!classes_normalize_pointers(cur);
             
 			ct++;
 		} else if (win->type == wintype_Graphics) {
@@ -511,7 +457,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
 								//!!!cur->obj.str = *str;
 								saveStream(str, &cur->obj.str);
 								cur->iscurrent = (str == str_cur);
-								classes_normalize_pointers(cur);
 								ct++;
 							}
 						} else if (i == 2) {
@@ -524,7 +469,6 @@ static glui32 classes_iter(glk_object_save_t **objs)
                             
 							//!!!cur->obj.fref = *fref;
 							saveFRef(fref, &cur->obj.fref);
-							classes_normalize_pointers(cur);
 							ct++;
 						} else if (i == 3) { // won't happen here
 							;
@@ -606,7 +550,6 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 		if (cur->type == gidisp_Class_Window) {
 			winct++;
 			foundwin = &cur->obj.win;
-			classes_denormalize_pointers(gidisp_Class_Window, foundwin);
 			winid[winct-1].id = cur->id; // fill this in for a pair, too
             
 			if (foundwin->type != wintype_Pair) {
@@ -661,7 +604,7 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
                 }
 				if (foundwin->inbuf) {
 					window_textbuffer_t *wtb = (window_textbuffer_t*)win->data;
-					wtb->inbuf = foundwin->inbuf;
+                    wtb->inbuf = foundwin->inbuf ? foundwin->inbuf + GlulxRAM : NULL;
 					wtb->inmax = foundwin->inmax;
 				}
 				found = TRUE;
@@ -685,7 +628,6 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 						cref_id->id = cur->id; // auto-awarding should verify that an id has not been reused
 						classes_push_cref(gidisp_Class_Stream, cref_id);
 					}
-					classes_denormalize_pointers(gidisp_Class_Stream, foundstr);
                     
 					str->rock = foundstr->rock;
 					str->readcount = foundstr->readcount;
@@ -693,12 +635,19 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 					str->readable = foundstr->readable;
 					str->writable = foundstr->writable;
 					if (!str->buf && foundstr->buf) {
-						str->buf = foundstr->buf;
-						str->bufptr = foundstr->bufptr;
-						str->bufend = foundstr->bufend;
-						str->bufeof = foundstr->bufeof;
+                        str->buf = foundstr->buf + GlulxRAM;
+						str->bufptr = foundstr->bufptr + GlulxRAM;
+						str->bufend = foundstr->bufend + GlulxRAM;
+						str->bufeof = foundstr->bufeof + GlulxRAM;
 						str->buflen = foundstr->buflen;
 					}
+                    if (!str->ubuf && foundstr->ubuf) {
+                        str->ubuf = (glui32 *)(foundstr->ubuf + GlulxRAM);
+                        str->ubufptr = (glui32 *)(foundstr->ubufptr + GlulxRAM);
+                        str->ubufend = (glui32 *)(foundstr->ubufend + GlulxRAM);
+                        str->ubufeof = (glui32 *)(foundstr->ubufeof + GlulxRAM);
+                        str->buflen = foundstr->buflen;
+                    }
 					if (cur->iscurrent) {
 						cur_str = str;
 					}
@@ -874,7 +823,6 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 								cref_id->id = cur->id; // auto-awarding should verify that an id has not been reused
 								classes_push_cref(gidisp_Class_Stream, cref_id);
 							}
-							classes_denormalize_pointers(gidisp_Class_Stream, foundstr);
                             
 							tempstr->rock = foundstr->rock;
 							if (tempstr->type != strtype_File && !tempstr->buf && foundstr->buf) {
@@ -883,9 +831,9 @@ static glsi32 classes_restore(glk_object_save_t *objects, glui32 objects_count, 
 								tempstr->readable = foundstr->readable;
 								tempstr->writable = foundstr->writable;
 								tempstr->buf = foundstr->buf;
-								tempstr->bufptr = foundstr->bufptr;
-								tempstr->bufend = foundstr->bufend;
-								tempstr->bufeof = foundstr->bufeof;
+                                tempstr->bufptr = foundstr->bufptr ? foundstr->bufptr + GlulxRAM : 0;
+								tempstr->bufend = foundstr->bufend ? foundstr->bufend + GlulxRAM : 0;
+								tempstr->bufeof = foundstr->bufeof ? foundstr->bufeof + GlulxRAM : 0;
 								tempstr->buflen = foundstr->buflen;
 								if (cur->iscurrent) {
 									cur_str = tempstr;
