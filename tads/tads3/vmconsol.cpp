@@ -2948,7 +2948,7 @@ int CVmConsole::read_line_timeout(VMG_ char *buf, size_t buflen,
         }
 
         /* read a line from the keyboard */
-        evt = os_gets_timeout((uchar *)S_read_buf, sizeof(S_read_buf),
+        evt = os_gets_timeout(S_read_buf, sizeof(S_read_buf),
                               timeout, use_timeout);
 
         /*
@@ -2960,7 +2960,7 @@ int CVmConsole::read_line_timeout(VMG_ char *buf, size_t buflen,
         if (evt == OS_EVT_NOTIMEOUT && !use_timeout)
         {
             /* perform an ordinary untimed input */
-            if (os_gets((uchar *)S_read_buf, sizeof(S_read_buf)) != 0)
+            if (os_gets(S_read_buf, sizeof(S_read_buf)) != 0)
             {
                 /* success */
                 if (do_autosave)

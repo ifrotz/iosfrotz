@@ -553,11 +553,11 @@ int os_askfile(const char *prompt, char *fname_buf, int fname_buf_len,
  *   success, returns 'buf'; on failure, including end of file, returns a
  *   null pointer.  
  */
-unsigned char *os_gets(unsigned char *buf, size_t buflen)
+char *os_gets(char *buf, size_t buflen)
 {
     event_t event;
 
-    os_get_buffer((char *)buf, buflen, 0);
+    os_get_buffer(buf, buflen, 0);
 
     do
     {
@@ -655,7 +655,7 @@ static char * timebuf = NULL;
 static size_t timelen = 0;
 #endif
 
-int os_gets_timeout(unsigned char *buf, size_t bufl,
+int os_gets_timeout(char *buf, size_t bufl,
                     unsigned long timeout_in_milliseconds, int use_timeout)
 {
 #if defined GLK_TIMERS && defined GLK_MODULE_LINE_ECHO
@@ -694,7 +694,7 @@ int os_gets_timeout(unsigned char *buf, size_t bufl,
     }
     while (event.type != evtype_LineInput);
 
-    char *res = os_fill_buffer(buf, event.val1);
+   char *res = os_fill_buffer(buf, event.val1);
 
     /* stop timer and turn on line echo */
     if (timer)

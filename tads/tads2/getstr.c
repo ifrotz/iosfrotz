@@ -121,7 +121,7 @@ int getstring(char *prompt, char *buf, int bufl)
         runstat();
         
         /* read a line from the keyboard */
-        result = (char *)os_gets((uchar *)buf, bufl);
+        result = os_gets(buf, bufl);
         
         /* 
          *   if the result is null, we're at eof, so return a non-zero

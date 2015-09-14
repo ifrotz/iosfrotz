@@ -39,7 +39,7 @@ void os_get_buffer (char *buf, size_t len, size_t init)
     glk_request_line_event(mainwin, buf, len - 1, init);
 }
 
-unsigned char *os_fill_buffer (unsigned char *buf, size_t len)
+char *os_fill_buffer (char *buf, size_t len)
 {
     buf[len] = '\0';
     return buf;
@@ -56,7 +56,7 @@ extern glui32 os_parse_chars(unsigned char *buf, glui32 buflen,
 extern glui32 os_prepare_chars (glui32 *buf, glui32 buflen,
                                 unsigned char *out, glui32 outlen);
 
-void os_put_buffer (unsigned char *buf, size_t len)
+void os_put_buffer (const char *buf, size_t len)
 {
     glui32 *out;
     glui32 outlen;
@@ -79,7 +79,7 @@ void os_put_buffer (unsigned char *buf, size_t len)
     free(out);
 }
 
-void os_get_buffer (unsigned char *buf, size_t len, size_t init)
+void os_get_buffer (char *buf, size_t len, size_t init)
 {
     input = malloc(sizeof(glui32)*(len+1));
     max = len;
@@ -90,7 +90,7 @@ void os_get_buffer (unsigned char *buf, size_t len, size_t init)
     glk_request_line_event_uni(mainwin, input, len - 1, init);
 }
 
-unsigned char *os_fill_buffer (unsigned char *buf, size_t len)
+char *os_fill_buffer (char *buf, size_t len)
 {
     glui32 res = os_prepare_chars(input, len, buf, max);
     buf[res] = '\0';

@@ -3280,7 +3280,7 @@ int os_askfile(const char *prompt, char *fname_buf, int fname_buf_len,
  *   success, returns 'buf'; on failure, including end of file, returns a
  *   null pointer.  
  */
-unsigned char *os_gets(unsigned char *buf, size_t bufl);
+char *os_gets(char *buf, size_t bufl);
 
 /*
  *   Read a string of input with an optional timeout.  This behaves like
@@ -3360,7 +3360,7 @@ unsigned char *os_gets(unsigned char *buf, size_t bufl);
  *   input is available IMMEDIATELY, return the input, otherwise return
  *   immediately with the OS_EVT_TIMEOUT result code.  
  */
-int os_gets_timeout(unsigned char *buf, size_t bufl,
+int os_gets_timeout(char *buf, size_t bufl,
                     unsigned long timeout_in_milliseconds, int use_timeout);
 
 /*

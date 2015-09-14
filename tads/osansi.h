@@ -154,7 +154,7 @@ int osfgetc(osfildef *fp);
 
 void os_put_buffer (const char *buf, size_t len);
 void os_get_buffer (char *buf, size_t len, size_t init);
-unsigned char *os_fill_buffer (unsigned char *buf, size_t len);
+char *os_fill_buffer (char *buf, size_t len);
 
 /* 
  *   Convert string to all-lowercase. 
