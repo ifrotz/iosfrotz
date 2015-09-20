@@ -974,7 +974,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw
 {
     CGSize textSize;
-    CGFloat fontHeight = [font leading];
+    CGFloat fontHeight = [font lineHeight];
     CGFloat fontFudge = 0.0001; // fudge to prevent rounding error from clipping drawing
     CGFloat width = rect.size.width - m_rightMargin;
     CGFloat textWidth = 0;

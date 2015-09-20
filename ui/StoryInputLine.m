@@ -358,7 +358,7 @@ BOOL cursorVisible = YES;
     //NSLog(@"udp cwin %d myFrame=%f %f %f %f vis=%d", cwin, myFrame.origin.x, myFrame.origin.y, myFrame.size.width, myFrame.size.height, cursorVisible);
     myFrame.size.width = frame.size.width - (myFrame.origin.x - frame.origin.x) - [curTextView rightMargin];
     int pad = 2;
-    myFrame.size.height = [[self font] leading]+pad;
+    myFrame.size.height = [[self font] lineHeight]+pad;
 
     [self setFrame: myFrame];
     if (m_completionLabel) {

@@ -748,7 +748,7 @@ void iosif_recompute_screensize() {
     CGRect pFrame = [parentView frame];
     pFrame.size.height -= [theSMVC keyboardSize].height;
     iosif_textview_width = (int)(pFrame.size.width / fontwid);
-    iosif_textview_height = (int)(pFrame.size.height / [[storyView font] leading])+1;
+    iosif_textview_height = (int)(pFrame.size.height / [[storyView font] lineHeight])+1;
     if (iosif_textview_width > MAX_COLS)
         iosif_textview_width = MAX_COLS;
     if (iosif_textview_height > MAX_ROWS)
@@ -2650,7 +2650,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
     m_statusFixedFontWidth = !normalSizeFixedFont ? 5.0 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4.0;
-    m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont leading];
+    m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont lineHeight];
     [m_statusLine reflowText];
     
     if (gStoryInterp == kGlxStory) {
@@ -4072,7 +4072,7 @@ static void setScreenDims(char *storyNameBuf) {
     
     disable_complete = NO;
     
-    iosif_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] leading]);
+    iosif_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] lineHeight]);
     
     m_storyTID = 0;
     pthread_create(&m_storyTID, NULL, interp_cover_normal, (void*)storyNameBuf);
