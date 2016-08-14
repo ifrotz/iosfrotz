@@ -1581,12 +1581,14 @@ void git_shutdown_dispatch() {
         gli_delete_fileref(fref);
     }
     
-    for (int classid=0; classid<num_classes; classid++) {
-        glulx_free(classes[classid]);
-        classes[classid] = 0;
+    if (classes) {
+        for (int classid=0; classid<num_classes; classid++) {
+            glulx_free(classes[classid]);
+            classes[classid] = 0;
+        }
+        glulx_free(classes);
+        classes = 0;
     }
-    glulx_free(classes);
-    classes = 0;
 }
 
 #define GlulxRAM (gRam)
