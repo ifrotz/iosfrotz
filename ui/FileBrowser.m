@@ -30,6 +30,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 @property(nonatomic,strong) NSDate *modDate;
 -(NSComparisonResult)compare:(FileInfo*)other;
 -(instancetype)initWithPath:(NSString*)path NS_DESIGNATED_INITIALIZER;
+-(instancetype)init NS_UNAVAILABLE;
+-(nullable instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
 @end
 
 @implementation FileInfo

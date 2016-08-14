@@ -11,9 +11,16 @@
 
 @implementation CompletionLabel
 
+-(nullable instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) {
+        m_label = [coder decodeObjectForKey:@"label"];
+    }
+    return self;
+}
 
 -(CompletionLabel*)initWithFont:(UIFont*)font {
-    if ((self = [super init])) {
+    if ((self = [super initWithFrame: CGRectZero])) {
         [self setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
         m_label = [[UILabel alloc] init];
         [m_label setFont: font];

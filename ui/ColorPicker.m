@@ -9,9 +9,10 @@
     int m_height;
 //    CALayer *m_screenLayer;
 //    CoreSurfaceBufferRef m_screenSurface;
-}
 
+}
 - (instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
 @property (nonatomic, readonly) int width;
 @property (nonatomic, readonly) int height;
 @end
@@ -23,6 +24,7 @@
     UIImageView *m_imgView;
 }
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithFrame:(CGRect)frame NS_UNAVAILABLE;
 - (void) setFrame:(CGRect)frame;
 - (void) setTextColor: (UIColor *)color;
 - (void) setBGColor: (UIColor *)color;
@@ -92,26 +94,26 @@
 
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     if ((self = [super initWithFrame: frame]) != nil) {
-	m_colorPicker = colorPicker;
-	self.autoresizesSubviews = YES;
-	m_text = [[UILabel alloc] initWithFrame: CGRectMake(5, 5, frame.size.width-5, frame.size.height-10)];
-	m_text.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
-	m_text.lineBreakMode = UILineBreakModeWordWrap;
-	m_text.backgroundColor = [UIColor clearColor];
-	UIFont *font = [[m_colorPicker delegate] fontForColorDemo];
-	if (font)
-	    m_text.font = font;
-	m_text.text = @"West of House\nThis is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n";
-	m_text.numberOfLines = 0;
-	[self addSubview: m_text];
-	m_flipFgImg = [UIImage imageNamed: @"colorflipfg.png"];
-	m_flipBgImg = [UIImage imageNamed: @"colorflipbg.png"];
-	m_imgView = [[UIImageView alloc] initWithImage: m_flipFgImg];
-	m_imgView.frame=CGRectMake(frame.size.width - m_flipFgImg.size.width - 1, frame.size.height - m_flipFgImg.size.height-1, m_flipFgImg.size.width, m_flipFgImg.size.height);
-	m_imgView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
-	[self addSubview: m_imgView];
-	[m_text sizeToFit];
-   }
+        m_colorPicker = colorPicker;
+        self.autoresizesSubviews = YES;
+        m_text = [[UILabel alloc] initWithFrame: CGRectMake(5, 5, frame.size.width-5, frame.size.height-10)];
+        m_text.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
+        m_text.lineBreakMode = UILineBreakModeWordWrap;
+        m_text.backgroundColor = [UIColor clearColor];
+        UIFont *font = [[m_colorPicker delegate] fontForColorDemo];
+        if (font)
+            m_text.font = font;
+        m_text.text = @"West of House\nThis is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n";
+        m_text.numberOfLines = 0;
+        [self addSubview: m_text];
+        m_flipFgImg = [UIImage imageNamed: @"colorflipfg.png"];
+        m_flipBgImg = [UIImage imageNamed: @"colorflipbg.png"];
+        m_imgView = [[UIImageView alloc] initWithImage: m_flipFgImg];
+        m_imgView.frame=CGRectMake(frame.size.width - m_flipFgImg.size.width - 1, frame.size.height - m_flipFgImg.size.height-1, m_flipFgImg.size.width, m_flipFgImg.size.height);
+        m_imgView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
+        [self addSubview: m_imgView];
+        [m_text sizeToFit];
+    }
    return self;
 }
 
@@ -142,7 +144,7 @@
     m_text.frame = CGRectMake(5, 5, frame.size.width-5, frame.size.height-10);
     UIFont *font = [[m_colorPicker delegate] fontForColorDemo];
     if (font)
-	m_text.font = font;
+        m_text.font = font;
 }
 
 - (void)setTextColor:(UIColor*)textColor {
