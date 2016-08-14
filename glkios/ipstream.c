@@ -890,7 +890,7 @@ static void gli_set_style(stream_t *str, glui32 val)
             if (oblique || val == style_Emphasized || val == style_Note)
                 istyle |= kFTItalic;
             if (val == style_Alert)
-                istyle |= kFTBold; // kFTReverse;
+                istyle |= kFTBold|kFTItalic; // kFTReverse;
             if (weight || val == style_Header || val == style_Subheader || val == style_Input)
                 istyle |= kFTBold;
             if (!proportional || val == style_Preformatted) { // || val == style_BlockQuote)
@@ -905,13 +905,15 @@ static void gli_set_style(stream_t *str, glui32 val)
                     istyle |= kFTCentered;
                 else if (just == stylehint_just_RightFlush)
                     istyle |= kFTRightJust;
-                iosif_set_text_attribs(str->win->iosif_glkViewNum, istyle, -1, TRUE);
-                
-                unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
-                unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
+                if (str->win->iosif_glkViewNum != -1) {
+                    iosif_set_text_attribs(str->win->iosif_glkViewNum, istyle, -1, TRUE);
+                    
+                    unsigned int textColor = gli_stylehint_get(str->win, val, stylehint_TextColor);
+                    unsigned int bgColor = gli_stylehint_get(str->win, val, stylehint_BackColor);
 
-                iosif_glk_set_text_colors(str->win->iosif_glkViewNum, textColor, bgColor);
-                //printf("stc v %d style %d text %x bg %x\n", str->win->iosif_glkViewNum, val, textColor, bgColor);
+                    iosif_glk_set_text_colors(str->win->iosif_glkViewNum, textColor, bgColor);
+                    //printf("stc v %d style %d text %x bg %x\n", str->win->iosif_glkViewNum, val, textColor, bgColor);
+                }
             }
             if (str->win->echostr && str->win->echostr != str)
                 gli_set_style(str->win->echostr, val);
