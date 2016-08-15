@@ -56,6 +56,7 @@ void removeAnim(UIView *view);
 -(void)removeAnimationsForTarget:(id)target;
 @end
 
+#if 0 // unused, debugging
 static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat x2, CGFloat y2) {
     CGContextBeginPath(context);
     CGContextMoveToPoint(context, x1, y1);
@@ -63,6 +64,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     CGContextClosePath(context);
     CGContextDrawPath(context, kCGPathStroke);
 }
+#endif
 
 @implementation RichTextTile
 
@@ -618,7 +620,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 -(void)reset {
     BOOL origLandscape = m_origFrame.size.width > m_origFrame.size.height;
-    BOOL nowLandscape = UIDeviceOrientationIsLandscape([[self delegate] interfaceOrientation]);
+    BOOL nowLandscape = UIInterfaceOrientationIsLandscape([[self delegate] interfaceOrientation]);
     if (origLandscape ^ nowLandscape) {
         m_origFrame = CGRectMake(m_origFrame.origin.y, m_origFrame.origin.x, m_origFrame.size.height, m_origFrame.size.width);
     }
@@ -834,10 +836,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         termRange = [text rangeOfCharacterFromSet:cs options:0 range: range];
         prevWidth = textSize.width;
         if (termRange.length > 0)
-            textSize = [[text substringToIndex:termRange.location+1] sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, m_fontHeight) lineBreakMode:UILineBreakModeClip];
+            textSize = [[text substringToIndex:termRange.location+1] sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, m_fontHeight) lineBreakMode:NSLineBreakByClipping];
         else {
             termRange.location = [text length];
-            textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, m_fontHeight) lineBreakMode:UILineBreakModeClip];
+            textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, m_fontHeight) lineBreakMode:NSLineBreakByClipping];
         }
         if (minXPos+pos.x+textSize.width > hotPoint->x) {
             //NSLog(@"findhot:[%@]", [text substringToIndex:termRange.location]);
@@ -1069,7 +1071,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 } else 
                     textSize = [text sizeWithFont:font constrainedToSize:
                                 CGSizeMake(width - pos.x, fontFudge+fontHeight + (noWrap ? 0 :fontFudge + fontHeight))
-                                    lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeWordWrap];
+                                    lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByWordWrapping];
                 textWidth = textSize.width;
                 CGFloat xPos = pos.x;
                 if (pos.x <= m_tempLeftMargin && lineNum < [m_lineWidth count]) {
@@ -1098,7 +1100,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         }
                         if (!isFixed) {
                             //NSLog(@"xpos2 = %f, actual = %f, text=%@", pos.x, minXPos+xPos, text);
-                            textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
+                            textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
                         }
                         else {
                             // Set fill and stroke colors
@@ -1138,7 +1140,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     termRange = [text rangeOfCharacterFromSet:cs options:0 range: range];
                     if (termRange.length <= 0)
                         break;
-                    textSize = [[text substringToIndex:termRange.location] sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x - m_fontMinWidth-1, fontHeight*2+fontFudge) lineBreakMode:UILineBreakModeWordWrap];
+                    textSize = [[text substringToIndex:termRange.location] sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x - m_fontMinWidth-1, fontHeight*2+fontFudge) lineBreakMode:NSLineBreakByWordWrapping];
                     // (The -m_fontMinWidth-1 is to prevent trailing hyphens from being clipped.  The sizeWithFont function
                     // won't wrap a trailing hyphen to the next line even if it won't fit in the given width.)
                     range.location = termRange.location+1;
@@ -1170,7 +1172,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         [fgColor set];
                     }
                     if (!isFixed)
-                        textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:UILineBreakModeClip];
+                        textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
                     else {
                         textSize.height = fontHeight;
                         textSize.width = RTDrawFixedWidthText(context, subtext, minXPos+xPos, -fontAscender-pos.y, YES);
@@ -1178,7 +1180,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 }
                 else {
                     if (!isFixed)
-                        textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontFudge+fontHeight) lineBreakMode:UILineBreakModeClip];
+                        textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontFudge+fontHeight) lineBreakMode:NSLineBreakByClipping];
                     else {
                         textSize.height = fontHeight;
                         textSize.width = RTDrawFixedWidthText(context, subtext, 0, 0, NO);			
@@ -1211,21 +1213,21 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                         if (bgColor) {
                             [bgColor set];
                             textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width-pos.x, fontFudge+fontHeight*maxLines)
-                                            lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
+                                            lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByCharWrapping];
                             CGFloat t = (textSize.height + m_extraLineSpacing > curLineHeight) ? textSize.height + m_extraLineSpacing : curLineHeight;
                             CGContextFillRect(context, CGRectMake(minXPos, pos.y, width + m_leftMargin, t));
                             [fgColor set];
                         }
                         if (!isFixed)
                             textSize = [text drawInRect:CGRectMake(minXPos+pos.x, pos.y, width-pos.x, fontFudge+fontHeight*maxLines) withFont:font
-                                          lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
+                                          lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByCharWrapping];
                         else {
                             textSize.width = RTDrawFixedWidthText(context, text, minXPos+pos.x, -fontAscender-pos.y, YES);
                         }
                     }
                     else
                         textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width, fontFudge+fontHeight*maxLines)
-                                        lineBreakMode: noWrap ? UILineBreakModeClip:UILineBreakModeCharacterWrap];
+                                        lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByCharWrapping];
                     textWidth = textSize.width;
                     CGFloat t = (textSize.height + m_extraLineSpacing > curLineHeight) ? textSize.height + m_extraLineSpacing : curLineHeight;
                     *nextPos = CGPointMake(m_tempLeftMargin+textSize.width, pos.y + t);
@@ -2189,17 +2191,15 @@ static NSString *kCommand = @"Command";
 #if !NoAccessibility
     if (hasAccessibility && m_numLines > 1 && m_lastAEIndexAnnounced >= 0) {
         UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
-        if (&UIAccessibilityAnnouncementNotification) {
-            NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
-            NSUInteger count = [m_accessibilityElements count];
-            if (m_lastAEIndexAnnounced < count) {
-                for (NSInteger i = m_lastAEIndexAnnounced; i < count; ++i) {
-                    [text appendString: [m_accessibilityElements[i] accessibilityValue]];
-                }
-                m_lastAEIndexAnnounced = count;
-                UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
-                m_prevLineNotTerminated = NO;
+        NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
+        NSUInteger count = [m_accessibilityElements count];
+        if (m_lastAEIndexAnnounced < count) {
+            for (NSInteger i = m_lastAEIndexAnnounced; i < count; ++i) {
+                [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
+            m_lastAEIndexAnnounced = count;
+            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            m_prevLineNotTerminated = NO;
         }
     }
 #endif

@@ -11,6 +11,10 @@
 #import <QuartzCore/QuartzCore.h>
 #import "TextViewExt.h"
 
+@protocol HidePopoverProto <NSObject>
+-(void)hidePopover; // this only exists to get rid of an unknown selector warning.  The actual call is guarded with respondsToSelector.
+@end
+
 @implementation FrotzInfo
 @synthesize keyboardOwner = m_kbdOwner;
 

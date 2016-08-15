@@ -54,7 +54,7 @@
         const CGFloat kFactor = 1.4;
         CGRect bounds = [self bounds];
         CGSize imageSize = self.image.size;
-        if (UIDeviceOrientationIsLandscape([m_detailsController interfaceOrientation]) && imageSize.height > bounds.size.height * 1.1) {
+        if (UIInterfaceOrientationIsLandscape([m_detailsController interfaceOrientation]) && imageSize.height > bounds.size.height * 1.1) {
             [UIView beginAnimations:@"artmag" context:0];
             [UIView setAnimationTransition:UIViewAnimationTransitionNone forView:self cache:YES];
             m_savedBounds = bounds;
@@ -115,7 +115,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         if (data) {
             NSString *errorStr = nil;
             NSPropertyListFormat plFmt;
-            NSDictionary *dict = [NSPropertyListSerialization propertyListFromData:data mutabilityOption:kCFPropertyListImmutable 
+            NSDictionary *dict = [NSPropertyListSerialization propertyListFromData:data mutabilityOption:NSPropertyListImmutable 
                                                                             format:&plFmt errorDescription:&errorStr];
             if (dict && [dict respondsToSelector:@selector(objectForKey:)]) {
                 NSArray *resources = dict[kWebSubResourcesKey];
@@ -285,7 +285,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     
     if ((m_title && [m_title length] > 0 || m_storyInfo) //|| UIDeviceOrientationIsLandscape([self interfaceOrientation])
         ) {
-        if (/*!m_portraitCover.isHidden && */ UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
+        if (/*!m_portraitCover.isHidden && */ UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
             if (m_artSizeLandscape.width != 0) {
                 CGRect bounds = m_artworkView.bounds;
                 bounds.size = m_artSizeLandscape;
@@ -429,7 +429,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         CGRect butttonsRect = m_buttonsView.frame;
         [m_textFieldsView.superview bringSubviewToFront:m_textFieldsView];
 
-        if (UIDeviceOrientationIsLandscape(toInterfaceOrientation)) {
+        if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
             if ([m_descriptionWebView superview] && ![m_descriptionWebView isHidden])
                 [self toggleArtDescript];
 //			flipRect.origin = CGPointMake(textRect.origin.x + butttonsRect.size.width - flipRect.size.width + 20, textRect.origin.y);
@@ -458,7 +458,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     CGRect artBounds = m_artworkView.bounds;
     if (m_title && [m_title length] > 0 || m_storyInfo) {
         m_portraitCover.hidden = YES;
-        artBounds.size =  UIDeviceOrientationIsLandscape(toInterfaceOrientation) ? m_artSizeLandscape: m_artSizePortrait;
+        artBounds.size =  UIInterfaceOrientationIsLandscape(toInterfaceOrientation) ? m_artSizeLandscape: m_artSizePortrait;
         m_artworkView.bounds = artBounds;
     } else {
         m_portraitCover.hidden = NO;
@@ -490,7 +490,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (hasPopover && [self isEditing])
         [self setEditing:NO animated: YES];
     
-    if (UIDeviceOrientationIsLandscape([self interfaceOrientation]))
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
         m_portraitCoverLabel.text = @"Select a story to begin";
     else
         m_portraitCoverLabel.text = hasPopover ? nil : @"Tap 'Select Story' to begin";

@@ -807,6 +807,9 @@ void iosif_restore_glk_win_graphics_img(int ordNum, int viewNum) {
     }
 }
 
+@protocol setGlkBGColorProto <NSObject>
+-(void)setGlkBGColor:(NSNumber*)arg;
+@end
 
 void iosif_set_background_color(int viewNum, glui32 color) {
     if (viewNum > kMaxGlkViews)
@@ -1881,17 +1884,13 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (!m_notesController) {
         m_notesController = [[NotesViewController alloc] initWithFrame: frame];
         [m_notesController setDelegate: self];
-        
-        if ([self respondsToSelector:@selector(automaticallyForwardAppearanceAndRotationMethodsToChildViewControllers:)])
-            [self addChildViewController:m_notesController]; // this was private but worked in 4.3, so check for another method added in 5.0
-        // (Yes, this is hacky, but not as hacky as doing string compares on systemVersion)
+        [self addChildViewController:m_notesController];
     }
     m_background = [m_notesController containerScrollView];
     [m_background addSubview: m_notesController.view];
 #endif
     [m_background setBackgroundColor: m_defaultBGColor];
- //   self.view = m_background;
-   [self.view addSubview: m_background];
+    [self.view addSubview: m_background];
 
     [m_background addSubview: m_notesController.view];
     
@@ -2152,7 +2151,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 - (void)autosize {
-    if (UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
         m_landscape = YES;
         if (!gLargeScreenDevice) {
             if (isOS32)
@@ -2248,7 +2247,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #endif
     BOOL navHidden = [self.navigationController isNavigationBarHidden];
     //    if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]) || !m_rotationInProgress && m_landscape) { // m_landscape
-    if (UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
         if (navHidden)
             frame.size.height = applicationFrame.size.width - statusHeight;
         else
@@ -3659,8 +3658,8 @@ static void setScreenDims(char *storyNameBuf) {
 #endif
         UILabel *msgView = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, 60)];
         [msgView setText: m_launchMessage];
-        [msgView setTextAlignment: UITextAlignmentCenter];
-        [msgView setLineBreakMode: UILineBreakModeTailTruncation];
+        [msgView setTextAlignment: NSTextAlignmentCenter];
+        [msgView setLineBreakMode: NSLineBreakByTruncatingTail];
         [msgView setNumberOfLines: 0];
         [msgView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
         [msgView sizeToFit];
@@ -4005,7 +4004,7 @@ static void setScreenDims(char *storyNameBuf) {
         m_splashImageView = nil;
     }
     
-    if (1 || ![storyBrowser lowMemory]) {
+    if (/* DISABLES CODE */(1) || ![storyBrowser lowMemory]) {
         NSString *pathExt = [[self currentStory] pathExtension];
         BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
         NSData *data = nil;

@@ -482,7 +482,7 @@ void removeOldPngSplash(const char *filename) {
 }
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (gUseSplitVC && self.popoverBarButton &&  UIDeviceOrientationIsPortrait(toInterfaceOrientation))
+    if (gUseSplitVC && self.popoverBarButton &&  UIInterfaceOrientationIsPortrait(toInterfaceOrientation))
         m_details.navigationItem.leftBarButtonItem = self.popoverBarButton;
 }
 
@@ -938,8 +938,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)viewDidUnload {
-    return;
-    NSLog(@"sb viewdidunload!");
     m_tableView = nil;
     m_background = nil;
 }
@@ -1135,7 +1133,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (gUseSplitVC && self.splitViewController) {
         if (self.splitViewController.modalViewController) {
             [self.splitViewController dismissModalViewControllerAnimated: YES];
-            if (UIDeviceOrientationIsLandscape([self interfaceOrientation]))
+            if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
                 self.popoverBarButton = nil;
             [self hidePopover];
             NSString *storyPath = [[m_details storyInfo] path];

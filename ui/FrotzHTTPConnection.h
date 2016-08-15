@@ -26,6 +26,5 @@
 - (NSObject<HTTPResponse> *)httpResponseForMethod:(NSString *)method URI:(NSString *)path;
 //- (void)processDataChunk:(NSData *)postDataChunk;
 - (void)processBodyData:(NSData *)postDataChunk;
-- (void)doneWithBody;
 - (void)handlePostMultipartData:(NSData *)data;
 @end

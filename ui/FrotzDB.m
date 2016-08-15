@@ -78,7 +78,6 @@
 
     CGRect tframe = CGRectMake(0.0, 0.0, 140, kTextFieldHeight);
     m_textField = [[UITextField alloc] initWithFrame:tframe];
-    [m_textField addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_textField.enablesReturnKeyAutomatically = YES;
     m_textField.autocorrectionType = UITextAutocorrectionTypeNo;
     m_textField.autocapitalizationType = UITextAutocapitalizationTypeNone;

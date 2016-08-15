@@ -106,7 +106,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [m_tableView setDelegate: self];
     [m_tableView setDataSource: self];
     CGRect origFrame = [[UIScreen mainScreen] applicationFrame];
-    if (UIDeviceOrientationIsLandscape([self interfaceOrientation])) {
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
         CGFloat t = origFrame.size.width; origFrame.size.width = origFrame.size.height; origFrame.size.height = t;
         t = origFrame.origin.x; origFrame.origin.x = origFrame.origin.y; origFrame.origin.y = t;
     }
@@ -321,7 +321,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
     [super viewWillDisappear:animated];
-    if (gUseSplitVC && animated && UIDeviceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
+    if (gUseSplitVC && animated && UIInterfaceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
         [self.navigationController.view.superview setHidden: YES];
 }
 
