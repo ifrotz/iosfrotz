@@ -21,6 +21,7 @@
     UIFont *font;
 }
 -(instancetype)initWithFamily:(NSString*)aFamily fontName:(NSString*)aFont font:(UIFont*)aFont NS_DESIGNATED_INITIALIZER;
+-(instancetype)init NS_UNAVAILABLE;
 
 @property(nonatomic,strong) NSString *family;
 @property(nonatomic,strong) NSString *fontName;

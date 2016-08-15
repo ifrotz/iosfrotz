@@ -36,7 +36,7 @@ BOOL isHiddenFile(NSString *file) {
 @synthesize serverIsRunning = m_running;
 
 - (instancetype)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller {
-    if ((self = [super init])) {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
         m_controller = controller;
         self.title = NSLocalizedString(@"File Transfer", @"");
     }

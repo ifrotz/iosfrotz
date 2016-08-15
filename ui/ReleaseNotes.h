@@ -19,6 +19,8 @@
     UIButton *m_rateButton;
 }
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+- (instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 - (void)updateReleaseNotes:(BOOL)force;
 - (void)updateReleaseNotesAuto;
 - (void)showReleaseNotes;

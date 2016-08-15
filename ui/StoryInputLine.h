@@ -23,6 +23,8 @@
     BOOL m_completionAmbiguous;
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 @property (nonatomic, strong) StoryView *storyView;
 @property (nonatomic, strong) StatusLine *statusLine;
 -(void)resetState;

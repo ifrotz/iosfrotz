@@ -35,6 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL m_running;
 }
 -(instancetype)initWithController:(NSObject<FrotzSettingsStoryDelegate>*)controller NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 -(void)toggleServer;
 -(void)startServer;
 -(void)stopServer;

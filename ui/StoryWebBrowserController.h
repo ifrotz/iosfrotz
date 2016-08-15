@@ -44,6 +44,8 @@ typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, k
     NSMutableArray *m_expectedArchiveFiles;
 }
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 -(void)loadView;
 -(void)goBack;
 -(void)goForward;

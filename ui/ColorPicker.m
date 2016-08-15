@@ -24,6 +24,7 @@
     UIImageView *m_imgView;
 }
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 - (instancetype) initWithFrame:(CGRect)frame NS_UNAVAILABLE;
 - (void) setFrame:(CGRect)frame;
 - (void) setTextColor: (UIColor *)color;
@@ -91,7 +92,6 @@
 
 
 @implementation ColorTile
-
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     if ((self = [super initWithFrame: frame]) != nil) {
         m_colorPicker = colorPicker;

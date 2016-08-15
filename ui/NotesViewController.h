@@ -27,6 +27,8 @@
 }
 
 -(instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *text;
 -(void)setFrame:(CGRect)frame;

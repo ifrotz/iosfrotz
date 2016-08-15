@@ -31,7 +31,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 @implementation StoryWebBrowserController 
 
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb {
-    if ((self = [super init])) {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
         m_storyBrowser = sb;
     }
     return self;

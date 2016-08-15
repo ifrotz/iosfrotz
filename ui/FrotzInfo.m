@@ -15,7 +15,7 @@
 @synthesize keyboardOwner = m_kbdOwner;
 
 -(instancetype)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem {
-	if ((self = [super init])) {
+	if ((self = [super initWithNibName:nil bundle:nil])) {
 	    // Initialization code
         
 	    m_navigationController = navController;

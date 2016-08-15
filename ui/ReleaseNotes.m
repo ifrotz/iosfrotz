@@ -22,7 +22,7 @@
 @implementation ReleaseNotes
 
 - (instancetype)init {
-    if ((self = [super init])) {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
         self.title = NSLocalizedString(@"Release Notes", @"");
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
         NSString *docPath = array[0];

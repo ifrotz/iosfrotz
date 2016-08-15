@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FrotzInfo : UIViewController <FrotzSettingsInfoDelegate> {
     UIButton *m_infoButton;
-//    UIButton *m_titleTextView;
     UILabel *m_titleTextView;
 
     UINavigationController *m_navigationController;
@@ -35,6 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 -(instancetype)initWithSettingsController:(FrotzSettingsController*)settings navController:(UINavigationController*)navController navItem: (UINavigationItem*) navItem NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 -(void)dismissInfo;
 -(void)frotzInfo;
 @property (nonatomic, strong) id<KeyboardOwner> keyboardOwner;

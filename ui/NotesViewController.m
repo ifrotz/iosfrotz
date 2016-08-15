@@ -29,7 +29,7 @@
 @synthesize delegate = m_delegate;
 
 - (NotesViewController*)initWithFrame:(CGRect)frame {
-    if ((self = [super init])) {
+    if ((self = [super initWithNibName:nil bundle:nil])) {
         m_frame = frame;
         // Initialization code
     }

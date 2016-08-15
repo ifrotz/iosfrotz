@@ -569,7 +569,7 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                 NSString *destPath = [[[config server] documentRoot] stringByAppendingPathComponent: [[uri relativeString] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
                 BOOL isDir = NO;
                 if (![[NSFileManager defaultManager] fileExistsAtPath: destPath isDirectory: &isDir] && [destPath hasSuffix: @".d"])
-                    [[NSFileManager defaultManager] createDirectoryAtPath: destPath attributes:nil];
+                    [[NSFileManager defaultManager] createDirectoryAtPath: destPath withIntermediateDirectories:YES attributes:nil error:nil];
                 filename = [destPath stringByAppendingPathComponent:[postInfoComponents lastObject]];
                 NSRange fileDataRange = {dataStartIndex, postDataLen - dataStartIndex};
                 

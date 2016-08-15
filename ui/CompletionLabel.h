@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(instancetype)initWithFont:(UIFont*)font NS_DESIGNATED_INITIALIZER;
 -(nullable instancetype)initWithCoder:(NSCoder *)coder NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithFrame:(CGRect)frame NS_UNAVAILABLE;
-@property (nonatomic, copy) NSString *text;
+@property (nullable, nonatomic, copy) NSString *text;
 -(void)setFont:(UIFont *)font;
 -(void)autoSize;
 @end

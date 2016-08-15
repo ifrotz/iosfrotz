@@ -112,6 +112,8 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 
 - (RichTextView*)initWithFrame: (CGRect)frame NS_DESIGNATED_INITIALIZER;
 - (RichTextView*)initWithFrame: (CGRect)frame border:(BOOL)border;
+-(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+-(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 - (void)clearSelection;
 - (UIFont*)fontForStyle: (RichTextStyle)style;
 - (void) drawRect:(CGRect)rect inView:(RichTextTile*)view;

@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
     NSString *path;
 }
 -(instancetype)initWithPath:(NSString*)storyPath browser:(StoryBrowser*)browser NS_DESIGNATED_INITIALIZER;
+-(instancetype)init NS_UNAVAILABLE;
 -(BOOL)isEqual:(id)object;
 @property (nonatomic, readonly, copy) NSString *title;
 

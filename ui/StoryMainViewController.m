@@ -1079,7 +1079,7 @@ static void setColorTable(RichTextView *v) {
 @synthesize canEditStoryInfo = m_canEditStoryInfo;
 
 - (StoryMainViewController*)init {
-    self = [super init];
+    self = [super initWithNibName:nil bundle:nil];
     if (self)
     {
         NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
