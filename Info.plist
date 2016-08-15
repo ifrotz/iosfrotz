@@ -2,26 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-	<key>NSAllowsArbitraryLoads</key>
-	      <true/>
-	 <key>NSExceptionDomains</key>
-	    <dict>
-	        <key>ifrotz.net</key>
-		    <dict>
-		         <!--Include to allow subdomains-->
-		        <key>NSIncludesSubdomains</key>
-			      <true/>
-		         <!--Include to allow HTTP requests-->
-		        <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-		        <true/>
-			      <!--Include to specify minimum TLS version-->
-			<key>NSTemporaryExceptionMinimumTLSVersion</key>
-		          <string>TLSv1.1</string>
-		   </dict>
-	    </dict>
-	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -187,7 +167,7 @@
 	<key>CFBundleIcons~ipad</key>
 	<dict/>
 	<key>CFBundleIdentifier</key>
-	<string>com.flippencorp.${PRODUCT_NAME:identifier}</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -211,6 +191,23 @@
 	<string>172.${BUILD_NUMBER}</string>
 	<key>LSRequiresIPhoneOS</key>
 	<string>YES</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>ifrotz.net</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSTemporaryExceptionMinimumTLSVersion</key>
+				<string>TLSv1.1</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSMainNibFile</key>
 	<string></string>
 	<key>UIFileSharingEnabled</key>
