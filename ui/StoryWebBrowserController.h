@@ -20,6 +20,8 @@
 #import "URLPromptController.h"
 #import "BookmarkListController.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class StoryBrowser;
 
 typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory };
@@ -64,15 +66,15 @@ typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, k
 @property (nonatomic, readonly, strong) StoryBrowser *storyBrowser;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 -(void)browserDidPressBackButton;
--(BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story;
+-(BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (nullable NSURLRequest*)delayedRequest forStory:(nullable NSString*)story;
 -(BOOL)savePicData:(NSData*)picData forStory:(NSString*)story;
 -(void)loadZFile:(NSURLRequest*)request;
 @property (nonatomic, readonly, copy) NSString *currentURL;
 @property (nonatomic, readonly, copy) NSString *currentURLTitle;
--(void)loadBookmarksWithURLs:(NSArray**)urls andTitles:(NSArray**)titles;
+-(void)loadBookmarksWithURLs:(NSArray* __autoreleasing  __nullable * __nullable)urls andTitles:( NSArray* __autoreleasing  __nullable * __nullable)titles;
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles;
 @property (nonatomic, readonly, copy) NSString *bookmarkPath;
 
 @end
 
-
+NS_ASSUME_NONNULL_END

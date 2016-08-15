@@ -8,8 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol FrotzFontDelegate <NSObject>
--(void) setFont: (NSString*)font withSize:(NSInteger)size;
+-(void) setFont: (nullable NSString*)font withSize:(NSInteger)size;
 @property (nonatomic, readonly, copy) NSString *font;
 @property (nonatomic, copy) NSString *fixedFont;
 @property (nonatomic, readonly) NSInteger fontSize;
@@ -39,3 +41,6 @@
 
 - (instancetype)init;
 @end
+
+NS_ASSUME_NONNULL_END
+

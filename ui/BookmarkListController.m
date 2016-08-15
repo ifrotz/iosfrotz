@@ -24,15 +24,15 @@
     CGRect frame = [self.view bounds];
 
     if (m_delegate) {
-	NSArray *urls = nil, *titles = nil;
-	[m_delegate loadBookmarksWithURLs:&urls andTitles:&titles];
-	m_sites = [[NSMutableArray alloc] initWithArray: urls];
-	m_titles = [[NSMutableArray alloc] initWithArray: titles];
+        NSArray *urls = nil, *titles = nil;
+        [m_delegate loadBookmarksWithURLs:&urls andTitles:&titles];
+        m_sites = [[NSMutableArray alloc] initWithArray: urls];
+        m_titles = [[NSMutableArray alloc] initWithArray: titles];
     }
     else {
-	m_sites = [[NSMutableArray alloc] init];
-	m_titles = [[NSMutableArray alloc] init];
-    }
+        m_sites = [[NSMutableArray alloc] init];
+        m_titles = [[NSMutableArray alloc] init];
+        }
     self.view = [[UIView alloc] initWithFrame: frame];
     [self.view setAutoresizesSubviews: YES];
     [self.view setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];

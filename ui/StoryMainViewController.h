@@ -29,13 +29,15 @@
 #import "RichTextView.h"
 #import "TextViewExt.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 enum { kIPZDisableInput = 0, kIPZRequestInput = 1, kIPZNoEcho = 2, kIPZAllowInput = 4 };
 /* !!! Move these to state variables in StoryMainViewController! */
 extern int ipzAllowInput;
 extern int lastVisibleYPos[];
 extern BOOL cursorVisible;
 
-void iosif_clear_input(NSString *initStr);
+void iosif_clear_input(NSString *__nullable initStr);
 void iosif_feed_input(NSString *str);
 void iosif_feed_input_line(NSString *str);
 
@@ -132,7 +134,7 @@ extern StoryBrowser *theStoryBrowser;
 -(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 -(void) loadView;
 @property (nonatomic, readonly, strong) StoryView *storyView;
-@property (nonatomic, copy) NSString *currentStory;
+@property (nullable, nonatomic, copy) NSString *currentStory;
 -(void) hideNotes;
 @property (nonatomic, getter=isCompletionEnabled) BOOL completionEnabled;
 @property (nonatomic) BOOL canEditStoryInfo;
@@ -156,7 +158,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) savePrefs;
 -(void) loadPrefs;
 @property (nonatomic, getter=isLandscape) BOOL landscape;
--(void) setFont: (NSString*)font withSize:(NSInteger)size;
+-(void) setFont: (nullable NSString*)font withSize:(NSInteger)size;
 @property (nonatomic, readonly, copy) NSString *font;
 -(void) setFixedFont: (NSString*)font;
 -(NSMutableString*) fixedFont;
@@ -171,7 +173,7 @@ extern StoryBrowser *theStoryBrowser;
 -(BOOL) scrollStoryViewOnePage:(FrotzView*)view fraction:(float)fraction;
 -(BOOL) scrollStoryViewUpOnePage:(FrotzView*)view fraction:(float)fraction;
 -(void) updateStatusLine:(RichTextView*)sl;
--(void) printText: (id)unused;
+-(void) printText: (nullable id)unused;
 
 -(void)reloadImages;
 -(void)clearGlkViews;
@@ -236,7 +238,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void)dropboxDidLinkAccount;
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile;
--(void)cacheTimestamp:(NSDate*)timeStamp forSaveFile:(NSString*)saveFile;
+-(void)cacheTimestamp:(nullable NSDate*)timeStamp forSaveFile:(NSString*)saveFile;
 -(NSString*)getHashForDBPath:(NSString*)path;
 -(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path;
 
@@ -255,3 +257,4 @@ extern const int kFixedFontPixelHeight;
 
 //extern NSString *storySIPPath;  // SIP == Story In Progress
 
+NS_ASSUME_NONNULL_END

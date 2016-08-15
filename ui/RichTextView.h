@@ -5,6 +5,8 @@
 #import "UIFontExt.h"
 #import "RichTextStyle.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class RichTextView;
 @class RichTextAE;
 
@@ -18,7 +20,7 @@
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
 @end
 
-typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
+typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 
 @interface RichTextView : UIScrollView <UIScrollViewDelegate> {
     NSMutableString *m_text;
@@ -123,11 +125,11 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 - (void)updateLine:(NSInteger)lineNum withYPos:(CGFloat)yPos;
 - (void)updateLine:(NSInteger)lineNum withDescent:(CGFloat)desent;
 - (void)updateLine:(NSInteger)lineNum width:(CGFloat)width;
-- (BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)pos font:(UIFont*)font style:(RichTextStyle)style fgColor:(UIColor*)fgColor
-   bgColor:(UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(NSInteger)lineNum nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw;
+- (BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)pos font:(UIFont*)font style:(RichTextStyle)style fgColor:(nullable UIColor*)fgColor
+   bgColor:(nullable UIColor*)bgColor withRect:(CGRect)rect  lineNumber:(NSInteger)lineNum nextPos:(CGPoint*)nextPos hotPoint:(nullable CGPoint*)hotPoint doDraw:(BOOL)doDraw;
 - (void)appendText:(NSString*)text;
 - (void)appendImage:(int)imageNum withAlignment:(int)imageAlign;
-- (BOOL)placeImage:(UIImage*)image imageView:(UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint inDraw:(BOOL)inDraw textStyle:(RichTextStyle)textStyle;
+- (BOOL)placeImage:(UIImage*)image imageView:(nullable UIImageView*)imageView atPoint:(CGPoint)pt withAlignment:(int)imageAlign prevLineY:(CGFloat)prevY newTextPoint:(CGPoint*)newTextPoint inDraw:(BOOL)inDraw textStyle:(RichTextStyle)textStyle;
 - (NSInteger) getTextRunAtPoint:(CGPoint)touchPoint;
 - (int)hyperlinkAtPoint:(CGPoint)point;
 - (void)populateZeroHyperlinks;
@@ -167,5 +169,6 @@ typedef UIImage *(*RichDataGetImageCallback)(int imageNum);
 @property (nonatomic, readonly) CGPoint cursorPoint;
 @end
 
+NS_ASSUME_NONNULL_END
 
 

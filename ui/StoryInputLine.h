@@ -9,6 +9,8 @@
 #import "StoryMainViewController.h"
 #import "CompletionLabel.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface StoryInputLine: UITextField <FrotzInputDelegate> {
     StoryView *m_storyView;
     StatusLine *m_statusLine;
@@ -40,3 +42,4 @@
 -(void)setTextKeepCompletion:(NSString*)text;
 @end
 
+NS_ASSUME_NONNULL_END

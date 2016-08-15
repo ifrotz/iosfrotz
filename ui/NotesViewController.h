@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import "FileBrowser.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol LockableKeyboard <NSObject>
 -(void)showKeyboardLockState;
 @end
@@ -52,3 +54,5 @@
 @property (nonatomic, weak) UIViewController<TextFileBrowser,FileSelected,LockableKeyboard>* delegate;
 -(void)workaroundFirstResponderBug;
 @end
+
+NS_ASSUME_NONNULL_END

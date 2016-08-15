@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "FrotzCommonWebView.h"
 
+NS_ASSUME_NONNULL_BEGIN
 
 @interface ReleaseNotes : FrotzCommonWebViewController {
     NSObject *m_controller;
@@ -27,3 +28,5 @@
 - (void)loadView;
 - (void)rateFrotz;
 @end
+
+NS_ASSUME_NONNULL_END

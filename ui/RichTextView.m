@@ -970,7 +970,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(BOOL)wordWrapTextSize:(NSString*)text atPoint:(CGPoint*)ipos font:(UIFont*)font style:(RichTextStyle)style 
-                fgColor:(UIColor*)fgColor bgColor:(UIColor*)bgColor withRect:(CGRect)rect lineNumber:(NSInteger)lineNum
+                fgColor:( UIColor*)fgColor bgColor:(UIColor*)bgColor withRect:(CGRect)rect lineNumber:(NSInteger)lineNum
                 nextPos:(CGPoint*)nextPos hotPoint:(CGPoint*)hotPoint doDraw:(BOOL)doDraw
 {
     CGSize textSize;
