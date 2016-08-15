@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
 -(nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
-@property (nonatomic, copy) NSString *title;
+@property (nullable, nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *text;
 -(void)setFrame:(CGRect)frame;
 -(void)setChainResponder:(UIResponder*)responder;
