@@ -2509,7 +2509,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0630;
+				LastUpgradeCheck = 0730;
 				TargetAttributes = {
 					1D6058900D05DD3D006BFB54 = {
 						DevelopmentTeam = 6KG7666N88;
@@ -3143,6 +3143,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
@@ -3190,6 +3191,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
@@ -3539,7 +3541,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Distribution: Craig Smith (6KG7666N88)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Craig Smith (6KG7666N88)";
@@ -3562,7 +3563,7 @@
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=*]" = "";
-				SDKROOT = iphoneos8.4;
+				SDKROOT = iphoneos9.3;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
@@ -3612,6 +3613,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -3622,7 +3624,6 @@
 		44AD7CF516266575006E1688 /* Release armv6 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -3643,7 +3644,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos8.4;
+				SDKROOT = iphoneos9.3;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
@@ -3695,6 +3696,7 @@
 					"-weak_framework",
 					Security,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
@@ -4622,11 +4624,11 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "iPhone Developer: Craig Smith (6AKPWEXC5W)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Craig Smith (6AKPWEXC5W)";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_BITCODE = NO;
+				ENABLE_TESTABILITY = YES;
 				FROTZ_BETA = 0;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -4644,7 +4646,7 @@
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos8.4;
+				SDKROOT = iphoneos9.3;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
@@ -4656,7 +4658,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
@@ -4677,7 +4678,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos8.4;
+				SDKROOT = iphoneos9.3;
 				STRIP_INSTALLED_PRODUCT = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "priv src/Classes";
