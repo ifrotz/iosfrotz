@@ -2855,7 +2855,7 @@ static int iosif_top_win_height = 1;
                         t = skipCount; skipCount = skipCount2; skipCount2 = t;
                     }
                     //NSLog(@"row=%d n=%d skip1=%d %d, skip2=%d %d", i, needCols, skipCol, skipCount, skipCol2, skipCount2);
-                    if (skipCount + skipCount2 < needCols) {
+                    if (skipCol >= 0 && skipCount + skipCount2 < needCols) {
                         int diff = needCols - skipCount - skipCount2;
                         if (diff > skipCol)
                             diff = skipCol;
