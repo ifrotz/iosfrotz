@@ -75,17 +75,15 @@
                          IPHONE_FROTZ_VERS
                          " for iOS.</b></p>"
                          "<p><b>Frotz</b> for iOS was developed by Craig Smith, based on Unix Frotz 2.43 by David Griffith and Galen Hazelwood.  \n"
-                         "Frotz was originally written by Stefan Jokisch in 1995-1997.  ZIP archive support based on minizip 1.01e by Gilles Vollant. \n"
-                         "Frotz 1.5 introduced (beta) Glulx game support, using the Git engine by Iain Merrick, and the Glk I/O system by Andrew Plotkin. \n"
-                         "Game splash screens include artwork by	Andrew Bossi, Trey Radcliff, and Mike Green, distributed under Creative Commons with attribution."
+                         "Frotz was originally written by Stefan Jokisch in 1995-1997.\n"
+                         "Frotz 1.5 introduced Glulx game support, using the Git engine by Iain Merrick and based on the Glulx game specification and Glk I/O system by Andrew Plotkin. \n"
+                         "Frotz 1.8 introduced TADS game support, based on TADS 2 and TADS 3 game engines by Michael Roberts under the TADS Freeware License, and using the TADS Glk I/O binding from Gargoyle by Tor Andersson and Ben Cressey (GPLv2).\n"
+                         "Game splash screens include artwork by Andrew Bossi, Trey Radcliff, and Mike Green, distributed under Creative Commons with attribution."
                          "</p>\n"
                          "<hr>\n"
-                         "<small><p><i>Frotz is licensed under the GNU Public License version&nbsp;2, with some components under compatible MIT and BSD licenses; "
-#if FROTZ_BETA
-                         "source code is available at http://code.google.com/p/iphonefrotz/.  \n"
-#else
-                         "see the Frotz support link in the App Store for more info.  \n"
-#endif
+                         "<small><p><i>Frotz is licensed under the GNU Public License version&nbsp;2, with some components under compatible MIT.  BSD and freeware licenses; "
+                         "source code is available at https://github.com/ifrotz.\n"
+                         "See the Frotz support link in the App Store for more info.  \n"
                          "Versions of Frotz for other platforms as well as other Interactive Fiction resources are at http://frotz.sourceforge.net/.</i></small></p>\n"
                          "<p><small><i>iPhone, iPad, iPod Touch, and App Store are registered trademarks of Apple, Inc.</i><br>\n"
                          "<i>Zork is a registered trademark of Activision.</i></small>\n"
@@ -93,15 +91,15 @@
                          "</body>\n",
                          baseFontSize+2, baseFontSize,
                          (iosif_ifrotz_verbose_debug & 2) ?
-                         @"<b>Frotz</b> comes with a collection of bundled stories/games, and works with most stories written in the Z-Machine or glulx formats. "
+                         @"<b>Frotz</b> comes with a collection of bundled stories/games, and works with most stories written in the Z-Machine, glulx and TADS formats. "
                          "More stories are available from the Interactive Fiction Database (IFDB) and elsewhere on the Internet and can be "
                          "opened in Frotz via Safari or other apps or browsed to using the "
-                         "built-in IFDB browser.   Just navigate to the Details page for a story file that interests you and click on the story link to launch the story.  (Supported story files end in extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, or .gblorb.)\n"
+                         "built-in IFDB browser.   Just navigate to the Details page for a story file that interests you and click on the story link to launch the story.  (Supported story files end in extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, .gblorb, .gam and .t3.)\n"
                                                   :
                          @"<p><b>Frotz</b> comes with a very large collection of stories/games. Twenty-five preselected stories appear by default in the Story List, but "
                          "over 300 more are bundled with Frotz.\n</p>"
                          "<p>To enable other stories, use the built-in Story Browser to read reviews and descriptions from the "
-                         "Interactive Fiction Database (IFDB). When you find one that interests you, select the link for the story file (extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, or .gblorb) "
+                         "Interactive Fiction Database (IFDB). When you find one that interests you, select the link for the story file (extensions .z3, .z4, .z5, .z8, .zblorb, .ulx, .blb, .gblorb, .gam or .t3) "
                          "from its description page, and the story file will be extracted from the bundled archive and added to the Story List. "
                          "Very recent additions to IFDB (or poorly reviewed ones) may not be available in the bundle. "
                          "The bundled list of stories will be expanded with each release of Frotz, but if you'd like to request a particular addition, "
