@@ -1256,9 +1256,13 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
     NSInteger row = indexPath.row;
-    if (tableView == self.searchDisplayController.searchResultsTableView)
-        return NO;
-    if (indexPath.section == 0 && [m_recents count] > 0)
+    if (tableView == self.searchDisplayController.searchResultsTableView) {
+        if (m_filteredNames && row < [m_filteredNames count])
+            row = [self indexRowFromStoryInfo: m_filteredNames[row]];
+        else
+            return NO;
+    }
+    else if (indexPath.section == 0 && [m_recents count] > 0)
         return NO;
     if (row < [m_storyNames count]) {
         NSString *delStory = [m_storyNames[row] path];
@@ -1275,6 +1279,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         NSInteger row = indexPath.row;
+        BOOL isSearch = NO;
+        if (tableView == self.searchDisplayController.searchResultsTableView) {
+            isSearch = YES;
+            if (m_filteredNames && row < [m_filteredNames count])
+                row = [self indexRowFromStoryInfo: m_filteredNames[row]];
+        }
         if (row < [m_storyNames count]) {
             StoryInfo *storyInfo = m_storyNames[row];
             NSString *delStory = [storyInfo path];
@@ -1297,7 +1307,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 if (recentIndex != NSNotFound && recentIndex < [m_recents count]) {
                     NSUInteger indexes[] = { 0, recentIndex };
                     [m_recents removeObjectAtIndex: recentIndex];
-                    [indexPaths addObject: [NSIndexPath indexPathWithIndexes: indexes length:2]];
+                    if (isSearch)
+                        [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject: [NSIndexPath indexPathWithIndexes: indexes length:2]] withRowAnimation:UITableViewRowAnimationNone];
+                    else
+                        [indexPaths addObject: [NSIndexPath indexPathWithIndexes: indexes length:2]];
                     [self saveRecents];
                 }
                 if (gUseSplitVC) {
@@ -1306,9 +1319,16 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 }
                 [m_storyNames removeObjectAtIndex: row];
                 m_numStories--;
-                [self.tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
+                if (isSearch) {
+                    NSMutableArray *f = [m_filteredNames mutableCopy];
+                    [f removeObjectAtIndex: indexPath.row];
+                    m_filteredNames = [NSArray arrayWithArray: f];
+                }
+                [tableView deleteRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationFade];
                 m_isDeleting = NO;
                 [tableView reloadData];
+                if (isSearch)
+                    [self.tableView reloadData];
             }
         }
     }
