@@ -9,8 +9,8 @@
 
 /* Options: */
 
-#define LIBRARY_VERSION "1.7.1"
-#define LIBRARY_PORT "iOS Port 1.7.1"
+#define LIBRARY_VERSION "1.8"
+#define LIBRARY_PORT "iOS Port 1.8"
 
 #define OPT_TIMED_INPUT
 /* OPT_TIMED_INPUT should be defined if your OS allows timed
