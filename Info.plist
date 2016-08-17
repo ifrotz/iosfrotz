@@ -191,6 +191,8 @@
 	<string>172.${BUILD_NUMBER}</string>
 	<key>LSRequiresIPhoneOS</key>
 	<string>YES</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
