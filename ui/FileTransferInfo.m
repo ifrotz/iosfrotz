@@ -45,9 +45,10 @@ BOOL isHiddenFile(NSString *file) {
 
 -(void)updateButtonLocation {
     if (m_startButton && m_webView) {
+        CGSize cgSize = [m_webView frame].size;
         [m_startButton setFrame:
-         CGRectMake([m_webView frame].size.width/2 - (gLargeScreenDevice ? 130:130),
-                    gLargeScreenDevice ? 520:  [m_webView frame].size.height-64,
+         CGRectMake(cgSize.width/2 - (gLargeScreenDevice ? 130:130),
+                    gLargeScreenDevice ? 520: (cgSize.height > cgSize.width) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
     }
 }
@@ -82,13 +83,18 @@ BOOL isHiddenFile(NSString *file) {
     [m_startButton addTarget:self action:@selector(toggleServer) forControlEvents: UIControlEventTouchUpInside];
 }
 
+-(void)viewDidAppear:(BOOL)animated {
+    [self updateButtonLocation];
+    [m_webView addSubview: m_startButton];
+    [self updateMessage];
+}
+
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [m_webView removeFromSuperview];
     [m_webView setFrame: self.view.frame];
     [self.view addSubview: m_webView];
     [self updateButtonLocation];
-    [m_webView addSubview: m_startButton];
     [self stopServer];
 }
 
@@ -97,82 +103,122 @@ BOOL isHiddenFile(NSString *file) {
     [m_startButton removeFromSuperview];
 }
 
-- (NSString *) localIPAddress
+#define IOS_CELLULAR    @"pdp_ip0"
+#define IOS_WIFI        @"en0"
+#define IOS_VPN         @"utun0"
+#define IP_ADDR_IPv4    @"ipv4"
+#define IP_ADDR_IPv6    @"ipv6"
+
+- (NSString *)getIPAddress:(BOOL)preferIPv4 isIPV6:(BOOL*)isIPV6
 {
-    //   NSLog(@"currentHost %@", [NSHost currentHost]);
-    
-    // Method 1
-#if ! defined(IFT_ETHER)
-#define IFT_ETHER 0x6/* Ethernet CSMACD */
-#endif
-    
-    BOOL                  success;
-    struct ifaddrs           * addrs;
-    const struct ifaddrs     * cursor;
-    NSString *addr = nil;
-    
-    success = getifaddrs(&addrs) == 0;
-    if (success) {
-        cursor = addrs;
-        while (cursor != NULL) {
-            if (cursor->ifa_addr->sa_family == AF_INET && (cursor->ifa_flags & IFF_LOOPBACK) == 0) {
-                const char *name = cursor->ifa_name;
-                if (name && name[0]=='e' && name[1]=='n') {
-                    addr = @(inet_ntoa(((struct sockaddr_in *)cursor->ifa_addr)->sin_addr));
-                    if (addr)
-                        break;
-                }
-            }
-            cursor = cursor->ifa_next;
-        }
-        freeifaddrs(addrs);
-    }
-    if (addr)
-        return addr;
-	
-    // Method 2
-    char baseHostName[256], hn[256];
-    gethostname(baseHostName, 250);
-    if (strstr(baseHostName, "."))
-        strcpy(hn, baseHostName);
-    else 
-        sprintf(hn, "%s.local", baseHostName);
-    struct hostent *host = gethostbyname(hn);
-    if (host) {
-        struct in_addr **list = (struct in_addr**)host->h_addr_list;
-        int i = 0;
-        while (list[i]) {
-            struct in_addr ip = *list[i];
-            if (ip.s_addr && ntohl(ip.s_addr) != INADDR_LOOPBACK)
-                return @(inet_ntoa(ip));
-            ++i;
-        }
-    }
-    
-    return nil;
+    NSArray *searchArray = preferIPv4 ?
+    @[ // IOS_VPN @"/" IP_ADDR_IPv4, IOS_VPN @"/" IP_ADDR_IPv6,
+       IOS_WIFI @"/" IP_ADDR_IPv4, IOS_WIFI @"/" IP_ADDR_IPv6,
+       // IOS_CELLULAR @"/" IP_ADDR_IPv4, IOS_CELLULAR @"/" IP_ADDR_IPv6
+       ] :
+    @[ // IOS_VPN @"/" IP_ADDR_IPv6, IOS_VPN @"/" IP_ADDR_IPv4,
+       IOS_WIFI @"/" IP_ADDR_IPv6, IOS_WIFI @"/" IP_ADDR_IPv4,
+       // IOS_CELLULAR @"/" IP_ADDR_IPv6, IOS_CELLULAR @"/" IP_ADDR_IPv4
+       ] ;
+
+    NSDictionary *addresses = [self getIPAddresses];
+//    NSLog(@"addresses: %@", addresses);
+    if (isIPV6)
+        *isIPV6 = NO;
+    __block NSString *address;
+    [searchArray enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL *stop)
+     {
+         address = addresses[key];
+         if(address) {
+             *stop = YES;
+             if ([key hasSuffix: IP_ADDR_IPv6]) {
+                 if (isIPV6)
+                     *isIPV6 = YES;
+             }
+         }
+     } ];
+    return address;
 }
 
+- (NSDictionary *)getIPAddresses
+{
+    NSMutableDictionary *addresses = [NSMutableDictionary dictionaryWithCapacity:8];
+    
+    // retrieve the current interfaces - returns 0 on success
+    struct ifaddrs *interfaces;
+    if(!getifaddrs(&interfaces)) {
+        // Loop through linked list of interfaces
+        struct ifaddrs *interface;
+        for(interface=interfaces; interface; interface=interface->ifa_next) {
+            if(!(interface->ifa_flags & IFF_UP) /* || (interface->ifa_flags & IFF_LOOPBACK) */ ) {
+                continue; // deeply nested code harder to read
+            }
+            const struct sockaddr_in *addr = (const struct sockaddr_in*)interface->ifa_addr;
+            char addrBuf[ MAX(INET_ADDRSTRLEN, INET6_ADDRSTRLEN) ];
+            if(addr && (addr->sin_family==AF_INET || addr->sin_family==AF_INET6)) {
+                NSString *name = [NSString stringWithUTF8String:interface->ifa_name];
+                NSString *type;
+                if(addr->sin_family == AF_INET) {
+                    if(inet_ntop(AF_INET, &addr->sin_addr, addrBuf, INET_ADDRSTRLEN)) {
+                        type = IP_ADDR_IPv4;
+                        NSString *key = [NSString stringWithFormat:@"%@/%@", name, type];
+                        if (strstr(addrBuf, "169.254.") != addrBuf) // ignore self-assigned
+                            addresses[key] = [NSString stringWithUTF8String:addrBuf];
+                    }
+                } else {
+                    const struct sockaddr_in6 *addr6 = (const struct sockaddr_in6*)interface->ifa_addr;
+                    if(inet_ntop(AF_INET6, &addr6->sin6_addr, addrBuf, INET6_ADDRSTRLEN)) {
+                        type = IP_ADDR_IPv6;
+                        NSString *key = [NSString stringWithFormat:@"%@/%@", name, type];
+                        addresses[key] = [NSString stringWithFormat:@"[%s]", addrBuf];
+                    }
+                }
+            }
+        }
+        // Free memory
+        freeifaddrs(interfaces);
+    }
+    return [addresses count] ? addresses : nil;
+}
 
 -(void)updateMessage {
-    NSString *httpUrlString = nil, *ftpUrlString = nil, *instructions = nil;
+    NSString *httpUrlString = @"", *ftpUrlString = @"", *instructions = nil;
+    BOOL isIPV6 = NO;
+    BOOL smallScreen = NO;
+    CGSize cgSize = m_webView.frame.size;
     if (!m_webView)
         return;
-    NSString *addr = [self localIPAddress];
-    if (m_running) {
+    char baseHostName[256] = { 0 };
+    if (gethostname(baseHostName, sizeof(baseHostName)-1) == 0 && *baseHostName && strstr(baseHostName, ".")==NULL)
+        strcat(baseHostName, ".local");
+    if (cgSize.width * cgSize.height < 320 * 500)
+        smallScreen = YES;
+    NSString *addr = [self getIPAddress:YES isIPV6:&isIPV6];
+    if (addr && m_running) {
         if (m_httpserv && [m_httpserv isRunning]) {
-            httpUrlString = [NSString stringWithFormat:@"<center><large><em>Connect via web:</em><br/><b>http://%@:%d</b></large></center>", addr, [m_httpserv port]];
+            NSString *bjname = [m_httpserv name];
+            if (bjname && [bjname length] > 0)
+                bjname = [NSString stringWithFormat: @" to Bonjour service </em><b>%@</b><em>, or using:", bjname];
+            else
+                bjname = @":";
+            NSString *urlString = *baseHostName ? [NSString stringWithFormat:@"<b>http://%s:%d</b> <em> or </em>", baseHostName, [m_httpserv port]] : @"";
+            if ([addr length] > 40 || isIPV6)
+                addr = [NSString stringWithFormat: @"<small>%@</small>", addr];
+            urlString = [NSString stringWithFormat:@"%@<b>http://%@:%d</b>", urlString, addr, [m_httpserv port]];
+            httpUrlString = [NSString stringWithFormat:@"<center><large><em>Connect via web%@</em><br/>%@</large></center>", bjname, urlString];
+            instructions =  [NSString stringWithFormat: @"<p>Just type the URL shown below into the address bar of your "
+                             "web browser/file explorer, or connect using Bonjour.</p>"];
         } else {
             httpUrlString = @"<center><h4><i>HTTP server is not currently enabled.</i><h4></center><br/>";
         }
-        if (m_ftpserv && [m_ftpserv isRunning]) {
-            ftpUrlString = [NSString stringWithFormat:@"<center><large><em>Or via FTP:</em><br/><b>ftp://ftp@%@:%d</b></large></center>", addr, FTPPORT];
-        } else {
+        if (m_ftpserv && !isIPV6 && [m_ftpserv isRunning]) {
+            ftpUrlString = [NSString stringWithFormat:@"<center><large><em>Or via FTP:</em> <b>ftp://ftp@%@:%d </b></large></center>", addr, FTPPORT];
+            if (instructions)
+                instructions =  [NSString stringWithFormat: @"<p>Just type one of the URLs shown below into the address bar of your "
+                             "web browser/file explorer.  The Bonjour/web address is easier to use and is recommended.</p>"];
+        } else if (!isIPV6) {
             ftpUrlString = @"<center><h4><i>FTP server is not currently enabled.</i><h4></center><br/>";
         }
-    	instructions =  [NSString stringWithFormat: @"<p>Just type one of the URLs shown below into the address bar of your "
-                         "web browser/file explorer.  The http web address is easier to use and is recommended.</p>"];
-                         //	"On a Mac, the Finder only provides read-only support for FTP, so try Cyberduck, or just type<br/>'<b>ftp&nbsp;%@&nbsp;%d</b>' from Terminal. "
-                         //"</p> ", addr, FTPPORT];
     } else {
         httpUrlString = @"<br/><center><h4><i>File Server is not currently enabled.</i><h4></center><br/>";
         ftpUrlString = @"";
@@ -184,7 +230,7 @@ BOOL isHiddenFile(NSString *file) {
             [m_startButton removeFromSuperview];
         }
     }
-    int fontBase = 10 + (gLargeScreenDevice ? 6:0);
+    int fontBase = 12 + (smallScreen ? -2:0) + (gLargeScreenDevice ? 6:0);
     NSString *message =  [NSString stringWithFormat: @
                           "<html><body>\n"
                           "<style type=\"text/css\">\n"
@@ -192,8 +238,9 @@ BOOL isHiddenFile(NSString *file) {
                           "h4 { font-size: %dpt; color:#cfcf00; margin-top: 0px;}\n"
                           "* { color:#ffffff; background: #555555 }\n"
                           "p { font-size:%dpt; }\n"
-                          "em { font-sie: %dpt; color:#cfcf00; }\n"
+                          "em { font-size: %dpt; color:#cfcf00; }\n"
                           "large { font-size:%dpt; color:#00c0c0; }\n"
+                          "small { font-size:%dpt; }\n"
                           "</style>\n"
                           "<h2>Copying Saved Games &amp; Story Files</h2>\n"
                           "<p>You can transfer saved games and stories from Frotz using a Web Browser or FTP client and load them on a computer using Zoom, WinFrotz, or other Z-machine apps"
@@ -202,7 +249,7 @@ BOOL isHiddenFile(NSString *file) {
                           "<hr>%@\n%@\n"
                           "<br/>\n"
                           "</body>\n",
-                          fontBase+3,fontBase+1,fontBase,fontBase,fontBase+3,
+                          fontBase+3,fontBase+1,fontBase,fontBase,fontBase+2, fontBase-2,
                           instructions, httpUrlString, ftpUrlString];
     //    [m_webView	setContentToHTMLString: message];
     [m_webView	loadHTMLString: message baseURL:nil];
@@ -216,6 +263,7 @@ BOOL isHiddenFile(NSString *file) {
     if (!m_httpserv)
         m_httpserv = [HTTPServer new];
     if (m_httpserv) {
+        [m_httpserv setName: @"Frotz"];
         [m_httpserv setType:@"_http._tcp."];
         [m_httpserv setConnectionClass:[FrotzHTTPConnection class]];
         [m_httpserv setPort: 8000];
@@ -223,9 +271,7 @@ BOOL isHiddenFile(NSString *file) {
         //[m_httpserv setDelegate: [m_controller storyBrowser]];
     }
     
-    if (m_httpserv && [m_httpserv start:&error]) {
-        NSLog(@"x %@ ", [self localIPAddress]);
-    } else {
+    if (!m_httpserv || ![m_httpserv start:&error]) {
 	    NSLog(@"Error starting HTTP Server: %@", error);
     }
 #if UseNewFTPServer
