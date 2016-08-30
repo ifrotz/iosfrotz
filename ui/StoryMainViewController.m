@@ -2283,8 +2283,24 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 //    NSLog(@"kb will change frame %@", notif);
 //}
 
+static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *window) {
+    // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
+    if (bounds->size.height > bounds->size.width) {
+        CGFloat h = bounds->size.height;
+        bounds->size.height = bounds->size.width;
+        bounds->size.width = h;
+    }
+
+    NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
+    if (kbFrameEndValue) {
+        CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
+        CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
+        if (bounds->size.height > window.frame.size.height - windowRect.origin.y)
+            bounds->size.height = window.frame.size.height - windowRect.origin.y;
+    }
+}
+
 -(void) keyboardDidShow:(NSNotification*)notif {
-//    NSLog(@"kb did show: %@", notif);
     // Even though we already did this in keyboardWillShow, we do it again here
     // so the animation of the storyview resizing will sync up with the keyboard
     // appearing, to make sure the size is correct for whether the
@@ -2315,15 +2331,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #endif
     m_kbShown = YES;
     
-    // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
-    if (bounds.size.height > bounds.size.width) {
-        CGFloat h = bounds.size.height;
-        bounds.size.height = bounds.size.width;
-        bounds.size.width = h;
-    }
-
-    m_kbdSize = bounds.size;
     CGRect frame = [self storyViewFullFrame];
+    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
+    m_kbdSize = bounds.size;
+
     frame.size.height -= bounds.size.height;
     
     [UIView beginAnimations: @"kbd" context: 0];
@@ -2367,12 +2378,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     CGRect bounds = [boundsValue CGRectValue];
     CGRect frame = [self storyViewFullFrame];
 
-    // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
-    if (bounds.size.height > bounds.size.width) {
-        CGFloat h = bounds.size.height;
-        bounds.size.height = bounds.size.width;
-        bounds.size.width = h;
-    }
+    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
+
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
 #endif
