@@ -58,8 +58,8 @@ BOOL isHiddenFile(NSString *file) {
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
-    [self updateMessage];
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    [self updateMessage];
     [self updateButtonLocation];
 }
 
@@ -70,8 +70,10 @@ BOOL isHiddenFile(NSString *file) {
 }
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (m_startButton && m_webView)
+    if (m_startButton && m_webView) {
+        [self updateMessage];
         [self updateButtonLocation];
+    }
 }
 
 - (void)loadView {
@@ -215,7 +217,7 @@ BOOL isHiddenFile(NSString *file) {
             ftpUrlString = [NSString stringWithFormat:@"<center><large><em>Or via FTP:</em> <b>ftp://ftp@%@:%d </b></large></center>", addr, FTPPORT];
             if (instructions)
                 instructions =  [NSString stringWithFormat: @"<p>Just type one of the URLs shown below into the address bar of your "
-                             "web browser/file explorer.  The Bonjour/web address is easier to use and is recommended.</p>"];
+                             "web browser/file explorer.  The web address is easier to use and is recommended.</p>"];
         } else if (!isIPV6) {
             ftpUrlString = @"<center><h4><i>FTP server is not currently enabled.</i><h4></center><br/>";
         }
@@ -251,7 +253,6 @@ BOOL isHiddenFile(NSString *file) {
                           "</body>\n",
                           fontBase+3,fontBase+1,fontBase,fontBase,fontBase+2, fontBase-2,
                           instructions, httpUrlString, ftpUrlString];
-    //    [m_webView	setContentToHTMLString: message];
     [m_webView	loadHTMLString: message baseURL:nil];
 }
 
