@@ -60,7 +60,7 @@
 -(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation;
 -(void)clear;
 -(void)refresh;
--(void)updateSelectionInstructions:(BOOL)hasPopover;
+-(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode;
 @property (nonatomic, readonly) BOOL keyboardIsActive;
 -(void)dimArtwork:(BOOL)dim;
 -(IBAction)playButtonPressed;

@@ -11,10 +11,6 @@
 #import <QuartzCore/QuartzCore.h>
 #import "TextViewExt.h"
 
-@protocol HidePopoverProto <NSObject>
--(void)hidePopover; // this only exists to get rid of an unknown selector warning.  The actual call is guarded with respondsToSelector.
-@end
-
 @implementation FrotzInfo
 @synthesize keyboardOwner = m_kbdOwner;
 
@@ -148,8 +144,6 @@
                 settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
                 [settingsNavController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
             }
-            if ([[m_navigationController topViewController] respondsToSelector:@selector(hidePopover)])
-                [[m_navigationController topViewController] performSelector:@selector(hidePopover)];
             [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
             [m_navigationController /*.splitViewController*/ presentModalViewController: settingsNavController animated:YES];
         }

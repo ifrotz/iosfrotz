@@ -79,8 +79,6 @@ void removeOldPngSplash(const char *filename) {
 
 @implementation StoryBrowser 
 
-@synthesize popoverController = m_popoverController;
-@synthesize popoverBarButton = m_popoverBarButton;
 @synthesize searchDisplayController = m_searchDisplayController;
 
 -(NSArray*)recentPaths {
@@ -186,8 +184,8 @@ void removeOldPngSplash(const char *filename) {
         // create a custom navigation bar button and set it to always say "Back"
         UIBarButtonItem *temporaryBarButtonItem = [[UIBarButtonItem alloc] init];
         temporaryBarButtonItem.title = @"Story List";
-        self.navigationItem.backBarButtonItem = temporaryBarButtonItem;
-        
+//xxx        self.navigationItem.backBarButtonItem = temporaryBarButtonItem;
+
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
         
@@ -213,7 +211,7 @@ void removeOldPngSplash(const char *filename) {
         
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
-        
+
         NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
         NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
         NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
@@ -476,14 +474,23 @@ void removeOldPngSplash(const char *filename) {
     return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
--(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (gUseSplitVC && self.popoverBarButton)
-        m_details.navigationItem.leftBarButtonItem = nil;
-}
-
--(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (gUseSplitVC && self.popoverBarButton &&  UIInterfaceOrientationIsPortrait(toInterfaceOrientation))
-        m_details.navigationItem.leftBarButtonItem = self.popoverBarButton;
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
+{
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    if (gUseSplitVC) { // && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact)
+       [coordinator animateAlongsideTransition:^(id context){
+            if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
+                if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation])) {
+                    self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
+                    m_details.navigationItem.leftBarButtonItem = nil;
+                } else {
+                    self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                    [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
+                }
+            } else
+                self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+        } completion:^(id context) { } ];
+    }
 }
 
 - (BOOL)canEditStoryInfo {
@@ -684,9 +691,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [[self navigationController] popToViewController:self animated:NO];
     
     if (gUseSplitVC && self.splitViewController) {
-        if (m_popoverController)
-            [m_popoverController dismissPopoverAnimated:YES];
-        
         UINavigationController *nc = [m_webBrowserController navigationController];
         if (!nc) {
             nc = [[UINavigationController alloc] initWithRootViewController: m_webBrowserController];
@@ -698,7 +702,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
             }
             [self didPressModalStoryListButton];
-            [self.splitViewController presentModalViewController:nc animated:YES];
+            nc.modalPresentationStyle = UIModalPresentationFullScreen;
+            [self.splitViewController presentViewController:nc animated:YES completion:nil];
             return;
         }	
     }
@@ -707,7 +712,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [UIView setAnimationDuration:0.8];
     [UIView setAnimationTransition: UIViewAnimationTransitionCurlUp
                            forView: self.navigationController.view
-     //[[[[[self view] superview] superview] superview] superview]
                                     cache:NO];
     
     [self.navigationController pushViewController: m_webBrowserController animated: NO];
@@ -1025,17 +1029,18 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     [searchDisplayController setDelegate:self];
     [searchDisplayController setSearchResultsDataSource:self];
-    
 
     if (m_postLaunch || m_launchPath)
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
         if (gUseSplitVC) // delay push of story controller so views have time to be sized correctly
-            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.2];
+            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.3];
         else
             [self autoRestoreAndShowMainStoryController];
     } else
         self.view.userInteractionEnabled = YES;
+    [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
+
     m_postLaunch = YES;
 }
 
@@ -1063,8 +1068,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
     if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
+        [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
     }
     [m_frotzInfoController updateTitle];
 
@@ -1076,7 +1081,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
+   [super viewWillDisappear:animated];
     [self setEditing: NO animated: YES];
 }
 
@@ -1114,28 +1119,19 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
                 nc.topViewController.navigationItem.leftBarButtonItem = backItem;
             }
-            [self.splitViewController dismissModalViewControllerAnimated:NO];
-            [self.splitViewController presentModalViewController:nc animated:YES];
+            [self.splitViewController dismissViewControllerAnimated:NO completion: nil];
+            nc.modalPresentationStyle = UIModalPresentationFullScreen;
+            [self.splitViewController presentViewController:nc animated:YES completion:nil];
             return;
         }
     }
     [[self navigationController] pushViewController:m_storyMainViewController animated:YES];
 }
 
--(void)hidePopover {
-    m_details.navigationItem.leftBarButtonItem = self.popoverBarButton;
-    if (self.popoverController) {
-        [self.popoverController dismissPopoverAnimated: NO];
-    }
-}
-
 - (void)didPressModalStoryListButton {
     if (gUseSplitVC && self.splitViewController) {
         if (self.splitViewController.modalViewController) {
             [self.splitViewController dismissModalViewControllerAnimated: YES];
-            if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
-                self.popoverBarButton = nil;
-            [self hidePopover];
             NSString *storyPath = [[m_details storyInfo] path];
             m_details.willResume = storyPath && [storyPath length] > 0
             && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
@@ -1478,8 +1474,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
     if (storyInfo) {
         [self setStoryDetails: storyInfo];
-        if (gLargeScreenDevice && self.splitViewController) {
+        if (gUseSplitVC && self.splitViewController) {
             [m_details refresh];
+            if ([self.splitViewController.viewControllers count] < 2)
+                [self.splitViewController showDetailViewController: m_details sender:self];
         }
         else
             [[self navigationController] pushViewController:m_details animated:YES];
@@ -1500,8 +1498,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 {
     static NSInteger lastRow = -1;
     BOOL secondTap = NO;
-    if (self.popoverController)
-        [self.popoverController dismissPopoverAnimated: YES];
     
     if (gUseSplitVC && indexPath.row == lastRow) {
         if (DebugDetailsDeselect) {
@@ -1514,8 +1510,15 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
-        if (gUseSplitVC && (!secondTap || (self.popoverController!=nil)))
+        if (gUseSplitVC && (!secondTap || self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
+            [UIView animateWithDuration:0.3 animations:^{
+                    if (m_details.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
+                        self.splitViewController.displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
+                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                    }
+                }];
             [self showStoryDetails: storyInfo];
+        }
         else {
             [[self tableView] deselectRowAtIndexPath:indexPath animated:NO];
             [self launchStoryInfo: storyInfo];
@@ -1524,7 +1527,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     if (gUseSplitVC) {
     	[m_details setEditing:NO animated: YES];
-        [m_details updateSelectionInstructions: NO];
+        [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
     }
 }
 
@@ -1689,29 +1692,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     m_lowMemory = YES;
 }
 
-- (void)splitViewController:(UISplitViewController*)svc popoverController:(UIPopoverController*)pc willPresentViewController:(UIViewController *)aViewController {
-    [m_details updateSelectionInstructions: YES];    
-}
 
-- (void)splitViewController:(UISplitViewController*)splitViewController willHideViewController:(UIViewController *)aViewController 
-          withBarButtonItem:(UIBarButtonItem*)barButtonItem forPopoverController:(UIPopoverController*)pc {
-    barButtonItem.title = @"Select Story";
-    
-    self.popoverController = pc;
-    [pc setDelegate: self];
-    self.popoverBarButton = barButtonItem;
-    m_details.navigationItem.leftBarButtonItem = barButtonItem;
-}
-
-- (void)splitViewController:(UISplitViewController*)splitViewController willShowViewController:(UIViewController *)aViewController 
-  invalidatingBarButtonItem:(UIBarButtonItem *)button {
-    m_details.navigationItem.leftBarButtonItem = nil;
-    self.popoverController = nil;
-    self.popoverBarButton = nil;
-}
-
-- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController {
-    [m_details updateSelectionInstructions: NO];
+- (void)splitViewController:(UISplitViewController *)splitViewController willChangeToDisplayMode:(UISplitViewControllerDisplayMode)displayMode {
+    [m_details updateBarButtonAndSelectionInstructions: displayMode];
 }
 
 @end

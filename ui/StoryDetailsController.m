@@ -280,8 +280,11 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [m_ifdbButton setAlpha: enable ? 1.0 : 0.5];
     [m_restartButton.superview bringSubviewToFront: m_restartButton];
     CGRect playFrame = m_playButton.frame, restartFrame = m_restartButton.frame;
-    [m_restartButton setCenter: CGPointMake(playFrame.origin.x + restartFrame.size.width/2.0 + (gLargeScreenDevice?24:1),
-                                            playFrame.origin.y + restartFrame.size.height/2.0 + (gLargeScreenDevice?2:1))];
+    BOOL largeSizeClass = gLargeScreenDevice && self.traitCollection.horizontalSizeClass== UIUserInterfaceSizeClassRegular;
+    if (largeSizeClass && playFrame.size.width < 160) // in landscape with 70/30% split screen and master/detail both showing, sometimes the horizSizeClass claims to be regular when it's clearly not
+        largeSizeClass = NO;
+    [m_restartButton setCenter: CGPointMake(playFrame.origin.x + restartFrame.size.width/2.0 + (largeSizeClass ?24:1),
+                                            playFrame.origin.y + restartFrame.size.height/2.0 + (largeSizeClass?2:1))];
     
     if ((m_title && [m_title length] > 0 || m_storyInfo) //|| UIDeviceOrientationIsLandscape([self interfaceOrientation])
         ) {
@@ -314,8 +317,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             [m_artworkLabel setAlpha: 1.0];
         }
     }
-    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; // [[UIDevice currentDevice] orientation]];
-
+    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]];
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
@@ -325,7 +327,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             [self toggleArtDescript];
         if (m_infoButton)
             [m_infoButton setEnabled:NO];
-        [m_browser hidePopover];
         [m_titleField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_titleField setTextColor: [UIColor blackColor]];
         [m_authorField setBorderStyle: UITextBorderStyleRoundedRect];
@@ -362,7 +363,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     
     [self refresh];
     
-    
     if (m_descriptionWebView) {
         NSArray *subviews = m_descriptionWebView.subviews;
         if ([subviews count] > 0) {
@@ -384,9 +384,15 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 #endif
 }
 
+-(void)viewDidAppear:(BOOL)animated {
+    [self updateBarButtonAndSelectionInstructions: self.splitViewController.displayMode];
+    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
+    
+}
+
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self updateSelectionInstructions: NO];
+    [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 
     [self refresh];
 
@@ -397,6 +403,13 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (m_flipper) {
         [m_flipper addSubview: m_artworkView];
         [m_flipper addSubview: m_artworkLabel];
+    }
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular
+        && UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
+        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
     }
 }
 
@@ -481,26 +494,44 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [self repositionArtwork: toInterfaceOrientation];
 }
 
--(void)viewDidAppear:(BOOL)animated {
-    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
-}
-
--(void)updateSelectionInstructions:(BOOL)hasPopover {
-    [[self navigationItem] setTitle: m_portraitCover.hidden ? @"Story Info" : nil];
-    if (hasPopover && [self isEditing])
+-(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode {
+    if (!gUseSplitVC)
+        return;
+    if (displayMode == UISplitViewControllerDisplayModeAutomatic)
+        displayMode = self.splitViewController.displayMode;
+    if (displayMode == UISplitViewControllerDisplayModePrimaryOverlay && [self isEditing])
         [self setEditing:NO animated: YES];
-    
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
+    if (displayMode == UISplitViewControllerDisplayModeAllVisible) {
+        if (m_browser.view.superview == nil) { // you lie!  Sometimes portrait mode reports this when only details vc is visible
+            self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryOverlay;
+            displayMode = UISplitViewControllerDisplayModePrimaryOverlay;
+        }
+    }
+    if (displayMode == UISplitViewControllerDisplayModeAllVisible
+        && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Select a story to begin";
-    else
-        m_portraitCoverLabel.text = hasPopover ? nil : @"Tap 'Select Story' to begin";
+    else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden
+        && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
+        m_portraitCoverLabel.text = @"Tap 'Select Story' to begin";
+    else // if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact)
+        m_portraitCoverLabel.text = nil;
+
+    if (displayMode == UISplitViewControllerDisplayModeAllVisible) {
+        self.navigationItem.leftBarButtonItem = nil;
+    } else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden || displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
+        [self setEditing: NO animated: YES];
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
+            self.navigationItem.leftBarButtonItem = nil; // will have Back button instead
+        }
+        else
+            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Select Story" style:UIBarButtonItemStylePlain target:self.splitViewController.displayModeButtonItem.target action:self.splitViewController.displayModeButtonItem.action];
+    }
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
 
- //   m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
-    [self updateSelectionInstructions: NO];
+    [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
     m_portraitCoverLabel.hidden = NO;
     [self refresh];
 }

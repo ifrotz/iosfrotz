@@ -50,12 +50,13 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
     const float toolBarHeight = nc ? navBarHeight : 44.0;
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    
+
+#if 0
     if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
 	CGFloat t = frame.size.width; frame.size.width = frame.size.height; frame.size.height = t;
 	t = frame.origin.x; frame.origin.x = frame.origin.y; frame.origin.y = t;
     }
-    
+#endif
     frame.origin.y += navBarHeight;
     frame.size.height -= navBarHeight;
     

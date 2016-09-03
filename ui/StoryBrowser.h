@@ -76,9 +76,6 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL m_isDeleting;
     BOOL m_lowMemory;
     BOOL m_postLaunch;
-    
-    UIPopoverController *m_popoverController;
-    UIBarButtonItem *m_popoverBarButton;
 }
 - (instancetype)init;
 @property (nonatomic, copy) NSString *launchPath;
@@ -105,7 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showMainStoryController;
 - (void)autoRestoreAndShowMainStoryController;
 - (void)didPressModalStoryListButton;
-- (void)hidePopover;
 - (void)addTitle: (NSString*)fullName forStory:(NSString*)story;
 - (void)addAuthors: (NSString*)authors forStory:(NSString*)story;
 - (void)addTUID: (NSString*)tuid forStory:(NSString*)story;
@@ -149,8 +145,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)storyInfoChanged;
 - (void)updateAccessibility;
 
-@property(nonatomic,strong,nullable) UIPopoverController *popoverController;
-@property(nonatomic,strong,nullable) UIBarButtonItem *popoverBarButton;
 @property(nonatomic,strong) UISearchDisplayController *searchDisplayController;
 @end
 

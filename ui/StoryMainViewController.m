@@ -2141,9 +2141,14 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_frotzInfoController dismissInfo];
     if (m_storyView)
         [self hideInputHelper];
-    
+
     if (m_notesController)
         [m_notesController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+}
+
+-(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    if (m_notesController)
+        [m_notesController autosize];
 }
 
 - (BOOL)prefersStatusBarHidden {
@@ -2218,6 +2223,17 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 }
 
+#if 0 // implement
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    [self autosize];
+    [m_inputLine updatePosition];
+    [self addKeyBoardLockGesture];
+    [[m_storyBrowser detailsController] refresh];
+}
+#endif
+
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
     [self autosize];
 	[m_inputLine updatePosition];
@@ -2230,41 +2246,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(CGRect) storyViewFullFrame {
-    CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
-    CGRect frame = CGRectMake(0, 0, 0, 0);
-	if (applicationFrame.size.height < applicationFrame.size.width) { // iOS 8, AppFrame is rotated in landscape mode, detect and undo
-		CGFloat t = applicationFrame.size.height;
-		applicationFrame.size.height = applicationFrame.size.width;
-		applicationFrame.size.width = t;
-	}
-    float navHeight = [self.navigationController.navigationBar bounds].size.height;
-#if UseRichTextView
-    float statusHeight = 0;
-    frame.origin.y = 0;
-#else
-    float statusHeight = [m_statusLine frame].size.height;
-    frame.origin.y = statusHeight;
-#endif
-    BOOL navHidden = [self.navigationController isNavigationBarHidden];
-    //    if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]) || !m_rotationInProgress && m_landscape) { // m_landscape
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-        if (navHidden)
-            frame.size.height = applicationFrame.size.width - statusHeight;
-        else
-            frame.size.height = applicationFrame.size.width - (gLargeScreenDevice?navHeight:navHeight /2) - statusHeight;
-        frame.size.width = applicationFrame.size.height;
-    } else {
-        if (navHidden)
-            frame.size.height = applicationFrame.size.height - (gLargeScreenDevice?0:navHeight/2) - statusHeight;
-        else
-            frame.size.height = applicationFrame.size.height - navHeight - statusHeight;
-        frame.size.width = applicationFrame.size.width;
-    }
-    
-    //    frame.size.width = m_storyView.frame.size.width; ??? why was this here
-    
-    //    NSLog(@"sv full frame nav=%d dev=%d frame +%.0f,%.0f,%.0fx%.0f", navHidden, UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]),
-    //	    frame.origin.x, frame.origin.y,frame.size.width, frame.size.height);
+    CGRect frame = [m_storyView.window bounds];
+    frame.size.height -= self.topLayoutGuide.length;
+
     CGPoint origin = m_storyView.frame.origin;
     frame.origin.x += origin.x;
     frame.origin.y += origin.y;

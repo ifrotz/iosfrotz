@@ -115,17 +115,13 @@ bool gUseSplitVC;
 
     m_browser = [[StoryBrowser alloc] init];
     if (launchOption) {
-	NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
-	if (url) 
-	    launchURL = url;
+        NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
+        if (url) 
+            launchURL = url;
     }
 
-    Class SplitVCClass = NSClassFromString(@"UISplitViewController");
-    if (!SplitVCClass)
-        gUseSplitVC = NO;
-
     if (gUseSplitVC) {
-        UISplitViewController* splitVC = [[SplitVCClass alloc] initWithNibName:nil bundle:nil];
+        UISplitViewController* splitVC = [[UISplitViewController alloc] initWithNibName:nil bundle:nil];
         [splitVC setDelegate: m_browser];
 
         m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
