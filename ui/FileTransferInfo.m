@@ -43,12 +43,24 @@ BOOL isHiddenFile(NSString *file) {
     return self;
 }
 
+-(void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    // This doesn't seem to be called when we are the secondary app and transition from 1/2 to 1/3 width.
+    // *sigh*  Nothing to be done.  Apple, do you test your $#!+?
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+
+    [self updateMessage];
+    [coordinator animateAlongsideTransition:nil completion: ^(id context) {
+        [self updateButtonLocation];
+    }];
+}
+
+
 -(void)updateButtonLocation {
     if (m_startButton && m_webView) {
         CGSize cgSize = [m_webView frame].size;
         [m_startButton setFrame:
-         CGRectMake(cgSize.width/2 - (gLargeScreenDevice ? 130:130),
-                    gLargeScreenDevice ? 520: (cgSize.height > cgSize.width) ? cgSize.height-64 : cgSize.height-48,
+         CGRectMake(cgSize.width/2 - 130,
+                    gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
     }
 }
@@ -232,7 +244,7 @@ BOOL isHiddenFile(NSString *file) {
             [m_startButton removeFromSuperview];
         }
     }
-    int fontBase = 12 + (smallScreen ? -2:0) + (gLargeScreenDevice ? 6:0);
+    int fontBase = 12 + (smallScreen ? -2:0) + (gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 6:0);
     NSString *message =  [NSString stringWithFormat: @
                           "<html><body>\n"
                           "<style type=\"text/css\">\n"
