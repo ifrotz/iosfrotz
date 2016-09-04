@@ -360,8 +360,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     m_artSizeLandscape.height *= landscapeScale;
     
     m_artworkView.detailsController = self;
-    
-    [self refresh];
+
     
     if (m_descriptionWebView) {
         NSArray *subviews = m_descriptionWebView.subviews;
@@ -382,6 +381,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         self.edgesForExtendedLayout=UIRectEdgeNone;
     }
 #endif
+    [self performSelector:@selector(refresh) withObject:nil afterDelay:0.1];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -407,6 +407,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
     if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular
         && UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;

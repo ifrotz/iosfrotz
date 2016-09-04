@@ -2147,6 +2147,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
     if (m_notesController)
         [m_notesController autosize];
 }
