@@ -1500,10 +1500,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     BOOL secondTap = NO;
     
     if (gUseSplitVC && indexPath.row == lastRow) {
-        if (DebugDetailsDeselect) {
-            [m_details clear];
-            lastRow = -1;
-        }
         secondTap = YES;
     } else
         lastRow = indexPath.row;
