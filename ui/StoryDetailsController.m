@@ -381,13 +381,11 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         self.edgesForExtendedLayout=UIRectEdgeNone;
     }
 #endif
-    [self performSelector:@selector(refresh) withObject:nil afterDelay:0.1];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
     [self updateBarButtonAndSelectionInstructions: self.splitViewController.displayMode];
     [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
-    
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -404,6 +402,10 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [m_flipper addSubview: m_artworkView];
         [m_flipper addSubview: m_artworkLabel];
     }
+}
+
+-(void)viewDidLayoutSubviews {
+    [self refresh];
 }
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
