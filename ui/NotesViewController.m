@@ -86,7 +86,7 @@ static const int kNotesTitleHeight = 24;
     [m_notesBGView setAutoresizesSubviews: YES];
     [m_notesBGView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_notesBGView setUserInteractionEnabled:YES];
-    [m_notesBGView setContentMode:UIViewContentModeTopLeft];
+    [m_notesBGView setContentMode:UIViewContentModeScaleAspectFill];
 
     //new
     self.view = m_notesBGView;
