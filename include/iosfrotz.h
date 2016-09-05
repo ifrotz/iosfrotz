@@ -152,9 +152,9 @@ extern bool gUseSplitVC;
 #define UseFullSizeStatusLineFont 1
 
 #define IPHONE_FROTZ_VERS "1.8"
-#define FROTZ_BETA 1
+#define FROTZ_BETA 0
 
-#define APPLE_FASCISM (!FROTZ_BETA)
+#define APPLE_FASCISM 0 // (!FROTZ_BETA)
 
 #define UseNewFTPServer 1
 
