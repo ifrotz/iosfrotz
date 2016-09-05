@@ -691,36 +691,36 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 -(void)layoutViews {
     CGRect frame = self.view.frame;
+    // This mess desperately needs to be redone with auto-layout
     BOOL fullScreenLarge = (frame.size.width >= 540.0 && frame.size.height >= 576.0);
-    BOOL isPortrait = (UIApplication.sharedApplication.statusBarOrientation==UIInterfaceOrientationPortrait
-                       || UIApplication.sharedApplication.statusBarOrientation==UIInterfaceOrientationPortraitUpsideDown);
-
-    CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : isPortrait ? 96.0f : 232.0f;
-    CGFloat leftMargin = fullScreenLarge ? 32.0f : isPortrait ? 4.0f : 16.0f;
-	CGFloat hsvBaseYOrigin = !isPortrait && !fullScreenLarge ? 24.0f : colorTileHeight + 48.0f;
-	CGFloat rightMarin = 60;
-	if (isPortrait && !fullScreenLarge && frame.size.height > 600) {
+    BOOL isPortraitish = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact
+                        && frame.size.height > frame.size.width;
+    CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : isPortraitish ? 96.0f : 232.0f;
+    CGFloat leftMargin = fullScreenLarge ? 32.0f : isPortraitish ? 4.0f : 16.0f;
+	CGFloat hsvBaseYOrigin = !isPortraitish && !fullScreenLarge ? 24.0f : colorTileHeight + 48.0f;
+	CGFloat rightMargin = 60;
+	if (isPortraitish && !fullScreenLarge && frame.size.width > 340 && frame.size.height > 600) {
 		leftMargin += 20;
 		colorTileHeight += 60;
 		hsvBaseYOrigin += 120;
-		rightMarin += 20;
+		rightMargin += 20;
 	}
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f,
-                                       isPortrait || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-328,
+                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-328,
                                        colorTileHeight);
-    if (!isPortrait && !fullScreenLarge)
+    if (!isPortraitish && !fullScreenLarge)
         leftMargin += frame.size.width-312;
     [m_colorTile setFrame: colorTileFrame];
     [m_tileBorder setFrame: CGRectInset(colorTileFrame, -1, -1)];
     
-    CGFloat radius = fullScreenLarge ? frame.size.width/3 : isPortrait ? 128.0f : 116.0f;
+    CGFloat radius = fullScreenLarge ? frame.size.width/3 : isPortraitish ? 128.0f : 116.0f;
     if (fullScreenLarge) {
         [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
         [m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin, 96.0f, radius*2)];
         [m_valuePicker setBarWidth: 64];
     } else {
         [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-		[m_valuePicker setFrame: CGRectMake(frame.size.width - (isPortrait ? rightMarin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
+		[m_valuePicker setFrame: CGRectMake(frame.size.width - (isPortraitish ? rightMargin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
         [m_valuePicker setBarWidth: 32];
     }
     
