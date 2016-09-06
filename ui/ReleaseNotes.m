@@ -101,8 +101,8 @@
 #endif
         NSString *devModel = [[[UIDevice currentDevice] localizedModel] stringByReplacingOccurrencesOfString:@" " withString:@"_"];
         NSString *devVers = [[[UIDevice currentDevice] systemVersion] stringByReplacingOccurrencesOfString:@" " withString:@"_"];
-        NSURL *myURL = [NSURL URLWithString: [NSString stringWithFormat:@"%@?q=%@,%@", @FROTZ_REL_URL kRelNotesFilename,
-                                                devModel, devVers]];
+        NSURL *myURL = [NSURL URLWithString: [NSString stringWithFormat:@"%@?q=%@,%@&%lu", @FROTZ_REL_URL kRelNotesFilename,
+                                                devModel, devVers, time(0)]];
         m_request = [NSURLRequest requestWithURL: myURL];    
         m_data = [NSMutableData data];
         m_connection = [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
@@ -262,7 +262,8 @@
         // 1.4: mar 19, 2010
         // 1.3: sep 4, 2009
     }
-    [webView loadHTMLString: [NSString stringWithFormat: @"<html><body>\n%@\n%@\n</body>\n\n", cssString, htmlString] baseURL: nil];
+    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n</body>\n\n", cssString, htmlString];
+    [webView loadHTMLString: contentString baseURL: nil];
 #if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);
 #endif
