@@ -689,6 +689,12 @@ int os_gets_timeout(char *buf, size_t bufl,
         glk_select(&event);
         if (event.type == evtype_Arrange)
             redraw_windows();
+        else if (do_autosave)
+        {
+            event.type = evtype_Timer;
+            glk_cancel_line_event(mainwin, &event);
+            break;
+        }
         else if (event.type == evtype_Timer && (timeout = 1))
             glk_cancel_line_event(mainwin, &event);
     }
