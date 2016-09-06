@@ -239,6 +239,11 @@
 		44A0FA9215EC649C005FF570 /* NavForward@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A0FA9015EC649C005FF570 /* NavForward@2x.png */; };
 		44A0FA9615EC7700005FF570 /* nowplaying@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A0FA9515EC7700005FF570 /* nowplaying@2x.png */; };
 		44A2E7B911228B0900E35CCC /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44A2E7B811228B0900E35CCC /* Entitlements.plist */; };
+		44A45D681D7E56A000C073D9 /* tads-64.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D631D7E56A000C073D9 /* tads-64.png */; };
+		44A45D691D7E56A000C073D9 /* tads-128.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D641D7E56A000C073D9 /* tads-128.png */; };
+		44A45D6A1D7E56A000C073D9 /* tads-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D651D7E56A000C073D9 /* tads-320.png */; };
+		44A45D6B1D7E56A000C073D9 /* tads-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D661D7E56A000C073D9 /* tads-640.png */; };
+		44A45D6C1D7E56A000C073D9 /* tads.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D671D7E56A000C073D9 /* tads.png */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
 		44B0ECC61B23D0B200C36380 /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D23126A402400B283FF /* accel.c */; };
 		44B0ECC71B23D0B200C36380 /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D24126A402400B283FF /* compiler.c */; };
@@ -1089,6 +1094,11 @@
 		44A0FA9015EC649C005FF570 /* NavForward@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "NavForward@2x.png"; path = "resources/NavForward@2x.png"; sourceTree = "<group>"; };
 		44A0FA9515EC7700005FF570 /* nowplaying@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "nowplaying@2x.png"; path = "resources/nowplaying@2x.png"; sourceTree = "<group>"; };
 		44A2E7B811228B0900E35CCC /* Entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Entitlements.plist; sourceTree = "<group>"; };
+		44A45D631D7E56A000C073D9 /* tads-64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "tads-64.png"; path = "resources/tads-64.png"; sourceTree = "<group>"; };
+		44A45D641D7E56A000C073D9 /* tads-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "tads-128.png"; path = "resources/tads-128.png"; sourceTree = "<group>"; };
+		44A45D651D7E56A000C073D9 /* tads-320.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "tads-320.png"; path = "resources/tads-320.png"; sourceTree = "<group>"; };
+		44A45D661D7E56A000C073D9 /* tads-640.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "tads-640.png"; path = "resources/tads-640.png"; sourceTree = "<group>"; };
+		44A45D671D7E56A000C073D9 /* tads.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = tads.png; path = resources/tads.png; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; name = locale; path = resources/locale; sourceTree = "<group>"; };
 		44B0ECAB1B23D00100C36380 /* libgit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgit.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B0ECDA1B23D1D800C36380 /* libglulxe.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglulxe.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1558,6 +1568,11 @@
 				443A64AD114F5EDB0093B4B2 /* splashes.zip */,
 				447DF980123DF34900689076 /* StoryDetailsController-ipad.xib */,
 				447DF3B9123C136500689076 /* StoryDetailsController.xib */,
+				44A45D631D7E56A000C073D9 /* tads-64.png */,
+				44A45D641D7E56A000C073D9 /* tads-128.png */,
+				44A45D651D7E56A000C073D9 /* tads-320.png */,
+				44A45D661D7E56A000C073D9 /* tads-640.png */,
+				44A45D671D7E56A000C073D9 /* tads.png */,
 				44FC54D31120006400CF11E9 /* url.png */,
 				44FB3BA40E6390DC00142D85 /* val-crosshair.png */,
 				44C48A7D15F6D9A80037EDF9 /* val-crosshair@2x.png */,
@@ -2592,6 +2607,7 @@
 				44E145CA114C303B001926E1 /* compass-small.png in Resources */,
 				443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */,
 				4409C8EF1985DD2B003869C2 /* glyph-input-clear.png in Resources */,
+				44A45D6C1D7E56A000C073D9 /* tads.png in Resources */,
 				447036B2123335C400E15D5B /* Settings.bundle in Resources */,
 				44407A701236C16F0021DEE4 /* parchment.jpg in Resources */,
 				44407D10123742030021DEE4 /* zcode.png in Resources */,
@@ -2618,6 +2634,7 @@
 				44DA421D15E987A2007F61DA /* glulx-128.png in Resources */,
 				44DA421E15E987A2007F61DA /* glulx-320.png in Resources */,
 				44DA421F15E987A2007F61DA /* glulx-640.png in Resources */,
+				44A45D6A1D7E56A000C073D9 /* tads-320.png in Resources */,
 				44DA422015E987A2007F61DA /* zcode-64.png in Resources */,
 				44D71CE819882F5300F4AD9A /* Frotz-76x76.png in Resources */,
 				44DA422115E987A2007F61DA /* zcode-128.png in Resources */,
@@ -2645,6 +2662,7 @@
 				449CD89D15E9E079007AEABD /* Default@2x.png in Resources */,
 				446ED97A160E7C110060E655 /* Default-568h@2x.png in Resources */,
 				445FFBBB15E9ED3F00ECB161 /* Icon-72.png in Resources */,
+				44A45D691D7E56A000C073D9 /* tads-128.png in Resources */,
 				445FFBBC15E9ED3F00ECB161 /* Icon-72@2x.png in Resources */,
 				445FFBBD15E9ED3F00ECB161 /* Icon.png in Resources */,
 				4485D050196E4F33005A19AD /* Icon-60.png in Resources */,
@@ -2658,12 +2676,14 @@
 				44C48A7C15EDD7E20037EDF9 /* colorflipfg@2x.png in Resources */,
 				4485D051196E4F33005A19AD /* Icon-60@2x.png in Resources */,
 				44FB3BA50E6390DC00142D85 /* hsv-crosshair.png in Resources */,
+				44A45D6B1D7E56A000C073D9 /* tads-640.png in Resources */,
 				44FB3BA60E6390DC00142D85 /* val-crosshair.png in Resources */,
 				44C48A7E15F6D9A80037EDF9 /* val-crosshair@2x.png in Resources */,
 				44C48A8015F6E34C0037EDF9 /* val-crosshair-ipad@2x.png in Resources */,
 				44D71CEA19882F5300F4AD9A /* Frotz-152x152.png in Resources */,
 				44C48A8215F6E5C20037EDF9 /* val-crosshair-ipad.png in Resources */,
 				44619B9E160FB0D400B70223 /* refresh-small.png in Resources */,
+				44A45D681D7E56A000C073D9 /* tads-64.png in Resources */,
 				44619BA0160FB36500B70223 /* refresh.png in Resources */,
 				44FDFBAB1999D02D00B44B03 /* icon-keyboard-locked@2x.png in Resources */,
 			);

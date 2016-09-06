@@ -114,6 +114,31 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>gam</string>
+				<string>t3</string>
+			</array>
+			<key>CFBundleTypeIconFiles</key>
+			<array>
+				<string>tads.png</string>
+				<string>tads-64</string>
+				<string>tads-128</string>
+				<string>tads-320</string>
+				<string>tads-640</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>org.tads.tads-game</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.tads.tads-game</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
 				<string>qut</string>
 				<string>sav</string>
 			</array>
@@ -337,6 +362,30 @@
 				</array>
 				<key>public.mime-type</key>
 				<string>application/x-glulx</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>TADS Code</string>
+			<key>UTTypeIconFile</key>
+			<string>public.png</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.tads.tads-game</string>
+			<key>UTTypeReferenceURL</key>
+			<string>http://www.tads.org/howto/mediatypes.htm</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>gam</string>
+					<string>t3</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-tads</string>
 			</dict>
 		</dict>
 	</array>
