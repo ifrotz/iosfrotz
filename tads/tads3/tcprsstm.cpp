@@ -7864,7 +7864,7 @@ void CTPNStmBreakBase::set_label(const CTcToken *tok)
 /*
  *   chart control flow 
  */
-ulong CTPNStmBreakBase::get_control_flow(int warn) const
+unsigned long CTPNStmBreakBase::get_control_flow(int warn) const
 {
     /*
      *   If we don't have a label, we break out of our enclosing control
@@ -7921,7 +7921,7 @@ void CTPNStmContinueBase::set_label(const CTcToken *tok)
 /*
  *   chart control flow 
  */
-ulong CTPNStmContinueBase::get_control_flow(int warn) const
+unsigned long CTPNStmContinueBase::get_control_flow(int warn) const
 {
     /*
      *   If we don't have a label, we continue in our enclosing control

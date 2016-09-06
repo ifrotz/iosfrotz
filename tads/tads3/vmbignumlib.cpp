@@ -3941,7 +3941,7 @@ void CVmObjBigNum::encode_ber(char *buf, size_t buflen, size_t &outlen,
     while (!(z = is_zero(tmp)) && outlen < buflen)
     {
         /* get the low-order 7 bits by getting the remainder mod 128 */
-        ulong rem;
+        unsigned long rem;
         div_by_long(tmp, 128, &rem);
         
         /* store it */
