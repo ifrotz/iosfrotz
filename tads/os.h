@@ -81,10 +81,11 @@ Modified
 #ifndef OS_INCLUDED
 #define OS_INCLUDED
 
+#define OSIOS 1
 #define OSANSI 1
 #define GLK 1
 #define UNIX 1
-//#define _M_IX86_64 1
+#define _M_IX86_64 1
 
 /*
  *   For C++ files, define externals with C linkage
@@ -98,15 +99,16 @@ extern "C" {
 /*
  *   Include the appropriate hardware-specific header.
  */
-
-#ifdef __ppc__
+#if defined(__aarch64__)
+#define _M_ARM64
+#elif defined(__arm__)
+#define _M_ARM32
+#elif defined(__ppc__)
 #define _M_PPC
-#else
-#ifdef __x86_64__
+#elif defined(__x86_64__)
 #define _M_IX86_64
 #else
 #define _M_IX86
-#endif
 #endif
 
 /*
@@ -161,7 +163,9 @@ extern "C" {
  *   system-specific definitions.
  */
 
-#if defined(GARGOYLE) || defined(OSANSI)
+#if defined(OSIOS)
+#include "osios.h"
+#elif defined(GARGOYLE) || defined(OSANSI)
 #include "osansi.h"
 #include <time.h>
 #include <stdarg.h>

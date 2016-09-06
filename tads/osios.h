@@ -21,15 +21,17 @@
  *                                                                            *
  *****************************************************************************/
 
-#ifndef OSANSI_H
-#define OSANSI_H
+#ifndef OSIOS_H
+#define OSIOS_H
 
-#define OSANSI	/* hmm? */
 #define MAC_OS	/* tell tads not to let os do paging */
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
+#include <stdarg.h>
+#include <sys/types.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -45,7 +47,7 @@ extern "C" {
  * All the stuff osifc.h forgot to tell me about...
  */
 
-#define TADS_OEM_NAME   "Mr Oizo"
+#define TADS_OEM_NAME   "iFrotz"
 
 /* Replace stricmp with strcasecmp */
 #define strnicmp strncasecmp
@@ -54,6 +56,9 @@ extern "C" {
 /* far pointer type qualifier (null on most platforms) */
 #define osfar_t
 #define far
+
+#define OS_ULONG_DEFINED 1
+typedef unsigned long ulong;
 
 /* cast an expression to void */
 #define DISCARD (void)
@@ -97,6 +102,7 @@ int os_memicmp(const char *a, const char *b, int n);
 #define osfree free
 #define osrealloc realloc
 
+#define os_vasprintf vasprintf
 
 /*
  *   Basic file I/O interface.  These functions are merely documented
@@ -109,12 +115,14 @@ int os_memicmp(const char *a, const char *b, int n);
 #define OSPATHALT "/:"
 #define OSPATHURL "\\/"
 #define OSPATHSEP ';'
+#define OSPATHPWD "."
 #define OS_NEWLINE_SEQ  "\r\n"
 #else
 #define OSPATHCHAR '/'
 #define OSPATHALT ""
 #define OSPATHURL "/"
 #define OSPATHSEP ':'
+#define OSPATHPWD "."
 #define OS_NEWLINE_SEQ "\n"
 #endif
 
@@ -144,15 +152,15 @@ int osfrb(osfildef *fp, void *buf, int bufl);
 size_t osfrbc(osfildef *fp, void *buf, size_t bufl);
 long osfpos(osfildef *fp);
 int osfseek(osfildef *fp, long pos, int mode);
-void osfflush(osfildef *fp);
+int osfflush(osfildef *fp);
 void osfcls(osfildef *fp);
 int osfdel(const char *fname);
 int osfacc(const char *fname);
 int osfgetc(osfildef *fp);
 
-void os_put_buffer (unsigned char *buf, size_t len);
-void os_get_buffer (unsigned char *buf, size_t len, size_t init);
-unsigned char *os_fill_buffer (unsigned char *buf, size_t len);
+void os_put_buffer (const char *buf, size_t len);
+void os_get_buffer (char *buf, size_t len, size_t init);
+char *os_fill_buffer (char *buf, size_t len);
 
 /* 
  *   Convert string to all-lowercase. 
@@ -181,9 +189,36 @@ char *os_strlwr(char *s);
  */
 #define OS_DEFAULT_SWAP_ENABLED   0
 
+#include <dirent.h>
+typedef DIR* osdirhdl_t;
+    
+    /* file type/mode bits */
+#define OSFMODE_FILE    S_IFREG
+#define OSFMODE_DIR     S_IFDIR
+#define OSFMODE_CHAR    S_IFCHR
+#define OSFMODE_BLK     S_IFBLK
+#define OSFMODE_PIPE    S_IFIFO
+#define OSFMODE_LINK    S_IFLNK
+#ifdef S_IFSOCK
+#define OSFMODE_SOCKET  S_IFSOCK
+#else
+#define OSFMODE_SOCKET  0
+#endif
+    
+    /* File attribute bits. */
+#define OSFATTR_HIDDEN  0x0001
+#define OSFATTR_SYSTEM  0x0002
+#define OSFATTR_READ    0x0004
+#define OSFATTR_WRITE   0x0008
+    
+/* Get a file's stat() type. */
+int osfmode( const char* fname, int follow_links, unsigned long* mode,
+                unsigned long* attr );
+#define os_rename_file(from, to) (rename(from, to) == 0)
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OSANSI_H */
+#endif /* OSIOS_H */
 

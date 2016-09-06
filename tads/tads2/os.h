@@ -1,6 +1,12 @@
-#if 1
+
+#define OSANSI_GARGYOLE 1
+
+#if OSANSI_GARGYOLE
 #include "../os.h"
 #else
+// The remainder of this file is the original os.h from TADS 2.  We ue the modified common os.h
+// shared by TADS 2 & 3 from Gargoyle, one level up.
+
 /*
 $Header: d:/cvsroot/tads/TADS2/OS.H,v 1.2 1999/05/17 02:52:12 MJRoberts Exp $
 */

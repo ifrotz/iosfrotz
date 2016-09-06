@@ -8,18 +8,18 @@
  */
 /*
 Name
-  h_ix86_64.h - hardware definitions for x86-64 (64-bit x86) platforms
+  h_arm64.h - hardware definitions for 64-bit ARM platforms
 Function
-  These definitions are designed ONLY for 64-bit x86 CPUs.  Note that these
-  probably will NOT work on 16- and 32-bit x86 hardware.
+  These definitions are designed ONLY for 64-bit CPUs.  Note that these
+  probably will NOT work on 16- and 32-bit hardware.
 Notes
   IMPORTANT!  See the note below about the typedef for hix_int32.
 Modified
-  03/25/08 MJRoberts  - created (from h_ix86.h)
+  09/05/2016 Craig Smith - created (from h_ix86_64.h)
 */
 #define HAVE_CONFIG_H 1
-#ifndef H_IX86_64_H
-#define H_IX86_64_H
+#ifndef H_ARM64_H
+#define H_ARM64_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -96,5 +96,5 @@ typedef unsigned short hix_uint16;
 #define oswp4s(p, l) oswp4(p, l)
 
 
-#endif /* H_IX86_64_H */
+#endif /* H_ARM64_H */
 
