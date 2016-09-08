@@ -14,7 +14,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
-**Update - Version 1.7.1 now available!**
+**Update - Version 1.81 now available!**
 
 *09/08/2016**
 
