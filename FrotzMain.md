@@ -14,9 +14,16 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+**Update - Version 1.7.1 now available!**
 
+*09/08/2016**
 
-**Update - Version 1.7 now available!**
+  * Now plays TADS games (v2/v3)
+  * Improved support for iOS 9 and 10
+  * Performance improvements / 64-bit support
+  * Various bug fixes
+
+**Update - Version 1.7.1 now available!**
 
 **10/20/2014**
 
