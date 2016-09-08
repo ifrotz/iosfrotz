@@ -16,7 +16,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 ---
 **Update - Version 1.8 now available!**
 
-*09/08/2016**
+**09/08/2016**
 
   * Now plays TADS games (v2/v3)
   * Improved support for iOS 9 and 10
@@ -25,7 +25,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 **Update - Version 1.7.1 now available!**
 
-**10/20/2014**
+10/20/2014
 
   * Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.
   * Fixed bug printing accented characters in status window.
