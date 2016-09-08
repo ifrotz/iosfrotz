@@ -1,4 +1,7 @@
-![http://iphonefrotz.googlecode.com/svn/trunk/resources/Frotz-320x480.png](http://iphonefrotz.googlecode.com/svn/trunk/resources/Frotz-320x480.png)
+
+### 2016/09/08 Update ###
+
+Version 1.8 with support for TADS format games and improved iOS 9/10 support now available.
 
 ### 2014/10/20 Update ###
 
