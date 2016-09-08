@@ -67,8 +67,8 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
   * **What device/OS versions is Frotz compatible with?**
 
-> Frotz 1.7 works on iPhone, iPad and iPod Touch with OS versions 3.0 and later.
-> (Version 1.6 had a bug which caused it to crash on 1st generation/armv6 devices, but this is fixed in 1.7.)
+> Frotz 1.8 works on iPhone, iPad and iPod Touch devices running iOS 8.0 or later.
+> If you have a device too old to run iOS 8, the previous version should show up in the App Store when accessed from the device. Frotz 1.7 works on iPhone, iPad and iPod Touch with OS versions 3.0 and later.
 
 <a href='Hidden comment: 
 Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I"ve gotten a lot of enjoyment playing these games over the years, and since I"m not a very good writer, this is my way of giving back.
