@@ -41,10 +41,14 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
   * **Why can't you transfer files to Frotz using the iTunes file sharing feature?**
 
-> Unfortunately, iTunes FIle Sharing doesn't support folders well, and Frotz uses folders internally to keep saved games separate for each story.  I'm not willing to make Frotz put all files at the top level in order for the files to show up in iTunes File Sharing.  If Apple adds better folder support, I will enable the ability in Frotz.  But check out the Dropbox feature, which is by far the easiest way to access your saved game files from multiple computers.
+> Unfortunately, iTunes File Sharing doesn't support folders well, and Frotz uses folders internally to keep saved games separate for each story.  I'm not willing to make Frotz put all files at the top level in order for the files to show up in iTunes File Sharing.  If Apple adds better folder support, I will enable the ability in Frotz.  But check out the Dropbox feature, which is by far the easiest way to access your saved game files from multiple computers.
+
+> **Update** - I went ahead and enabled iTunes File Sharing in 1.8, because there are other apps you can then use to connect to Frotz, such as FileApp, which deal with subfolders.
 
   * **Speaking of Folders...**
 > A couple of people have asked for the ability to move games into folders.  This sounds like a nice idea, but it's actually really hard to design a good interface for manipulating folders that allows everything you'd want to be able to do without moving to a file-centric UI, where you end up with something looking like a desktop file browser.  I think this would benefit a few users at the expense of most, and don't think it's worth it.  (Even Apple didn't do a very good job of implementing Folders in IOS - how is dragging one app on top of another to make a folder intuitive in the least?)
+
+> **Update** - I'm thinking of adding arbitrary, user-editable tags collections to the stories. Combined with the search bar, this may be better than folders.
 
   * **How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?**
 
