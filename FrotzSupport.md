@@ -8,9 +8,16 @@ To report an **issue or usability issue** with Frotz, please click [here to file
 If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
 
 
-**Update 08/21/2014**
+**Update 09/06/2016**
 
-**Frotz 1.7** now available, with following enhancements and bug fixes:
+**Frotz 1.8** now available, with following enhancements and bug fixes:
+
+  * Now plays TADS games (v2/v3)
+  * Improved support for iOS 9 and 10, including split screen multitasking
+  * Performance improvements / 64-bit support
+  * Various other bug fixes, including iOS 9 crash switching back to app
+
+Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
   * UI makeover with support for iOS 7/8
   * New Search Bar in Story List.
