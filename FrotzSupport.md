@@ -87,5 +87,3 @@ Frotz would be worth nothing without the wealth of great games created by the ta
 > When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.
 > You can also delete games via the web file transfer interface.
 
-  * **Performance**
-> The performance problems in Frotz 1.0 were fixed in 1.0.1, and further improved in 1.2 and 1.4  If you notice very poor performance, please file a new bug report.  Please do not just file a negative review on iTunes without also filing a bug report so I can have an opportunity to reproduce and fix it.
