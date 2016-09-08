@@ -18,7 +18,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 **09/08/2016**
 
-  * Now plays TADS games (v2/v3)
+  * Now plays TADS games (v2/v3, text only for now)
   * Improved support for iOS 9 and 10
   * Performance improvements / 64-bit support
   * Various bug fixes
