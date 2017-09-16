@@ -1,9 +1,21 @@
 {
   "images" : [
     {
+      "size" : "20x20",
+      "idiom" : "iphone",
+      "filename" : "Frotz-40x40.png",
+      "scale" : "2x"
+    },
+    {
+      "size" : "20x20",
+      "idiom" : "iphone",
+      "filename" : "Frotz-60x60.png",
+      "scale" : "3x"
+    },
+    {
       "size" : "29x29",
       "idiom" : "iphone",
-      "filename" : "Icon-Small.png",
+      "filename" : "Frotz-29x29.png",
       "scale" : "1x"
     },
     {
@@ -13,8 +25,9 @@
       "scale" : "2x"
     },
     {
-      "idiom" : "iphone",
       "size" : "29x29",
+      "idiom" : "iphone",
+      "filename" : "Frotz-87x87.png",
       "scale" : "3x"
     },
     {
@@ -26,7 +39,7 @@
     {
       "size" : "40x40",
       "idiom" : "iphone",
-      "filename" : "Frotz-120x120-1.png",
+      "filename" : "Frotz-120x120.png",
       "scale" : "3x"
     },
     {
@@ -54,9 +67,21 @@
       "scale" : "3x"
     },
     {
+      "size" : "20x20",
+      "idiom" : "ipad",
+      "filename" : "Frotz-20x20.png",
+      "scale" : "1x"
+    },
+    {
+      "size" : "20x20",
+      "idiom" : "ipad",
+      "filename" : "Frotz-40x40.png",
+      "scale" : "2x"
+    },
+    {
       "size" : "29x29",
       "idiom" : "ipad",
-      "filename" : "Icon-Small.png",
+      "filename" : "Frotz-29x29.png",
       "scale" : "1x"
     },
     {
@@ -74,7 +99,7 @@
     {
       "size" : "40x40",
       "idiom" : "ipad",
-      "filename" : "Frotz-80x80-1.png",
+      "filename" : "Frotz-80x80.png",
       "scale" : "2x"
     },
     {
@@ -114,10 +139,15 @@
       "scale" : "2x"
     },
     {
-      "idiom" : "ipad",
       "size" : "83.5x83.5",
+      "idiom" : "ipad",
       "filename" : "Frotz-167x167.png",
       "scale" : "2x"
+    },
+    {
+      "idiom" : "ios-marketing",
+      "size" : "1024x1024",
+      "scale" : "1x"
     }
   ],
   "info" : {
