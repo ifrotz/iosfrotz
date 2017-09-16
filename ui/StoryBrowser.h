@@ -66,7 +66,6 @@ NS_ASSUME_NONNULL_BEGIN
 
     UIBarButtonItem *m_editButtonItem;
     UIBarButtonItem *m_nowPlayingButtonItem;
-    UIButton *m_nowPlayingButtonView;
 
     NSMutableDictionary *m_metaDict;
     NSMutableDictionary *m_storyInfoDict;

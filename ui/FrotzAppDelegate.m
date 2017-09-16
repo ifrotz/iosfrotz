@@ -161,14 +161,18 @@ bool gUseSplitVC;
     }
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        UIColor *textColor = [UIColor darkGrayColor]; // [UIColor whiteColor];
-        //[[UINavigationBar appearance] setBarTintColor: [UIColor darkGrayColor]];
+        UIColor *textColor = [UIColor darkGrayColor];
         [[UINavigationBar appearance] setBarTintColor: [UIColor whiteColor]];
         
-        [[UIButton appearance] setTintColor: [UIColor whiteColor]];
+        // This is now done explicitly for buttons in the StoryDetailsController, and in the xib files
+        // because of bugs/misfeatures in the iOS 11 SDK.
+        // See: http://www.openradar.me/radar?id=5064333964869632
+        //[[UIButton appearance] setTintColor: [UIColor whiteColor]];
+        //[[UIButton appearance] setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        //[[UIButton appearanceWhenContainedIn: [UINavigationBar class], nil] setTintColor: textColor];
+
+        [[UIButton appearanceWhenContainedIn: [StoryDetailsController class], nil] setTitleColor: [UIColor whiteColor] forState:UIControlStateNormal];
         [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor purpleColor]];
-        [[UIButton appearance] setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [[UIButton appearanceWhenContainedIn: [UINavigationBar class], nil] setTintColor: textColor];
         [[UINavigationBar appearance] setTintColor:textColor];
     }
 #endif

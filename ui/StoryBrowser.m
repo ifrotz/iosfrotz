@@ -188,25 +188,22 @@ void removeOldPngSplash(const char *filename) {
 
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
-        
-        m_nowPlayingButtonView = [UIButton buttonWithType: UIButtonTypeCustom];
+
 #ifdef NSFoundationVersionNumber_iOS_6_1
         if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-            [m_nowPlayingButtonView setTitle:@"Resume" forState: UIControlStateNormal];
-            [m_nowPlayingButtonView setFrame: CGRectMake(0, 0, 100, 36)];
             m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
-            
         } else
 #endif
         {
             UIImage *img = [UIImage imageNamed: @"nowplaying.png"];
-            [m_nowPlayingButtonView setImage: img forState: UIControlStateNormal];
-            [m_nowPlayingButtonView setFrame: CGRectMake(0,0,[img size].width, [img size].height)];
-            [m_nowPlayingButtonView addTarget:self action:@selector(resumeStory) forControlEvents: UIControlEventTouchDown];
-            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_nowPlayingButtonView];
-            [m_nowPlayingButtonItem setCustomView: m_nowPlayingButtonView];
-            if ([m_nowPlayingButtonView respondsToSelector: @selector(setAccessibilityLabel:)])
-                [m_nowPlayingButtonView setAccessibilityLabel: NSLocalizedString(@"Now playing",nil)];
+            UIButton *nowPlayingButtonView = [UIButton buttonWithType: UIButtonTypeCustom];
+            [nowPlayingButtonView setImage: img forState: UIControlStateNormal];
+            [nowPlayingButtonView setFrame: CGRectMake(0,0,[img size].width, [img size].height)];
+            [nowPlayingButtonView addTarget:self action:@selector(resumeStory) forControlEvents: UIControlEventTouchDown];
+            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithCustomView: nowPlayingButtonView];
+            [m_nowPlayingButtonItem setCustomView: nowPlayingButtonView];
+            if ([nowPlayingButtonView respondsToSelector: @selector(setAccessibilityLabel:)])
+                [nowPlayingButtonView setAccessibilityLabel: NSLocalizedString(@"Now playing",nil)];
         }
         
         m_editButtonItem = [self editButtonItem];
@@ -1082,7 +1079,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)viewWillDisappear:(BOOL)animated {
    [super viewWillDisappear:animated];
-    [self setEditing: NO animated: YES];
+   [self setEditing: NO animated: YES];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
