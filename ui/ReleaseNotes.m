@@ -13,7 +13,7 @@
 #import "FrotzCommonWebView.h"
 #import "NetworkController.h"
 
-#define kRelNotesFilename "release_" IPHONE_FROTZ_VERS ".html"
+#define kRelNotesFilename "release_" IPHONE_FROTZ_RN_VERS ".html"
 
 #ifndef OO
 #define OO
