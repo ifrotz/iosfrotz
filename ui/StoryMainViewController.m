@@ -30,7 +30,6 @@
 #import "GlkView.h"
 
 #import "FileBrowser.h"
-#import <DropboxSDK/DropboxSDK.h>
 
 #import "ui_setup.h"
 #import "ui_utils.h"
@@ -4516,8 +4515,48 @@ static NSString *kDBTopPath = @"topPath";
 
 static NSString *kDefaultDBTopPath = @"/Frotz";
 
+static BOOL migateDropboxAuth() {
+#if UseNewDropBoxSDK
+    BOOL willPerformMigration = [DBClientsManager checkAndPerformV1TokenMigration:^(BOOL shouldRetry, BOOL invalidAppKeyOrSecret,
+                                                                                    NSArray<NSArray<NSString *> *> *unsuccessfullyMigratedTokenData) {
+        if (invalidAppKeyOrSecret) {
+            // Developers should ensure that the appropriate app key and secret are being supplied.
+            // If your app has multiple app keys / secrets, then run this migration method for
+            // each app key / secret combination, and ignore this boolean.
+            NSLog(@"Migrate DB Invalid AppKey");
+        }
+
+        if (shouldRetry) {
+            // Store this BOOL somewhere to retry when network connection has returned
+            NSLog(@"Migrate DB should retry");
+        }
+
+        if ([unsuccessfullyMigratedTokenData count] != 0) {
+            NSLog(@"The following tokens were unsucessfully migrated:");
+            for (NSArray<NSString *> *tokenData in unsuccessfullyMigratedTokenData) {
+                NSLog(@"DropboxUserID: %@, AccessToken: %@, AccessTokenSecret: %@, StoredAppKey: %@", tokenData[0],
+                      tokenData[1], tokenData[2], tokenData[3]);
+            }
+        }
+
+        if (!invalidAppKeyOrSecret && !shouldRetry && [unsuccessfullyMigratedTokenData count] == 0) {
+            [DBClientsManager setupWithAppKey:@FROTZ_DB_APP_KEY];
+        }
+    } queue:nil appKey:@FROTZ_DB_APP_KEY appSecret:@FROTZ_DB_APP_SECRET];
+
+    if (!willPerformMigration) {
+        [DBClientsManager setupWithAppKey:@FROTZ_DB_APP_KEY];
+    }
+    return willPerformMigration;
+#else
+    return NO;
+#endif
+}
+
 -(void) initializeDropbox {
 #ifdef FROTZ_DB_APP_KEY
+    BOOL willPerformMigration = migateDropboxAuth();
+
     DBSession* session = [[DBSession alloc] initWithAppKey:@FROTZ_DB_APP_KEY  appSecret:@FROTZ_DB_APP_SECRET root:kDBRootDropbox];
 
     session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating

@@ -5,4 +5,10 @@
 //  Created by Craig Smith on 9/9/14.
 //
 //
+#include "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"
+
+#include "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.distribution.xcconfig" // same as release version
+// These two includes have the same contents; including twice is harmless, and prevents 'pod install'
+// from generating a warning without having to clone this file to have two different top-level configs for release/dist.
+
 BUILD_NUMBER = 138

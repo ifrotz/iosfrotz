@@ -233,8 +233,6 @@ extern StoryBrowser *theStoryBrowser;
 -(void)dbRecursiveMakeParents:(NSString*)path;
 -(NSString*)metadataSubPath:(NSString*)path;
 -(void)sessionDidReceiveAuthorizationFailure:(DBSession*)session;
-//-(void)loginControllerDidLogin:(DBLoginController*)controller;
-//-(void)loginControllerDidCancel:(DBLoginController*)controller;
 -(void)dropboxDidLinkAccount;
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile;

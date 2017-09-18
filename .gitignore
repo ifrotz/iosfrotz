@@ -28,6 +28,7 @@ xcuserdata
 *.xccheckout
 *.moved-aside
 *.xcuserstate
+Pods
 
 ## Obj-C/Swift specific
 *.hmap

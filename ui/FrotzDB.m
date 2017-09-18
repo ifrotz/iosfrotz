@@ -335,12 +335,6 @@
 	    switch (row) {
 		case 0: {
             [[DBSession sharedSession] linkFromController:self];
-#if 0
-		    DBLoginController *dbController = [[DBLoginController new] autorelease];
-		    dbController.delegate = m_delegate;
-		    [dbController presentFromController:self];
-		    dbController.navigationController.navigationBar.barStyle = UIBarStyleBlack;
-#endif
 		    break;
 		    }
 		case 1: {

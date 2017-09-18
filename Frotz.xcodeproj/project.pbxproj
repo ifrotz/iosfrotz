@@ -530,6 +530,7 @@
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Frotz_Prefix.pch; sourceTree = "<group>"; };
+		2C8A091C5513E52EF8D8E7A5 /* Pods-Frotz.distribution.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.distribution.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.distribution.xcconfig"; sourceTree = "<group>"; };
 		440018FC15D9EB50007612E4 /* compass-small@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "compass-small@2x.png"; path = "resources/compass-small@2x.png"; sourceTree = "<group>"; };
 		440018FE15DA1EEA007612E4 /* compass-med@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "compass-med@2x.png"; path = "resources/compass-med@2x.png"; sourceTree = "<group>"; };
 		4400190015E03720007612E4 /* glare@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glare@2x.png"; path = "resources/glare@2x.png"; sourceTree = "<group>"; };
@@ -1218,7 +1219,11 @@
 		44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked.png"; path = "resources/icon-keyboard-locked.png"; sourceTree = "<group>"; };
 		44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked@2x.png"; path = "resources/icon-keyboard-locked@2x.png"; sourceTree = "<group>"; };
 		55A50A4F1B8E7EA700E70F53 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		5F035534BFA142623108ADE9 /* libPods-Frotz.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Frotz.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		895EA10B2340FB2642FFCE94 /* Pods-Frotz.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.info-plist"; sourceTree = "<group>"; };
+		B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release armv6.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release armv6.xcconfig"; sourceTree = "<group>"; };
+		E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1387,6 +1392,17 @@
 			path = ui;
 			sourceTree = "<group>";
 		};
+		14BD0D4CD6D76DB6DB120075 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */,
+				B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */,
+				895EA10B2340FB2642FFCE94 /* Pods-Frotz.release.xcconfig */,
+				2C8A091C5513E52EF8D8E7A5 /* Pods-Frotz.distribution.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1419,6 +1435,7 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				44A2E7B811228B0900E35CCC /* Entitlements.plist */,
+				14BD0D4CD6D76DB6DB120075 /* Pods */,
 			);
 			name = CustomTemplate;
 			sourceTree = "<group>";
@@ -2278,13 +2295,18 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "Frotz" */;
 			buildPhases = (
+				44D42FDA1F6F3D32003406FB /* Script - Fake out CocoaPods script to be optional and  succeed if pod not installed */,
+				90325B71809E51711576C446 /* [CP] Check Pods Manifest.lock */,
 				44A2E71F11227AA000E35CCC /* Copy bundled stories */,
 				1D60588D0D05DD3D006BFB54 /* Resources */,
 				1D60588E0D05DD3D006BFB54 /* Sources */,
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
 				4431B76C0E204F52001E5DAD /* CopyFiles */,
-				44FD062B162667E5001E940A /* ShellScript */,
-				4433A76919BF54B200EC8D98 /* ShellScript */,
+				44FD062B162667E5001E940A /* Script - Merge pre-built armv6  */,
+				4433A76919BF54B200EC8D98 /* Script - Update Build Number in Distribution builds */,
+				44D42FD91F6ECE31003406FB /* Script - Make subsequent Pods scripts optional */,
+				DB8C8272FD9A5D37A8A538A9 /* [CP] Embed Pods Frameworks */,
+				2BB52E8DAEC61C5232FC42EC /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -2480,6 +2502,7 @@
 				en,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* CustomTemplate */;
+			productRefGroup = 19C28FACFE9D520D11CA2CBB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -2584,13 +2607,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		4433A76919BF54B200EC8D98 /* ShellScript */ = {
+		2BB52E8DAEC61C5232FC42EC /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		4433A76919BF54B200EC8D98 /* Script - Update Build Number in Distribution builds */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Script - Update Build Number in Distribution builds";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2611,18 +2650,80 @@
 			shellPath = /bin/sh;
 			shellScript = "\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
 		};
-		44FD062B162667E5001E940A /* ShellScript */ = {
+		44D42FD91F6ECE31003406FB /* Script - Make subsequent Pods scripts optional */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Script - Make subsequent Pods scripts optional";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p \"${SRCROOT}/Pods/Target Support Files/Pods-Frotz\"\ntouch \"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-frameworks.sh\" \"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-resources.sh\"\nchmod +x \"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-frameworks.sh\" \"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-resources.sh\"\n";
+		};
+		44D42FDA1F6F3D32003406FB /* Script - Fake out CocoaPods script to be optional and  succeed if pod not installed */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Script - Fake out CocoaPods script to be optional and  succeed if pod not installed";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "test -z \"${PODS_ROOT}\" && exit 0\ntest -f \"${PODS_ROOT}/Manifest.lock\" || mkdir -p \"${PODS_ROOT}\" && cp \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\"";
+		};
+		44FD062B162667E5001E940A /* Script - Merge pre-built armv6  */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Script - Merge pre-built armv6 ";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "#\n# Script to add armv6 architecture to iOS executable built with Xcode 4.5\n#\n\n#################\n# Configuration #\n#################\nexit 0  # Disabled; we don't support armv6 devices anymore\n# Change this to the full path where Xcode 4.4 (or below) puts your armv6 output\ncase \"$BUILD_ROOT\" in\n  */BuildProductsPath)\n   export ARMV6_EXECUTABLE_PATH=\"`cd $BUILD_ROOT/../../../../Products/Release\\ armv6-iphoneos; pwd`/$EXECUTABLE_PATH\"\n   ;;\n  *)\n   export ARMV6_EXECUTABLE_PATH=\"$BUILD_ROOT/Release armv6-iphoneos/$EXECUTABLE_PATH\"\n   ;;\nesac\n# Your \"real\" minimum OS version since Xcode 4.5 wants to make it iOS 4.3\n# Must be 4.2 or below if you are supporting armv6...\nexport MINIMUM_OS=3.0\n#####################\n# End configuration #\n#####################\n\n\n# For debugging\necho BUILD_ROOT = $BUILD_ROOT\necho ARMV6_EXECUTABLE_PATH = $ARMV6_EXECUTABLE_PATH\necho CURRENT_ARCH = $CURRENT_ARCH\necho CONFIGURATION = $CONFIGURATION\n\n# Don't need to do this for armv6 (built in older Xcode), simulator (i386), or debug build\nif [ \"$CURRENT_ARCH\" = \"armv6\" ]; then\n    exit 0\nfi\nif  [ \"$CURRENT_ARCH\" = \"i386\" ]; then\n    exit 0\nfi\nif [ \"$CONFIGURATION\" != \"Release\" -a \"$CONFIGURATION\" != \"Distribution\"  -a \"$CONFIGURATION\" != \"Beta Test\" ]; then\n    exit 0\nfi\n\n# Paths\nexport LIPO_PATH=\"$CODESIGNING_FOLDER_PATH/${EXECUTABLE_NAME}.lipo\"\nexport FINAL_PATH=\"$CODESIGNING_FOLDER_PATH/$EXECUTABLE_NAME\"\nexport FULL_INFO_PLIST_PATH=\"$CONFIGURATION_BUILD_DIR/$INFOPLIST_PATH\"\n\n# Debug / sanity check\nlipo -info \"$FINAL_PATH\"\nls -l \"$ARMV6_EXECUTABLE_PATH\"\n\n# Make sure something exists at $LIPO_PATH even if the next command fails\ncp -pv \"$FINAL_PATH\" \"$LIPO_PATH\"\n\n# If rebuilding without cleaning first, old armv6 might already be there so remove it\n# If not, lipo won't output anything (thus the cp command just above)\nif lipo -info \"$FINAL_PATH\" | grep armv6; then\n  lipo -remove armv6 -output \"$LIPO_PATH\" \"$FINAL_PATH\"\nfi\n\n# Add armv6 to the fat binary, show that it worked for debugging, then remove temp file\nlipo -create -output \"$FINAL_PATH\" \"$ARMV6_EXECUTABLE_PATH\" \"$LIPO_PATH\"\nlipo -info \"$FINAL_PATH\"\nrm -f \"$LIPO_PATH\"\n\n# Change Info.plist to set minimum OS version to 4.2 (instead of 4.3 which Xcode 4.5 wants)\n/usr/libexec/PlistBuddy -c \"Set :MinimumOSVersion $MINIMUM_OS\" \"$FULL_INFO_PLIST_PATH\"\nplutil -convert binary1 \"$FULL_INFO_PLIST_PATH\"\n\n";
+		};
+		90325B71809E51711576C446 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Frotz-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DB8C8272FD9A5D37A8A538A9 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Frotz/Pods-Frotz-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3015,6 +3116,7 @@
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3040,6 +3142,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
+					"$(inherited)",
 					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
@@ -3052,9 +3155,12 @@
 					"-DTADSNET",
 				);
 				OTHER_LDFLAGS = (
+					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
+				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
+				PODS_ROOT = "$(inherited)/../../../../../../../${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3088,6 +3194,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
+					"$(inherited)",
 					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
@@ -3100,9 +3207,12 @@
 					"-DTADSNET",
 				);
 				OTHER_LDFLAGS = (
+					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
+				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
+				PODS_ROOT = "$(inherited)/../../../../../../../${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3142,8 +3252,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos9.3;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -3174,8 +3285,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos9.3;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -3206,8 +3318,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos9.3;
 				SKIP_INSTALL = YES;
 			};
 			name = "Release armv6";
@@ -3238,8 +3351,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos9.3;
 				SKIP_INSTALL = YES;
 			};
 			name = Distribution;
@@ -3451,7 +3565,6 @@
 		};
 		44954F9E0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -3523,6 +3636,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
+					"$(inherited)",
 					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
@@ -3535,9 +3649,12 @@
 					"-DTADSNET",
 				);
 				OTHER_LDFLAGS = (
+					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
+				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
+				PODS_ROOT = "$(inherited)/../../../../../../../${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3592,6 +3709,7 @@
 		};
 		44AD7CF616266575006E1688 /* Release armv6 */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3615,6 +3733,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
+					"$(inherited)",
 					"-Wno-deprecated-declarations",
 					"-DGLKUNIX",
 					"-DGLK_TIMERS",
@@ -3627,6 +3746,7 @@
 					"-DTADSNET",
 				);
 				OTHER_LDFLAGS = (
+					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 					"-weak_library",
@@ -3634,6 +3754,8 @@
 					"-weak_framework",
 					Security,
 				);
+				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
+				PODS_ROOT = "$(inherited)/../../../../../../../${SRCROOT}/Pods";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3677,6 +3799,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3713,6 +3836,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3750,6 +3874,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3787,6 +3912,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3830,6 +3956,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3866,6 +3993,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3903,6 +4031,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3940,6 +4069,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3983,6 +4113,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4019,6 +4150,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4056,6 +4188,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4093,6 +4226,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4136,6 +4270,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4172,6 +4307,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4209,6 +4345,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4246,6 +4383,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4289,6 +4427,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4325,6 +4464,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4362,6 +4502,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4399,6 +4540,7 @@
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4442,6 +4584,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4478,6 +4621,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4515,6 +4659,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4552,6 +4697,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -4607,7 +4753,6 @@
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;

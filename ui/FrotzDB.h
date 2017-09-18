@@ -1,13 +1,16 @@
 
 #import <UIKit/UIKit.h>
-#import <DropboxSDK/DropboxSDK.h>
+#import <DropboxSDK/DropboxSDK.h> // old SDK
+
+#ifdef COCOAPODS
+#define UseNewDropBoxSDK 1
+#import <ObjectiveDropboxOfficial/ObjectiveDropboxOfficial.h> // new SDK
+#endif
 
 @interface FrotzDBController : UITableViewController <UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate>
 {
     UITableView	*m_tableView;
     UILabel	*m_headerLabel, *m_folderLabel;
-    
-//    DBLoginController* m_dbLoginController;
 
     UITextField *m_textField;
     
