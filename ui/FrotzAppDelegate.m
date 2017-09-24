@@ -13,6 +13,7 @@
 #import "StoryInputLine.h"
 #import "StoryView.h"
 #import "StoryDetailsController.h"
+#import "FrotzDB.h"
 
 @interface FrotzWindow : UIWindow
 {
@@ -210,6 +211,20 @@ bool gUseSplitVC;
 
 - (BOOL)application: (UIApplication*)application handleOpenURL: (NSURL*)launchURL {
     NSLog(@"handleOpenURL %@", launchURL);
+#if UseNewDropBoxSDK
+    DBOAuthResult *authResult = [DBClientsManager handleRedirectURL:launchURL];
+    if (authResult != nil) {
+        if ([authResult isSuccess]) {
+            NSLog(@"Success! User is logged into Dropbox.");
+            [[m_browser storyMainViewController] dropboxDidLinkAccount];
+            return YES;
+        } else if ([authResult isCancel]) {
+            NSLog(@"Authorization flow was manually canceled by user!");
+        } else if ([authResult isError]) {
+            NSLog(@"Error: %@", authResult);
+        }
+    }
+#else
     if ([[DBSession sharedSession] handleOpenURL:launchURL]) {
         if ([[DBSession sharedSession] isLinked]) {
             if ([[launchURL path] hasSuffix: @"/cancel"])
@@ -220,7 +235,7 @@ bool gUseSplitVC;
         }
         return YES;
     }
-
+#endif
     if (launchURL && [launchURL isFileURL]) {
         NSString *launchPath = [launchURL path];
 

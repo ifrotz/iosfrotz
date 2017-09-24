@@ -186,6 +186,11 @@
 			</array>
 		</dict>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>dbapi-2</string>
+		<string>dbapi-8-emm</string>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>181.${BUILD_NUMBER}</string>
 	<key>LSRequiresIPhoneOS</key>

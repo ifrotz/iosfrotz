@@ -1,10 +1,18 @@
 
 #import <UIKit/UIKit.h>
-#import <DropboxSDK/DropboxSDK.h> // old SDK
+
+#define UseNewDropBoxSDKByDefault 0
 
 #ifdef COCOAPODS
-#define UseNewDropBoxSDK 1
-#import <ObjectiveDropboxOfficial/ObjectiveDropboxOfficial.h> // new SDK
+#define UseNewDropBoxSDK UseNewDropBoxSDKByDefault
+#else
+#define UseNewDropBoxSDK 0 // always off if build w/o CocoaPod installed
+#endif
+
+#if UseNewDropBoxSDK
+#import <ObjectiveDropboxOfficial/ObjectiveDropboxOfficial.h>
+#else
+#import <DropboxSDK/DropboxSDK.h> // old SDK
 #endif
 
 @interface FrotzDBController : UITableViewController <UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate>
@@ -21,6 +29,7 @@
 
 - (instancetype)init;
 - (void)donePressed;
+- (BOOL)isLinked;
 @property (nonatomic, weak) id delegate;
 @end
 

@@ -54,9 +54,13 @@ extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
-@interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate, UIActionSheetDelegate,
-                TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,InputHelperDelegate, UIScrollViewDelegate,
-                RTSelected, FileSelected, TextFileBrowser, LockableKeyboard, DBSessionDelegate, DBRestClientDelegate>
+@interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
+    UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
+#if !UseNewDropBoxSDK
+    DBSessionDelegate, DBRestClientDelegate,
+#endif
+    LockableKeyboard>
 {
     StoryView *m_storyView;
     StatusLine *m_statusLine;
@@ -112,7 +116,9 @@ extern StoryBrowser *theStoryBrowser;
     NSString *m_launchMessage;
 
     NSMutableDictionary *m_dbCachedMetadata;
+#if !UseNewDropBoxSDK
     DBRestClient *m_restClient;
+#endif
     NSString *m_dbTopPath;
     BOOL m_dbActive;
 }
@@ -221,7 +227,7 @@ extern StoryBrowser *theStoryBrowser;
 -(NSString*) completeWord:(NSString*)word prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
-@property (nonatomic, readonly, strong) DBRestClient *restClient;
+// Dropbox API
 -(void) initializeDropbox;
 -(void)saveDBCacheDict;
 @property (nonatomic, readonly, copy) NSString *dbTopPath;
@@ -230,25 +236,38 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic, readonly, copy) NSString *dbSavePath;
 @property (nonatomic, readonly) BOOL dbIsActive;
 -(void)setDBTopPath:(NSString*)path;
--(void)dbRecursiveMakeParents:(NSString*)path;
 -(NSString*)metadataSubPath:(NSString*)path;
 -(void)sessionDidReceiveAuthorizationFailure:(DBSession*)session;
 -(void)dropboxDidLinkAccount;
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile;
 -(void)cacheTimestamp:(nullable NSDate*)timeStamp forSaveFile:(NSString*)saveFile;
--(NSString*)getHashForDBPath:(NSString*)path;
--(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path;
 
 -(void)dbUploadSaveGameFile:(NSString*)saveGameSubPath;
 -(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath;
--(void)dbCheckSaveDirs:(DBMetadata*)metadata;
+#if UseNewDropBoxSDK
+-(void)dbRefreshFolder:(NSString*)folder createIfNotExists:(BOOL)createIfNotExists;
+-(void)dbSyncSingleSaveDir:(DBFILESMetadata*)folderResult withEntries:(NSArray<DBFILESMetadata *>*)metadata;
+-(void)handleDropboxError:(NSObject*)routeError withRequestError:(DBRequestError*)error;
+#else
 -(void)dbSyncSingleSaveDir:(DBMetadata*)metadata;
+-(void)dbCheckSaveDirs:(DBMetadata*)metadata;
+-(void)dbRecursiveMakeParents:(NSString*)path;
+-(NSString*)getHashForDBPath:(NSString*)path;
+-(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path;
+@property (nonatomic, readonly, strong) DBRestClient *restClient;
+#endif
 @end
 
+#if UseNewDropBoxSDK
+@interface DBFILESMetadata (MySort)
+-(NSComparisonResult)caseInsensitiveCompare:(DBFILESMetadata*)other;
+@end
+#else
 @interface DBMetadata (MySort)
 -(NSComparisonResult)caseInsensitiveCompare:(DBMetadata*)other;
 @end
+#endif
 
 extern const int kFixedFontSize;
 extern const int kFixedFontPixelHeight;

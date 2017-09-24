@@ -23,7 +23,16 @@
 @synthesize delegate = m_delegate;
 
 -(void)donePressed {
+}
 
+-(BOOL)isLinked {
+#if UseNewDropBoxSDK
+    DBUserClient *client = [DBClientsManager authorizedClient];
+    BOOL isLinked = (client != nil);
+#else
+    BOOL isLinked = [[DBSession sharedSession] isLinked];
+#endif
+    return isLinked;
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -122,15 +131,19 @@
         m_isUnlinking = NO;
 
         if (buttonIndex == 1) {
+#if UseNewDropBoxSDK
+            [DBClientsManager unlinkAndResetClients];
+#else
             [[DBSession sharedSession] unlinkAll];
+#endif
             [[self tableView] reloadData];
         }
-        } else { // change DB folder
-            StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
-            if (buttonIndex == 1) {
-                if (![[smvc dbTopPath] isEqualToString: m_textField.text]) {
-                [smvc setDBTopPath: m_textField.text];		
-                }
+    } else { // change DB folder
+        StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
+        if (buttonIndex == 1) {
+            if (![[smvc dbTopPath] isEqualToString: m_textField.text]) {
+                [smvc setDBTopPath: m_textField.text];
+            }
         } 
         m_textField.text = [smvc dbTopPath];
     }
@@ -140,26 +153,26 @@
     NSString *newFolder = [textField text];
     StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
     if (![newFolder isEqualToString: [smvc dbTopPath]]) {
-	if ([newFolder hasSuffix: @"/"])
-	    m_textField.text = [newFolder substringToIndex: [newFolder length]-1];
-	if ([smvc dbIsActive]) {
-	    if (![[DBSession sharedSession] isLinked]) {
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Must link account to change Sync Folder"
-					    message: @"You have previously synched with a different Dropbox folder. You must relink "
-					    "your account before changing folders so the change can take effect."
-					    delegate:self cancelButtonTitle:@"OK" otherButtonTitles:  nil];
-		[alert show];
-		textField.text = [smvc dbTopPath];
-	    } else {
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change Dropbox Sync Folder?"
-					    message: @"Any Frotz files previously synched with Dropbox will be moved to the new location."
-					    delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Change", nil];
-		[alert show];
-	    }
-	} else{
-	    [smvc setDBTopPath: m_textField.text];		
-	    m_textField.text = [smvc dbTopPath];
-	}
+        if ([newFolder hasSuffix: @"/"])
+            m_textField.text = [newFolder substringToIndex: [newFolder length]-1];
+        if ([smvc dbIsActive]) {
+            if (![self isLinked]) {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Must link account to change Sync Folder"
+                                message: @"You have previously synched with a different Dropbox folder. You must relink "
+                                "your account before changing folders so the change can take effect."
+                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles:  nil];
+                [alert show];
+                textField.text = [smvc dbTopPath];
+            } else {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change Dropbox Sync Folder?"
+                                message: @"Any Frotz files previously synched with Dropbox will be moved to the new location."
+                                delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Change", nil];
+                [alert show];
+            }
+        } else {
+            [smvc setDBTopPath: m_textField.text];
+            m_textField.text = [smvc dbTopPath];
+        }
     }
     [m_textField resignFirstResponder];
 }
@@ -199,40 +212,40 @@
 
 - (CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
     if (section == 0)
-	return 130;
+        return 130;
     return 32;
 }
 
 - (UIView*)tableView:(UITableView*)tableView viewForHeaderInSection:(NSInteger)section {
     if (section == 0) {
 
-	if (!m_headerLabel) {
-	    m_headerLabel = [UILabel new];
-	    m_headerLabel.backgroundColor = [UIColor clearColor];
-	    m_headerLabel.textColor = [UIColor darkGrayColor];
-	    m_headerLabel.font = [UIFont boldSystemFontOfSize:15];
-	    m_headerLabel.textAlignment = UITextAlignmentCenter;
-	    m_headerLabel.lineBreakMode = UILineBreakModeWordWrap;
-	    m_headerLabel.text = 
-		[NSString stringWithFormat: @"%@  This will automatically\n"
-		 "synchronize saved game files with your\n"
-		 "Dropbox so you can easily share them \n"
-		 "between multiple devices.",
-         [[DBSession sharedSession] isLinked] ? 
-         @"Frotz is currently linked to your Dropbox\naccount.":
-         @"If you have a Dropbox account, you can\nlink it to Frotz."];
-	    m_headerLabel.numberOfLines = 0;
-	}
-	return m_headerLabel;
+        if (!m_headerLabel) {
+            m_headerLabel = [UILabel new];
+            m_headerLabel.backgroundColor = [UIColor clearColor];
+            m_headerLabel.textColor = [UIColor darkGrayColor];
+            m_headerLabel.font = [UIFont boldSystemFontOfSize:15];
+            m_headerLabel.textAlignment = UITextAlignmentCenter;
+            m_headerLabel.lineBreakMode = UILineBreakModeWordWrap;
+            m_headerLabel.numberOfLines = 0;
+        }
+        m_headerLabel.text =
+            [NSString stringWithFormat: @"%@  This will automatically\n"
+             "synchronize saved game files with your\n"
+             "Dropbox so you can easily share them \n"
+             "between multiple devices.",
+             [self isLinked] ?
+             @"Frotz is currently linked to your Dropbox\naccount.":
+             @"If you have a Dropbox account, you can\nlink it to Frotz."];
+        return m_headerLabel;
     } else {
-	if (!m_folderLabel) {
-	    m_folderLabel = [UILabel new];
-	    m_folderLabel.backgroundColor = [UIColor clearColor];
-	    m_folderLabel.textColor = [UIColor darkGrayColor];
-	    m_folderLabel.font = [UIFont boldSystemFontOfSize:15];
-    	    m_folderLabel.textAlignment = UITextAlignmentCenter;
-	    m_folderLabel.text = @"Dropbox folder for Frotz files";
-	}
+        if (!m_folderLabel) {
+            m_folderLabel = [UILabel new];
+            m_folderLabel.backgroundColor = [UIColor clearColor];
+            m_folderLabel.textColor = [UIColor darkGrayColor];
+            m_folderLabel.font = [UIFont boldSystemFontOfSize:15];
+                m_folderLabel.textAlignment = UITextAlignmentCenter;
+            m_folderLabel.text = @"Dropbox folder for Frotz files";
+        }
 	return m_folderLabel;
     }
 }
@@ -296,7 +309,7 @@
     NSInteger row = [indexPath row];
     DisplayCell *cell = [self obtainTableCellForRow:row];
     cell.accessoryType = UITableViewCellAccessoryNone;
-    BOOL isLinked = [[DBSession sharedSession] isLinked];
+    BOOL isLinked = [self isLinked];
     switch (indexPath.section)
     {
 	case 0:
@@ -305,8 +318,8 @@
                 cell.textLabel.text = isLinked ? @"Relink to Dropbox Account..." : @"Link to Dropbox Account...";
             }
             else if (row == 1) {
-            cell.textLabel.text = @"Unlink Account";
-            cell.textLabel.enabled = isLinked;		
+                cell.textLabel.text = @"Unlink Account";
+                cell.textLabel.enabled = isLinked;
             }
             break;
         }
@@ -334,11 +347,19 @@
 	    [m_textField resignFirstResponder];
 	    switch (row) {
 		case 0: {
+#if UseNewDropBoxSDK
+            [DBClientsManager authorizeFromController:[UIApplication sharedApplication]
+                                           controller:self
+                                              openURL:^(NSURL *url) {
+                                                  [[UIApplication sharedApplication] openURL:url];
+                                              }];
+#else
             [[DBSession sharedSession] linkFromController:self];
+#endif
 		    break;
 		    }
 		case 1: {
-		    if ([[DBSession sharedSession] isLinked]) {
+		    if ([self isLinked]) {
                 m_isUnlinking = YES;
                 UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
                         message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
