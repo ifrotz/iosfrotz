@@ -4707,13 +4707,13 @@ static BOOL migateDropboxAuth() {
     }
     return m_restClient;
 }
-#endif // !UseNewDropBoxSDK
 
 - (void)sessionDidReceiveAuthorizationFailure:(DBSession*)session {
 }
 
 - (void)sessionDidReceiveAuthorizationFailure:(DBSession *)session userId:(NSString *)userId {
 }
+#endif // !UseNewDropBoxSDK
 
 - (void)dropboxDidLinkAccount {
 #if UseNewDropBoxSDK

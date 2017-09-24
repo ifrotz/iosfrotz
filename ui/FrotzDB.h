@@ -1,7 +1,7 @@
 
 #import <UIKit/UIKit.h>
 
-#define UseNewDropBoxSDKByDefault 0
+#define UseNewDropBoxSDKByDefault 1
 
 #ifdef COCOAPODS
 #define UseNewDropBoxSDK UseNewDropBoxSDKByDefault

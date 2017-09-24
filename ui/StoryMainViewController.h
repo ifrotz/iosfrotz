@@ -228,7 +228,7 @@ extern StoryBrowser *theStoryBrowser;
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
 // Dropbox API
--(void) initializeDropbox;
+-(void)initializeDropbox;
 -(void)saveDBCacheDict;
 @property (nonatomic, readonly, copy) NSString *dbTopPath;
 @property (nonatomic, readonly, copy) NSString *dbTopPathT;
@@ -237,7 +237,6 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic, readonly) BOOL dbIsActive;
 -(void)setDBTopPath:(NSString*)path;
 -(NSString*)metadataSubPath:(NSString*)path;
--(void)sessionDidReceiveAuthorizationFailure:(DBSession*)session;
 -(void)dropboxDidLinkAccount;
 
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile;
@@ -256,6 +255,7 @@ extern StoryBrowser *theStoryBrowser;
 -(NSString*)getHashForDBPath:(NSString*)path;
 -(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path;
 @property (nonatomic, readonly, strong) DBRestClient *restClient;
+-(void)sessionDidReceiveAuthorizationFailure:(DBSession*)session;
 #endif
 @end
 
