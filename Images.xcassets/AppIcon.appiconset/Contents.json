@@ -21,7 +21,7 @@
     {
       "size" : "29x29",
       "idiom" : "iphone",
-      "filename" : "Icon-Small@2x.png",
+      "filename" : "Frotz-58x58.png",
       "scale" : "2x"
     },
     {
@@ -45,13 +45,13 @@
     {
       "size" : "57x57",
       "idiom" : "iphone",
-      "filename" : "Icon.png",
+      "filename" : "Frotz-57x57.png",
       "scale" : "1x"
     },
     {
       "size" : "57x57",
       "idiom" : "iphone",
-      "filename" : "Icon@2x.png",
+      "filename" : "Frotz-114x114.png",
       "scale" : "2x"
     },
     {
@@ -87,7 +87,7 @@
     {
       "size" : "29x29",
       "idiom" : "ipad",
-      "filename" : "Icon-Small@2x.png",
+      "filename" : "Frotz-58x58.png",
       "scale" : "2x"
     },
     {
@@ -105,25 +105,25 @@
     {
       "size" : "50x50",
       "idiom" : "ipad",
-      "filename" : "Icon-Small-50.png",
+      "filename" : "Frotz-50x50.png",
       "scale" : "1x"
     },
     {
       "size" : "50x50",
       "idiom" : "ipad",
-      "filename" : "Icon-Small-50@2x.png",
+      "filename" : "Frotz-100x100.png",
       "scale" : "2x"
     },
     {
       "size" : "72x72",
       "idiom" : "ipad",
-      "filename" : "Icon-72.png",
+      "filename" : "Frotz-72x72.png",
       "scale" : "1x"
     },
     {
       "size" : "72x72",
       "idiom" : "ipad",
-      "filename" : "Icon-72@2x.png",
+      "filename" : "Frotz-144x144.png",
       "scale" : "2x"
     },
     {
