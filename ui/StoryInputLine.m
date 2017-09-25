@@ -137,12 +137,13 @@
     UIView *parentView = [m_storyView superview];
     CGFloat ypos = [self convertPoint: CGPointZero toView: parentView].y;
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    CGPoint ihpt = CGPointMake(2, ypos-8);
+    BOOL isLandscape = [storyController isLandscape];
+    CGPoint ihpt = CGPointMake(isLandscape ? 100 : 2, ypos-8);
     if (gLargeScreenDevice)
         ihpt.x += self.frame.origin.x;
     else if (!gLargeScreenDevice && ![storyController isKBLocked] && [self isFirstResponder]
-                && [storyController isLandscape])
-        ihpt = CGPointMake(120, 148);
+                && isLandscape)
+        ihpt = CGPointMake(100, ypos);
     // point is bottom-LEFT of helper view; 140 is height of helper
     if (ihpt.y < 140) ihpt.y = 140;
     return ihpt;

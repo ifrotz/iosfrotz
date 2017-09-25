@@ -1054,6 +1054,9 @@ void *interp_cover_autorestore(void *arg) {
 @property (nonatomic, readonly, strong) UIView *view;
 @end
 
+@interface UIViewController (Ext)
+-(void)setAdditionalSafeAreaInsets: (UIEdgeInsets)insets;
+@end
 
 static void setColorTable(RichTextView *v) {
     [v resetColors];
@@ -2180,7 +2183,18 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     [self performSelector: @selector(_clearRotationInProgress) withObject: nil afterDelay:0.05];
 
+    CGFloat statusHeight = 0;
+    if ([self respondsToSelector:@selector(setAdditionalSafeAreaInsets:)])
+        [self setAdditionalSafeAreaInsets: UIEdgeInsetsMake([UIApplication sharedApplication].statusBarFrame.size.height, 0, 0, 0)];
+    else
+        statusHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
+
     CGRect frame = [self storyViewFullFrame];
+
+    if (m_landscape && frame.size.width > 760)
+        [m_statusLine setLeftMargin: 40];
+    else
+        [m_statusLine setLeftMargin: 0];
 
     // Work around weird bug where the owning NotesVC scrollview resizes the view 20
     // pixels smaller when presentModalViewController shows the view.  Dunno why, but this
@@ -2199,7 +2213,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #endif
         CGFloat height = swap ? applicationFrame.size.width : applicationFrame.size.height;
         CGFloat width = !swap ? applicationFrame.size.width : applicationFrame.size.height;
-        CGFloat statusHeight = 20;
         // storyViewFullFrame subtracts off original origin, which we don't want, so add it back in here
         if (m_landscape)
             bgRect = CGRectMake(0, height-frame.size.height-frame.origin.y + (gLargeScreenDevice?20:0), width, frame.size.height+frame.origin.y);
@@ -2278,6 +2291,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         bounds->size.width = h;
     }
 
+    if (UIDeviceOrientationIsPortrait([[UIDevice currentDevice] orientation])
+        && [theSMVC respondsToSelector:@selector(setAdditionalSafeAreaInsets:)]) {
+        CGFloat sbHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
+        bounds->size.height -= sbHeight;
+    }
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
     if (kbFrameEndValue) {
         CGRect kbEndFrame = [kbFrameEndValue CGRectValue];

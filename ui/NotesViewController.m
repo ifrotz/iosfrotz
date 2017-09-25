@@ -9,6 +9,8 @@
 #import "iosfrotz.h"
 #import "NotesViewController.h"
 
+#define kNotesLandscapeInset 40
+
 @interface HScrollView : UIScrollView
 {
 }
@@ -81,7 +83,7 @@ static const int kNotesTitleHeight = 24;
     [m_scrollView setBounces: NO];
     [m_scrollView setPagingEnabled: YES];
 
-    m_notesBGView = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"parchment.jpg"]];
+    m_notesBGView = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"parchment2"]];
     [m_notesBGView setFrame: CGRectMake(m_frame.size.width, 0, m_frame.size.width, m_frame.size.height)];
     [m_notesBGView setAutoresizesSubviews: YES];
     [m_notesBGView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
@@ -129,6 +131,10 @@ static const int kNotesTitleHeight = 24;
     
     [m_notesView setEditable: YES];
     [m_notesView setDelegate: self];
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
+        m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
+    else
+        m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
     [m_notesView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin];
     [m_notesView setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
     [m_notesView setFont: font];
@@ -336,8 +342,15 @@ static const int kNotesTitleHeight = 24;
     
     frame.size.width *= 2;
     [m_scrollView setContentSize: frame.size];
-    if ([m_scrollView contentOffset].x > 0)
+    if ([m_scrollView contentOffset].x > frame.size.width/4)
         [m_scrollView setContentOffset: CGPointMake(frame.size.width/2, 0)];
+    else
+        [m_scrollView setContentOffset: CGPointMake(0, 0)];
+
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
+        m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
+    else
+        m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {

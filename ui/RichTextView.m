@@ -1087,7 +1087,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     if (doDraw) {
                         if (bgColor) {
                             if (pos.x <= m_leftMargin) {
-                                [m_currBgColor set];
+                                if ((style & kFTReverse) && isFixed)
+                                    [bgColor set];
+                                else
+                                    [m_currBgColor set];
                                 CGContextFillRect(context, CGRectMake(minXPos, pos.y, m_leftMargin, curLineHeight+1));
                                 [bgColor set];
                                 CGContextFillRect(context, CGRectMake(minXPos+m_leftMargin, pos.y, textWidth+1/*+m_leftMargin*/, curLineHeight+1));
