@@ -1054,10 +1054,6 @@ void *interp_cover_autorestore(void *arg) {
 @property (nonatomic, readonly, strong) UIView *view;
 @end
 
-@interface UIViewController (Ext)
--(void)setAdditionalSafeAreaInsets: (UIEdgeInsets)insets;
-@end
-
 static void setColorTable(RichTextView *v) {
     [v resetColors];
     [v getOrAllocColorIndex: [UIColor brownColor]];
@@ -1869,7 +1865,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
         self.automaticallyAdjustsScrollViewInsets = NO;
         self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
-        navHeight = 64.0;
+        navHeight = self.topLayoutGuide.length;
         frame.origin.y = navHeight;
         frame.size.height -= navHeight;
     } else
@@ -2183,12 +2179,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     [self performSelector: @selector(_clearRotationInProgress) withObject: nil afterDelay:0.05];
 
-    CGFloat statusHeight = 0;
-    if ([self respondsToSelector:@selector(setAdditionalSafeAreaInsets:)])
-        [self setAdditionalSafeAreaInsets: UIEdgeInsetsMake([UIApplication sharedApplication].statusBarFrame.size.height, 0, 0, 0)];
-    else
-        statusHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-
     CGRect frame = [self storyViewFullFrame];
 
     if (m_landscape && frame.size.width > 760)
@@ -2205,19 +2195,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
     {
-        CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame], bgRect;
-        BOOL swap = m_landscape;
-#if defined(__IPHONE_8_0)
-		if ([[[UIDevice currentDevice] systemVersion] compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending)
-			swap = NO;
-#endif
-        CGFloat height = swap ? applicationFrame.size.width : applicationFrame.size.height;
-        CGFloat width = !swap ? applicationFrame.size.width : applicationFrame.size.height;
-        // storyViewFullFrame subtracts off original origin, which we don't want, so add it back in here
-        if (m_landscape)
-            bgRect = CGRectMake(0, height-frame.size.height-frame.origin.y + (gLargeScreenDevice?20:0), width, frame.size.height+frame.origin.y);
-        else
-            bgRect = CGRectMake(0, height-frame.size.height-frame.origin.y+statusHeight, width, frame.size.height+frame.origin.y);
+        CGRect bgRect;
+        CGFloat header =  self.topLayoutGuide.length;
+        bgRect = CGRectMake(0, header, frame.size.width, frame.size.height);
         m_background.frame = bgRect;
     }
 #endif
@@ -2291,11 +2271,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         bounds->size.width = h;
     }
 
-    if (UIDeviceOrientationIsPortrait([[UIDevice currentDevice] orientation])
-        && [theSMVC respondsToSelector:@selector(setAdditionalSafeAreaInsets:)]) {
-        CGFloat sbHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-        bounds->size.height -= sbHeight;
-    }
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
     if (kbFrameEndValue) {
         CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
