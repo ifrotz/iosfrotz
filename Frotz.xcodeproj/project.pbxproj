@@ -30,6 +30,7 @@
 		441EC86D0E10BD4400E74625 /* ui_pic.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8610E10BD4400E74625 /* ui_pic.c */; };
 		441EC86F0E10BD4400E74625 /* ui_text.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8640E10BD4400E74625 /* ui_text.c */; };
 		442351D0125E77C000BFB245 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 442351CF125E77C000BFB245 /* notes.png */; };
+		442F81111F77835700946E9B /* parchment2.png in Resources */ = {isa = PBXBuildFile; fileRef = 442F81101F77835600946E9B /* parchment2.png */; };
 		443149C50E3B0077007A075F /* NavBack.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149C40E3B0077007A075F /* NavBack.png */; };
 		443149D80E3B0154007A075F /* NavForward.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149D70E3B0154007A075F /* NavForward.png */; };
 		443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */ = {isa = PBXBuildFile; fileRef = 443A64AD114F5EDB0093B4B2 /* splashes.zip */; };
@@ -625,6 +626,7 @@
 		4423590A1261894100BFB245 /* cgunicod.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cgunicod.c; sourceTree = "<group>"; };
 		4423590B1261894100BFB245 /* gi_blorb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gi_blorb.c; sourceTree = "<group>"; };
 		4423590C1261894100BFB245 /* gi_blorb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gi_blorb.h; sourceTree = "<group>"; };
+		442F81101F77835600946E9B /* parchment2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = parchment2.png; path = resources/parchment2.png; sourceTree = "<group>"; };
 		443149C40E3B0077007A075F /* NavBack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavBack.png; path = resources/NavBack.png; sourceTree = "<group>"; };
 		443149D70E3B0154007A075F /* NavForward.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavForward.png; path = resources/NavForward.png; sourceTree = "<group>"; };
 		44320C7717E9874700549CBD /* Reveal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Reveal.framework; path = "../Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework"; sourceTree = "<group>"; };
@@ -1219,7 +1221,6 @@
 		44FDFBA81999D02D00B44B03 /* icon-keyboard-locked.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked.png"; path = "resources/icon-keyboard-locked.png"; sourceTree = "<group>"; };
 		44FDFBA91999D02D00B44B03 /* icon-keyboard-locked@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard-locked@2x.png"; path = "resources/icon-keyboard-locked@2x.png"; sourceTree = "<group>"; };
 		55A50A4F1B8E7EA700E70F53 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		5F035534BFA142623108ADE9 /* libPods-Frotz.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Frotz.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		895EA10B2340FB2642FFCE94 /* Pods-Frotz.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.info-plist"; sourceTree = "<group>"; };
 		B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release armv6.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release armv6.xcconfig"; sourceTree = "<group>"; };
@@ -1500,6 +1501,7 @@
 				446248DB0E3BABF10057917B /* nowplaying.png */,
 				44A0FA9515EC7700005FF570 /* nowplaying@2x.png */,
 				44407A6F1236C16F0021DEE4 /* parchment.jpg */,
+				442F81101F77835600946E9B /* parchment2.png */,
 				44619B9D160FB0D400B70223 /* refresh-small.png */,
 				44619B9F160FB36500B70223 /* refresh.png */,
 				4490621D111FA698004E3E33 /* save.png */,
@@ -2525,6 +2527,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				446B9DA00E2059E3002BDD65 /* Games in Resources */,
+				442F81111F77835700946E9B /* parchment2.png in Resources */,
 				443149C50E3B0077007A075F /* NavBack.png in Resources */,
 				443149D80E3B0154007A075F /* NavForward.png in Resources */,
 				446248DC0E3BABF10057917B /* nowplaying.png in Resources */,
