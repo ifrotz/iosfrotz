@@ -83,7 +83,7 @@ static const int kNotesTitleHeight = 24;
     [m_scrollView setBounces: NO];
     [m_scrollView setPagingEnabled: YES];
 
-    m_notesBGView = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"parchment2"]];
+    m_notesBGView = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"parchment2.jpg"]];
     [m_notesBGView setFrame: CGRectMake(m_frame.size.width, 0, m_frame.size.width, m_frame.size.height)];
     [m_notesBGView setAutoresizesSubviews: YES];
     [m_notesBGView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];

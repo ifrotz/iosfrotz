@@ -30,15 +30,15 @@
 		441EC86D0E10BD4400E74625 /* ui_pic.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8610E10BD4400E74625 /* ui_pic.c */; };
 		441EC86F0E10BD4400E74625 /* ui_text.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8640E10BD4400E74625 /* ui_text.c */; };
 		442351D0125E77C000BFB245 /* notes.png in Resources */ = {isa = PBXBuildFile; fileRef = 442351CF125E77C000BFB245 /* notes.png */; };
-		442F81111F77835700946E9B /* parchment2.png in Resources */ = {isa = PBXBuildFile; fileRef = 442F81101F77835600946E9B /* parchment2.png */; };
 		443149C50E3B0077007A075F /* NavBack.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149C40E3B0077007A075F /* NavBack.png */; };
 		443149D80E3B0154007A075F /* NavForward.png in Resources */ = {isa = PBXBuildFile; fileRef = 443149D70E3B0154007A075F /* NavForward.png */; };
+		4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EAD8BC41F6D680B232D31E6E /* libPods-Frotz.a */; };
+		4436E5A21F7A1D8700571092 /* parchment2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 4436E5A11F7A1D8700571092 /* parchment2.jpg */; };
 		443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */ = {isa = PBXBuildFile; fileRef = 443A64AD114F5EDB0093B4B2 /* splashes.zip */; };
 		443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */; };
 		443C9B4A0E46A518003A44D4 /* ui_utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 443C9B490E46A518003A44D4 /* ui_utils.m */; };
 		443C9DE30E46DD59003A44D4 /* metadata.plist in Resources */ = {isa = PBXBuildFile; fileRef = 443C9DE20E46DD59003A44D4 /* metadata.plist */; };
 		4440777D1235F32E0021DEE4 /* NotesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4440777C1235F32E0021DEE4 /* NotesViewController.m */; };
-		44407A701236C16F0021DEE4 /* parchment.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 44407A6F1236C16F0021DEE4 /* parchment.jpg */; };
 		44407D10123742030021DEE4 /* zcode.png in Resources */ = {isa = PBXBuildFile; fileRef = 44407D0F123742030021DEE4 /* zcode.png */; };
 		44418F7E124576E800F49BC4 /* flip.png in Resources */ = {isa = PBXBuildFile; fileRef = 44418F7D124576E800F49BC4 /* flip.png */; };
 		444F7D0319F23DE500927703 /* tccmdutl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 444F7CE219F23DE500927703 /* tccmdutl.cpp */; };
@@ -626,11 +626,11 @@
 		4423590A1261894100BFB245 /* cgunicod.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cgunicod.c; sourceTree = "<group>"; };
 		4423590B1261894100BFB245 /* gi_blorb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gi_blorb.c; sourceTree = "<group>"; };
 		4423590C1261894100BFB245 /* gi_blorb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gi_blorb.h; sourceTree = "<group>"; };
-		442F81101F77835600946E9B /* parchment2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = parchment2.png; path = resources/parchment2.png; sourceTree = "<group>"; };
 		443149C40E3B0077007A075F /* NavBack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavBack.png; path = resources/NavBack.png; sourceTree = "<group>"; };
 		443149D70E3B0154007A075F /* NavForward.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = NavForward.png; path = resources/NavForward.png; sourceTree = "<group>"; };
 		44320C7717E9874700549CBD /* Reveal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Reveal.framework; path = "../Reveal.app/Contents/SharedSupport/iOS-Libraries/Reveal.framework"; sourceTree = "<group>"; };
 		4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = buildnumber.xcconfig; sourceTree = "<group>"; };
+		4436E5A11F7A1D8700571092 /* parchment2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = parchment2.jpg; path = resources/parchment2.jpg; sourceTree = "<group>"; };
 		443A64AD114F5EDB0093B4B2 /* splashes.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; name = splashes.zip; path = resources/splashes.zip; sourceTree = "<group>"; };
 		443A7C32115094E00093B4B2 /* FrotzCommonWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzCommonWebView.h; sourceTree = "<group>"; };
 		443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzCommonWebView.m; sourceTree = "<group>"; };
@@ -651,7 +651,6 @@
 		443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzHTTPConnection.h; sourceTree = "<group>"; };
 		4440777B1235F32E0021DEE4 /* NotesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotesViewController.h; sourceTree = "<group>"; };
 		4440777C1235F32E0021DEE4 /* NotesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotesViewController.m; sourceTree = "<group>"; };
-		44407A6F1236C16F0021DEE4 /* parchment.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = parchment.jpg; path = resources/parchment.jpg; sourceTree = "<group>"; };
 		44407D0F123742030021DEE4 /* zcode.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = zcode.png; path = resources/zcode.png; sourceTree = "<group>"; };
 		44418F7D124576E800F49BC4 /* flip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = flip.png; path = resources/flip.png; sourceTree = "<group>"; };
 		444592F91396DBED00C740B9 /* RichTextStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RichTextStyle.h; sourceTree = "<group>"; };
@@ -1250,6 +1249,7 @@
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 				44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */,
+				4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1501,8 +1501,7 @@
 				442351CF125E77C000BFB245 /* notes.png */,
 				446248DB0E3BABF10057917B /* nowplaying.png */,
 				44A0FA9515EC7700005FF570 /* nowplaying@2x.png */,
-				44407A6F1236C16F0021DEE4 /* parchment.jpg */,
-				442F81101F77835600946E9B /* parchment2.png */,
+				4436E5A11F7A1D8700571092 /* parchment2.jpg */,
 				44619B9D160FB0D400B70223 /* refresh-small.png */,
 				44619B9F160FB36500B70223 /* refresh.png */,
 				4490621D111FA698004E3E33 /* save.png */,
@@ -2467,6 +2466,7 @@
 				TargetAttributes = {
 					1D6058900D05DD3D006BFB54 = {
 						DevelopmentTeam = 6KG7666N88;
+						ProvisioningStyle = Automatic;
 					};
 					445484CC1B1E61A900E8EE7B = {
 						CreatedOnToolsVersion = 6.3.2;
@@ -2529,7 +2529,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				446B9DA00E2059E3002BDD65 /* Games in Resources */,
-				442F81111F77835700946E9B /* parchment2.png in Resources */,
 				443149C50E3B0077007A075F /* NavBack.png in Resources */,
 				443149D80E3B0154007A075F /* NavForward.png in Resources */,
 				446248DC0E3BABF10057917B /* nowplaying.png in Resources */,
@@ -2551,7 +2550,6 @@
 				4409C8EF1985DD2B003869C2 /* glyph-input-clear.png in Resources */,
 				44A45D6C1D7E56A000C073D9 /* tads.png in Resources */,
 				447036B2123335C400E15D5B /* Settings.bundle in Resources */,
-				44407A701236C16F0021DEE4 /* parchment.jpg in Resources */,
 				44407D10123742030021DEE4 /* zcode.png in Resources */,
 				447DF3BB123C136500689076 /* StoryDetailsController.xib in Resources */,
 				447DF47F123C295900689076 /* compass-med.png in Resources */,
@@ -2568,6 +2566,7 @@
 				4409C8F61985F8B5003869C2 /* glyph-enter@2x.png in Resources */,
 				440018FD15D9EB50007612E4 /* compass-small@2x.png in Resources */,
 				440018FF15DA1EEA007612E4 /* compass-med@2x.png in Resources */,
+				4436E5A21F7A1D8700571092 /* parchment2.jpg in Resources */,
 				4400190215E03720007612E4 /* glare@2x.png in Resources */,
 				4400190315E03720007612E4 /* glarels@2x.png in Resources */,
 				445E9394160FF5080098DBE7 /* glarels5@2x.png in Resources */,
@@ -3132,6 +3131,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
@@ -3169,6 +3169,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Debug;
@@ -3186,6 +3187,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
@@ -3221,6 +3223,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Release;
@@ -3630,8 +3633,9 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
@@ -3668,6 +3672,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Distribution;
@@ -3729,6 +3734,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
@@ -3768,6 +3774,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = "Release armv6";
