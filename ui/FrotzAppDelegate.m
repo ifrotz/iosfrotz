@@ -216,6 +216,7 @@ bool gUseSplitVC;
     if (authResult != nil) {
         if ([authResult isSuccess]) {
             NSLog(@"Success! User is logged into Dropbox.");
+            [[m_browser navigationController] popViewControllerAnimated: YES];
             [[m_browser storyMainViewController] dropboxDidLinkAccount];
             return YES;
         } else if ([authResult isCancel]) {
@@ -223,6 +224,7 @@ bool gUseSplitVC;
         } else if ([authResult isError]) {
             NSLog(@"Error: %@", authResult);
         }
+        return YES;
     }
 #else
     if ([[DBSession sharedSession] handleOpenURL:launchURL]) {

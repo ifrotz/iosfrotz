@@ -19,6 +19,10 @@
 
 #define kFontSizeStr "Font size (%d)"
 
+@interface DBOAuthManager (Ext)
+- (NSURL *)authURL;
+@end
+
 @implementation FrotzDBController
 @synthesize delegate = m_delegate;
 
@@ -348,11 +352,24 @@
 	    switch (row) {
 		case 0: {
 #if UseNewDropBoxSDK
-            [DBClientsManager authorizeFromController:[UIApplication sharedApplication]
+            Class DBMobileSafariViewControllerClass = NSClassFromString(@"DBMobileSafariViewController"); // will fail in iOS 8
+            if (DBMobileSafariViewControllerClass) {
+                [DBClientsManager authorizeFromController:[UIApplication sharedApplication]
                                            controller:self
                                               openURL:^(NSURL *url) {
                                                   [[UIApplication sharedApplication] openURL:url];
                                               }];
+            } else { // iOS 8 fallback, since DropBox SDK 2 Pod v3.2.* only supports iOS 9+
+                UIApplication *sharedApplication = [UIApplication sharedApplication];
+                DBMobileSharedApplication *sharedMobileApplication =
+                    [[DBMobileSharedApplication alloc] initWithSharedApplication:
+                     sharedApplication controller:self openURL:^(NSURL *url) {
+                         [[UIApplication sharedApplication] openURL:url];
+                        }];
+                [DBMobileSharedApplication setMobileSharedApplication:sharedMobileApplication];
+                NSURL *authUrl = [[DBOAuthManager sharedOAuthManager] authURL];
+                [[UIApplication sharedApplication] openURL: authUrl];
+            }
 #else
             [[DBSession sharedSession] linkFromController:self];
 #endif
