@@ -64,6 +64,9 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
 > **Update** - I went ahead and enabled iTunes File Sharing in 1.8, because there are other apps you can then use to connect to Frotz, such as FileApp, which deal with subfolders.
 
+> **Update** - Apple rejected the 1.8.1 update because iTunes File Sharing made some of Frotz's internal files visible, so I had to disable it again to get it approved.  Enabling it in a way acceptable to Apple will require reorganizing Frotz's file structure, so I'll have to tackle that another day.  Sorry.
+
+
   * **Speaking of Folders...**
 > A couple of people have asked for the ability to move games into folders.  This sounds like a nice idea, but it's actually really hard to design a good interface for manipulating folders that allows everything you'd want to be able to do without moving to a file-centric UI, where you end up with something looking like a desktop file browser.  I think this would benefit a few users at the expense of most, and don't think it's worth it.  (Even Apple didn't do a very good job of implementing Folders in IOS - how is dragging one app on top of another to make a folder intuitive in the least?)
 
