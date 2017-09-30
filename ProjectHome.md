@@ -1,4 +1,8 @@
 
+### 2017/09/30 Update ###
+
+Version 1.8.1, restoring DropBox support and improving iOS 11 compatiblity, now available.
+
 ### 2016/09/08 Update ###
 
 Version 1.8 with support for TADS format games and improved iOS 9/10 support now available.
