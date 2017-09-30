@@ -18,11 +18,11 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 **09/08/2016**
 
-**Update - Version 1.8 now available!**
-
   * Updated to DropBox API V2 for syncing saved games
   * Improved support for iOS 11
   * Minor bug fixes
+
+**Update - Version 1.8 now available!**
 
 09/08/2016
 
