@@ -4,7 +4,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 **Frotz 1.8.1** now available, with following:
 
-  * Upgrade to DropBox API V2, restoring DropBox saved game syncing.
+  * Updated to DropBox API V2 for DropBox saved game syncing
   * Improvements for iOS 11
   * Other minor bug fixes
   
