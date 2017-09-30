@@ -1,13 +1,23 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
-**Update 09/30/2017**
+**Update 09/06/2016**
 
+**Frotz 1.8.1** now available, with following:
+
+  * Upgrade to DropBox API V2, restoring DropBox saved game syncing.
+  * Improvements for iOS 11
+  * Other minor bug fixes
+  
 **Attention DropBox users:**
 
 On September 28, Dropbox discontinued the version of their API which Frotz uses to automatically
-sync saved games between devices and your DropBox account.  Frotz 1.8.1, which restores DB support,
-was submitted to the App Store early this week but is stuck in App Review limbo.
-It should hopefully be available soon. Until then, you can access saved game files using the built in web/ftp server.
+sync saved games between devices and your DropBox account.  They forced all of their application
+clients to completely re-write their DropBox support to continue functioning.
+Frotz *1.8.1*, which restores DB support, was submitted to the App Store on 9/24, but was stuck in App Review limbo for 5 days, and wasn't
+released in time for the API cut-off.   It is available now, and DB syncing will resume automatically
+when you upgrade.  You do not have to re-authenticate or re-link your DropBox account.
+Sorry for the inconvenience.
+
 
 **Reporting Bugs**
 
