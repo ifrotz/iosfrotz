@@ -14,9 +14,17 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
-**Update - Version 1.8 now available!**
+**Update - Version 1.8.1 now available!**
 
 **09/08/2016**
+
+**Update - Version 1.8 now available!**
+
+  * Updated to DropBox API V2 for syncing saved games
+  * Improved support for iOS 11
+  * Minor bug fixes
+
+09/08/2016
 
   * Now plays TADS games (v2/v3, text only for now)
   * Improved support for iOS 9 and 10
