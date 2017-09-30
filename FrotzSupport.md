@@ -7,6 +7,15 @@ To report an **bug or usability issue** with Frotz, please click [here to file a
 
 If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
 
+**Update 09/30/2017**
+
+Attention DropBox users:
+
+On September 28, Dropbox discontinued the version of their API which Frotz uses to automatically
+sync saved games between devices and your DropBox account.  Frotz 1.8.1, which restores DB support,
+was submitted to the App Store early this week but is stuck in App Review limbo.
+It should hopefully be available soon. Until then, you can access saved game files using the built in web/ftp server.
+
 
 **Update 09/06/2016**
 
