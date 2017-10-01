@@ -16,13 +16,13 @@
 
 #define kUIRowHeight                    50.0
 #define kUIRowLabelHeight               22.0
-
 #define kFontSizeStr "Font size (%d)"
 
+#if UseNewDropBoxSDK
 @interface DBOAuthManager (Ext)
 - (NSURL *)authURL;
 @end
-
+#endif
 @implementation FrotzDBController
 @synthesize delegate = m_delegate;
 
