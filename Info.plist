@@ -217,7 +217,7 @@
 	<key>NSMainNibFile</key>
 	<string></string>
 	<key>UIFileSharingEnabled</key>
-	<true/>
+	<false/>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
 	<key>UIPrerenderedIcon</key>
