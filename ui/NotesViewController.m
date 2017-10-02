@@ -243,9 +243,10 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    CGPoint ofst = [scrollView contentOffset];
     if (scrollView == m_scrollView && decelerate) {
         [m_notesView setEditable: YES];
-        if (m_chainResponder && [m_chainResponder isFirstResponder]) {
+        if (m_chainResponder && [m_chainResponder isFirstResponder] && ofst.x >= scrollView.frame.size.width*0.75) {
             [m_notesView becomeFirstResponder];
         }
         [m_delegate showKeyboardLockState];
@@ -355,6 +356,9 @@ static const int kNotesTitleHeight = 24;
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [self autosize];
+    if (m_chainResponder && [m_notesView isFirstResponder] && [m_chainResponder canBecomeFirstResponder]) {
+        [m_chainResponder becomeFirstResponder];
+    }
 }
 
 -(void)viewWillAppear:(BOOL)animated {
