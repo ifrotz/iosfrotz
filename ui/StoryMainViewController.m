@@ -384,10 +384,25 @@ int iosif_getchar(int timeout) {
     	    UInt8 buf[4];
             CFRange r = {0,1}; NSRange nr = {0,1};
             CFIndex usedBufferLength;
-            CFIndex numChars = CFStringGetBytes((CFStringRef)ipzInputBufferStr, r, kCFStringEncodingISOLatin1,'?',FALSE,(UInt8 *)buf,2,&usedBufferLength);
+            UniChar uc = [ipzInputBufferStr characterAtIndex:0];
+            switch (uc) {
+                // Fix so-called "smart punctuation"
+                case L'“': // \u201c
+                case L'”': // \u201d
+                    c = '"';
+                    break;
+                case L'‘': // \u2018
+                case L'’': // \u2019
+                    c = '\'';
+                    break;
+                default: {
+                    CFIndex numChars = CFStringGetBytes((CFStringRef)ipzInputBufferStr, r, kCFStringEncodingISOLatin1,'?',FALSE,(UInt8 *)buf,2,&usedBufferLength);
+                    if (numChars)
+                        c = (int)*(unsigned char*)buf;
+                    break;
+                }
+            }
             [ipzInputBufferStr deleteCharactersInRange: nr];
-            if (numChars)
-                c = (int)*(unsigned char*)buf;
         }
         pthread_mutex_unlock(&inputMutex);
         if (c)
