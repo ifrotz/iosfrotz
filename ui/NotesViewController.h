@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
     
     UIScrollView *m_scrollView;
     UITextView *m_notesView;
-    UIImageView *m_notesBGView;
+    UIView *m_notesBGView;
     UIResponder *m_chainResponder;
     
     UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> __weak *m_delegate;
