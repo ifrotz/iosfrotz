@@ -147,7 +147,7 @@
         "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
         "<p><ul>\n"
         "<li><b>Update to Dropbox API v2.</b></li>\n"
-        "<li><b>Improvements for iOS 11 and iPhone X.</b></li>\n"
+        "<li><b>Improvements for iOS 11.</b></li>\n"
         "<li><b>Bug fixes.</b></li>\n"
         "</ul>\n"
         "<p>New in <b>Frotz</b> 1.8:</p>\n"
