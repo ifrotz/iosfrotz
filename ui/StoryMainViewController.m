@@ -2210,9 +2210,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
     {
+        CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
         CGRect bgRect;
-        CGFloat header =  self.topLayoutGuide.length;
-        bgRect = CGRectMake(0, header, frame.size.width, frame.size.height);
+        CGFloat header = self.topLayoutGuide.length;
+        bgRect = CGRectMake(0, header, applicationFrame.size.width, frame.size.height);
         m_background.frame = bgRect;
     }
 #endif
@@ -2262,9 +2263,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
     CGPoint origin = m_storyView.frame.origin;
     frame.origin.x += origin.x;
-    frame.origin.y += origin.y;
     frame.size.width -= origin.x;
-    frame.size.height -= origin.y;
     return frame;
 }
 
