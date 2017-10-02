@@ -149,6 +149,7 @@
         "<p><ul>\n"
         "<li>Prevent games from being confused by iOS 11's &#x201c;smart punctuation&#x201d;.</li>\n"
         "<li>Fix bug with text window partition sizing in glulx games.</li>\n"
+        "<li>Add launch shortcut to Story List (without resuming current story).</li>\n"
         "<li>Other bug fixes.</li>\n"
         "</ul>\n"
         "<p>New in <b>Frotz</b> 1.8.1:</p>\n"
