@@ -2228,7 +2228,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
     if (m_kbShown)
         frame.size.height -= m_kbdSize.height;
-    [m_storyView setFrame: frame];
+ //   [m_storyView setFrame: frame];
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
