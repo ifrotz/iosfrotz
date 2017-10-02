@@ -755,11 +755,18 @@ void iosif_stop_script() {
 void iosif_recompute_screensize() {
     if (!theSMVC)
         return;
+    __block CGRect pFrame;
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
-    UIView *parentView = [storyView superview];
-//    CGRect frame = [storyView frame];
-    CGRect pFrame = [parentView frame];
+    if ([NSThread isMainThread]) {
+        UIView *parentView = [storyView superview];
+        pFrame = [parentView frame];
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            UIView *parentView = [storyView superview];
+            pFrame = [parentView frame];
+        });
+    }
     pFrame.size.height -= [theSMVC keyboardSize].height;
     iosif_textview_width = (int)(pFrame.size.width / fontwid);
     iosif_textview_height = (int)(pFrame.size.height / [[storyView font] lineHeight])+1;
@@ -893,9 +900,7 @@ void iosif_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 wi
 void iosif_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
 //    NSLog(@"glk_window_fill_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, color, left, top, width, height };
-//    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
-    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
-
+    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
 }
 
 extern int gLastGlkEventWasArrange;
@@ -920,7 +925,7 @@ glui32 iosif_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2,
                 [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
         }
         else
-            [theSMVC performSelector:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args]];
+            [theSMVC performSelectorOnMainThread:@selector(drawGlkImage:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
     }
     return TRUE;
 }
