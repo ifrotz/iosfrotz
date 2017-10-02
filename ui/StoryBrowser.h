@@ -95,6 +95,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 @property (nonatomic, readonly, strong) FrotzSettingsController *settings;
 @property (nonatomic, readonly, strong) StoryDetailsController *detailsController;
+- (void)setPostLaunch;
 - (void)refreshDetails;
 - (void)setStoryDetails:(StoryInfo*)storyInfo;
 - (void)showStoryDetails:(StoryInfo*)storyInfo;

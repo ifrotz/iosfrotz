@@ -67,7 +67,14 @@ bool gLargeScreenDevice;
 int gLargeScreenPhone = 0;
 bool gUseSplitVC;
 
-//CGImageRef UIGetScreenImage(void);
+
+- (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
+    if ([[shortcutItem type] isEqualToString: @"storylist"]) {
+        [m_browser setPostLaunch];
+        [[m_browser navigationController] popToViewController:m_browser animated:YES];
+        completionHandler(YES);
+    }
+}
 
 //- (void)applicationDidFinishLaunching:(UIApplication *)application
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOption {
@@ -112,12 +119,17 @@ bool gUseSplitVC;
     }
 
     NSURL *launchURL = nil;
+    BOOL handledShortcut = YES;
 
     m_browser = [[StoryBrowser alloc] init];
     if (launchOption) {
         NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
         if (url) 
             launchURL = url;
+        if (launchOption[UIApplicationLaunchOptionsShortcutItemKey]) {
+            [m_browser setPostLaunch];
+            handledShortcut = YES;
+        }
     }
 
     if (gUseSplitVC) {
@@ -184,7 +196,7 @@ bool gUseSplitVC;
 
     if (launchURL)
         [self application:application handleOpenURL: launchURL];
-    return YES;
+    return !handledShortcut;
 }
 
 - (void)transitionViewDidFinish:(TransitionView *)view {

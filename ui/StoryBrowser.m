@@ -1041,6 +1041,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     m_postLaunch = YES;
 }
 
+- (void)setPostLaunch {
+    m_postLaunch = YES;
+}
+
 - (void)updateNavButton {
     //    NSLog(@"updatenav: %@ %d", self.navigationController.navigationBar, [self.navigationController.navigationBar barStyle]);
     
