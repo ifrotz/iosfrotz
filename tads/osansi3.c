@@ -498,7 +498,7 @@ void os_xlat_html4(unsigned int html4_char, char *result, size_t result_buf_len)
                 strcpy(result, "oe");
                 return;
             case 159:                                                   /* Yuml */
-                result[0] = 255;
+                result[0] = -1;
                 break;
             case 376:                                        /* Y with diaresis */
                 result[0] = 'Y';

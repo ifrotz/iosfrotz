@@ -18,7 +18,7 @@
 - (void)transitionViewDidCancel:(TransitionView *)view;
 @end
 
-@interface TransitionView: UIView
+@interface TransitionView: UIView <CAAnimationDelegate>
 {
     BOOL transitioning;
     BOOL wasEnabled;

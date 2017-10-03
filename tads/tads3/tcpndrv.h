@@ -4193,7 +4193,7 @@ public:
     /* adjust for dynamic (run-time) compilation */
     class CTcPrsNode *adjust_for_dyn(const tcpn_dyncomp_info *info)
     {
-        stm_ = (CTPNStm *)adjust_for_dyn(info);
+        stm_ = (CTPNStm *)stm_->adjust_for_dyn(info);
         return this;
     }
 

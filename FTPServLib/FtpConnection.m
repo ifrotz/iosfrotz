@@ -31,7 +31,7 @@
 -(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer 
 // ----------------------------------------------------------------------------------------------------------
 {
-	self = [super init ];
+	self = [super init];
 	if (self)
 	{
 		connectionSocket = newSocket;

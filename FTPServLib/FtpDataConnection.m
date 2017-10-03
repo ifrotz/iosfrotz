@@ -30,7 +30,7 @@
 -(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forConnection:(id)aConnection withQueuedData:(NSMutableArray*)queuedData
 // ----------------------------------------------------------------------------------------------------------
 {
-	self = [super init ];
+	self = [super init];
 	if (self)
 	{
 		dataSocket = newSocket;						// Hang onto the socket that was generated - the FDC is retained by FC

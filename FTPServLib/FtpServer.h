@@ -43,7 +43,7 @@
 	Boolean			changeRoot;							// Change root to virtual root ( basedir )
 	int				clientEncoding;						// FTP client encoding type
 }
-- (instancetype)initWithPort:(unsigned)serverPort withDir:(NSString *)aDirectory notifyObject:(id)sender NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithPort:(unsigned)serverPort withDir:(NSString *)aDirectory notifyObject:(id)sender;// NS_DESIGNATED_INITIALIZER;
 - (void)startFtpServer;
 - (void)stopFtpServer;
 @property (nonatomic, getter=isRunning, readonly) BOOL running;

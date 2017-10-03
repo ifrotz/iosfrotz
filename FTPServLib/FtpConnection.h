@@ -54,7 +54,7 @@
 
 }
 
--(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer  NS_DESIGNATED_INITIALIZER;
+-(instancetype)initWithAsyncSocket:(AsyncSocket*)newSocket forServer:(id)myServer;//  NS_DESIGNATED_INITIALIZER;
 #pragma mark STATE
 
 @property(readwrite)int transferMode;

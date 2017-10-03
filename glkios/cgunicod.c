@@ -34,7 +34,7 @@ void gli_putchar_utf8(glui32 val, FILE *fl)
 
 glui32 gli_utf8_to_utf32(unsigned char *buf, glui32 buflen, glui32 *skipped)
 {
-    glui32 pos = 0, res;
+    glui32 pos = 0, res = 0;
     glui32 val0, val1, val2, val3;
     *skipped = 0;
     if (!buflen)
