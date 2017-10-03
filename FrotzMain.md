@@ -14,9 +14,19 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+
+**Update - Version 1.8.2 under review**
+
+**10/02/2017**
+
+  * Prevent games from being confused by iOS 11 'smart punctuation' feature.
+  * Fix window resizing bug in glulx/glk games accidentally introduced in 1.8.1.
+  * Launch shortcut to Story List (without resuming current game).
+  * Other minor bug fixes, improvements to scrolling behavior.
+
 **Update - Version 1.8.1 now available!**
 
-**09/08/2016**
+**09/30/2017**
 
   * Updated to DropBox API V2 for syncing saved games
   * Improved support for iOS 11
