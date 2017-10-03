@@ -15,9 +15,9 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 ---
 
-**Update - Version 1.8.2 under review**
+**Update - Version 1.8.2 now availablew**
 
-**10/02/2017**
+**10/03/2017**
 
   * Prevent games from being confused by iOS 11 'smart punctuation' feature.
   * Fix window resizing bug in glulx/glk games accidentally introduced in 1.8.1.
