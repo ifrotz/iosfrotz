@@ -85,7 +85,6 @@ Modified
 #define OSANSI 1
 #define GLK 1
 #define UNIX 1
-#define _M_IX86_64 1
 
 /*
  *   For C++ files, define externals with C linkage
