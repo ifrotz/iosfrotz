@@ -1,5 +1,14 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+**Update 10/02/2017**
+
+**Frotz 1.8.2** under review, with the following changes:
+
+  * Prevent games from being confused by iOS 11 'smart punctuation' feature.
+  * Fix window resizing bug in glulx/glk games accidentally introduced in 1.8.1.
+  * Launch shortcut to Story List (without resuming current game).
+  * Other minor bug fixes, improvements to scrolling behavior.
+
 **Update 09/30/2017**
 
 **Frotz 1.8.1** now available, with the following changes:
