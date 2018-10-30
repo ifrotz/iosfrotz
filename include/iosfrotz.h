@@ -158,6 +158,7 @@ extern bool gUseSplitVC;
 #define APPLE_FASCISM 0 // (!FROTZ_BETA)
 
 #define UseNewFTPServer 1
+#define UseNewDropBoxAPI 1
 
 #include "ifrotzdefs.h"
 

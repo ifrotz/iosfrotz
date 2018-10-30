@@ -4854,7 +4854,7 @@ static BOOL migateDropboxAuth() {
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath];
 
     DBFILESWriteMode *mode = [[DBFILESWriteMode alloc] initWithOverwrite];
-    [[client.filesRoutes uploadUrl:dbSGPath mode:mode autorename:false clientModified:nil mute:false inputUrl:localSavePath]
+    [[client.filesRoutes uploadUrl:dbSGPath mode:mode autorename:false clientModified:nil mute:false propertyGroups:nil strictConflict:false inputUrl:localSavePath]
      setResponseBlock:^(DBFILESFileMetadata *result, DBFILESUploadError *routeError, DBRequestError *error) {
          if (result) {
              [self cacheTimestamp: [result serverModified] forSaveFile:
