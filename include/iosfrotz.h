@@ -151,14 +151,12 @@ extern bool gUseSplitVC;
 
 #define UseFullSizeStatusLineFont 1
 
-#define IPHONE_FROTZ_VERS "1.8.2"
+#define IPHONE_FROTZ_VERS "1.8.3"
 #define IPHONE_FROTZ_RN_VERS IPHONE_FROTZ_VERS // "1.8"
-#define FROTZ_BETA 0
+#define FROTZ_BETA 1
 
 #define APPLE_FASCISM 0 // (!FROTZ_BETA)
 
 #define UseNewFTPServer 1
 
 #include "ifrotzdefs.h"
-
-

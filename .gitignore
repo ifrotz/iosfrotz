@@ -4,6 +4,7 @@
 # Frotz
 /meta
 /priv
+/include/ifrotzdefs.h
 
 ## Backups and Mac files
 *~
@@ -12,6 +13,7 @@
 ## Build generated
 build/
 DerivedData
+Frotz.xcworkspace/xcshareddata
 
 ## Various settings
 *.pbxuser
