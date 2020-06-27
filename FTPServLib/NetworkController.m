@@ -83,7 +83,7 @@
 		return NO;
 	}
 	
-	memset((char *) address, sizeof(struct sockaddr_in), 0);
+	memset((char *) address, 0, sizeof(struct sockaddr_in));
 	address->sin_family = AF_INET;
 	address->sin_len = sizeof(struct sockaddr_in);
 	
