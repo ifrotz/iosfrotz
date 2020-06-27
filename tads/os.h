@@ -124,6 +124,14 @@ extern "C" {
 #include "h_ix86_64.h"
 #endif
 
+#ifdef _M_ARM32
+#include "h_arm32.h"
+#endif
+
+#ifdef _M_ARM64
+#include "h_arm64.h"
+#endif
+
 /*
  *   PowerPC CPU's
  */
