@@ -197,27 +197,23 @@ bool gUseSplitVC;
         }
     } // !usingStoryBoard
 
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        if (@available(iOS 13.0, *)) {
-            [[UINavigationBar appearance] setTintColor:[UIColor labelColor]];
-            [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor systemIndigoColor]];
-        } else {
-            [[UINavigationBar appearance] setTintColor:[UIColor darkGrayColor]];
-            [[UINavigationBar appearance] setBarTintColor: [UIColor whiteColor]];
-            [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor purpleColor]];
-        }
-
-        // This is now done explicitly for buttons in the StoryDetailsController, and in the xib files
-        // because of bugs/misfeatures in the iOS 11 SDK.
-        // See: http://www.openradar.me/radar?id=5064333964869632
-        //[[UIButton appearance] setTintColor: [UIColor whiteColor]];
-        //[[UIButton appearance] setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        //[[UIButton appearanceWhenContainedIn: [UINavigationBar class], nil] setTintColor: textColor];
-        
-        [[UIButton appearanceWhenContainedIn: [StoryDetailsController class], nil] setTitleColor: [UIColor whiteColor] forState:UIControlStateNormal];
+    if (@available(iOS 13.0, *)) {
+        [[UINavigationBar appearance] setTintColor:[UIColor labelColor]];
+        [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor systemIndigoColor]];
+    } else {
+        [[UINavigationBar appearance] setTintColor:[UIColor darkGrayColor]];
+        [[UINavigationBar appearance] setBarTintColor: [UIColor whiteColor]];
+        [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor purpleColor]];
     }
-#endif
+
+    // This is now done explicitly for buttons in the StoryDetailsController, and in the xib files
+    // because of bugs/misfeatures in the iOS 11 SDK.
+    // See: http://www.openradar.me/radar?id=5064333964869632
+    //[[UIButton appearance] setTintColor: [UIColor whiteColor]];
+    //[[UIButton appearance] setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    //[[UIButton appearanceWhenContainedIn: [UINavigationBar class], nil] setTintColor: textColor];
+    
+    [[UIButton appearanceWhenContainedIn: [StoryDetailsController class], nil] setTitleColor: [UIColor whiteColor] forState:UIControlStateNormal];
     
     [[m_browser storyMainViewController] initializeDropbox];
 #if 0

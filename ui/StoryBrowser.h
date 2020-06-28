@@ -24,6 +24,10 @@
 #define kBundledZIPFile  "bundle/bundled.zip"
 #define kBundledFileList "bundle/bundled.txt"
 
+@interface StoryDetailsControllerNC : UINavigationController {    
+}
+@end
+
 @class StoryDetailsController;
 @class StoryBrowser;
 
@@ -41,7 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,weak,nullable) StoryBrowser *browser;
 @end
 
-@interface StoryBrowser : UITableViewController <UIActionSheetDelegate, UISplitViewControllerDelegate, UIPopoverControllerDelegate,UISearchBarDelegate, UISearchDisplayDelegate, UITableViewDataSource, UITableViewDelegate> {
+@interface StoryBrowser : UITableViewController <UIActionSheetDelegate,
+    UISplitViewControllerDelegate, UIPopoverControllerDelegate,
+    UISearchBarDelegate, UISearchControllerDelegate, UISearchResultsUpdating,
+    UITableViewDataSource, UITableViewDelegate> {
     NSMutableArray *m_paths;
 
     int m_numStories;
@@ -51,13 +58,13 @@ NS_ASSUME_NONNULL_BEGIN
     
     NSArray *m_filteredNames;
 
-    StoryMainViewController<FrotzFontDelegate> *m_storyMainViewController;
+IBOutlet    StoryMainViewController<FrotzFontDelegate> *m_storyMainViewController;
     StoryWebBrowserController *m_webBrowserController;
-    StoryDetailsController *m_details;
+IBOutlet    StoryDetailsController *m_details;
     FrotzInfo *m_frotzInfoController;
     FrotzSettingsController *m_settings;
 
-    UISearchDisplayController *m_searchDisplayController;
+    UISearchController *m_searchController;
 
     UIView *m_navTitleView;
 
@@ -145,7 +152,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)storyInfoChanged;
 - (void)updateAccessibility;
 
-@property(nonatomic,strong) UISearchDisplayController *searchDisplayController;
+@property(nonatomic,strong) UISearchController *searchController;
 @end
 
 extern NSString *storyGamePath;

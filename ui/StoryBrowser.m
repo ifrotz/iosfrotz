@@ -79,7 +79,7 @@ void removeOldPngSplash(const char *filename) {
 
 @implementation StoryBrowser 
 
-@synthesize searchDisplayController = m_searchDisplayController;
+@synthesize searchController = m_searchController;
 
 -(NSArray*)recentPaths {
     NSUInteger count = [m_recents count];
@@ -110,12 +110,33 @@ void removeOldPngSplash(const char *filename) {
     }
     return NO;
 }
+- (instancetype)initWithStyle:(UITableViewStyle)style {
+    if ((self = [super initWithStyle:style]))
+        return self;
+    return self;
+}
+- (instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil {
+    if ((self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]))
+        return self;
+    return self;
+}
+- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder {
+    if((self = [super initWithCoder:aDecoder])) {
+        self = [self initStuff:YES];
+    }
+    return self;
+}
 
 - (instancetype)init {
-    
     if ((self = [super initWithStyle:UITableViewStylePlain]) != nil) {
+        self = [self initStuff:NO];
+    }
+    return self;
+}
+- (instancetype)initStuff:(BOOL)hasStoryBoard {
+    
+    if (self) {
         BOOL needMDDictUpdate = NO;
-       	//self.title = NSLocalizedString(@"Frotz", @"");
         
         NSFileManager *defaultManager = [NSFileManager defaultManager];
         
@@ -129,22 +150,14 @@ void removeOldPngSplash(const char *filename) {
         m_storyMainViewController = [[StoryMainViewController alloc] init];
         [m_storyMainViewController setStoryBrowser: self];
         m_webBrowserController = [[StoryWebBrowserController alloc] initWithBrowser: self];
-        m_details = [[StoryDetailsController alloc] initWithNibName:gLargeScreenDevice ? @"StoryDetailsController-ipad":@"StoryDetailsController"
-                                                             bundle:nil];
-        [m_details setStoryBrowser:self];
-        
         m_settings = [[FrotzSettingsController alloc] init];
         [m_settings setStoryDelegate: m_storyMainViewController];
-        
-        if (gUseSplitVC) {
-            UINavigationController *nc = [m_details navigationController];
-            if (!nc) {
-                nc = [[UINavigationController alloc] initWithRootViewController: m_details];
-                m_details.detailsNavigationController = nc;
-                [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];
-            }
+
+        if (!hasStoryBoard) {
+            m_details = [[StoryDetailsController alloc] initWithNibName:gLargeScreenDevice ? @"StoryDetailsController-ipad":@"StoryDetailsController"
+                                                                 bundle:nil];
+            [m_details setStoryBrowser:self];
         }
-        
         m_storyNames = [[NSMutableArray alloc] init];
         m_unsupportedNames = [[NSMutableArray alloc] init];
         m_paths = [[NSMutableArray alloc] init];
@@ -180,11 +193,6 @@ void removeOldPngSplash(const char *filename) {
             }
         }
 #endif
-        
-        // create a custom navigation bar button and set it to always say "Back"
-        UIBarButtonItem *temporaryBarButtonItem = [[UIBarButtonItem alloc] init];
-        temporaryBarButtonItem.title = @"Story List";
-//xxx        self.navigationItem.backBarButtonItem = temporaryBarButtonItem;
 
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
@@ -283,7 +291,10 @@ void removeOldPngSplash(const char *filename) {
             extractAllFilesFromZIPWithCallback([[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"], splashPath, removeOldPngSplash);
         }
 #endif
-        
+        NSString *cacheSplashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
+        if (![defaultManager fileExistsAtPath: cacheSplashPath])
+            [defaultManager createDirectoryAtPath:cacheSplashPath withIntermediateDirectories:NO attributes:nil error:&error];
+
         NSDictionary *dfltMetaData = nil;
         if (!vers || [vers compare: @"1.5"]==NSOrderedAscending) {
             
@@ -363,12 +374,8 @@ void removeOldPngSplash(const char *filename) {
         }
 
         [self refresh];
-    
-        NSString *cacheSplashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
 
         if (!vers || [vers compare: @"1.6"]==NSOrderedAscending) {
-            if (![defaultManager fileExistsAtPath: cacheSplashPath])
-                [defaultManager createDirectoryAtPath:cacheSplashPath withIntermediateDirectories:NO attributes:nil error:&error];
             
             if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
                 return self;
@@ -474,19 +481,27 @@ void removeOldPngSplash(const char *filename) {
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    if (gUseSplitVC) { // && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact)
-       [coordinator animateAlongsideTransition:^(id context){
-            if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
-                if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation])) {
-                    self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
-                    m_details.navigationItem.leftBarButtonItem = nil;
-                } else {
-                    self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-                    [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-                }
-            } else
-                self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+    if (gUseSplitVC && gLargeScreenDevice && !self.splitViewController.presentedViewController) {
+#if 000
+        [coordinator animateAlongsideTransition:^(id context){
+            if (self.splitViewController.presentedViewController)
+                ;
+            else if ([m_storyMainViewController navigationController])
+                self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+            else if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
+               if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation])) {
+                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
+                   m_details.navigationItem.leftBarButtonItem = nil;
+               } else {
+                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                   [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
+               }
+           } else {
+               self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+           }
+            
         } completion:^(id context) { } ];
+#endif
     }
 }
 
@@ -691,7 +706,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         UINavigationController *nc = [m_webBrowserController navigationController];
         if (!nc) {
             nc = [[UINavigationController alloc] initWithRootViewController: m_webBrowserController];
-            [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
+            [nc.navigationBar setBarStyle: UIBarStyleDefault];   
         }
         if (nc) {
             if (!nc.topViewController.navigationItem.leftBarButtonItem) {
@@ -839,20 +854,33 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (NSString*)mapInfocom83Filename:(NSString*)aStory {
+    // maps other common filename variants as well, as well as names with version numbers embedded
     static NSDictionary *map = nil;
     NSString *story = [aStory lowercaseString];
     if (!map)
-        map = @{@"beyondzo": @"beyondzork", @"borderzo": @"borderzone", @"bureaucr": @"bureaucracy", @"bureau": @"bureaucracy", @"cutthroa": @"cutthroats", @"enchante": @"enchanter",
-                @"hitchhik": @"hitchhiker", @"hgg": @"hitchhiker", @"hhgg": @"hitchhiker", @"h2g2": @"hitchhiker", @"hhgttg": @"hitchhiker",
-                @"hollywoo": @"hollywood", @"phobos": @"leather", @"nordandb": @"nordandbert", @"planetfa": @"planetfall", @"plundere": @"plundered",
-                @"seastalk": @"seastalker", @"sorceror": @"sorcerer", @"spellbr": @"spellbreaker",@"spellbre": @"spellbreaker", @"starcros": @"starcross",
-                @"stationf": @"stationfall", @"suspend": @"suspended", @"suspende": @"suspended", @"wishbrin": @"wishbringer"};
+        map = @{@"amf" : @"amfv", @"beyond zork": @"beyondzork", @"beyondzo": @"beyondzork",
+                @"borderzo": @"borderzone", @"bureaucr": @"bureaucracy", @"bureau": @"bureaucracy",
+                @"cutthroa": @"cutthroats", @"cutthroat": @"cutthroats", @"enchante": @"enchanter",
+                @"hitchhik": @"hitchhiker", @"hgg": @"hitchhiker", @"hhgg": @"hitchhiker",
+                @"h2g2": @"hitchhiker", @"hhgttg": @"hitchhiker",
+                @"hijinx": @"hollywood", @"hjinx": @"hollywood",@"hollywoo": @"hollywood",
+                @"leatherg": @"leather", @"phobos": @"leather",
+                @"nordandb": @"nordandbert", @"nordbert": @"nordandbert",
+                @"planetfa": @"planetfall", @"plundere": @"plundered",
+                @"plundered hearts": @"plundered",
+                @"seastalk": @"seastalker", @"sorceror": @"sorcerer",
+                @"spellbr": @"spellbreaker",@"spellbre": @"spellbreaker", @"starcros": @"starcross",
+                @"stationf": @"stationfall", @"suspend": @"suspended",
+                @"suspende": @"suspended", @"wishbrin": @"wishbringer"};
     NSString *longStory;
     longStory = map[story];
     if (longStory)
         return longStory;
     NSRange r = [story rangeOfString: @"-"];
-    if (r.length > 0 && r.location > 4 && r.location < [story length]-1 && isdigit([story characterAtIndex: r.location+1])) {
+    if (r.length > 0 && r.location > 4 && r.location < [story length]-1
+        && (isdigit([story characterAtIndex: r.location+1])
+            // try to allow the variations in Zarf's Infocom collection and ignore the version numbers
+            || ([story rangeOfString: @"-r"].location != NSNotFound))) {
         story = [story substringToIndex: r.location];
         longStory = map[story];
         if (!longStory)
@@ -944,7 +972,13 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)loadView {
+    
     [super loadView];
+    if (!m_details && self.splitViewController.childViewControllers.count > 1) {
+        m_details = self.splitViewController.childViewControllers[1].childViewControllers[0];
+        [m_details setStoryBrowser:self];
+    }
+
     UITableView *realView = [super tableView];
     CGRect frame = [realView frame];
     m_background = [[UIView alloc] initWithFrame: frame];
@@ -986,47 +1020,54 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     }
 }
 
+- (void)updateSearchResultsForSearchController:(UISearchController *)searchController
+{
+    NSString *searchString = searchController.searchBar.text;
+    if (!searchString.length) {
+        m_filteredNames = nil;// m_storyNames;
+    } else {
+        // strip out all the leading and trailing spaces
+        NSString *strippedString = [searchString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        NSPredicate* predicate = [NSPredicate predicateWithFormat:@"title contains[c] %@", strippedString];
+        m_filteredNames = [m_storyNames filteredArrayUsingPredicate:predicate];
+    }
+    [self.tableView reloadData];
+}
+- (void)searchBar:(UISearchBar *)searchBar selectedScopeButtonIndexDidChange:(NSInteger)selectedScope
+{
+  [self updateSearchResultsForSearchController:self.searchController];
+}
+
 - (void)filterContentForSearchText:(NSString*)searchText scope:(NSString*)scope
 {
     NSPredicate *resultPredicate = [NSPredicate predicateWithFormat:@"title contains[c] %@", searchText];
     m_filteredNames = [m_storyNames filteredArrayUsingPredicate:resultPredicate];
 }
 
-- (BOOL)searchDisplayController:(UISearchDisplayController *)controller shouldReloadTableForSearchString:(NSString *)searchString
-{
-    [self filterContentForSearchText:searchString
-                               scope:[self.searchDisplayController.searchBar scopeButtonTitles][[self.searchDisplayController.searchBar
-                                                     selectedScopeButtonIndex]]];
-    
-    return YES;
-}
-- (void)searchDisplayControllerDidBeginSearch:(UISearchDisplayController *)controller {
-    [self.searchDisplayController.searchResultsTableView setDelegate: self];
-    [self.searchDisplayController.searchResultsTableView setDataSource: self];
-}
-
-
 - (void)viewDidLoad {
     [super viewDidLoad];
+    if (self.splitViewController) {
+        gUseSplitVC = YES;
+        self.splitViewController.delegate = self;
+    }
     if (!gUseSplitVC)
         self.navigationItem.titleView = [m_frotzInfoController view];
     [self updateNavButton];
-    
-    UISearchBar *searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width, 0)];
-    searchBar.delegate = self;
-    [searchBar sizeToFit];
-    
+
+    UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController: nil];
+    searchController.searchResultsUpdater = self;
+    searchController.dimsBackgroundDuringPresentation = NO;
+    UISearchBar *searchBar = searchController.searchBar;
+    searchController.searchBar.delegate = self;
+    //_tblDropDown.tableHeaderView = self.searchController.searchBar;
+    self.definesPresentationContext = YES;
+    [self.searchController.searchBar sizeToFit];
+    [self setSearchController: searchController];
+
     self.tableView.tableHeaderView = searchBar;
     CGRect newBounds = self.tableView.bounds;
     newBounds.origin.y += searchBar.frame.size.height;
     self.tableView.bounds = newBounds;
-    
-    UISearchDisplayController *searchDisplayController = [[UISearchDisplayController alloc] initWithSearchBar:searchBar contentsController:self];
-    [self setSearchDisplayController: searchDisplayController];
-    
-    [searchDisplayController setDelegate:self];
-    [searchDisplayController setSearchResultsDataSource:self];
-
     if (m_postLaunch || m_launchPath)
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
@@ -1067,8 +1108,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [self reloadData];
     [self updateNavButton];
 
-    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
+    if (@available(iOS 13.0, *)) {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
+    } else {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
         [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
         [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
     }
@@ -1101,38 +1146,42 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return m_settings;
 }
 
-- (void) dealloc {
-    NSString *path;
-    for (path in m_paths)
-        path;
-    
-}
-
 - (void)addPath: (NSString *)path {
     [m_paths addObject: path];
 }
 
 -(void)showMainStoryController {
-    if (gUseSplitVC && self.splitViewController) {
+    self.splitViewController.presentsWithGesture = NO;
+    if (gUseSplitVC && self.splitViewController && !self.splitViewController.isCollapsed) {
+#if 0
         UINavigationController *nc = [m_storyMainViewController navigationController];
         if (nc) {
-            if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-                UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-                nc.topViewController.navigationItem.leftBarButtonItem = backItem;
+            if (self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassRegular) {
+                if (!nc.topViewController.navigationItem.leftBarButtonItem) {
+                    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
+                    nc.topViewController.navigationItem.leftBarButtonItem = backItem;
+                }
+                [self.splitViewController dismissViewControllerAnimated:NO completion: nil];
+                nc.modalPresentationStyle = UIModalPresentationFullScreen;
+                [self.splitViewController presentViewController:nc animated:YES completion:nil];
+                return;
             }
-            [self.splitViewController dismissViewControllerAnimated:NO completion: nil];
-            nc.modalPresentationStyle = UIModalPresentationFullScreen;
-            [self.splitViewController presentViewController:nc animated:YES completion:nil];
-            return;
         }
+        //self.splitViewController.viewControllers = @[ self.navigationController, nc ];
+#endif
+        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+
+        if (m_storyMainViewController.storyNavController.topViewController != m_storyMainViewController)
+            [m_storyMainViewController.storyNavController pushViewController: m_storyMainViewController animated:YES];
+        return;
     }
     [[self navigationController] pushViewController:m_storyMainViewController animated:YES];
 }
 
 - (void)didPressModalStoryListButton {
     if (gUseSplitVC && self.splitViewController) {
-        if (self.splitViewController.modalViewController) {
-            [self.splitViewController dismissModalViewControllerAnimated: YES];
+        if (self.splitViewController.presentedViewController) {
+            [self.splitViewController dismissViewControllerAnimated:YES completion:nil];
             NSString *storyPath = [[m_details storyInfo] path];
             m_details.willResume = storyPath && [storyPath length] > 0
             && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
@@ -1218,12 +1267,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 - (NSInteger) tableView:(UITableView*)tableView numberOfRowsInSection: (NSInteger)section {
     NSUInteger nRecents = [m_recents count];
-    if (tableView == self.searchDisplayController.searchResultsTableView) {
-        if (m_filteredNames)
-            return [m_filteredNames count];
-        else
-            return 0;
-    } else if (section == 0 && (m_isDeleting || nRecents > 0))
+    if (m_filteredNames)
+        return [m_filteredNames count];
+    else if (section == 0 && (m_isDeleting || nRecents > 0))
         return nRecents;
     if (section > 1)
         return 0;
@@ -1231,7 +1277,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (NSString*)tableView:(UITableView*)tableView titleForHeaderInSection:(NSInteger)section {
-    if (tableView == self.searchDisplayController.searchResultsTableView)
+    if (m_filteredNames)
         return @"Story List";
     if (section == 0 && (m_isDeleting || [m_recents count] > 0)) {
         return @"Recently Played";
@@ -1246,15 +1292,15 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView  {
     if (abortLaunchCondition)
         return 0;
-    if (tableView == self.searchDisplayController.searchResultsTableView)
+    if (m_filteredNames)
         return 1;
     return m_isDeleting ? 2 :  1 + ([m_recents count] > 0);
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
     NSInteger row = indexPath.row;
-    if (tableView == self.searchDisplayController.searchResultsTableView) {
-        if (m_filteredNames && row < [m_filteredNames count])
+    if (m_filteredNames) {
+        if (row < [m_filteredNames count])
             row = [self indexRowFromStoryInfo: m_filteredNames[row]];
         else
             return NO;
@@ -1277,7 +1323,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         NSInteger row = indexPath.row;
         BOOL isSearch = NO;
-        if (tableView == self.searchDisplayController.searchResultsTableView) {
+        if (m_filteredNames)
+        {
             isSearch = YES;
             if (m_filteredNames && row < [m_filteredNames count])
                 row = [self indexRowFromStoryInfo: m_filteredNames[row]];
@@ -1472,6 +1519,64 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     }
 }
 
+// Return the view controller which is to become the primary view controller after `splitViewController` is collapsed due to a transition to
+// the horizontally-compact size class. If you return `nil`, then the argument will perform its default behavior (i.e. to use its current primary view
+// controller).
+- (nullable UIViewController *)primaryViewControllerForCollapsingSplitViewController:(UISplitViewController *)splitViewController {
+    if (self.splitViewController.presentedViewController)
+        return nil;
+    if ([m_storyMainViewController navigationController])
+        return nil;
+#if 0
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
+        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+        return self.navigationController;
+    }
+#endif
+    return nil;
+}
+
+// This method is called when a split view controller is collapsing its children for a transition to a compact-width size class. Override this
+// method to perform custom adjustments to the view controller hierarchy of the target controller.  When you return from this method, you're
+// expected to have modified the `primaryViewController` so as to be suitable for display in a compact-width split view controller, potentially
+// using `secondaryViewController` to do so.  Return YES to prevent UIKit from applying its default behavior; return NO to request that UIKit
+// perform its default collapsing behavior.
+- (BOOL)splitViewController:(UISplitViewController *)splitViewController collapseSecondaryViewController:(UIViewController *)secondaryViewController ontoPrimaryViewController:(UIViewController *)primaryViewController {
+    if (self.splitViewController.presentedViewController)
+        return NO;
+    if ([m_storyMainViewController navigationController])
+        return NO;
+    return self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact;
+}
+
+-(UIViewController*)primaryViewControllerForExpandingSplitViewController:(UISplitViewController *)splitViewController {
+    return nil; //self.navigationController;
+}
+
+- (UIViewController*)splitViewController:(UISplitViewController *)splitViewController separateSecondaryViewControllerFromPrimaryViewController:(nonnull UIViewController *)primaryViewController {
+    NSLog(@"separateSecondaryViewControllerFromPrimaryViewController %@", primaryViewController);
+    NSLog(@" %@", splitViewController.viewControllers);
+    if (primaryViewController == self.navigationController && primaryViewController.childViewControllers.count == 1) {
+        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+        if (m_details.navigationController)
+            [m_details.navigationController popToViewController:m_details animated:YES];
+        return m_details.navigationController ? m_details.navigationController : m_details;
+    }
+    else {
+#if 000
+        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+#endif
+        ///xxx
+        if (m_details.navigationController) {
+            if (m_details.navigationController.childViewControllers.count <= 1)
+                [m_details.navigationController pushViewController:m_storyMainViewController animated:YES];
+            return m_details.navigationController;
+        }
+        return [m_storyMainViewController navigationController];
+    }
+//    return m_details;
+}
+
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
     if (storyInfo) {
         [self setStoryDetails: storyInfo];
@@ -1507,18 +1612,24 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
-        if (gUseSplitVC && (!secondTap || self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
-            [UIView animateWithDuration:0.3 animations:^{
+        if (gUseSplitVC && !self.splitViewController.isCollapsed && (!secondTap ||
+            self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
+#if 11111
+            if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)
+                [UIView animateWithDuration:0.3 animations:^{
                     if (m_details.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
                         self.splitViewController.displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
                         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
                     }
                 }];
+#endif
             [self showStoryDetails: storyInfo];
         }
         else {
             [[self tableView] deselectRowAtIndexPath:indexPath animated:NO];
             [self launchStoryInfo: storyInfo];
+            lastRow = -1;
         }
     }
     
@@ -1585,8 +1696,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     cell.image = nil;
     cell.text = @"";
     NSInteger row = indexPath.row;
-    if (tableView == self.searchDisplayController.searchResultsTableView) {
-        if (m_filteredNames && row < [m_filteredNames count])
+    if (m_filteredNames) {
+        if (row < [m_filteredNames count])
             row = [self indexRowFromStoryInfo: m_filteredNames[row]];
         else
             row = -1;
@@ -1594,7 +1705,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     else if (indexPath.section == 0 && row < [m_recents count])
         row = [self indexRowFromStoryInfo: m_recents[row]];
     
-    if (gUseSplitVC)
+    if (gUseSplitVC && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         cell.accessoryType = UITableViewCellAccessoryNone;
     else if (row >= 0 && row < [m_storyNames count])
         cell.accessoryType = [tableView isEditing] ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDetailDisclosureButton;
@@ -1661,8 +1772,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (!indexPath)
         return nil;
     NSInteger row = indexPath.row;
-    if (tableView == self.searchDisplayController.searchResultsTableView) {
-        if (m_filteredNames && row < [m_filteredNames count])
+    if (m_filteredNames) {
+        if (row < [m_filteredNames count])
             row = [self indexRowFromStoryInfo: m_filteredNames[row]];
         else
             row = -1;

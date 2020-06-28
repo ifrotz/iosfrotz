@@ -1639,31 +1639,29 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 -(void)setNavBarTint {
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
-        CGColorRef cgColor = [m_defaultBGColor CGColor];
-        CGFloat max;
-        const CGFloat *components = CGColorGetComponents(cgColor);
-        size_t nComponents = CGColorGetNumberOfComponents(cgColor), i;
-        max = components[0];
-        for (i=1; i < nComponents-1; ++i)
-            if (components[i] > max)
-                max = components[i];
-        if (max < 0.5) {
-            [self.navigationController.navigationBar  setBarTintColor:  m_defaultBGColor];
-            [self.navigationController.navigationBar  setTintColor: m_defaultFGColor];
-            m_inputLine.keyboardAppearance = UIKeyboardAppearanceDark;
-        }
-        else {
-            [self.navigationController.navigationBar  setBarTintColor:  m_defaultFGColor];
-            [self.navigationController.navigationBar  setTintColor: m_defaultBGColor];
-            m_inputLine.keyboardAppearance = UIKeyboardAppearanceLight;
-        }
-    } else
-#endif
-    {
-        m_inputLine.keyboardAppearance = UIKeyboardAppearanceAlert;
+    if (@available(iOS 9.0,*)) {
+        [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
+        [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
+    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+    CGColorRef cgColor = [m_defaultBGColor CGColor];
+    CGFloat max;
+    const CGFloat *components = CGColorGetComponents(cgColor);
+    size_t nComponents = CGColorGetNumberOfComponents(cgColor), i;
+    max = components[0];
+    for (i=1; i < nComponents-1; ++i)
+        if (components[i] > max)
+            max = components[i];
+    if (max < 0.5) {
+        [self.navigationController.navigationBar  setBarTintColor:  m_defaultBGColor];
+        [self.navigationController.navigationBar  setTintColor: m_defaultFGColor];
+        // let's just leave the keyboard alone, matching system light/dark mode
+        //m_inputLine.keyboardAppearance = UIKeyboardAppearanceDark;
+    }
+    else {
+        [self.navigationController.navigationBar  setBarTintColor:  m_defaultFGColor];
+        [self.navigationController.navigationBar  setTintColor: m_defaultBGColor];
+        //m_inputLine.keyboardAppearance = UIKeyboardAppearanceLight;
     }
 }
 
@@ -1706,7 +1704,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 -(void)viewDidAppear:(BOOL)animated {
     [self checkAccessibility];
-    
+
     self.navigationItem.titleView = [m_frotzInfoController view];
     
     [self autosize];
@@ -1714,9 +1712,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     
     if (m_kbShown)
         [m_inputLine becomeFirstResponder];
-    
-    //    if (m_autoRestoreDict)
-    //	[self autoRestoreSession];
+
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -1724,7 +1720,10 @@ extern void gli_ios_set_focus(window_t *winNum);
   
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
-    
+    [self setNavBarTint];
+
+    self.navigationItem.titleView = [m_frotzInfoController view];
+
     [m_frotzInfoController setKeyboardOwner: self];
 
     disable_complete = !m_completionEnabled;
@@ -1733,15 +1732,14 @@ extern void gli_ios_set_focus(window_t *winNum);
     else
         refresh_savedir = 0;
 
-    [self setNavBarTint];
-    [m_frotzInfoController updateTitle];
     if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
         m_landscape = YES;
     }
     else {
         m_landscape = NO;
     }
-
+    [m_background addSubview: m_inputLine];
+    [m_background bringSubviewToFront: m_inputLine];
     if (m_notesController) {
         [m_notesController hide];
         [m_notesController viewWillAppear:animated];
@@ -1752,18 +1750,26 @@ extern void gli_ios_set_focus(window_t *winNum);
     disable_complete = YES;
     [super viewWillDisappear:animated];
     [[self view] setTransform: CGAffineTransformIdentity];
-    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
-    }
+
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
     
     [self.navigationItem.rightBarButtonItem setEnabled: YES];
     [self dismissKeyboard];
+    [m_inputLine removeFromSuperview];
     if ([self inputHelperShown])
         [self hideInputHelper];
     if (m_notesController)
         [m_notesController viewWillDisappear:animated];
+}
+
+- (void)willMoveToParentViewController:(UIViewController *)parent
+{
+    [super willMoveToParentViewController:parent];
+    if (!parent) {
+        // `self` is about to get popped.
+        [self dismissKeyboard];
+        [m_inputLine removeFromSuperview];  // prevent keyboard from getting auto-restored whem we're pushed again
+    }
 }
 
 - (id)dismissKeyboard
@@ -1864,7 +1870,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     return image;
 }
-    
+
 - (void)loadView {
     
     if (m_background) {
@@ -1873,13 +1879,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-        CGFloat t = frame.size.width;
-        frame.size.width = frame.size.height;
-        frame.size.height = t;
-        t = frame.origin.x; frame.origin.x = frame.origin.y; frame.origin.y = t;
-    }
-    frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
+     frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
     float navHeight;
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
@@ -2169,6 +2169,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
+    if (m_storyView)
+        [self hideInputHelper];
     if (m_notesController)
         [m_notesController autosize];
 }
@@ -2178,7 +2180,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 - (void)autosize {
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
+    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])
+        || self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         m_landscape = YES;
         if (!gLargeScreenDevice) {
             if (isOS32)
@@ -2212,50 +2215,43 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (gUseSplitVC && m_landscape && m_autoRestoreDict!=nil)
         frame.size.height += 20;
 
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
-        CGRect bgRect;
-        CGFloat header = self.topLayoutGuide.length;
-        bgRect = CGRectMake(0, header, applicationFrame.size.width, frame.size.height);
-        m_background.frame = bgRect;
-    }
-#endif
-    
+    CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
+    CGFloat header = self.topLayoutGuide.length;
+    CGRect bgRect = CGRectMake(0, header, applicationFrame.size.width, frame.size.height);
+    //NSLog(@"autosize bg frame=(%f,%f,%f,%f)", bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
+    m_background.frame = bgRect;
+
     // iOS 8 seems to be auto-restoring the first responder and bringing the keyboard back when you return to the story from the
     // story list, which we never had to deal with before.  Worse, sometimes keyboardDidShow notification happens after viewDidAppear,
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
     if (m_kbShown)
         frame.size.height -= m_kbdSize.height;
- //   [m_storyView setFrame: frame];
+    CGRect storyFrame = [m_storyView frame];
+    storyFrame.size.width = frame.size.width;
+    [m_storyView setFrame: storyFrame];
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
-    [m_statusLine setNeedsDisplay];
 
+    [m_statusLine setNeedsDisplay];
     if (m_notesController)
         [m_notesController autosize];
     [self resizeStatusWindow];
 
 }
 
-#if 0 // implement
 - (void)viewWillTransitionToSize:(CGSize)size
        withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    [self autosize];
-    [m_inputLine updatePosition];
-    [self addKeyBoardLockGesture];
-    [[m_storyBrowser detailsController] refresh];
-}
-#endif
-
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
-    [self autosize];
-	[m_inputLine updatePosition];
-    [self addKeyBoardLockGesture];
-    [[m_storyBrowser detailsController] refresh];
+    
+    [coordinator animateAlongsideTransition:^(id context){
+        [self autosize];
+        [m_inputLine updatePosition];
+        [self addKeyBoardLockGesture];
+        [[m_storyBrowser detailsController] refresh];
+    } completion:^(id context) {
+        [self setNavBarTint];
+    } ];
 }
 
 -(void)_clearRotationInProgress {
@@ -2582,15 +2578,13 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     
     [m_background setBackgroundColor: m_defaultBGColor];
 
-    if (gLargeScreenDevice)
-        [self setNavBarTint];
+    [self setNavBarTint];
     
 #if UseRichTextView
     [m_statusLine setBackgroundColor: color];
 #else
     [m_statusLine setTextColor: color];
 #endif
-    //    [m_inputLine setBackgroundColor: color];
 }
 
 -(void) setTextColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
@@ -3468,7 +3462,10 @@ char *tempStatusLineScreenBuf() {
                 [storyView setFrame: viewFrame];
                 [storyView appendText: @"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"];
             }
-            [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
+            if (gLargeScreenDevice)
+                [storyView appendText: @"\n\n[End of story. Tap 'Select Story' to exit.]\n\n"];
+            else
+                [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
             [storyView scrollRectToVisible:CGRectMake(0, lastVisibleYPos[0]+50, viewFrame.size.width, 24) animated:YES];
             [self abandonStory: YES];
         }
@@ -3492,6 +3489,10 @@ char *tempStatusLineScreenBuf() {
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {               // any offset changes
     [m_inputLine updatePosition];
+    CGFloat contentOffset = scrollView.contentOffset.y;
+    CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
+    if (!m_kbShown && maximumOffset > 0 && contentOffset >= maximumOffset+100)
+        [self activateKeyboard];
 }
 
 -(void) savePrefs {
@@ -3675,12 +3676,10 @@ static void setScreenDims(char *storyNameBuf) {
 -(void)displayLaunchMessageWithDelay: (CGFloat)delay duration:(CGFloat)duration alpha:(CGFloat)alpha {
     if (m_launchMessage) {
         CGRect frame = [[[m_storyView superview] superview] frame];
-#ifdef NSFoundationVersionNumber_iOS_6_1
-        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-            frame.size.height -= 64;
-        }
-#endif
-        UILabel *msgView = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, 60)];
+        UIEdgeInsets margins = self.view.layoutMargins;
+        frame.size.height -= margins.top+margins.bottom;
+
+        UILabel *msgView = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, frame.size.width, 6)];
         [msgView setText: m_launchMessage];
         [msgView setTextAlignment: NSTextAlignmentCenter];
         [msgView setLineBreakMode: NSLineBreakByTruncatingTail];
@@ -3690,6 +3689,7 @@ static void setScreenDims(char *storyNameBuf) {
         CGRect msgFrame = [msgView frame];
         msgFrame.size.height += 20;
         msgFrame.origin.y = frame.size.height - msgFrame.size.height + 2;
+        msgFrame.size.height += margins.bottom;
         msgFrame.size.width = frame.size.width;
         [msgView setFrame: msgFrame];
         [msgView setBackgroundColor: [UIColor blackColor]];
@@ -4550,6 +4550,9 @@ static NSString *kDefaultDBTopPath = @"/Frotz";
 
 static BOOL migateDropboxAuth() {
 #if UseNewDropBoxSDK
+
+#ifdef FROTZ_DB_APP_KEY
+#ifdef FROTZ_DB_APP_SECRET
     BOOL willPerformMigration = [DBClientsManager checkAndPerformV1TokenMigration:^(BOOL shouldRetry, BOOL invalidAppKeyOrSecret,
                                                                                     NSArray<NSArray<NSString *> *> *unsuccessfullyMigratedTokenData) {
         if (invalidAppKeyOrSecret) {
@@ -4576,11 +4579,16 @@ static BOOL migateDropboxAuth() {
             [DBClientsManager setupWithAppKey:@FROTZ_DB_APP_KEY];
         }
     } queue:nil appKey:@FROTZ_DB_APP_KEY appSecret:@FROTZ_DB_APP_SECRET];
-
+#else
+    BOOL willPerformMigration = NO;
+#endif
     if (!willPerformMigration) {
         [DBClientsManager setupWithAppKey:@FROTZ_DB_APP_KEY];
     }
     return willPerformMigration;
+#else
+    return NO;
+#endif
 #else
     return NO;
 #endif
@@ -4641,13 +4649,15 @@ static BOOL migateDropboxAuth() {
     }
     [self dbRefreshFolder: [self dbSavePath] createIfNotExists:YES];
 #else
+#ifdef FROTZ_DB_APP_SECRET
     DBSession* session = [[DBSession alloc] initWithAppKey:@FROTZ_DB_APP_KEY  appSecret:@FROTZ_DB_APP_SECRET root:kDBRootDropbox];
     session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating
     [DBSession setSharedSession:session];
     if ([[DBSession sharedSession] isLinked]) {
         [self.restClient loadMetadata: [self dbTopPath]];
     }
-#endif
+#endif // FROTZ_DB_APP_SECRET
+#endif // UseNewDropBoxSDK
 #endif // FROTZ_DB_APP_KEY
 }
 
