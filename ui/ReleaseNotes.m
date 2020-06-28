@@ -145,7 +145,12 @@
         htmlString = @
         "<h2>What's New in Frotz?</h2>\n"
         "<hr/>\n"
-        "<p>New in <b>Frotz</b> " IPHONE_FROTZ_VERS ":</p>\n"
+        "<p>New in <b>Frotz</b> 1.8.3:</p>\n"
+        "<p><ul>\n"
+        "<li>Improved support for iOS 13 and newer devices.</li>\n"
+        "<li>Bug fixes.</li>\n"
+        "</ul>\n"
+        "<p>New in <b>Frotz</b> 1.8.2:</p>\n"
         "<p><ul>\n"
         "<li>Prevent games from being confused by iOS 11's &#x201c;smart punctuation&#x201d;.</li>\n"
         "<li>Fix bug with text window partition sizing in glulx games.</li>\n"
