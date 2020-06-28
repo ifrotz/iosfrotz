@@ -25,6 +25,7 @@
 @property (nonatomic,weak) StoryDetailsController *detailsController;
 @end
 
+
 @interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate, UIActionSheetDelegate> {
 
     IBOutlet UITextField *m_titleField;
@@ -38,7 +39,7 @@
     IBOutlet UIButton *m_infoButton;
     IBOutlet UIButton *m_ifdbButton;
     IBOutlet UIButton *m_playButton;
-    IBOutlet UILabel *m_artworkLabel;
+    IBOutlet UILabel *m_noArtworkLabel;
     IBOutlet UIView *m_portraitCover;
     IBOutlet UILabel *m_portraitCoverLabel;
     IBOutlet UIView *m_contentView;
@@ -62,7 +63,7 @@
 -(void)refresh;
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode;
 @property (nonatomic, readonly) BOOL keyboardIsActive;
--(void)dimArtwork:(BOOL)dim;
+-(void)dimDescription:(BOOL)dim;
 -(IBAction)playButtonPressed;
 -(IBAction)IFDBButtonPressed;
 -(IBAction)dismissKeyboard;
