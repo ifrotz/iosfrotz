@@ -27,6 +27,7 @@
 NSString *kBookmarksFN = @"bookmarks.plist";
 const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
+const NSString *kBookmarkVersionKey = @"Version";
 
 @implementation StoryWebBrowserController 
 
@@ -49,14 +50,11 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     UINavigationController *nc = [self navigationController];
     const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
     const float toolBarHeight = nc ? navBarHeight : 44.0;
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
-
-#if 0
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-	CGFloat t = frame.size.width; frame.size.width = frame.size.height; frame.size.height = t;
-	t = frame.origin.x; frame.origin.x = frame.origin.y; frame.origin.y = t;
+    CGRect frame = [[UIScreen mainScreen] bounds];
+    UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
+    if (@available(iOS 11.0,*)) {
+        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
     }
-#endif
     frame.origin.y += navBarHeight;
     frame.size.height -= navBarHeight;
     
@@ -68,7 +66,7 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     [m_scrollView setScrollEnabled: NO];
     [m_scrollView setBackgroundColor: [UIColor blackColor]];
     [m_scrollView setDelegate: self];
-    
+
     m_urlBarController = [[URLPromptController alloc] init];
     [m_urlBarController setDelegate: self];
 
@@ -76,6 +74,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     [m_background addSubview: m_scrollView];
 
     frame = [m_scrollView bounds];
+    frame.size.height -= safeInsets.bottom;
+
     m_webView = [[UIWebView alloc] initWithFrame: frame];
 
     [m_background setAutoresizesSubviews: YES];
@@ -176,46 +176,80 @@ const NSString *kBookmarkTitlesKey = @"Titles";
     return bmPath;
 }
 
--(void)loadBookmarksWithURLs:(NSArray**)urls andTitles:(NSArray**)titles {
+-(void)loadBookmarksWithURLs:(NSArray**)pUrls andTitles:(NSArray**)pTitles {
     NSString *bmPath = [self bookmarkPath];
-    NSDictionary *bmDict = [NSDictionary dictionaryWithContentsOfFile: bmPath];
+    NSMutableDictionary *bmDict = [NSMutableDictionary dictionaryWithContentsOfFile: bmPath];
     if (bmDict) {
-	if (urls)
-	    *urls = bmDict[kBookmarkURLsKey];
-	if (titles)
-	    *titles = bmDict[kBookmarkTitlesKey];
-        if (urls && titles && [*urls count]==11 && [*titles count]==11
-            && [(*urls)[0] isEqualToString:@"brasslantern.org"]
-            && [(*urls)[10] isEqualToString:@"nickm.com/if"])
-            ;
-        else
-            return;
+        NSMutableArray *urls = bmDict[kBookmarkURLsKey];
+        NSMutableArray *titles = bmDict[kBookmarkTitlesKey];
+        NSString *vers = bmDict[kBookmarkVersionKey];
+        if (!vers) {
+            NSArray *addUrls = @[ @"https://eblong.com/infocom" ];
+            NSArray *addTitles = @[ @"The Obsessively Complete Infocom Catalog" ];
+            NSArray *obsoleteUrls = @[
+                @"www.xyzzynews.com",
+                @"sparkynet.com/spag",
+                @"www.wurb.com/if",
+                @"www.csd.uwo.ca/Infocom/"];
+            BOOL changed = NO;
+            for (NSString *oUrl in obsoleteUrls) {
+                NSUInteger foundIndex = [urls indexOfObject: oUrl];
+                if (foundIndex != NSNotFound) {
+                    [urls removeObjectAtIndex: foundIndex];
+                    [titles removeObjectAtIndex: foundIndex];
+                    changed = YES;
+                }
+            }
+            NSUInteger i = 0;
+            for (NSString *aUrl in addUrls) {
+                NSUInteger foundIndex = [urls indexOfObject: aUrl];
+                if (foundIndex == NSNotFound) {
+                    [urls addObject: aUrl];
+                    [titles addObject: [addTitles objectAtIndex: i]];
+                    changed = YES;
+                }
+                i++;
+            }
+            if (changed)
+                [self saveBookmarksWithURLs:urls andTitles:titles];
+        }
+        if (pUrls)
+            *pUrls = urls;
+        if (pTitles)
+            *pTitles = titles;
+        return;
     }
 
-    if (urls)
-	*urls = @[@"brasslantern.org",
-      @"www.xyzzynews.com", @"ifdb.tads.org",
-      @"gallery.guetech.org/greybox.html",
-      @"inform7.com", @"www.ifwiki.org/index.php/Main_Page", 
-      @"sparkynet.com/spag", @"www.ifarchive.org",
-      @"www.ifcomp.org", @"www.wurb.com/if", 
-      @"www.csd.uwo.ca/Infocom/", @"nickm.com/if"];
-    if (titles)
-	*titles = @[@"Brass Latern",
-      @"XYZZYnews Home Page", @"Interactive Fiction Database - IF and Text Adventures",
-      @"Infocom Gallery (Artwork, Docs)",
-      @"Inform 7 - A Design System for Interactive Fiction", @"IFWiki Home", 
-      @"SPAG - Society for the Promotion of Adventure Games", @"The Interactive Fiction Archive",
-      @"The Annual Interactive Fiction Competition", @"Baf's Guide to the Interactive Fiction Archive", 
-      @"INFOCOM Tribute Page", @"Interactive Fiction - Nick Montfort"];
+    if (pUrls)
+        *pUrls = @[@"ifdb.tads.org",
+                  @"gallery.guetech.org/greybox.html",
+                  @"inform7.com",
+                  @"www.ifwiki.org/index.php/Main_Page",
+                  @"www.ifarchive.org",
+                  @"www.ifcomp.org",
+                  @"https://eblong.com/infocom",
+                  @"brasslantern.org",
+                  @"nickm.com/if"];
+    if (pTitles)
+        *pTitles = @[@"Interactive Fiction Database - IF and Text Adventures",
+                    @"Infocom Gallery (Artwork, Docs)",
+                    @"Inform 7 - A Design System for Interactive Fiction",
+                    @"IFWiki Home",
+                    @"The Interactive Fiction Archive",
+                    @"The Annual Interactive Fiction Competition",
+                    @"The Obsessively Complete Infocom Catalog",
+                    @"Brass Latern",
+                    @"Interactive Fiction - Nick Montfort"];
 }
 
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles {
     NSString *bmPath = [self bookmarkPath];
     NSDictionary *bmDict = [NSDictionary dictionaryWithObjectsAndKeys:
-			    urls, kBookmarkURLsKey, titles, kBookmarkTitlesKey, nil, nil];
+                            urls, kBookmarkURLsKey, titles, kBookmarkTitlesKey,
+                            @"1", kBookmarkVersionKey,
+                            nil, nil];
     if (bmDict)
-	[bmDict writeToFile:bmPath atomically:YES];
+        [bmDict writeToFile:bmPath atomically:YES];
 }
 
 
@@ -401,7 +435,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 }
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [m_receivedData appendData:data];
-
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
@@ -419,31 +452,31 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 
     NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
     if (m_state == kSWBFetchingImage) {
-	if (m_receivedData && m_delayedRequest) {
-	    NSString *storyFile = [[[m_delayedRequest mainDocumentURL] relativeString] lastPathComponent];
-	    NSString *story;
-	    if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
-		&& m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
-		story = [m_expectedArchiveFiles[0] stringByDeletingPathExtension];
-	    else
-		story = [storyFile stringByDeletingPathExtension];
-	    if (story) {
-		if ([self savePicData:m_receivedData forStory:story])
-		    [m_storyBrowser saveMetaData];
-	    }
-	}
+        if (m_receivedData && m_delayedRequest) {
+            NSString *storyFile = [[[m_delayedRequest mainDocumentURL] relativeString] lastPathComponent];
+            NSString *story;
+            if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
+            && m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
+                story = [m_expectedArchiveFiles[0] stringByDeletingPathExtension];
+            else
+                story = [storyFile stringByDeletingPathExtension];
+            if (story) {
+                if ([self savePicData:m_receivedData forStory:story])
+                    [m_storyBrowser saveMetaData];
+            }
+        }
 	
-	m_receivedData = nil;
+        m_receivedData = nil;
 
-	if (m_delayedRequest) {
-	    m_state = kSWBFetchingStory;
-	    [self loadZFile: m_delayedRequest];
-	    m_delayedRequest = nil;
-	} else {
-	    m_state = kSWBIdle;
-	    [m_activityView stopAnimating];
-	}
-	return;
+        if (m_delayedRequest) {
+            m_state = kSWBFetchingStory;
+            [self loadZFile: m_delayedRequest];
+            m_delayedRequest = nil;
+        } else {
+            m_state = kSWBIdle;
+            [m_activityView stopAnimating];
+        }
+        return;
     }
     NSString *outFile = [gamePath stringByAppendingPathComponent: urlString];
     tempbuf[0] = 0;
@@ -528,8 +561,6 @@ const NSString *kBookmarkTitlesKey = @"Titles";
         && ![story isEqualToString: @"hhgg"]) // ifdb hitchhiker pic is low-res, don't override built-in
     {
 	BOOL saveMeta = NO;
-//	NSURLResponse *response;
-//	NSError *error;
 	NSString *pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
 	NSUInteger len = [pageStr length];
 	NSRange range1 = [pageStr rangeOfString: @"<h1>"];
@@ -544,89 +575,89 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 		fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
 		if (!story)
 		    story = [fullName lowercaseString];
-		if (story) {
-		    [m_storyBrowser addTitle: fullName forStory: story];
-		    
-		    NSString *authorsStr = nil, *tuidStr = nil, *descriptStr = nil;
-		    
-		    //Look for authors: by <a href="search?searchfor=author%3ANick+Montfort">Nick Montfort</a></b>
-		    range1.location = range2.location + range2.length;
-		    range1.length = len - range1.location;
-		    range2 = [pageStr rangeOfString: @"<a href=\"search?searchfor=author%3A" options:0 range:range1];
-		    while (range2.length > 0) {
-			range1.location = range2.location + range2.length;
-			range1.length = len - range1.location;
-			range2 = [pageStr rangeOfString: @"\">" options:0 range:range1];
-			if (range2.length > 0) {
-			    range1.location = range2.location + range2.length;
-			    range1.length = len - range1.location;
-			    range1 = [pageStr rangeOfString: @"</a>" options:0 range:range1];
-			    if (range1.length > 0) {
-				range2.location += range2.length;
-				NSString *atmp = [pageStr substringWithRange: NSMakeRange(range2.location,  range1.location-range2.location)];
-				if (authorsStr)
-				    authorsStr = [authorsStr stringByAppendingFormat: @", %@", atmp];
-				else
-				    authorsStr = atmp;
-				range2.location = range1.location + range1.length;
-				range2.length = len - range2.location;
-				range2 = [pageStr rangeOfString: @"<a href=\"search?searchfor=author%3A" options:0 range:range2];
-			    } else
-				range2.length = 0;
-			}
-		    }
-		    
-		    // Look for tuid: >TUID</a>:            xi4s5ne9m6w821xd            </span>
-		    range1.location = range1.location + range1.length;
-		    range1.length = len - range1.location;
-		    NSRange srange = range1;
-		    range2 = [pageStr rangeOfString: @">TUID</a>:" options:0 range:range1];
-		    if (range2.length > 0) {
-			range1.location = range2.location + range2.length;
-			range1.length = len - range1.location;
-			range1 = [pageStr rangeOfString: @"</span>" options:0 range:range1];
-			if (range1.length > 0) {
-			    range2.location += range2.length;
-			    tuidStr = [pageStr substringWithRange: NSMakeRange(range2.location,  range1.location-range2.location)];
-			    tuidStr = [tuidStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			}
-		    }
-		    
-		    range1 = [pageStr rangeOfString: @"<h3>About the Story</h3>" options:0 range:srange];
-		    if (range1.length > 0) {
-			range2.location = range1.location + range1.length;
-			range2.length = len - range2.location;
-			range2 = [pageStr rangeOfString: @"<h2>" options:0 range:range2];
-			if (range2.length > 0) {
-			    descriptStr = [pageStr substringWithRange: NSMakeRange(range1.location, range2.location - range1.location)];
-			    srange.location = range2.location;
-			    srange.length = len - srange.location;
-			}
-		    }
-		    range1 = [pageStr rangeOfString: @"<h2>Editorial Reviews</h2>" options:0 range:srange];
-		    if (range1.length > 0) {
-			range2.location = range1.location + range1.length;
-			range2.length = len - range2.location;
-			range2 = [pageStr rangeOfString: @"<h2>" options:0 range:range2];
-			if (range2.length > 0) {
-			    NSString *ds = [pageStr substringWithRange: NSMakeRange(range1.location, range2.location - range1.location)];
-			    if (!descriptStr)
-				descriptStr = ds;
-			    else
-				descriptStr = [NSString stringWithFormat: @"%@\n<br>\n%@", descriptStr, ds];
-			    srange.location = range2.location;
-			    srange.length = len - srange.location;
-			}
-		    }
-
-		    if (authorsStr)
-			[m_storyBrowser addAuthors:authorsStr forStory:story];
-		    if (tuidStr)
-			[m_storyBrowser addTUID:tuidStr forStory:story];
-		    if (descriptStr)
-			[m_storyBrowser addDescript:descriptStr forStory:story];
-		    saveMeta = YES;
-		}
+            if (story) {
+                [m_storyBrowser addTitle: fullName forStory: story];
+                
+                NSString *authorsStr = nil, *tuidStr = nil, *descriptStr = nil;
+                
+                //Look for authors: by <a href="search?searchfor=author%3ANick+Montfort">Nick Montfort</a></b>
+                range1.location = range2.location + range2.length;
+                range1.length = len - range1.location;
+                range2 = [pageStr rangeOfString: @"<a href=\"search?searchfor=author%3A" options:0 range:range1];
+                while (range2.length > 0) {
+                    range1.location = range2.location + range2.length;
+                    range1.length = len - range1.location;
+                    range2 = [pageStr rangeOfString: @"\">" options:0 range:range1];
+                    if (range2.length > 0) {
+                        range1.location = range2.location + range2.length;
+                        range1.length = len - range1.location;
+                        range1 = [pageStr rangeOfString: @"</a>" options:0 range:range1];
+                        if (range1.length > 0) {
+                            range2.location += range2.length;
+                            NSString *atmp = [pageStr substringWithRange: NSMakeRange(range2.location,  range1.location-range2.location)];
+                            if (authorsStr)
+                                authorsStr = [authorsStr stringByAppendingFormat: @", %@", atmp];
+                            else
+                                authorsStr = atmp;
+                            range2.location = range1.location + range1.length;
+                            range2.length = len - range2.location;
+                            range2 = [pageStr rangeOfString: @"<a href=\"search?searchfor=author%3A" options:0 range:range2];
+                        } else
+                            range2.length = 0;
+                    }
+                }
+                
+                // Look for tuid: >TUID</a>:            xi4s5ne9m6w821xd            </span>
+                range1.location = range1.location + range1.length;
+                range1.length = len - range1.location;
+                NSRange srange = range1;
+                range2 = [pageStr rangeOfString: @">TUID</a>:" options:0 range:range1];
+                if (range2.length > 0) {
+                    range1.location = range2.location + range2.length;
+                    range1.length = len - range1.location;
+                    range1 = [pageStr rangeOfString: @"</span>" options:0 range:range1];
+                    if (range1.length > 0) {
+                        range2.location += range2.length;
+                        tuidStr = [pageStr substringWithRange: NSMakeRange(range2.location,  range1.location-range2.location)];
+                        tuidStr = [tuidStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                    }
+                }
+                
+                range1 = [pageStr rangeOfString: @"<h3>About the Story</h3>" options:0 range:srange];
+                if (range1.length > 0) {
+                    range2.location = range1.location + range1.length;
+                    range2.length = len - range2.location;
+                    range2 = [pageStr rangeOfString: @"<h2>" options:0 range:range2];
+                    if (range2.length > 0) {
+                        descriptStr = [pageStr substringWithRange: NSMakeRange(range1.location, range2.location - range1.location)];
+                        srange.location = range2.location;
+                        srange.length = len - srange.location;
+                    }
+                }
+                range1 = [pageStr rangeOfString: @"<h2>Editorial Reviews</h2>" options:0 range:srange];
+                if (range1.length > 0) {
+                    range2.location = range1.location + range1.length;
+                    range2.length = len - range2.location;
+                    range2 = [pageStr rangeOfString: @"<h2>" options:0 range:range2];
+                    if (range2.length > 0) {
+                        NSString *ds = [pageStr substringWithRange: NSMakeRange(range1.location, range2.location - range1.location)];
+                        if (!descriptStr)
+                            descriptStr = ds;
+                        else
+                            descriptStr = [NSString stringWithFormat: @"%@\n<br>\n%@", descriptStr, ds];
+                        srange.location = range2.location;
+                        srange.length = len - srange.location;
+                    }
+                }
+                
+                if (authorsStr)
+                    [m_storyBrowser addAuthors:authorsStr forStory:story];
+                if (tuidStr)
+                    [m_storyBrowser addTUID:tuidStr forStory:story];
+                if (descriptStr)
+                    [m_storyBrowser addDescript:descriptStr forStory:story];
+                saveMeta = YES;
+            }
 	    }
 	}
 	if (story) {
@@ -638,15 +669,14 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 	    NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
 	    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
 	    if (connection) {
-		m_delayedRequest = delayedRequest;
-		m_receivedData = [NSMutableData data];
-		m_state = kSWBFetchingImage;
-		loadingPic = YES;
-//		[connection release];
+            m_delayedRequest = delayedRequest;
+            m_receivedData = [NSMutableData data];
+            m_state = kSWBFetchingImage;
+            loadingPic = YES;
 	    } else {
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
-							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-		[alert show];
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
+                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            [alert show];
 	    }
 
 	}

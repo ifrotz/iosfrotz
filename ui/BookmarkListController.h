@@ -23,6 +23,7 @@
     NSMutableArray *m_titles;
     id<BookmarkDelegate> __weak m_delegate;
     UITableView *m_tableView;
+    UIToolbar *m_toolBar;
 }
 @property (nonatomic, weak) id<BookmarkDelegate> delegate;
 @end

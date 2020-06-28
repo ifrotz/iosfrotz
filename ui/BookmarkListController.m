@@ -35,14 +35,15 @@
         }
     self.view = [[UIView alloc] initWithFrame: frame];
     [self.view setAutoresizesSubviews: YES];
-    [self.view setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
-    [m_tableView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
+    [self.view setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin];
+    [m_tableView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin];
     [self.view addSubview: m_tableView];
-    [m_tableView setFrame: CGRectOffset(frame, 0, -frame.origin.y)];
+    frame.size.height -= 44;
+    [m_tableView setFrame: frame];
 
-    frame.origin.y = frame.size.height - 44;
+    frame.origin.y = frame.size.height;
     frame.size.height = 44;
-    UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame: frame];
+    UIToolbar *toolBar = m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
     
     [toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
 
@@ -50,8 +51,11 @@
     
     UIBarButtonItem *addButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(add)];
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-    UIBarButtonItem *editButtonItem =  [self editButtonItem]; //[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(edit)];
+    UIBarButtonItem *editButtonItem =  [self editButtonItem];
     UIBarButtonItem *cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancel)];
+    [addButtonItem setTintColor: [UIColor whiteColor]];
+    [editButtonItem setTintColor: [UIColor whiteColor]];
+    [cancelButtonItem setTintColor: [UIColor whiteColor]];
     [toolBar setItems: @[addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem]];
     
     [self.view addSubview: toolBar];
@@ -60,30 +64,30 @@
 
 -(UITableView*)tableView {
     if (m_tableView)
-	return m_tableView;
+        return m_tableView;
     return [super tableView];
 }
 
 - (void)add {
     [self setEditing:NO];
     if (m_delegate) {
-	NSString *currentURL = [[m_delegate currentURL] stringByReplacingOccurrencesOfString:@"http://" withString:@""];
-	NSString *currentTitle = [m_delegate currentURLTitle];
+        NSString *currentURL = [[m_delegate currentURL] stringByReplacingOccurrencesOfString:@"http://" withString:@""];
+        NSString *currentTitle = [m_delegate currentURLTitle];
 
-	if (currentURL) {
-	    UITableView *tableView = self.tableView;
-	    [tableView beginUpdates];
-	    [m_sites addObject: currentURL];
-	    [m_titles addObject: currentTitle ? currentTitle : @"(untitled)"];
-	    [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
-	    NSUInteger indexes[] = { 0, [m_sites count] };
-	    NSIndexPath *indexPath = [NSIndexPath indexPathWithIndexes: indexes length:2];
-	    NSArray *indexPaths = @[indexPath];
-	    [tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationBottom];
-	    [tableView reloadData];
-	    [tableView endUpdates];
-	    [tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
-	}
+        if (currentURL) {
+            UITableView *tableView = self.tableView;
+            [tableView beginUpdates];
+            [m_sites addObject: currentURL];
+            [m_titles addObject: currentTitle ? currentTitle : @"(untitled)"];
+            [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
+            NSUInteger indexes[] = { 0, [m_sites count] };
+            NSIndexPath *indexPath = [NSIndexPath indexPathWithIndexes: indexes length:2];
+            NSArray *indexPaths = @[indexPath];
+            [tableView insertRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationBottom];
+            [tableView reloadData];
+            [tableView endUpdates];
+            [tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+        }
     }
 }
 
@@ -109,7 +113,7 @@
     static NSString *myID = @"IFBookmarks";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:myID];
     if (cell == nil) {
-	cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:myID];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:myID];
     }
     // Configure the cell
     cell.textLabel.text = nil;
