@@ -218,7 +218,7 @@ const CGFloat kHistoryLineHeight = 20.0;
         --m_currHistoryItem;
         return m_history[m_currHistoryItem];
     } else
-        m_currHistoryItem = -1;
+        m_currHistoryItem = 0;
     return @"";
 }
 
