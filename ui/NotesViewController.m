@@ -168,7 +168,6 @@ static const int kNotesTitleHeight = 24;
         if ([fileBrowser textFileCount] > 0) {
             if (gUseSplitVC) {
                 UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
-                [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
                 nc.modalPresentationStyle = UIModalPresentationFormSheet;
                 [m_delegate.navigationController presentModalViewController: nc animated: YES];
             } else {

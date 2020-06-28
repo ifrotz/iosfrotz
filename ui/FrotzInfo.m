@@ -56,11 +56,9 @@
 -(void)updateTitle {
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        UINavigationController *nc = nil;//self.navigationController;
-        if (!nc)
-            nc = m_navigationController;
+        UINavigationController *nc = m_navigationController;
         UIColor *color = [nc.navigationBar tintColor];
-        [m_titleTextView setTextColor: color];  //[UIColor redColor]];
+        [m_titleTextView setTextColor: color];
         [m_infoButton setTintColor: color];
     } else
 #endif
@@ -85,17 +83,11 @@
 -(void)setupFade {
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.5];
-    BOOL cache = YES;
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-        cache = NO;
-#endif
 
     [UIView setAnimationTransition:
      ([m_settings.view superview] ? UIViewAnimationTransitionFlipFromLeft : UIViewAnimationTransitionFlipFromRight)
                            forView: m_navigationController.view
-     //[[[[[m_navigationController topViewController] view] superview] superview] superview]
-                             cache:cache];
+                             cache:NO];
 
     [UIView commitAnimations];
 }
@@ -108,42 +100,41 @@
 }
 
 -(void)dismissInfo {
-    if ([m_settings settingsActive] || (!gUseSplitVC && [m_settings.view superview])) {
-        UIViewController *svc = nil;
-        if (gUseSplitVC && (svc = m_navigationController /*.splitViewController*/)) {
-            UINavigationController *nc = nil;
-            if ((nc = (UINavigationController*)svc.modalViewController)) {
-                if ([nc topViewController] != m_settings)
-                    [nc popToViewController: m_settings animated:YES];
-                [self performSelector:@selector(dismissInfoModal) withObject: nil afterDelay: 0.2];
-            }
-        } else {
-            [self setupFade];
-            if (m_navigationController.topViewController != m_settings)
-                [m_navigationController popToViewController: m_settings animated:NO];
-            [m_navigationController popViewControllerAnimated: NO];
-            
-            if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
-                [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
-            [UIView commitAnimations];
+    UIViewController *svc = nil;
+    if (gUseSplitVC && (svc = m_navigationController /*.splitViewController*/)) {
+        UINavigationController *nc = nil;
+        if ((nc = (UINavigationController*)svc.modalViewController)) {
+            if ([nc topViewController] != m_settings)
+                [nc popToViewController: m_settings animated:YES];
+            [self performSelector:@selector(dismissInfoModal) withObject: nil afterDelay: 0.2];
         }
+    } else {
+        [self setupFade];
+        if (m_navigationController.topViewController != m_settings)
+            [m_navigationController popToViewController: m_settings animated:NO];
+        [m_navigationController popViewControllerAnimated: NO];
+        
+        if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
+            [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
+        [UIView commitAnimations];
     }
 }
 
 -(void)frotzInfo {
-    if (![m_settings settingsActive]) {
+    UIView *view = [m_settings view]; // Preload view so animation is smoother
+    if (![view superview]) { // already presented
         if (m_kbdOwner)
             m_prevResponder = [m_kbdOwner dismissKeyboard];
         [m_settings setInfoDelegate: self];
         
-        (void)[m_settings view]; // Preload view so animation is smoother
         
-        if (gUseSplitVC ) { //&& m_navigationController.splitViewController) {
+        if (gUseSplitVC) {
             UINavigationController *settingsNavController = [m_settings navigationController];
             if (!settingsNavController) {
                 settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
-                [settingsNavController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
             }
+            if (!gLargeScreenDevice)
+                [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
             [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
             [m_navigationController /*.splitViewController*/ presentModalViewController: settingsNavController animated:YES];
         }

@@ -355,8 +355,8 @@ int extractOneFileFromZIP(NSString *zipFileStr, NSString *dirName, NSString *fil
         uf = unzOpen(zipfilename);
 
     if (uf) {
-	ret = do_extract_onefile(uf, dir, file, 1, NULL);
-	unzCloseCurrentFile(uf);
+        ret = do_extract_onefile(uf, dir, file, 1, NULL);
+        unzCloseCurrentFile(uf);
     }
     return ret;
 }

@@ -226,7 +226,7 @@
         if (!m_headerLabel) {
             m_headerLabel = [UILabel new];
             m_headerLabel.backgroundColor = [UIColor clearColor];
-            m_headerLabel.textColor = [UIColor darkGrayColor];
+            m_headerLabel.textColor = [UIColor grayColor];
             m_headerLabel.font = [UIFont boldSystemFontOfSize:15];
             m_headerLabel.textAlignment = UITextAlignmentCenter;
             m_headerLabel.lineBreakMode = UILineBreakModeWordWrap;
@@ -329,7 +329,7 @@
         }
 	case 1:
         {
-            cell.nameLabel.text = @"Sync Folder";
+            cell.textLabel.text = @"Sync Folder";
             cell.view = m_textField;
             break;
         }

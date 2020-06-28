@@ -123,7 +123,11 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
                                           origFrame.size.width,
                                           origFrame.size.height-m_textField.bounds.size.height)];
         [m_textField setReturnKeyType: UIReturnKeyDone];
-        [m_textField setBackgroundColor: [UIColor whiteColor]];
+        if (@available(iOS 13.0, *)) {
+            [m_textField setBackgroundColor: [UIColor systemBackgroundColor]];
+        } else {
+            [m_textField setBackgroundColor: [UIColor whiteColor]];
+        }
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_textField setPlaceholder: @"filename"];
         [m_textField setDelegate: self];
@@ -299,22 +303,13 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 -(void)viewDidAppear:(BOOL)animated {
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(didPressCancel:)];
     self.navigationItem.leftBarButtonItem = backItem;
-    
+
     UIBarButtonItem* editItem = [self editButtonItem];
     [editItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = editItem;
     [editItem setEnabled: (m_rowCount > 0)];
-    
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
-            [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-            [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
-            [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
-        }
-    }
-#endif
 
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {

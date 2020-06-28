@@ -40,8 +40,7 @@
     ColorPicker	*m_colorPicker;
     FontPicker	*m_fontPicker;
     FrotzDBController *m_frotzDB;
-    
-    BOOL	m_settingsShown, m_subPagePushed;
+
     BOOL	m_resetting;
 
     NSObject<FrotzSettingsInfoDelegate> *m_infoDelegate;
@@ -56,7 +55,6 @@
     int m_origFontSize, m_newFontSize;
 }
 - (instancetype)init;
-@property (nonatomic, readonly) BOOL settingsActive;
 @property (nonatomic, strong) id<FrotzSettingsInfoDelegate> infoDelegate;
 @property (nonatomic, strong) id<FrotzSettingsStoryDelegate,FrotzFontDelegate> storyDelegate;
 @property (nonatomic, readonly, copy) NSString *rootPath;

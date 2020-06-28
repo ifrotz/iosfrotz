@@ -39,14 +39,11 @@
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
 @synthesize infoDelegate = m_infoDelegate;
-@synthesize settingsActive = m_settingsShown;
 
 enum ControlTableSections
 {
     kFrotzInfoSection,
     kFrotzPrefsSection,
-//  kFrotzColorsSection,
-//  kFrotzFontSection,
     kFrotzResetSection,
     kFrotzNumSections
 };
@@ -54,31 +51,31 @@ enum ControlTableSections
 -(void)setupFade {
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.5];
-	    
+
     [UIView setAnimationTransition:(UIViewAnimationTransitionFlipFromLeft)
-								forView:[[[self view] superview] superview] cache:YES];
+                           forView:[[[self view] superview] superview] cache:YES];
     [UIView commitAnimations];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if(m_resetting) {
-	NSIndexPath *idx = [[self tableView] indexPathForSelectedRow];
-	if (idx)
-	    [[self tableView] deselectRowAtIndexPath: idx animated:YES];
-	m_resetting = NO;
-	if (buttonIndex == 1) {
-	    [m_storyDelegate resetSettingsToDefault];
-	    m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
-	    m_sliderCtl.value = (float)m_origFontSize;
-	    [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
-	    [[self tableView] reloadData];
-	}
-	return;
+        NSIndexPath *idx = [[self tableView] indexPathForSelectedRow];
+        if (idx)
+            [[self tableView] deselectRowAtIndexPath: idx animated:YES];
+        m_resetting = NO;
+        if (buttonIndex == 1) {
+            [m_storyDelegate resetSettingsToDefault];
+            m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
+            m_sliderCtl.value = (float)m_origFontSize;
+            [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
+            [[self tableView] reloadData];
+        }
+        return;
     }
     // else FTP Alert
     if (buttonIndex == 1) {
-	[m_fileTransferInfo stopServer];
-	[self donePressed];
+        [m_fileTransferInfo stopServer];
+        [self donePressed];
     }
 }
 
@@ -105,7 +102,7 @@ enum ControlTableSections
                 [m_storyDelegate setFont: [m_storyDelegate font] withSize: m_newFontSize];
             [m_storyDelegate savePrefs];
         }
-        
+
         [m_infoDelegate dismissInfo];
     }
     else {
@@ -113,14 +110,11 @@ enum ControlTableSections
         [[self navigationController] popViewControllerAnimated: NO];
         [UIView commitAnimations];
     }
-    
-    m_settingsShown = NO;
 }
 
+#include <objc/runtime.h>
+
 -(void)viewDidDisappear:(BOOL)animated {
-    if (!m_subPagePushed)
-        m_settingsShown = NO;
-    m_subPagePushed = NO;
 }
 
 - (instancetype)init
@@ -152,16 +146,16 @@ enum ControlTableSections
 {
     [m_tableView setDelegate:nil];
     m_tableView = nil;
-    
+
     m_gettingStarted = nil;
     m_aboutFrotz = nil;
     m_releaseNotes = nil;
-    
+
     m_colorPicker = nil;
     m_fontPicker = nil;
-    
+
     m_frotzDB = nil;
-    
+
 }
 
 - (void)create_UISwitch
@@ -169,14 +163,14 @@ enum ControlTableSections
     CGRect frame = CGRectMake(0.0, 0.0, kSwitchButtonWidth, kSwitchButtonHeight);
     m_switchCtl = [[UISwitch alloc] initWithFrame:frame];
     [m_switchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
-    
+
     // in case the parent view draws with a custom color or gradient, use a transparent color
     m_switchCtl.backgroundColor = [UIColor clearColor];
     [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
 
     m_switchCtl2 = [[UISwitch alloc] initWithFrame:frame];
     [m_switchCtl2 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
-    
+
     // in case the parent view draws with a custom color or gradient, use a transparent color
     m_switchCtl2.backgroundColor = [UIColor clearColor];
     [m_switchCtl2 setOn: [m_storyDelegate canEditStoryInfo]];
@@ -185,9 +179,9 @@ enum ControlTableSections
 - (void)switchAction:(id)sender
 {
     if (sender == m_switchCtl)
-	[m_storyDelegate setCompletionEnabled: [sender isOn]];
+        [m_storyDelegate setCompletionEnabled: [sender isOn]];
     else if (sender == m_switchCtl2)
-	[m_storyDelegate setCanEditStoryInfo: [sender isOn]];
+        [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
 }
 
 - (void)create_UISlider
@@ -195,10 +189,10 @@ enum ControlTableSections
     CGRect frame = CGRectMake(0.0, 0.0, 120.0, kSliderHeight);
     m_sliderCtl = [[UISlider alloc] initWithFrame:frame];
     [m_sliderCtl addTarget:self action:@selector(sliderAction:) forControlEvents:UIControlEventValueChanged];
-    
+
     // in case the parent view draws with a custom color or gradient, use a transparent color
     m_sliderCtl.backgroundColor = [UIColor clearColor];
-    
+
     m_sliderCtl.minimumValue = 8.0;
     m_sliderCtl.maximumValue = 24.0 + (gLargeScreenDevice ? 8.0 : 0.0);
     m_sliderCtl.continuous = YES;
@@ -210,9 +204,9 @@ enum ControlTableSections
 {
     static int lastValue;
     int value = [sender value];
-    
+
     if (value != lastValue) {
-        ((DisplayCell*)m_fontSizeCell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, value];
+        m_fontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, value];
         m_newFontSize = (int)value;
         if (gLargeScreenDevice)
             [m_storyDelegate setFont: [m_storyDelegate font] withSize: value];
@@ -234,22 +228,22 @@ enum ControlTableSections
 - (void)loadView
 {
     CGRect frame = CGRectMake(0, 0, 240, 200);
-    //[[UIScreen mainScreen] applicationFrame];
 
-    m_tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];	
+
+    m_tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
     m_tableView.autoresizesSubviews = YES;
     self.view = m_tableView;
 
     m_selectedSection = m_selectedRow = -1;
-    
+
     m_gettingStarted = [[GettingStarted alloc] init];
     m_aboutFrotz = [[AboutFrotz alloc] init];
     if (!m_releaseNotes)
         m_releaseNotes = [[ReleaseNotes alloc] init];
-    m_fileTransferInfo = [[FileTransferInfo alloc] initWithController: m_storyDelegate];	
-    
+    m_fileTransferInfo = [[FileTransferInfo alloc] initWithController: m_storyDelegate];
+
     [self create_UISwitch];
     [self create_UISlider];
 
@@ -260,7 +254,7 @@ enum ControlTableSections
         [m_storyDelegate setTextColor: color makeDefault:YES];
     else
         [m_storyDelegate setBackgroundColor: color makeDefault:YES];
-}	
+}
 
 -(UIFont*)fontForColorDemo {
     return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate font] size:m_newFontSize] : nil;
@@ -271,18 +265,21 @@ enum ControlTableSections
 
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
-    m_settingsShown = YES;
-    m_subPagePushed = NO;
-    if ([self.navigationController.navigationBar respondsToSelector:@selector(setBarTintColor:)]) {
+
+    if (@available(iOS 13.0, *)) {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar  setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar  setTintColor:  [UIColor darkGrayColor]];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
+    } else {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
+        [self.navigationController.navigationBar setTintColor:  [UIColor darkGrayColor]];
     }
 
     [[self.navigationItem backBarButtonItem] setEnabled: NO];
     [[self.navigationItem leftBarButtonItem] setEnabled: NO];
     [self.navigationItem setHidesBackButton: YES animated:YES];
-	
+
     UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
     self.navigationItem.rightBarButtonItem = doneItem;
 
@@ -290,22 +287,20 @@ enum ControlTableSections
     if (m_storyDelegate)
         m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
     if (m_fontSizeCell)
-        ((DisplayCell*)m_fontSizeCell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, m_origFontSize];
+        m_fontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, m_origFontSize];
     m_sliderCtl.value = (float)m_origFontSize;
-
-//    [self tableView: nil didSelectRowAtIndexPath: [NSIndexPath indexPathForRow: m_selectedRow inSection: m_selectedSection]];
 }
 
 #pragma mark - UITableView delegates
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	return UITableViewCellEditingStyleNone;
+    return UITableViewCellEditingStyleNone;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return kFrotzNumSections;
+    return kFrotzNumSections;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
@@ -313,33 +308,33 @@ enum ControlTableSections
     NSString *title;
     switch (section)
     {
-	case kFrotzInfoSection:
-	{
-	    title = @"Info";
-	    break;
-	}
-	case kFrotzPrefsSection:
-	{
-	    title = @"Preferences ";
-	    break;
-	}
+        case kFrotzInfoSection:
+        {
+            title = @"Info";
+            break;
+        }
+        case kFrotzPrefsSection:
+        {
+            title = @"Preferences ";
+            break;
+        }
 #if 0
-	case kFrotzColorsSection:
-	{
-	    title = @"Colors";
-	    break;
-	}
-	case kFrotzFontSection: 
-	{
-	    title = @"Fonts";
-	    break;
-	}
+        case kFrotzColorsSection:
+        {
+            title = @"Colors";
+            break;
+        }
+        case kFrotzFontSection:
+        {
+            title = @"Fonts";
+            break;
+        }
 #endif
-	default:
-	{
-	    title = @" ";
-	    break;
-	}
+        default:
+        {
+            title = @" ";
+            break;
+        }
     }
     return title;
 }
@@ -347,9 +342,9 @@ enum ControlTableSections
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     if (section == kFrotzInfoSection) {
-	return 4;
+        return 4;
     } else if (section == kFrotzResetSection)
-	return 1;
+        return 1;
 #ifdef FROTZ_DB_APP_KEY
     return 7;
 #else
@@ -358,20 +353,18 @@ enum ControlTableSections
 }
 
 // to determine specific row height for each cell, override this.  In this example, each row is determined
-// buy the its subviews that are embedded.
+// by its embedded subviews
 //
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     CGFloat result;
-    
+
     switch ([indexPath row])
     {
-	case 0:
-	default:
-	{
-	    result = kUIRowHeight;
-	    break;
-	}
+        case 0:
+        default:
+            result = kUIRowHeight;
+            break;
     }
 
     return result;
@@ -384,14 +377,13 @@ enum ControlTableSections
     DisplayCell *cell = nil;
 
     cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
-	
+
     if (cell == nil) {
-	cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
+        cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
     }
     cell.textAlignment = UITextAlignmentLeft;
     cell.text = nil;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    cell.nameLabel.text = nil;
     [cell setView: nil];
 
     return cell;
@@ -404,87 +396,87 @@ enum ControlTableSections
     NSInteger row = [indexPath row];
     DisplayCell *cell = [self obtainTableCellForRow:row];
     if (indexPath.section == kFrotzPrefsSection && indexPath.row >= 3 && indexPath.row != 6 || indexPath.section == kFrotzResetSection)
-	cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.accessoryType = UITableViewCellAccessoryNone;
     else
-	cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 
     switch (indexPath.section)
     {
-	case kFrotzInfoSection:
-	{
-	    switch (row) {
-		case 0:
-		    cell.text = @"About Frotz";
-		    break;
-		case 1:
-		    cell.text = @"Getting Started";
-		    break;
-		case 2:
-		    cell.text = @"What's New?";
-		    break;
-		case 3:
-		    cell.text = @"File Transfer";
-		    break;
-	    }
-	    break;
-	}
-	case kFrotzPrefsSection:
-	{
-	    switch (row) {
-		case 0:
-		    cell.text = @"Text Color";
-		    break;
-		case 1:
-		    cell.text = @"Background Color";
-		    break;
-		case 2:
-		    cell.text = @"Story Font";
-		    break;
-		case 3:
-		    m_fontSizeCell = cell;
-		    ((DisplayCell*)cell).nameLabel.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_sliderCtl value]];
-		    ((DisplayCell*)cell).view = m_sliderCtl;
-		    break;
-		case 4:
-		    ((DisplayCell*)cell).nameLabel.text = @"Word completion";
-		    ((DisplayCell*)cell).view = m_switchCtl;
-		    break;
-		case 5:
-		    ((DisplayCell*)cell).nameLabel.text = @"Story Info Editing";
-		    ((DisplayCell*)cell).view = m_switchCtl2;
-		    break;
+        case kFrotzInfoSection:
+        {
+            switch (row) {
+                case 0:
+                    cell.text = @"About Frotz";
+                    break;
+                case 1:
+                    cell.text = @"Getting Started";
+                    break;
+                case 2:
+                    cell.text = @"What's New?";
+                    break;
+                case 3:
+                    cell.text = @"File Transfer";
+                    break;
+            }
+            break;
+        }
+        case kFrotzPrefsSection:
+        {
+            switch (row) {
+                case 0:
+                    cell.text = @"Text Color";
+                    break;
+                case 1:
+                    cell.text = @"Background Color";
+                    break;
+                case 2:
+                    cell.text = @"Story Font";
+                    break;
+                case 3:
+                    m_fontSizeCell = cell;
+                    cell.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_sliderCtl value]];
+                    cell.view = m_sliderCtl;
+                    break;
+                case 4:
+                    cell.text = @"Word completion";;
+                    cell.view = m_switchCtl;
+                    break;
+                case 5:
+                    cell.text = @"Story Info Editing";
+                    cell.view = m_switchCtl2;
+                    break;
 #ifdef FROTZ_DB_APP_KEY
-		case 6:
-		    cell.text = @"Dropbox Settings";
-		    break;
+                case 6:
+                    cell.text = @"Dropbox Settings";
+                    break;
 #endif
-	    }
-	    break;
-	}
-	case kFrotzResetSection:
-	{
-		cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-		cell.text = @"Reset Preferences to Default";
-		cell.textAlignment = UITextAlignmentCenter;
-		break;
-	}
+            }
+            break;
+        }
+        case kFrotzResetSection:
+        {
+            cell.selectionStyle = UITableViewCellSelectionStyleBlue;
+            cell.text = @"Reset Preferences to Default";
+            cell.textAlignment = UITextAlignmentCenter;
+            break;
+        }
 #if 0
-	case kFrotzFontSection:
-	{
-	    if (row == 0)
-		cell.text = @"Main Story Font";
-	    else
-		cell.text = @"Fixed Width Font";
-	    break;
-	}
+        case kFrotzFontSection:
+        {
+            if (row == 0)
+                cell.text = @"Main Story Font";
+            else
+                cell.text = @"Fixed Width Font";
+            break;
+        }
 #endif
     }
-    
+
     return cell;
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-//    NSInteger section = indexPath.section, row = indexPath.row;
+    //    NSInteger section = indexPath.section, row = indexPath.row;
     return NO;
 }
 
@@ -495,69 +487,69 @@ enum ControlTableSections
     m_selectedRow = row;
     UIViewController *viewController = nil;
     switch (section)  {
-	case kFrotzInfoSection: {
-	    switch (row) {
-		case 0:
-		    viewController = m_aboutFrotz;
-		    break;
-		case 1:
-		    viewController = m_gettingStarted;
-		    break;
-		case 2:
-		    viewController = m_releaseNotes;
-		    break;
-		case 3:
-		    viewController = m_fileTransferInfo;
-		    break;
-	    }
-	    break;
-	}
-	case kFrotzPrefsSection: 
-//	case kFrotzColorsSection: 
-	    if (row==0) {
-		[m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
-	    	m_colorPicker.title = NSLocalizedString(@"Text Color", @"");
-		viewController = m_colorPicker;
-	    } else if (row==1) {
-		[m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
-	    	m_colorPicker.title = NSLocalizedString(@"Background Color", @"");
-		viewController = m_colorPicker;
-	    } else if (row==2) {
-		[m_fontPicker setFixedFontsOnly: false];
-		viewController = m_fontPicker;
+        case kFrotzInfoSection: {
+            switch (row) {
+                case 0:
+                    viewController = m_aboutFrotz;
+                    break;
+                case 1:
+                    viewController = m_gettingStarted;
+                    break;
+                case 2:
+                    viewController = m_releaseNotes;
+                    break;
+                case 3:
+                    viewController = m_fileTransferInfo;
+                    break;
+            }
+            break;
+        }
+        case kFrotzPrefsSection:
+            //	case kFrotzColorsSection:
+            if (row==0) {
+                [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
+                m_colorPicker.title = NSLocalizedString(@"Text Color", @"");
+                viewController = m_colorPicker;
+            } else if (row==1) {
+                [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
+                m_colorPicker.title = NSLocalizedString(@"Background Color", @"");
+                viewController = m_colorPicker;
+            } else if (row==2) {
+                [m_fontPicker setFixedFontsOnly: false];
+                viewController = m_fontPicker;
 #ifdef FROTZ_DB_APP_KEY
-	    }
-	     else if (row==6) {
-		viewController = m_frotzDB;
+            }
+            else if (row==6) {
+                viewController = m_frotzDB;
 #endif
-	    }
-	    break;
-	case kFrotzResetSection: {
-		m_resetting = YES;
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset Preferences"
-			message: @"Do you want to reset all color and font settings to their defaults?"
-			delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
-		[alert show];
-	    }
-	    break;
+            }
+            break;
+        case kFrotzResetSection: {
+            m_resetting = YES;
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset Preferences"
+                message: @"Do you want to reset all color and font settings to their defaults?"
+                delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
+            [alert show];
+        }
+            break;
 
 #if 0
-	case kFrotzFontSection:
-	    [m_fontPicker setFixedFontsOnly: (row==1)];
-	    viewController = m_fontPicker;
-	    break;
+        case kFrotzFontSection:
+            [m_fontPicker setFixedFontsOnly: (row==1)];
+            viewController = m_fontPicker;
+            break;
 #endif
-	default:
-	    break;
+        default:
+            break;
     }
     if (viewController) {
-	if (!viewController.navigationItem.rightBarButtonItem) {
-	    UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
-	    viewController.navigationItem.rightBarButtonItem = doneItem;
-	}
-	m_subPagePushed = YES;
-	[[self navigationController] pushViewController: viewController animated: YES];
-	[tableView deselectRowAtIndexPath:indexPath animated:NO];
+        if (!viewController.navigationItem.rightBarButtonItem) {
+            UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
+            viewController.navigationItem.rightBarButtonItem = doneItem;
+        }
+
+        [[self navigationController] pushViewController: viewController animated: YES];
+        [tableView deselectRowAtIndexPath:indexPath animated:NO];
     }
 }
 

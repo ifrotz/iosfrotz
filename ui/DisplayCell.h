@@ -69,7 +69,6 @@ extern NSString *kDisplayCell_ID;
 
 @interface DisplayCell : UITableViewCell
 {
-	UILabel	*nameLabel;
 	UIView	*view;
 }
 
