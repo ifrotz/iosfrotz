@@ -16,8 +16,8 @@
 {
     self = [super init];
     if (self) {
-	// this title will appear in the navigation bar
-	self.title = NSLocalizedString(@"URL", @"");
+        // this title will appear in the navigation bar
+        self.title = NSLocalizedString(@"URL", @"");
     }
     
     return self;
@@ -52,7 +52,7 @@
     [m_textbar addSubview: imgView];
     [m_textbar bringSubviewToFront:imgView];
     CGSize isz = [img size];
-    [imgView setFrame: CGRectMake(11, 9, isz.width, isz.height)];
+    [imgView setFrame: CGRectMake(14, 9, isz.width, isz.height)];
 
     m_textbar.placeholder = @"URL";
     m_textbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;
