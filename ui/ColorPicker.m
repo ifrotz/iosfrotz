@@ -7,9 +7,6 @@
 {
     int m_width;
     int m_height;
-//    CALayer *m_screenLayer;
-//    CoreSurfaceBufferRef m_screenSurface;
-
 }
 - (instancetype)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
@@ -47,6 +44,7 @@
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event;
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer;
 @end
 
 
@@ -63,13 +61,14 @@
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event;
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer;
 @end
 
 @implementation ColorPickerView 
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])!=nil) {
         m_width = frame.size.width;
-	m_height = frame.size.height;
+        m_height = frame.size.height;
     }
     return self;
 }
@@ -114,7 +113,7 @@
         [self addSubview: m_imgView];
         [m_text sizeToFit];
     }
-   return self;
+    return self;
 }
 
 -(void) touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event
@@ -126,9 +125,9 @@
     UITouch* touch = [touches anyObject];
     CGPoint pt =[touch locationInView: self];
     if (pt.y > self.bounds.origin.y + self.bounds.size.height*0.6
-	&& pt.x > self.bounds.origin.x + self.bounds.size.width*0.8) {
-	[m_colorPicker toggleMode];
-	m_imgView.image = [m_colorPicker isTextColorMode] ? m_flipFgImg : m_flipBgImg;
+        && pt.x > self.bounds.origin.x + self.bounds.size.width*0.8) {
+        [m_colorPicker toggleMode];
+        m_imgView.image = [m_colorPicker isTextColorMode] ? m_flipFgImg : m_flipBgImg;
     }
 }
 
@@ -152,7 +151,7 @@
 }
 
 - (void)setBGColor:(UIColor*)bgColor {
-   self.backgroundColor = bgColor;
+    self.backgroundColor = bgColor;
 }
 
 -(void)viewDidUnload {
@@ -208,11 +207,11 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 {
     CGFloat f, p, q, t;
     if(s == 0) { // grey
-	*r = *g = *b = v;
-	return;
+        *r = *g = *b = v;
+        return;
     }
     if (h < 0.0f)
-	h = 0.0f;
+        h = 0.0f;
     h *= 6.0f;
     int sector = ((int)h) % 6;
     f = h - (CGFloat)sector;			// factorial part of h
@@ -220,24 +219,24 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     q = v * (1 - s * f);
     t = v * (1 - s * (1-f));
     switch(sector) {
-	case 0: default:
-	    *r = v; *g = t; *b = p;
-	    break;
-	case 1:
-	    *r = q; *g = v; *b = p;
-	    break;
-	case 2:
-	    *r = p; *g = v; *b = t;
-	    break;
-	case 3:
-	    *r = p; *g = q; *b = v;
-	    break;
-	case 4:
-	    *r = t; *g = p; *b = v;
-	    break;
-	case 5:
-	    *r = v; *g = p; *b = q;
-	    break;
+        case 0: default:
+            *r = v; *g = t; *b = p;
+            break;
+        case 1:
+            *r = q; *g = v; *b = p;
+            break;
+        case 2:
+            *r = p; *g = v; *b = t;
+            break;
+        case 3:
+            *r = p; *g = q; *b = v;
+            break;
+        case 4:
+            *r = t; *g = p; *b = v;
+            break;
+        case 5:
+            *r = v; *g = p; *b = q;
+            break;
     }
 }
 
@@ -247,6 +246,12 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker {
     if (!(self = [super initWithFrame: frame])) return nil;
     m_colorPicker = colorPicker;
+
+    UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    [panRecognizer setMinimumNumberOfTouches:1];
+    [panRecognizer setMaximumNumberOfTouches:1];
+    [self addGestureRecognizer:panRecognizer];
+
     return self;
 }
 
@@ -264,10 +269,10 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 -(void)mousePositionToValue:(CGPoint)point {
     int y = (int)point.y;
-	if (y < 0)
-		y = 0;
-	else if (y >= m_height)
-		y = m_height;
+    if (y < 0)
+        y = 0;
+    else if (y >= m_height)
+        y = m_height;
     CGFloat value = 1.0f - (CGFloat)y / (CGFloat)m_height;
     
     CGFloat rgba[4] = {0.0, 0.0, 0.0, 1.0};
@@ -304,79 +309,87 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [self mousePositionToValue: [touch locationInView: self]];
 }
 
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer
+{
+    CGPoint pt = [recognizer locationInView:self];
+    [self mousePositionToValue: pt];
+}
 
 - (void)drawRect:(CGRect)rect {
     void *bitmapData = NULL;
+    BOOL isDark = NO;
+    if (@available(iOS 13.0, *))
+        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
     if (!m_imageRef) {
-	int x, y, i = 0, j;
-	CGFloat r, g, b;
-	CGFloat h, s, v;
+        int x, y, i = 0, j;
+        CGFloat r, g, b;
+        CGFloat h, s, v;
 
-	CGContextRef    bmcontext = NULL;
-	CGColorSpaceRef colorSpace;
-	int             bitmapByteCount;
-	int             bitmapBytesPerRow;
+        CGContextRef    bmcontext = NULL;
+        CGColorSpaceRef colorSpace;
+        int             bitmapByteCount;
+        int             bitmapBytesPerRow;
 
-	int pixelsWide = m_width, pixelsHigh = m_height;
-	bitmapBytesPerRow   = (pixelsWide * 4);
-	bitmapByteCount     = (bitmapBytesPerRow * pixelsHigh);
+        int pixelsWide = m_width, pixelsHigh = m_height;
+        bitmapBytesPerRow   = (pixelsWide * 4);
+        bitmapByteCount     = (bitmapBytesPerRow * pixelsHigh);
 
-	colorSpace = CGColorSpaceCreateDeviceRGB();
-	if (colorSpace == NULL) {
-	    NSLog(@"Error allocating color space\n");
-	    return;
-	}
+        colorSpace = CGColorSpaceCreateDeviceRGB();
+        if (colorSpace == NULL) {
+            NSLog(@"Error allocating color space\n");
+            return;
+        }
 
-	bitmapData = malloc(bitmapByteCount);
+        bitmapData = malloc(bitmapByteCount);
 
-	if (bitmapData == NULL) {
-	    NSLog(@"BitmapContext memory not allocated!");
-	    CGColorSpaceRelease(colorSpace);
-	    return;
-	}
-	unsigned int *c = (unsigned int*)bitmapData;
-	unsigned int wColor;
+        if (bitmapData == NULL) {
+            NSLog(@"BitmapContext memory not allocated!");
+            CGColorSpaceRelease(colorSpace);
+            return;
+        }
+        unsigned int *c = (unsigned int*)bitmapData;
+        unsigned int wColor;
 
-	h = [m_colorPicker hue];
-	s = [m_colorPicker saturation]; // use full sat on color picker
-	for (y=0; y < m_height; y++)
-	{
-	    for (x=0; x < m_leftMargin; x++)
-		c[i++] = 0xffffffffUL;
-	    v = (CGFloat)y / (CGFloat)m_height;
-	    HSVtoRGB(&r, &g, &b, h, s, v);
-	    // iPhone is little endian, want alpha last in memoryt
-	    wColor = 0xff000000UL | (((int)(b * 255.0f) & 0xff) << 16) | (((int)(g * 255.0f) & 0xff) << 8) | (((int)(r * 255.0f) & 0xff));
-	    for (j=0; j < m_barWidth; j++, x++)
-		c[i++] = wColor;
-	    for (; x < m_width; x++)
-		c[i++] = 0xffffffffUL;
-	}
+        h = [m_colorPicker hue];
+        s = [m_colorPicker saturation]; // use full sat on color picker
+        for (y=0; y < m_height; y++)
+        {
+            for (x=0; x < m_leftMargin; x++)
+                c[i++] = isDark ? 0UL : 0xffffffffUL;
+            v = (CGFloat)y / (CGFloat)m_height;
+            HSVtoRGB(&r, &g, &b, h, s, v);
+            // iPhone is little endian, want alpha last in memoryt
+            wColor = 0xff000000UL | (((int)(b * 255.0f) & 0xff) << 16) | (((int)(g * 255.0f) & 0xff) << 8) | (((int)(r * 255.0f) & 0xff));
+            for (j=0; j < m_barWidth; j++, x++)
+                c[i++] = wColor;
+            for (; x < m_width; x++)
+                c[i++] = isDark ? 0UL : 0xffffffffUL;
+        }
 
-	// Create the bitmap context. We want pre-multiplied ARGB, 8-bits
-	// per component. Regardless of what the source image format is
-	// (CMYK, Grayscale, and so on) it will be converted over to the format
-	// specified here by CGBitmapContextCreate.
-	bmcontext = CGBitmapContextCreate (bitmapData,
-					pixelsWide,
-					pixelsHigh,
-					8,      // bits per component
-					bitmapBytesPerRow,
-					colorSpace,
-					kCGImageAlphaPremultipliedLast);
-	if (bmcontext == NULL){
-	    free (bitmapData);
-	    NSLog(@"Context not created!");
-	}
-	
-	m_imageRef = CGBitmapContextCreateImage(bmcontext);
+        // Create the bitmap context. We want pre-multiplied ARGB, 8-bits
+        // per component. Regardless of what the source image format is
+        // (CMYK, Grayscale, and so on) it will be converted over to the format
+        // specified here by CGBitmapContextCreate.
+        bmcontext = CGBitmapContextCreate (bitmapData,
+                                           pixelsWide,
+                                           pixelsHigh,
+                                           8,      // bits per component
+                                           bitmapBytesPerRow,
+                                           colorSpace,
+                                           kCGImageAlphaPremultipliedLast);
+        if (bmcontext == NULL){
+            free (bitmapData);
+            NSLog(@"Context not created!");
+        }
 
-	// When finished, release the context
-	CGContextRelease(bmcontext);
+        m_imageRef = CGBitmapContextCreateImage(bmcontext);
 
-	// Make sure and release colorspace before returning
-	CGColorSpaceRelease( colorSpace );
-	// Free image data memory for the context
+        // When finished, release the context
+        CGContextRelease(bmcontext);
+
+        // Make sure and release colorspace before returning
+        CGColorSpaceRelease( colorSpace );
+        // Free image data memory for the context
     }
 
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -395,16 +408,28 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     m_colorPicker = colorPicker;
     [self setFrame: frame];
 
+    UIPanGestureRecognizer *panRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    [panRecognizer setMinimumNumberOfTouches:1];
+    [panRecognizer setMaximumNumberOfTouches:1];
+    [self addGestureRecognizer:panRecognizer];
+
     return self;
 }
 
 - (void)setFrame:(CGRect)frame {
+    BOOL isDark = NO;
+    if (@available(iOS 13.0, *))
+        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+
     if (m_hsvData) {
-	if (m_width == frame.size.width && m_height == frame.size.height) {
-	    [super setFrame: frame];
-	    return;
-	}
-	free(m_hsvData);
+        if (@available(iOS 13.0, *)) {
+        } else {// don't cache after iOS 13 in case light/dark mode changes while active
+            if (m_width == frame.size.width && m_height == frame.size.height) {
+                [super setFrame: frame];
+                return;
+            }
+        }
+        free(m_hsvData);
     }
 
     [super setFrame: frame]; // sets m_width/m_height
@@ -425,33 +450,33 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
     for (y=m_height-1; y >= 0; y--)
     {
-	for (x=0; x < m_width; x++) {
-	    dx = x - cx;
-	    dy = y - cy;
-	    radius = sqrt(dx*dx + dy*dy);
-	    if (dx == 0) {
-		if (y > cy)
-		    theta = M_PI + M_PI/2.0f;
-		else
-		    theta = M_PI/2.0f;
-	    }
-	    else {
-		theta = M_PI - atan(dy/dx);
-		if (x > cx) {
-		    if (y > cy)
-			theta += M_PI;
-		    else
-			theta -= M_PI;
-		}
-	    }
-	    s = radius / (CGFloat)cx;
-	    if (s <= 1.0f) {
-		h = theta  / (2.0f * M_PI);
-		c[i] = 0xff000000UL|(((((int)(h * 255.0f)) << 16) | (((int)(s * 255.0f)) << 8) | ((int)(v * 255.0f))));
-	    } else
-		c[i] = 0x00ffffffUL;
-	    i++;
-	}
+        for (x=0; x < m_width; x++) {
+            dx = x - cx;
+            dy = y - cy;
+            radius = sqrt(dx*dx + dy*dy);
+            if (dx == 0) {
+                if (y > cy)
+                    theta = M_PI + M_PI/2.0f;
+                else
+                    theta = M_PI/2.0f;
+            }
+            else {
+                theta = M_PI - atan(dy/dx);
+                if (x > cx) {
+                    if (y > cy)
+                        theta += M_PI;
+                    else
+                        theta -= M_PI;
+                }
+            }
+            s = radius / (CGFloat)cx;
+            if (s <= 1.0f) {
+                h = theta  / (2.0f * M_PI);
+                c[i] = 0xff000000UL|(((((int)(h * 255.0f)) << 16) | (((int)(s * 255.0f)) << 8) | ((int)(v * 255.0f))));
+            } else
+                c[i] = isDark ? 0UL : 0x00ffffffUL;
+            i++;
+        }
     }
 }
 
@@ -463,10 +488,13 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     int x, y, i = 0;
     CGFloat r, g, b;
     CGFloat h, s, v;
+    BOOL isDark = NO;
+    if (@available(iOS 13.0, *))
+        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
 
     unsigned int wColor, hsv;
 
-    v = 1.0; //[m_colorPicker value];
+    v = 1.0;
 
     CGContextRef    bmcontext = NULL;
     CGColorSpaceRef colorSpace;
@@ -481,54 +509,53 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     colorSpace = CGColorSpaceCreateDeviceRGB();
     if (colorSpace == NULL)
     {
-	NSLog(@"Error allocating color space\n");
-	return;
+        NSLog(@"Error allocating color space\n");
+        return;
     }
 
     bitmapData = malloc(bitmapByteCount);
 
     if (bitmapData == NULL)
     {
-	NSLog(@"BitmapContext memory not allocated!");
-	CGColorSpaceRelease(colorSpace);
-	return;
+        NSLog(@"BitmapContext memory not allocated!");
+        CGColorSpaceRelease(colorSpace);
+        return;
     }
     unsigned int *c = (unsigned int*)bitmapData;
 
     for (y=0; y < m_height; y++)
     {
-	for (x=0; x < m_width; x++) {
-	    hsv = m_hsvData[i];
-	    
-	    if ((hsv & 0xff000000UL)) {
-		h = (CGFloat)((hsv & 0x00ff0000UL) >> 16) / 255.0f;
-		s = (CGFloat)((hsv & 0x0000ff00UL) >> 8) / 255.0f;
-		HSVtoRGB(&r, &g, &b, h, s, v);
-	    
-		wColor = 0xff000000UL | (((int)(b * 255.0f)) << 16) | (((int)(g * 255.0f)) << 8) | ((int)(r * 255.0f));
-		c[i] = wColor;
-	    } else
-		c[i] = 0xffffffffUL;
-	    i++;
-	}
+        for (x=0; x < m_width; x++) {
+            hsv = m_hsvData[i];
+            if ((hsv & 0xff000000UL)) {
+                h = (CGFloat)((hsv & 0x00ff0000UL) >> 16) / 255.0f;
+                s = (CGFloat)((hsv & 0x0000ff00UL) >> 8) / 255.0f;
+                HSVtoRGB(&r, &g, &b, h, s, v);
+
+                wColor = 0xff000000UL | (((int)(b * 255.0f)) << 16) | (((int)(g * 255.0f)) << 8) | ((int)(r * 255.0f));
+                c[i] = wColor;
+            } else
+                c[i] = isDark ? 0UL : 0xffffffffUL;
+            i++;
+        }
     }
     
     bmcontext = CGBitmapContextCreate (bitmapData,
-				    pixelsWide,
-				    pixelsHigh,
-				    8,      // bits per component
-				    bitmapBytesPerRow,
-				    colorSpace,
-				    kCGImageAlphaPremultipliedLast);
+                                       pixelsWide,
+                                       pixelsHigh,
+                                       8,      // bits per component
+                                       bitmapBytesPerRow,
+                                       colorSpace,
+                                       kCGImageAlphaPremultipliedLast);
     if (bmcontext == NULL)
     {
-	free (bitmapData);
-	NSLog(@"Context not created!");
+        free (bitmapData);
+        NSLog(@"Context not created!");
     }
 
     // Make sure and release colorspace before returning
     CGColorSpaceRelease( colorSpace );
-    
+
     m_imageRef = CGBitmapContextCreateImage(bmcontext);
 
     // When finished, release the context
@@ -539,11 +566,10 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     CGImageRelease(m_imageRef);
     m_imageRef = NULL;
     free (bitmapData);
-
 }
 
 -(void)mousePositionToColor:(CGPoint)point {
-    unsigned int *c = [self hsvData];    
+    unsigned int *c = [self hsvData];
     CGFloat rgba[4] = {0.0, 0.0, 0.0, 1.0};
     unsigned int color;
     unsigned int x = (int)point.x;
@@ -557,18 +583,18 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     CGFloat saturation = (CGFloat)((color & 0xff00) >> 8) / 255.0f;
     CGFloat value; // = (CGFloat)(color & 0xff) / 255.0f;
     CGFloat alpha = (CGFloat)((color & 0xff000000) >> 24) / 255.0f;
-    
-    if (alpha != 0.0f) {
-	value = [m_colorPicker value];
-	HSVtoRGB(&rgba[0], &rgba[1], &rgba[2], hue, saturation, value);
 
-	UIColor *col = [UIColor colorWithRed: rgba[0] green:rgba[1] blue:rgba[2] alpha:rgba[3]];
-	[m_colorPicker setColor: col];
+    if (alpha != 0.0f) {
+        value = [m_colorPicker value];
+        HSVtoRGB(&rgba[0], &rgba[1], &rgba[2], hue, saturation, value);
+
+        UIColor *col = [UIColor colorWithRed: rgba[0] green:rgba[1] blue:rgba[2] alpha:rgba[3]];
+        [m_colorPicker setColor: col];
     }
 }
 -(void)dealloc {
     if (m_hsvData)
-	free(m_hsvData);
+        free(m_hsvData);
     m_hsvData = NULL;
 }
 
@@ -592,6 +618,12 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     UITouch* touch = [touches anyObject];
     [self mousePositionToColor: [touch locationInView: self]];
 }
+
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer
+{
+    CGPoint pt = [recognizer locationInView:self];
+    [self mousePositionToColor: pt];
+}
 @end
 
 @implementation ColorPicker
@@ -604,8 +636,12 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 - (instancetype)init {
     if ((self = [super init])!=nil) {
-    	self.title = NSLocalizedString(@"Select Color", @"");
+        self.title = NSLocalizedString(@"Select Color", @"");
     }
+    if (@available(iOS 13.0,*)) {
+//        self.modalInPresentation = YES;
+    }
+
     return self;
 }
 
@@ -633,11 +669,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
-    UIColor *bgColor = [UIColor whiteColor];
-    UIColor *borderColor = [UIColor blackColor];
-    [m_background setBackgroundColor: bgColor];
-
-//    [m_background setAutoresizesSubviews: YES];
+    [m_background setBackgroundColor: [UIColor whiteColor]];
     [m_background setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
 
     CGFloat colorTileHeight  = 64.0f;
@@ -646,7 +678,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     CGRect colorTileFrame = CGRectMake(leftMargin, 32.0f, frame.size.width-(leftMargin-1)*2, colorTileHeight);
     m_colorTile = [[ColorTile alloc] initWithFrame: colorTileFrame withColorPicker: self];
     m_tileBorder = [[UIView alloc] initWithFrame: CGRectInset(colorTileFrame, -1, -1)];
-    [m_tileBorder setBackgroundColor: borderColor];
+    [m_tileBorder setBackgroundColor: [UIColor blackColor]];
     [m_colorTile setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
     [m_tileBorder setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
 
@@ -660,13 +692,13 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [m_valuePicker setLeftMargin: 16];
 
     UIImage *hsvCursorImage = [[UIImage alloc]
-	initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"hsv-crosshair" ofType:@"png" inDirectory: @"/"]];
+                               initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"hsv-crosshair" ofType:@"png" inDirectory: @"/"]];
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
     UIImage *valCursorImage = [[UIImage alloc]
                                initWithContentsOfFile: [[NSBundle mainBundle] pathForResource:
-                             (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair") ofType:@"png" inDirectory: @"/"]];
+                                                        (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair") ofType:@"png" inDirectory: @"/"]];
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
-    
+
     CGRect cursFrame = [m_hsvCursor frame];
     cursFrame.origin = CGPointMake(radius - 16.0f, radius - 16.0f);
     [m_hsvCursor setFrame: cursFrame];
@@ -681,8 +713,9 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [self.view addSubview: m_colorTile];
     [m_hsvPicker addSubview: m_hsvCursor];
     [m_valuePicker addSubview: m_valueCursor];
-    
+
     [self updateAccessibility];
+
 }
 
 - (void)viewWillLayoutSubviews {
@@ -692,24 +725,39 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 -(void)layoutViews {
     CGRect frame = self.view.frame;
     // This mess desperately needs to be redone with auto-layout
-    BOOL fullScreenLarge = (frame.size.width >= 540.0 && frame.size.height >= 576.0);
+    BOOL fullScreenLarge = (frame.size.width >= 540.0 && frame.size.height >= 564);
     BOOL isPortraitish = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact
-                        && frame.size.height > frame.size.width;
+    && frame.size.height > frame.size.width;
     CGFloat colorTileHeight  = fullScreenLarge ? 128.0f : isPortraitish ? 96.0f : 232.0f;
     CGFloat leftMargin = fullScreenLarge ? 32.0f : isPortraitish ? 4.0f : 16.0f;
-	CGFloat hsvBaseYOrigin = !isPortraitish && !fullScreenLarge ? 24.0f : colorTileHeight + 48.0f;
-	CGFloat rightMargin = 60;
-	if (isPortraitish && !fullScreenLarge && frame.size.width > 340 && frame.size.height > 600) {
-		leftMargin += 20;
-		colorTileHeight += 60;
-		hsvBaseYOrigin += 120;
-		rightMargin += 20;
-	}
+    CGFloat hsvBaseYOrigin = !isPortraitish && !fullScreenLarge ? 24.0f : colorTileHeight + 48.0f;
+    CGFloat rightMargin = 60;
+    if (isPortraitish && !fullScreenLarge && frame.size.width > 340 && frame.size.height > 600) {
+        leftMargin += 20;
+        colorTileHeight += 60;
+        hsvBaseYOrigin += 120;
+        rightMargin += 20;
+    }
+    CGFloat leftNotch = 0, rightNotch = 0;
+    if (@available(iOS 11.0,*)) {
+        UIEdgeInsets safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
+        if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
+            if (safeInsets.left > 0) {
+                leftNotch = safeInsets.left;
+                leftNotch -= leftMargin;
+                leftMargin += leftNotch;
+            }
+        } else if (UIInterfaceOrientationLandscapeLeft == [self interfaceOrientation]) {
+            if (safeInsets.right > 0) {
+                rightNotch = safeInsets.right;
+            }
+        }
+    }
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f,
-                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-328,
+                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-leftNotch-rightNotch-328,
                                        colorTileHeight);
     if (!isPortraitish && !fullScreenLarge)
-        leftMargin += frame.size.width-312;
+        leftMargin += frame.size.width-leftNotch-rightNotch-312;
     [m_colorTile setFrame: colorTileFrame];
     [m_tileBorder setFrame: CGRectInset(colorTileFrame, -1, -1)];
     
@@ -720,19 +768,35 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         [m_valuePicker setBarWidth: 64];
     } else {
         [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-		[m_valuePicker setFrame: CGRectMake(frame.size.width - (isPortraitish ? rightMargin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
+        [m_valuePicker setFrame: CGRectMake(frame.size.width - rightNotch - (isPortraitish ? rightMargin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
         [m_valuePicker setBarWidth: 32];
     }
-    
+
     CGRect cursFrame = [m_valueCursor frame];
     //    cursFrame.size.width = m_valueCursor.image.size.width * (fullScreenLarge ? 2 : 1);
     [m_valueCursor setFrame: cursFrame];
-    
+
     [self updateHSVCursors];
+}
+
+-(void)updateUserInterfaceStyle {
+    if (@available(iOS 13.0, *)) {
+        [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
+        [m_tileBorder setBackgroundColor: [UIColor labelColor]];
+    } else {
+        [m_background setBackgroundColor: [UIColor whiteColor]];
+        [m_tileBorder setBackgroundColor: [UIColor blackColor]];
+    }
+}
+
+-(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self updateUserInterfaceStyle];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self updateUserInterfaceStyle];
     [self layoutViews];
 }
 
@@ -749,7 +813,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 - (void)updateAccessibility {
     if (m_colorTile && [m_colorTile respondsToSelector: @selector(setAccessibilityLabel:)]) {
-	[[m_colorTile textLabel] setAccessibilityHint: NSLocalizedString(@"Sample text for color adjustment",nil)];
+        [[m_colorTile textLabel] setAccessibilityHint: NSLocalizedString(@"Sample text for color adjustment",nil)];
     }
 }
 
@@ -764,30 +828,30 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 - (void)toggleMode {
     m_changeTextColor = !m_changeTextColor;
     if (m_changeTextColor) {
-	self.title = @"Text Color";
+        self.title = @"Text Color";
     } else {
-	self.title = @"Background Color";
+        self.title = @"Background Color";
     }
     [self updateHSVCursors];
 }
 
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor {
     if (textColor && m_textColor != textColor) {
-	m_textColor = textColor;
+        m_textColor = textColor;
     }
     if (bgColor && m_bgColor != bgColor) {
-	m_bgColor = bgColor;
+        m_bgColor = bgColor;
     }
     m_changeTextColor = changeTextColor;
 
     (void)self.view; // force load of view
     if (textColor)
-	[[self colorTile] setTextColor: textColor];
+        [[self colorTile] setTextColor: textColor];
     if (bgColor)
-	[[self colorTile] setBGColor: bgColor];
+        [[self colorTile] setBGColor: bgColor];
 
     if (!textColor || !bgColor)
-	return;
+        return;
     [self updateHSVCursors];
 }
 
@@ -801,9 +865,9 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 -(void) setColorOnly: (UIColor *)color {
     if (m_changeTextColor)
-	[self setTextColor:color bgColor:nil changeText:m_changeTextColor];
+        [self setTextColor:color bgColor:nil changeText:m_changeTextColor];
     else
-	[self setTextColor:nil bgColor:color changeText:m_changeTextColor];
+        [self setTextColor:nil bgColor:color changeText:m_changeTextColor];
 }
 
 -(void) setColor: (UIColor *)color {
@@ -826,7 +890,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 -(void)updateColorWithHue:(float)hue Saturation:(float)saturation Value:(float)value {
-//  float oldValue = m_value;
+    //  float oldValue = m_value;
     m_hue = hue == hue ? hue : 0; // NaN guard
     m_saturation = saturation;
     m_value = value;
@@ -835,11 +899,11 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
     float hsvX = radius - 16.0f, hsvY = radius - 16.0f;
     float valX = [m_valuePicker barWidth] > 32 ? 0.0f : 8.0f, valY = -16.0f;
-    
+
     hsvX += (m_saturation * radius) * cos(m_hue * 2.0f * M_PI);
     hsvY -= (m_saturation * radius) * sin(m_hue * 2.0f * M_PI);
     valY += (1.0f - m_value) * valHeight;
-    
+
     CGRect cursFrame = [m_hsvCursor frame];
     cursFrame.origin = CGPointMake(hsvX, hsvY);
     [m_hsvCursor setFrame: cursFrame];
@@ -848,10 +912,10 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [m_valueCursor setFrame: cursFrame];
 
     [m_valuePicker setNeedsDisplay];
-//    if (oldValue != m_value)
-//	[m_hsvPicker setNeedsDisplay];
+    //    if (oldValue != m_value)
+    //	[m_hsvPicker setNeedsDisplay];
     if (m_delegate && [m_delegate respondsToSelector: @selector(colorPicker:selectedColor:)])
-	[m_delegate colorPicker: self selectedColor: m_changeTextColor ? m_textColor : m_bgColor];
+        [m_delegate colorPicker: self selectedColor: m_changeTextColor ? m_textColor : m_bgColor];
 }
 
 - (HSVPicker *)hsvPicker {
