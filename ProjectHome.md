@@ -1,3 +1,10 @@
+### 2020/06/30 Update ###
+
+Version 1.8.3, with support for iOS 13 and devices with larger screens, pending review.
+
+### 2017/10/03 Update ###
+
+Version 1.8.2, with a launch shortcut to by-pass game auto-restore, and bug fixes, now available.
 
 ### 2017/09/30 Update ###
 
