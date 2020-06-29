@@ -1,5 +1,13 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+**Update 10/03/2020**
+
+**Frotz 1.8.3** is pending review in the App Store, with the following changes:
+
+  * Support for iOS 13, including light/dark mode
+  * Support for newer devices with larger screen sizes.
+  * Bug fixes.
+ 
 **Update 10/03/2017**
 
 **Frotz 1.8.2** now available, with the following changes:
