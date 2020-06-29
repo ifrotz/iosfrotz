@@ -54,16 +54,10 @@
 }
 
 -(void)updateTitle {
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        UINavigationController *nc = m_navigationController;
-        UIColor *color = [nc.navigationBar tintColor];
-        [m_titleTextView setTextColor: color];
-        [m_infoButton setTintColor: color];
-    } else
-#endif
-        [m_titleTextView setTextColor: [UIColor whiteColor]];
-
+    UINavigationController *nc = m_navigationController;
+    UIColor *color = [nc.navigationBar tintColor];
+    [m_titleTextView setTextColor: color];
+    [m_infoButton setTintColor: color];
 }
 
 -(void)updateAccessibility {

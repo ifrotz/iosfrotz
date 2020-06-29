@@ -1663,6 +1663,7 @@ extern void gli_ios_set_focus(window_t *winNum);
         [self.navigationController.navigationBar  setTintColor: m_defaultBGColor];
         //m_inputLine.keyboardAppearance = UIKeyboardAppearanceLight;
     }
+    [m_frotzInfoController updateTitle];
 }
 
 -(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
@@ -1720,9 +1721,9 @@ extern void gli_ios_set_focus(window_t *winNum);
   
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
-    [self setNavBarTint];
 
     self.navigationItem.titleView = [m_frotzInfoController view];
+    [self setNavBarTint];
 
     [m_frotzInfoController setKeyboardOwner: self];
 
@@ -1813,8 +1814,7 @@ extern void gli_ios_set_focus(window_t *winNum);
             return;
         }
     }
-    if (!m_kbShown)
-        [self unlockKeyboard];
+    [self unlockKeyboard];
     if (m_kbShown)
         [m_inputLine resignFirstResponder];
     else
