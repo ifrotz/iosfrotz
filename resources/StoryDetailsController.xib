@@ -207,12 +207,22 @@
                                                             <rect key="frame" x="5" y="340" width="364" height="220"/>
                                                             <color key="backgroundColor" red="0.33333333333333331" green="0.33333333333333331" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             <constraints>
-                                                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="220" id="EX0-U5-TuR">
+                                                                <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="950" constant="220" id="EX0-U5-TuR">
                                                                     <variation key="heightClass=compact" constant="0.0"/>
                                                                 </constraint>
                                                             </constraints>
                                                             <dataDetectorType key="dataDetectorTypes"/>
+                                                            <variation key="default">
+                                                                <mask key="constraints">
+                                                                    <exclude reference="EX0-U5-TuR"/>
+                                                                </mask>
+                                                            </variation>
                                                             <variation key="heightClass=compact" hidden="YES"/>
+                                                            <variation key="heightClass=regular">
+                                                                <mask key="constraints">
+                                                                    <include reference="EX0-U5-TuR"/>
+                                                                </mask>
+                                                            </variation>
                                                             <connections>
                                                                 <outlet property="delegate" destination="-1" id="54"/>
                                                             </connections>
@@ -223,7 +233,7 @@
                                                         <constraint firstItem="53" firstAttribute="trailing" secondItem="cre-mc-A6f" secondAttribute="trailing" constant="-20" id="Cfz-NA-eko">
                                                             <variation key="heightClass=regular-widthClass=compact" constant="-5"/>
                                                         </constraint>
-                                                        <constraint firstItem="53" firstAttribute="top" relation="lessThanOrEqual" secondItem="18" secondAttribute="bottom" constant="60" id="JHy-PS-ztK"/>
+                                                        <constraint firstItem="53" firstAttribute="top" relation="lessThanOrEqual" secondItem="18" secondAttribute="bottom" priority="950" constant="60" id="JHy-PS-ztK"/>
                                                         <constraint firstItem="53" firstAttribute="leading" secondItem="cre-mc-A6f" secondAttribute="leading" constant="20" id="Jco-OB-RW7">
                                                             <variation key="heightClass=regular-widthClass=compact" constant="5"/>
                                                         </constraint>
