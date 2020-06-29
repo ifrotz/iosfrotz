@@ -1152,30 +1152,16 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)showMainStoryController {
     self.splitViewController.presentsWithGesture = NO;
-    if (gUseSplitVC && self.splitViewController && !self.splitViewController.isCollapsed) {
-#if 0
-        UINavigationController *nc = [m_storyMainViewController navigationController];
-        if (nc) {
-            if (self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassRegular) {
-                if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-                    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-                    nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-                }
-                [self.splitViewController dismissViewControllerAnimated:NO completion: nil];
-                nc.modalPresentationStyle = UIModalPresentationFullScreen;
-                [self.splitViewController presentViewController:nc animated:YES completion:nil];
-                return;
-            }
+    UINavigationController *nc = m_storyMainViewController.storyNavController;
+    if (nc) {
+        if (!nc.topViewController.navigationItem.leftBarButtonItem) {
+            UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
+            nc.topViewController.navigationItem.leftBarButtonItem = backItem;
         }
-        //self.splitViewController.viewControllers = @[ self.navigationController, nc ];
-#endif
-        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-
-        if (m_storyMainViewController.storyNavController.topViewController != m_storyMainViewController)
-            [m_storyMainViewController.storyNavController pushViewController: m_storyMainViewController animated:YES];
-        return;
+        nc.modalPresentationStyle = UIModalPresentationFullScreen;
+        nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+        [self.splitViewController presentViewController:nc animated:YES completion:nil];
     }
-    [[self navigationController] pushViewController:m_storyMainViewController animated:YES];
 }
 
 - (void)didPressModalStoryListButton {
@@ -1197,8 +1183,11 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)launchStory:(NSString*)storyPath {
     NSString *currStory = [[m_storyMainViewController currentStory] lastPathComponent];
     NSString *autosaveMsg = nil;
-    [[self navigationController] popToViewController:self animated:NO];
-    
+
+    // delay pop back to story list so transition doesn't interfere with story controller presentation
+    // (we just want story browser on top of stack when you return)
+    [self performSelector:@selector(delayedPopToSelf) withObject:nil afterDelay:1.5];
+
     if ([storyPath length] > 0 &&
         [currStory isEqualToString: [storyPath lastPathComponent]])
         [self resumeStory];
@@ -1232,6 +1221,11 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             }
         }
     }
+
+}
+
+-(void)delayedPopToSelf {
+    [[self navigationController] popToViewController:self animated:NO];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -1523,16 +1517,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // the horizontally-compact size class. If you return `nil`, then the argument will perform its default behavior (i.e. to use its current primary view
 // controller).
 - (nullable UIViewController *)primaryViewControllerForCollapsingSplitViewController:(UISplitViewController *)splitViewController {
-    if (self.splitViewController.presentedViewController)
-        return nil;
-    if ([m_storyMainViewController navigationController])
-        return nil;
-#if 0
-    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
-        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
-        return self.navigationController;
-    }
-#endif
     return nil;
 }
 
@@ -1544,37 +1528,22 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (BOOL)splitViewController:(UISplitViewController *)splitViewController collapseSecondaryViewController:(UIViewController *)secondaryViewController ontoPrimaryViewController:(UIViewController *)primaryViewController {
     if (self.splitViewController.presentedViewController)
         return NO;
-    if ([m_storyMainViewController navigationController])
-        return NO;
-    return self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact;
+    return YES;
 }
 
 -(UIViewController*)primaryViewControllerForExpandingSplitViewController:(UISplitViewController *)splitViewController {
-    return nil; //self.navigationController;
+    return nil;
 }
 
+
+// This method is called when a split view controller is separating its child into two children for a transition from a compact-width size
+// class to a regular-width size class. Override this method to perform custom separation behavior.  The controller returned from this method
+// will be set as the secondary view controller of the split view controller.  When you return from this method, `primaryViewController` should
+// have been configured for display in a regular-width split view controller. If you return `nil`, then `UISplitViewController` will perform
+// its default behavior.
 - (UIViewController*)splitViewController:(UISplitViewController *)splitViewController separateSecondaryViewControllerFromPrimaryViewController:(nonnull UIViewController *)primaryViewController {
-    NSLog(@"separateSecondaryViewControllerFromPrimaryViewController %@", primaryViewController);
-    NSLog(@" %@", splitViewController.viewControllers);
-    if (primaryViewController == self.navigationController && primaryViewController.childViewControllers.count == 1) {
-        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
-        if (m_details.navigationController)
-            [m_details.navigationController popToViewController:m_details animated:YES];
-        return m_details.navigationController ? m_details.navigationController : m_details;
-    }
-    else {
-#if 000
-        splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-#endif
-        ///xxx
-        if (m_details.navigationController) {
-            if (m_details.navigationController.childViewControllers.count <= 1)
-                [m_details.navigationController pushViewController:m_storyMainViewController animated:YES];
-            return m_details.navigationController;
-        }
-        return [m_storyMainViewController navigationController];
-    }
-//    return m_details;
+//    NSLog(@"separateSecondaryViewControllerFromPrimaryViewController %@\n  viewControllers: %@", primaryViewController, splitViewController.viewControllers));
+    return nil;
 }
 
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
@@ -1614,7 +1583,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (storyInfo && lastRow != -1) {
         if (gUseSplitVC && !self.splitViewController.isCollapsed && (!secondTap ||
             self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
-#if 11111
             if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)
                 [UIView animateWithDuration:0.3 animations:^{
                     if (m_details.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
@@ -1623,7 +1591,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
                     }
                 }];
-#endif
             [self showStoryDetails: storyInfo];
         }
         else {

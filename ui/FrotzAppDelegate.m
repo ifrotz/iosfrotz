@@ -156,7 +156,8 @@ bool gUseSplitVC;
         }
     }
     if (usingStoryBoard) {
-        [m_browser storyMainViewController].storyNavController = m_window.rootViewController.childViewControllers[1];  //navigationController;
+        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
+        [m_browser storyMainViewController].storyNavController = navigationController;
         //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
         gUseSplitVC = YES;
     } else {

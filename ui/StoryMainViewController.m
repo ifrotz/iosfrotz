@@ -3789,12 +3789,17 @@ static void setScreenDims(char *storyNameBuf) {
     [m_inputLine updatePosition];
 }
 
+-(void) delayedDisplayLaunchMessage {
+    [self displayLaunchMessageWithDelay: 2.5 duration:1.0 alpha:0.85];
+}
+
 -(BOOL) autoRestoreSession {
     static char storyNameBuf[MAX_FILE_NAME];
     
     id fileMgr = [NSFileManager defaultManager];
     NSError *error = nil;
-    [self displayLaunchMessageWithDelay: 3.0 duration:1.0 alpha:0.85];
+    if (m_launchMessage)
+        [self performSelector: @selector(delayedDisplayLaunchMessage) withObject:nil afterDelay:0.1];
     if (m_splashImageView) { // stale
         [m_splashImageView removeFromSuperview];
         m_splashImageView = nil;
@@ -4019,8 +4024,8 @@ static void setScreenDims(char *storyNameBuf) {
         [m_notesController setText: notesText];
     }
     
-    [self displayLaunchMessageWithDelay: 2.5 duration:1.0  alpha:0.85];
-    
+    [self performSelector: @selector(delayedDisplayLaunchMessage) withObject:nil afterDelay:0.01];
+
     [self rememberActiveStory];
     
     if (m_splashImageView) { // stale
