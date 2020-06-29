@@ -14,8 +14,13 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+**Update - Version 1.8.3 has been submitted to the App Store for review **
 
-**Update - Version 1.8.2 now availablew**
+**6/29/2020**
+
+This update contains the long-awaited changes to better support iOS 13 and new devices with larger screen sizes.
+
+**Update - Version 1.8.2 now available.**
 
 **10/03/2017**
 
@@ -24,7 +29,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
   * Launch shortcut to Story List (without resuming current game).
   * Other minor bug fixes, improvements to scrolling behavior.
 
-**Update - Version 1.8.1 now available!**
+**Update - Version 1.8.1 now available.**
 
 **09/30/2017**
 
