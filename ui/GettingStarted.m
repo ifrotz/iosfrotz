@@ -104,7 +104,7 @@
                               
                               "<p><b>Some commands control or query the game state rather than progressing the story:</b></p>\n"
                               "<p><table><tr><td><i><span style=\"color:yellow;\">Command</span></i></td><td><i><span style=\"color:yellow;\">Description</span></i></td></tr>\n"
-                              "<tr valign=top><td><b>save</b></td><td>Save a story session in progress.<br>(<b>Frotz</b> will auto-save your game periodically, or if you press the Home button or take a phone call.)</td></tr>\n"
+                              "<tr valign=top><td><b>save</b></td><td>Save a story session in progress.<br>(<b>Frotz</b> will auto-save your game periodically, or if you switch apps or take a phone call.)</td></tr>\n"
                               "<tr valign=top><td><b>restore</b></td><td>Restore (load) a saved session.</td></tr>\n"
                               "<tr valign=top><td><b>restart</b></td><td>Restart a story from the beginning.</td></tr>\n"
                               "<tr valign=top><td><b>quit</b></td><td>Quit a story and return to story list.</td></tr>\n"
