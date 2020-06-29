@@ -1,4 +1,4 @@
-# Privacy Policy
+# Frotz for iOS Privacy Policy
 
 When you use Frotz, certain information will be gathered and stored about your usage of that App. This information does not identify you personally. We collect and store information as follows:
 
