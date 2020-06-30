@@ -151,8 +151,9 @@
     if  ([delegate isLandscape])
         magnifyYThreshold = 20;
     NotesViewController* notesController = [delegate notesController];
-    if ([[delegate navigationController] presentedViewController] || // settings active
-        notesController && [notesController isVisible])
+    if (![[delegate view] window]
+        || [[delegate navigationController] presentedViewController] // settings active
+        || notesController && [notesController isVisible])
         ;
     else if (!gLargeScreenDevice && pt.y < magnifyYThreshold) {
         m_isMagnifying = YES;

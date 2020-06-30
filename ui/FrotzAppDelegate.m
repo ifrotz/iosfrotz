@@ -48,8 +48,13 @@
     }
     if (@available(iOS 13.4, *)) {
         if ([event isKindOfClass: [UIPressesEvent class]]) {
-            if (theInputLine.isFirstResponder == NO)
-                [theInputLine becomeFirstResponder];
+            StoryMainViewController *smvc = [theStoryBrowser storyMainViewController];
+            if ([[smvc view] window]
+                && ![[smvc navigationController] presentedViewController]
+                && ![[smvc notesController] isVisible]) {
+                if (theInputLine.isFirstResponder == NO)
+                    [theInputLine becomeFirstResponder];
+            }
         }
     }
     [super sendEvent: event];
