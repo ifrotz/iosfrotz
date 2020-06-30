@@ -45,11 +45,7 @@
 }
 
 -(void)rateFrotz {
-#if TARGET_IPHONE_SIMULATOR
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://itunes.apple.com/app/frotz/id287653015?mt=8"]];
-#else
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://itunes.com/apps/Frotz"]];
-#endif
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/us/app/frotz/id287653015"]];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
