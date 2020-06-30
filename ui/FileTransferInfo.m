@@ -54,13 +54,17 @@ BOOL isHiddenFile(NSString *file) {
     }];
 }
 
+-(void)viewDidLayoutSubviews {
+    [self updateMessage];
+    [self updateButtonLocation];
+}
 
 -(void)updateButtonLocation {
     if (m_startButton && m_webView) {
         CGSize cgSize = [m_webView frame].size;
         [m_startButton setFrame:
          CGRectMake(cgSize.width/2 - 130,
-                    gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width) ? cgSize.height-64 : cgSize.height-48,
+                    gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
     }
 }
@@ -256,14 +260,16 @@ BOOL isHiddenFile(NSString *file) {
                           "large { font-size:%dpt; color:#00c0c0; }\n"
                           "small { font-size:%dpt; }\n"
                           "</style>\n"
+                          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=%.1f\">\n"
                           "<h2>Copying Saved Games &amp; Story Files</h2>\n"
                           "<p>You can transfer saved games and stories from Frotz using a Web Browser or FTP client and load them on a computer using Zoom, WinFrotz, or other Z-machine apps"
                           " which support the standard \'Quetzal\' save game format. (Also see 'Dropbox Settings' for another way to share saved games.)</p><hr>"
                           "%@\n"
                           "<hr>%@\n%@\n"
-                          "<br/>\n"
+                          "<br/><p/>\n"
                           "</body>\n",
                           fontBase+3,fontBase+1,fontBase,fontBase,fontBase+2, fontBase-2,
+                          cgSize.height > cgSize.width ? 1.0f : 0.8f,
                           instructions, httpUrlString, ftpUrlString];
     [m_webView	loadHTMLString: message baseURL:nil];
 }

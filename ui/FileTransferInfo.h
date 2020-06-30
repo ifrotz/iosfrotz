@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FileTransferInfo : FrotzCommonWebViewController {
     NSObject<FrotzSettingsStoryDelegate> *m_controller;
-    UIWebView *m_webView;
+    FrotzWebView *m_webView;
     UIButton *m_startButton;
 #if UseNewFTPServer
     FtpServer *m_ftpserv;

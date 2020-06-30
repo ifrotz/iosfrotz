@@ -9,8 +9,20 @@
 
 #import <UIKit/UIKit.h>
 
+#import <WebKit/WebKit.h>
+
+//#define UIWebView WKWebView
+
+#define UseWKWebViewForFrotzInfoDialogs 1
+
+#if UseWKWebViewForFrotzInfoDialogs
+typedef WKWebView FrotzWebView;
+#else
+typedef UIWebView FrotzWebView;
+#endif
+
 @interface FrotzCommonWebViewController : UIViewController
 
-+(nonnull UIWebView*)sharedWebView;
++(nonnull FrotzWebView*)sharedWebView;
 +(void)releaseSharedWebView;
 @end

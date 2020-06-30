@@ -61,7 +61,7 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     
     NSError *error;
     NSString *contents = [[NSString alloc] initWithBytes:[m_data bytes] length:[m_data length] encoding: NSUTF8StringEncoding];
@@ -119,7 +119,7 @@
 
 - (void)showReleaseNotes {
     NSError *error;
-    UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];
     [self.view addSubview: webView];
@@ -147,23 +147,29 @@
         "<hr/>\n"
         "<p>New in <b>Frotz</b> 1.8.3:</p>\n"
         "<p><ul>\n"
-        "<li>Improved support for iOS 13 and newer devices.</li>\n"
+        "<li>Improved support for iOS 13, including dark mode.</li>\n"
+        "<li>Better support for newer devices/screen sizes.</li>\n"
         "<li>Bug fixes.</li>\n"
         "</ul>\n"
-        "<p>New in <b>Frotz</b> 1.8.2:</p>\n"
+        "<h3>If you enjoy Frotz, please rate it in the App Store.  Or write a review! Thanks!</h3>"
+        "<p><small><i>Craig Smith, June 30, 2020</i><br>\n"
+        "<hr>\n"
+        "<p><i>Previous release notes</i></p>\n"
+        "\n"
+        "<p>Version 1.8.2:</p>\n"
         "<p><ul>\n"
         "<li>Prevent games from being confused by iOS 11's &#x201c;smart punctuation&#x201d;.</li>\n"
         "<li>Fix bug with text window partition sizing in glulx games.</li>\n"
         "<li>Add launch shortcut to Story List (without resuming current story).</li>\n"
         "<li>Other bug fixes.</li>\n"
         "</ul>\n"
-        "<p>New in <b>Frotz</b> 1.8.1:</p>\n"
+        "<p>Version 1.8.1:</p>\n"
         "<p><ul>\n"
         "<li>Update to <b>Dropbox</b> API v2.</li>\n"
         "<li>Improvements for iOS 11.</li>\n"
         "<li>Bug fixes, but a couple new bugs.</li>\n"
         "</ul>\n"
-        "<p>New in <b>Frotz</b> 1.8:</p>\n"
+        "<p>Version 1.8:</p>\n"
         "<p><ul>\n"
         "<li>Now plays games in <b>TADS</b> format (v2/v3).</li>\n"
         "<li>Improved performance and <b>64-bit</b> support.</li>\n"
@@ -171,12 +177,7 @@
         "<li>Fix crash when task-switching back to Frotz in iOS 9.x.</li>\n"
         "<li>Various other bug fixes.</b></li>\n"
         "</ul>\n"
-        "<h3>If you enjoy Frotz, please rate it in the App Store.  Or write a review! Thanks!</h3>"
-        "<p><small><i>Craig Smith, October 3, 2017</i><br>\n"
-        "<hr>\n"
-        "<p><i>Previous release notes</i></p>\n"
-        "\n"
-        "<p>Version 1.7,1:</p>\n"
+        "<p>Version 1.7.1:</p>\n"
         "<p><ul>\n"
         "<li>Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.</li>\n"
         "<li>Fixed bug printing accented characters in status window.</li>\n"
@@ -281,7 +282,8 @@
         // 1.4: mar 19, 2010
         // 1.3: sep 4, 2009
     }
-    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n</body>\n\n", cssString, htmlString];
+    NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, htmlString];
     [webView loadHTMLString: contentString baseURL: nil];
 #if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);
@@ -295,7 +297,7 @@
 }
 
 -(void)viewDidAppear:(BOOL)animated {
-    UIWebView *view = [FrotzCommonWebViewController sharedWebView];
+    FrotzWebView *view = [FrotzCommonWebViewController sharedWebView];
     if ([view respondsToSelector: @selector(scrollView)]) {
         [[view scrollView] addSubview: m_rateButton];
         CGRect frame = self.view.frame;

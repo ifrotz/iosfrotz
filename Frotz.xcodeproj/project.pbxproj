@@ -363,6 +363,7 @@
 		44D71CE719882F5300F4AD9A /* Frotz-60x60.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE019882F5300F4AD9A /* Frotz-60x60.png */; };
 		44D71CEB19882F5300F4AD9A /* icon-keyboard.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE419882F5300F4AD9A /* icon-keyboard.png */; };
 		44D71CEC19882F5300F4AD9A /* icon-keyboard@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 44D71CE519882F5300F4AD9A /* icon-keyboard@2x.png */; };
+		44DA2B9D24AAB5F300B87F91 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44DA2B9C24AAB5F200B87F91 /* WebKit.framework */; };
 		44DA421C15E987A2007F61DA /* glulx-64.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA420E15E987A1007F61DA /* glulx-64.png */; };
 		44DA421D15E987A2007F61DA /* glulx-128.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA420F15E987A1007F61DA /* glulx-128.png */; };
 		44DA421E15E987A2007F61DA /* glulx-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA421015E987A1007F61DA /* glulx-320.png */; };
@@ -1232,6 +1233,7 @@
 		44D71CE019882F5300F4AD9A /* Frotz-60x60.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-60x60.png"; path = "resources/Frotz-60x60.png"; sourceTree = "<group>"; };
 		44D71CE419882F5300F4AD9A /* icon-keyboard.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard.png"; path = "resources/icon-keyboard.png"; sourceTree = "<group>"; };
 		44D71CE519882F5300F4AD9A /* icon-keyboard@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-keyboard@2x.png"; path = "resources/icon-keyboard@2x.png"; sourceTree = "<group>"; };
+		44DA2B9C24AAB5F200B87F91 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/WebKit.framework; sourceTree = DEVELOPER_DIR; };
 		44DA420C15E987A1007F61DA /* Frotz-512x512.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-512x512.png"; path = "resources/Frotz-512x512.png"; sourceTree = "<group>"; };
 		44DA420D15E987A1007F61DA /* Frotz-1024x1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Frotz-1024x1024.png"; path = "resources/Frotz-1024x1024.png"; sourceTree = "<group>"; };
 		44DA420E15E987A1007F61DA /* glulx-64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "glulx-64.png"; path = "resources/glulx-64.png"; sourceTree = "<group>"; };
@@ -1301,6 +1303,7 @@
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 				44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */,
+				44DA2B9D24AAB5F300B87F91 /* WebKit.framework in Frameworks */,
 				4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1596,6 +1599,7 @@
 				1DF5F4DF0D08C38300B7A737 /* UIKit.framework */,
 				1D30AB110D05D00D00671497 /* Foundation.framework */,
 				447DD4AB125311B500004A83 /* Security.framework */,
+				44DA2B9C24AAB5F200B87F91 /* WebKit.framework */,
 				44F7B1001B2014E600DDD2A3 /* libstdc++.dylib */,
 				EAD8BC41F6D680B232D31E6E /* libPods-Frotz.a */,
 			);

@@ -32,7 +32,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     BOOL oldOS = NO;
     NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
     if (osVersStr && [osVersStr characterAtIndex: 0] == '3' && [osVersStr characterAtIndex: 2] < '2')
@@ -51,6 +51,7 @@
                               "* { color:#ffffff; background: #555555 }\n"
                               "p { font-size:12pt; }\n"
                               "</style>\n"
+                              "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
                               "<h2>New to Interactive Fiction?</h2>"
                               "<p>Interactive Fiction makes you the main character in a story.  You control what your character does by entering imperative commands, such as "
                               "<b>light the lamp</b> or <b>give the banana to the monkey</b> at the story prompt (<b>&gt;</b>).  IF contains many subgenres, ranging from classic puzzle-based adventure games and "

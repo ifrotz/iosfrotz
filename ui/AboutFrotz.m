@@ -46,7 +46,7 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
-    UIWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];
     [self.view addSubview: webView];
@@ -60,6 +60,7 @@
                          "* { color:#ffffff; background: #555555 }\n"
                          "p { font-size:%dpt; }\n"
                          "</style>\n"
+                         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
                          "<h2>Welcome to Frotz!</h2>\n"
                          "<p>\n"
                          "<b>Frotz</b> lets you play hundreds of works of Interactive Fiction (a.k.a. text adventure games) on your iPhone,<sup>&reg;</sup> iPad,<sup>&reg;</sup> or iPod Touch.<sup>&reg;</sup></p>\n"
