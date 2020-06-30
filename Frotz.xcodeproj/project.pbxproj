@@ -3230,7 +3230,7 @@
 					"-lc++",
 				);
 				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
-				PODS_ROOT = "${SRCROOT}/Pods";
+				PODS_ROOT = "${inherited}";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3283,7 +3283,7 @@
 					"-lc++",
 				);
 				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
-				PODS_ROOT = "${SRCROOT}/Pods";
+				PODS_ROOT = "${inherited}";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3733,7 +3733,7 @@
 					"-lc++",
 				);
 				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
-				PODS_ROOT = "${SRCROOT}/Pods";
+				PODS_ROOT = "${inherited}";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
@@ -3838,7 +3838,7 @@
 					Security,
 				);
 				PODS_PODFILE_DIR_PATH = "$(inherited)/../../../../../../../${SRCROOT}";
-				PODS_ROOT = "${SRCROOT}/Pods";
+				PODS_ROOT = "${inherited}";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.flippencorp.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
