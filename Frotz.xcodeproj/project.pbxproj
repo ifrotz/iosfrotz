@@ -377,7 +377,6 @@
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
 		44E145CA114C303B001926E1 /* compass-small.png in Resources */ = {isa = PBXBuildFile; fileRef = 44E145C9114C303B001926E1 /* compass-small.png */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
-		44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */; };
 		44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */; };
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
 		44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4454850C1B1FBAB900E8EE7B /* libtads.a */; };
@@ -1302,7 +1301,6 @@
 				447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */,
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
-				44EBDB5B1B3D223F0061091E /* DropboxSDK.framework in Frameworks */,
 				44DA2B9D24AAB5F300B87F91 /* WebKit.framework in Frameworks */,
 				4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */,
 			);
