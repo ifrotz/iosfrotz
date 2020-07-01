@@ -14,7 +14,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
-**Update - Version 1.8.3 has been submitted to the App Store for review**
+**Update - Version 1.8.3 now available.**
 
 **6/29/2020**
 
