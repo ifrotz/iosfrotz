@@ -2,7 +2,7 @@ This page contains frequently asked questions and miscellaneous help about using
 
 **Update 10/03/2020**
 
-**Frotz 1.8.3** is pending review in the App Store, with the following changes:
+**Frotz 1.8.3** is now available, with the following changes:
 
   * Support for iOS 13, including light/dark mode
   * Support for newer devices with larger screen sizes.
