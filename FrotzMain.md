@@ -4,7 +4,7 @@ Frotz for iOS lets you play hundreds of free works of Interactive Fiction (a.k.a
 
 Frotz plays games written in the Z-Machine format.  This format was invented by Infocom and was used to produce great text adventures from the 80s such as the Zork Trilogy, Hitchhiker's Guide to the Galaxy, and Trinity.
 
-In the past decade, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.  Frotz also supports the glulx format, a newer format which is more powerful than Z-machine and supports games with images/graphics.
+In the two decades, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.  Frotz also supports the glulx format, a newer format which is more powerful than Z-machine and supports games with images/graphics.
 
 ![Frotz](../master/resources/Frotz-512x512.png)
 
