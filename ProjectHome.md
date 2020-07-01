@@ -1,6 +1,6 @@
 ### 2020/06/30 Update ###
 
-Version 1.8.3, with support for iOS 13 and devices with larger screens, pending review.
+Version 1.8.3, with support for iOS 13 and devices with larger screens, now available.
 
 ### 2017/10/03 Update ###
 
