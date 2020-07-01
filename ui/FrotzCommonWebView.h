@@ -14,6 +14,7 @@
 //#define UIWebView WKWebView
 
 #define UseWKWebViewForFrotzInfoDialogs 1
+#define UseWKWebViewForFrotzStoryDetails 1
 
 #if UseWKWebViewForFrotzInfoDialogs
 typedef WKWebView FrotzWebView;

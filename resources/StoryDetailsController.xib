@@ -204,7 +204,7 @@
                                                                 <constraint firstAttribute="height" priority="700" constant="40" id="ccZ-yt-Xmw"/>
                                                             </constraints>
                                                         </view>
-                                                        <webView opaque="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="53">
+                                                        <view opaque="NO" contentMode="center" translatesAutoresizingMaskIntoConstraints="NO" id="53" userLabel="Web View">
                                                             <rect key="frame" x="5" y="340" width="364" height="220"/>
                                                             <color key="backgroundColor" red="0.33333333333333331" green="0.33333333333333331" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             <constraints>
@@ -212,7 +212,6 @@
                                                                     <variation key="heightClass=compact" constant="0.0"/>
                                                                 </constraint>
                                                             </constraints>
-                                                            <dataDetectorType key="dataDetectorTypes"/>
                                                             <variation key="default">
                                                                 <mask key="constraints">
                                                                     <exclude reference="EX0-U5-TuR"/>
@@ -224,10 +223,7 @@
                                                                     <include reference="EX0-U5-TuR"/>
                                                                 </mask>
                                                             </variation>
-                                                            <connections>
-                                                                <outlet property="delegate" destination="-1" id="54"/>
-                                                            </connections>
-                                                        </webView>
+                                                        </view>
                                                     </subviews>
                                                     <constraints>
                                                         <constraint firstItem="18" firstAttribute="width" relation="lessThanOrEqual" secondItem="cre-mc-A6f" secondAttribute="width" multiplier="0.8" id="CEX-L0-D2I"/>

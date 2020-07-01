@@ -26,7 +26,13 @@
 @end
 
 
-@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate, UIActionSheetDelegate> {
+@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate,
+#if UseWKWebViewForFrotzStoryDetails
+    WKNavigationDelegate,
+#else
+    UIWebViewDelegate,
+#endif
+    UIActionSheetDelegate> {
 
     IBOutlet UITextField *m_titleField;
     IBOutlet UITextField *m_authorField;
@@ -35,7 +41,7 @@
     IBOutlet UIView *m_textFieldsView;
     IBOutlet UIView *m_buttonsView;
     IBOutlet UIView *m_flipper;
-    IBOutlet UIWebView *m_descriptionWebView;
+    IBOutlet UIView *m_descriptionWebView;
     IBOutlet UIButton *m_infoButton;
     IBOutlet UIButton *m_ifdbButton;
     IBOutlet UIButton *m_playButton;
@@ -50,7 +56,11 @@
     NSString *m_title, *m_author, *m_tuid, *m_descriptionHTML;
     StoryInfo *m_storyInfo;
     UIImage *m_artwork;
-
+#if UseWKWebViewForFrotzStoryDetails
+    WKWebView *m_realWebView;
+#else
+    UIWebView *m_realWebView;
+#endif
     StoryBrowser *__weak m_browser;
     FrotzInfo *m_frotzInfoController;
     
@@ -77,7 +87,7 @@
 @property(nonatomic,strong,setter=setTUID:) NSString* tuid;
 @property(nonatomic,strong) UIImage* artwork;
 @property(nonatomic,strong) UIView* contentView;
-@property(nonatomic,strong) UIWebView* descriptionWebView;
+@property(nonatomic,strong) UIView* descriptionWebView;
 @property(nonatomic,strong) UIView* flipper;
 @property(nonatomic,strong) UIView* infoButton;
 @property(nonatomic,assign) BOOL willResume;

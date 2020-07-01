@@ -217,7 +217,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 @synthesize descriptionHTML = m_descriptionHTML;
 @synthesize willResume = m_willResume;
 
-
 -(void)clear {
     self.storyTitle = @"";
     self.author = @"";
@@ -269,11 +268,12 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
    // [m_artworkView magnifyImage: NO];
     
     if (m_descriptionWebView) {
-        [m_descriptionWebView loadHTMLString:
+        [m_realWebView loadHTMLString:
          [NSString stringWithFormat:
           @"<html><body><style type=\"text/css\">\n"
           "h2 { font-size: 12pt; color:#cfcf00; } h3 { font-size: 11pt; color:#cfcf00; } p { font-size:10pt; }\n"
           "* { color:#ffffff; background: #666666 } ul { margin-left: 0.2em; padding-left: 1em; margin-right: 0.2em;}\n</style>\n"
+          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
           "%@\n<br>%@<br>\n"
           "</body></html\n",
           ([m_descriptionHTML length] > 0
@@ -378,6 +378,17 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (self.storyboard)
         [m_browser.splitViewController setDelegate: m_browser];
 
+    m_realWebView = [[WKWebView alloc] init];
+    [m_descriptionWebView addSubview: m_realWebView];
+#if UseWKWebViewForFrotzStoryDetails
+    [m_realWebView setNavigationDelegate: self];
+#else
+    [m_realWebView setDelegate: self];
+#endif
+    [m_realWebView setFrame: m_descriptionWebView.bounds];
+    [m_realWebView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
+    [m_descriptionWebView setAutoresizesSubviews: YES];
+
     m_artSizePortrait = m_artworkView.bounds.size;
     
     // Originally we let auto-rotate resizing compute the landscape bounds, and cached it.
@@ -392,7 +403,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
     
     if (m_descriptionWebView) {
-        NSArray *subviews = m_descriptionWebView.subviews;
+        NSArray *subviews = m_realWebView.subviews;
         if ([subviews count] > 0) {
             UIScrollView *sv = subviews[0];
             if (sv && [sv respondsToSelector:@selector(setBounces:)])
@@ -731,8 +742,15 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     }
 }
 
+#if UseWKWebViewForFrotzStoryDetails
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    //NSString *url = [navigationAction.request.URL query];
+    decisionHandler(navigationAction.navigationType !=  WKNavigationTypeLinkActivated);
+}
+#else
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
     return navigationType != UIWebViewNavigationTypeLinkClicked;
 }
+#endif
 
 @end
