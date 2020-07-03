@@ -14,11 +14,17 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
-**Update - Version 1.8.3 now available.**
+**Update - Version 1.8.4 now available.**
 
-**6/29/2020**
+**7/03/2020**
 
 This update contains the long-awaited changes to better support iOS 13 and new devices with larger screen sizes.
+
+**Update - Version 1.8.3 now available.**
+
+**7/01/2017**
+
+* This version added support for iOS 13, but introduced a usability bug with manual saved games, fixed in 1.8.4.
 
 **Update - Version 1.8.2 now available.**
 
