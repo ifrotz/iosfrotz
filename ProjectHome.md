@@ -1,6 +1,10 @@
-### 2020/06/30 Update ###
+### 2020/07/03 Update ###
 
-Version 1.8.3, with support for iOS 13 and devices with larger screens, now available.
+Version 1.8.4, with support for iOS 13 and devices with larger screens, now available.
+
+### 2020/07/01 Update ###
+
+Version 1.8.3, added support for iOS 13 but introduced a usability bug with manual saved games and was quickly replaced.
 
 ### 2017/10/03 Update ###
 
