@@ -18,7 +18,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 **7/03/2020**
 
-This update contains the long-awaited changes to better support iOS 13 and new devices with larger screen sizes.
+* This update contains the long-awaited changes to better support iOS 13 and new devices with larger screen sizes.
 
 **Update - Version 1.8.3 now available.**
 
