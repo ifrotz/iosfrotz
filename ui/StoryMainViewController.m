@@ -3491,7 +3491,10 @@ char *tempStatusLineScreenBuf() {
     [m_inputLine updatePosition];
     CGFloat contentOffset = scrollView.contentOffset.y;
     CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
-    if (!m_kbShown && maximumOffset > 0 && contentOffset >= maximumOffset+100)
+    if (!m_kbShown && maximumOffset > 0 && contentOffset >= maximumOffset+100
+        && [self.view window]
+        && ![self.navigationController presentedViewController]
+        && ![self.notesController isVisible])
         [self activateKeyboard];
 }
 
