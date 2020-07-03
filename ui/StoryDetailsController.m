@@ -43,33 +43,39 @@
 -(BOOL)isMagnified {
     return (m_savedBounds.size.width != 0);
 }
-
--(void)magnifyImage:(BOOL)toggle {
+-(void)resetMagnification {
     if ([self isMagnified]) {
-    	[UIView beginAnimations:@"artmag" context:0];
-        [UIView setAnimationTransition:UIViewAnimationTransitionNone forView:self cache:YES];
         self.frame = m_savedBounds;
         m_savedBounds = CGRectZero;
         [m_detailsController dimDescription: NO];
         self.translatesAutoresizingMaskIntoConstraints = NO;
+    }
+}
+
+-(void)magnifyImage:(BOOL)toggle {
+    if ([self isMagnified]) {
+        [UIView beginAnimations:@"artmag" context:0];
+        [UIView setAnimationTransition:UIViewAnimationTransitionNone forView:self cache:YES];
+        [self resetMagnification];
         [UIView commitAnimations];
     } else if (toggle) {
         const CGFloat kFactor = 0.9;
         CGRect bounds = [self bounds];
         CGSize imageSize = self.image.size;
+        CGSize superSize = self.superview.bounds.size;
+        if (imageSize.width < superSize.width * kFactor
+            && imageSize.height < superSize.height * kFactor)
+            superSize = imageSize;
+        else {
+            superSize.width *= kFactor;
+            superSize.height *= kFactor;
+        }
         if (m_detailsController.artwork && (imageSize.width > bounds.size.width * 1.1 || imageSize.height > bounds.size.height * 1.1))
         {
             [UIView beginAnimations:@"artmag" context:0];
             [UIView setAnimationTransition:UIViewAnimationTransitionNone forView:self cache:YES];
             m_savedBounds = self.frame;
-            CGSize superSize = self.superview.bounds.size;
-            if (imageSize.width < superSize.width * kFactor
-                && imageSize.height < superSize.height * kFactor)
-                bounds.size = imageSize;
-            else {
-                bounds.size.width = superSize.width * kFactor;
-                bounds.size.height = superSize.height * kFactor;
-            }
+            bounds.size = superSize;
             self.translatesAutoresizingMaskIntoConstraints = YES;
             self.bounds = bounds;
             [self.superview bringSubviewToFront: self];
@@ -232,7 +238,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (m_title && [m_title length] > 0 || m_storyInfo) {
         m_portraitCover.hidden = YES;
         m_textFieldsView.hidden = NO;
-        m_descriptionWebView.hidden = NO;
+        m_descriptionWebView.hidden = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact ? YES : NO;
         m_noArtworkLabel.hidden = m_artwork ? YES : NO;
         m_playButton.hidden = NO;
         m_ifdbButton.hidden = NO;
@@ -433,7 +439,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
     [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
     [self updateSelectStoryHint];
-    [m_artworkView magnifyImage:NO];
+    [m_artworkView resetMagnification];
     [self refresh];
     if (self.storyboard)
         return;
@@ -459,50 +465,18 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    [m_artworkView magnifyImage:NO];
-    if (gUseSplitVC && gLargeScreenDevice && !self.splitViewController.presentedViewController) {
-#if 000
-        [coordinator animateAlongsideTransition:^(id context){
-            if (self.splitViewController.presentedViewController)
-                ;
-            else if ([[m_browser storyMainViewController] navigationController])
-                self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-            else if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
-               if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation])) {
-                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
-                   self.navigationItem.leftBarButtonItem = nil;
-               } else {
-                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-                   [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-               }
-           } else {
-               self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
-           }
-            
-        } completion:^(id context) { } ];
-#endif
-    }
+    [m_artworkView resetMagnification];
+    [self updateSelectStoryHint];
 }
+
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
-    [m_artworkView magnifyImage:NO];
+    [m_artworkView magnifyImage: NO];
     [self setEditing: NO animated: animated];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
-- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    [m_artworkView magnifyImage:NO];
-    
- //   m_artworkView.autoresizingMask &= ~UIViewAutoresizingFlexibleBottomMargin;
-    
-    if (m_title && [m_title length] > 0 || m_storyInfo) {
-        m_portraitCover.hidden = YES;
-    } else {
-        m_portraitCover.hidden = NO;
-    }
 }
 
 -(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation {
@@ -582,7 +556,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         }
     }
 #endif
-    m_descriptionWebView.hidden = m_artworkView.isMagnified ? YES : NO;
+    m_descriptionWebView.hidden = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact ? YES : NO;
     if (displayMode == UISplitViewControllerDisplayModeAllVisible
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Select a story to begin";

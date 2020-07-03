@@ -138,6 +138,7 @@
                                                 <constraint firstAttribute="height" relation="lessThanOrEqual" constant="240" id="DXF-Jn-wd3"/>
                                                 <constraint firstItem="16" firstAttribute="top" secondItem="14" secondAttribute="bottom" constant="2" id="FGE-5j-ROj"/>
                                                 <constraint firstItem="15" firstAttribute="centerX" secondItem="72" secondAttribute="centerX" id="RwL-sL-JNT"/>
+                                                <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="160" id="SSg-jG-wsZ"/>
                                                 <constraint firstItem="17" firstAttribute="centerY" secondItem="16" secondAttribute="centerY" id="UZP-ov-yw7"/>
                                                 <constraint firstItem="17" firstAttribute="trailing" secondItem="72" secondAttribute="centerX" constant="-14" id="Uzr-KX-31y"/>
                                                 <constraint firstItem="17" firstAttribute="leading" secondItem="72" secondAttribute="leading" constant="16" id="VGB-aT-r4r"/>
@@ -179,7 +180,7 @@
                                                             <rect key="frame" x="37.5" y="0.0" width="299" height="299"/>
                                                             <accessibility key="accessibilityConfiguration" label="Artwork"/>
                                                             <constraints>
-                                                                <constraint firstAttribute="width" secondItem="18" secondAttribute="height" multiplier="1:1" id="uPO-CL-JaK"/>
+                                                                <constraint firstAttribute="width" secondItem="18" secondAttribute="height" multiplier="1:1" priority="950" id="uPO-CL-JaK"/>
                                                                 <constraint firstAttribute="height" relation="lessThanOrEqual" constant="500" id="wjw-S4-39w"/>
                                                             </constraints>
                                                         </imageView>

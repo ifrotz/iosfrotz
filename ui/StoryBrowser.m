@@ -1535,7 +1535,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return nil;
 }
 
-
 // This method is called when a split view controller is separating its child into two children for a transition from a compact-width size
 // class to a regular-width size class. Override this method to perform custom separation behavior.  The controller returned from this method
 // will be set as the secondary view controller of the split view controller.  When you return from this method, `primaryViewController` should
@@ -1654,6 +1653,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     return 1;
 }
 #endif
+
+-(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [[self tableView] reloadData];
+}
 
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"storyCell"];
