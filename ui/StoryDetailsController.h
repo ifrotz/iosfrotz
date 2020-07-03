@@ -35,7 +35,7 @@
     IBOutlet UIView *m_textFieldsView;
     IBOutlet UIView *m_buttonsView;
     IBOutlet UIView *m_flipper;
-    IBOutlet FrotzWebView *m_descriptionWebView;
+    IBOutlet UIWebView *m_descriptionWebView;
     IBOutlet UIButton *m_infoButton;
     IBOutlet UIButton *m_ifdbButton;
     IBOutlet UIButton *m_playButton;
@@ -77,7 +77,7 @@
 @property(nonatomic,strong,setter=setTUID:) NSString* tuid;
 @property(nonatomic,strong) UIImage* artwork;
 @property(nonatomic,strong) UIView* contentView;
-@property(nonatomic,strong) FrotzWebView* descriptionWebView;
+@property(nonatomic,strong) UIWebView* descriptionWebView;
 @property(nonatomic,strong) UIView* flipper;
 @property(nonatomic,strong) UIView* infoButton;
 @property(nonatomic,assign) BOOL willResume;
