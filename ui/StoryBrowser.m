@@ -1160,6 +1160,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         }
         nc.modalPresentationStyle = UIModalPresentationFullScreen;
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+        if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
+            [self.splitViewController dismissViewControllerAnimated:NO completion:nil];
         [self.splitViewController presentViewController:nc animated:YES completion:nil];
     }
 }
