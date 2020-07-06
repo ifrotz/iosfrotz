@@ -154,7 +154,7 @@ extern bool gUseSplitVC;
 
 #define UseWKWebViewForFrotzInfoDialogs 1
 #define UseWKWebViewForFrotzStoryDetails 1
-#define UseWKWebViewForIFDBBrowser 0
+#define UseWKWebViewForIFDBBrowser 1
 
 #define IPHONE_FROTZ_VERS "1.8.4"
 #define IPHONE_FROTZ_RN_VERS IPHONE_FROTZ_VERS // "1.8"
