@@ -14,7 +14,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-*/
+ */
 #import <UIKit/UIKit.h>
 #import "iosfrotz.h"
 #import "StoryWebBrowserController.h"
@@ -30,7 +30,7 @@ const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
 
-@implementation StoryWebBrowserController 
+@implementation StoryWebBrowserController
 
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb {
     if ((self = [super initWithNibName:nil bundle:nil])) {
@@ -58,9 +58,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
     frame.origin.y += navBarHeight;
     frame.size.height -= navBarHeight;
-    
+
     m_background = [[UIView alloc] initWithFrame: frame];
-    
+
     frame.origin.y = 0;
     frame.size.height -= toolBarHeight;
     m_scrollView = [[UIScrollView alloc] initWithFrame: frame];
@@ -86,7 +86,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_scrollView setAutoresizesSubviews: YES];
     [m_scrollView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_scrollView bringSubviewToFront: m_webView];
-    
+
     [self setView: m_background];
 #if UseWKWebViewForIFDBBrowser
     [m_webView setNavigationDelegate: self];
@@ -107,7 +107,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         [m_toolBar setTintColor: [UIColor whiteColor]];
     }
 #endif
-    
+
     m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack.png"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     m_cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel)];
@@ -121,7 +121,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.rightBarButtonItem = m_activButtonItem;
 
     [m_toolBar setItems: @[m_backButtonItem, spaceButtonItem, m_reloadButtonItem, spaceButtonItem, m_cancelButtonItem, spaceButtonItem, m_URLButtonItem, spaceButtonItem, m_forwardButtonItem]];
-    
+
     [m_background addSubview: m_toolBar];
     [m_background bringSubviewToFront: m_toolBar];
 
@@ -133,20 +133,13 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     self.navigationItem.title = @"Story Browser";
 
-//    m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
-
-    // turn off tables; this sets a cookie and makes the next page easier to read and navigate
-//    NSURL *myURL = [NSURL URLWithString: @"http://wurb.com:80/if/settables?set=no"];
-//    [NSURLConnection sendSynchronousRequest:[NSURLRequest requestWithURL: myURL] returningResponse:&response error:&error];
-//  myURL = [NSURL URLWithString: @"http://wurb.com:80/if/search"];
-
-    NSURL *myURL = [NSURL URLWithString: @"http://ifdb.tads.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"]; 
+    NSURL *myURL = [NSURL URLWithString: @"http://ifdb.tads.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"];
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: NO];
 
     m_state = kSWBIdle;
-    [m_webView loadRequest: [NSURLRequest requestWithURL: myURL]];    
+    [m_webView loadRequest: [NSURLRequest requestWithURL: myURL]];
 }
 
 -(void)viewDidLoad {
@@ -224,24 +217,24 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     if (pUrls)
         *pUrls = @[@"ifdb.tads.org",
-                  @"gallery.guetech.org/greybox.html",
-                  @"inform7.com",
-                  @"www.ifwiki.org/index.php/Main_Page",
-                  @"www.ifarchive.org",
-                  @"www.ifcomp.org",
-                  @"https://eblong.com/infocom",
-                  @"brasslantern.org",
-                  @"nickm.com/if"];
+                   @"gallery.guetech.org/greybox.html",
+                   @"inform7.com",
+                   @"www.ifwiki.org/index.php/Main_Page",
+                   @"www.ifarchive.org",
+                   @"www.ifcomp.org",
+                   @"https://eblong.com/infocom",
+                   @"brasslantern.org",
+                   @"nickm.com/if"];
     if (pTitles)
         *pTitles = @[@"Interactive Fiction Database - IF and Text Adventures",
-                    @"Infocom Gallery (Artwork, Docs)",
-                    @"Inform 7 - A Design System for Interactive Fiction",
-                    @"IFWiki Home",
-                    @"The Interactive Fiction Archive",
-                    @"The Annual Interactive Fiction Competition",
-                    @"The Obsessively Complete Infocom Catalog",
-                    @"Brass Latern",
-                    @"Interactive Fiction - Nick Montfort"];
+                     @"Infocom Gallery (Artwork, Docs)",
+                     @"Inform 7 - A Design System for Interactive Fiction",
+                     @"IFWiki Home",
+                     @"The Interactive Fiction Archive",
+                     @"The Annual Interactive Fiction Competition",
+                     @"The Obsessively Complete Infocom Catalog",
+                     @"Brass Latern",
+                     @"Interactive Fiction - Nick Montfort"];
 }
 
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles {
@@ -257,8 +250,8 @@ const NSString *kBookmarkVersionKey = @"Version";
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-// Convenient, but makes navigation feel inconsistent, and hides activity spinner.
-//    self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
+    // Convenient, but makes navigation feel inconsistent, and hides activity spinner.
+    //self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
     [m_frotzInfoController setKeyboardOwner: self];
 #ifdef NSFoundationVersionNumber_iOS_6_1
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
@@ -273,7 +266,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
-    
+
     if (m_backToStoryList) {
         BOOL cache = YES;
 #ifdef NSFoundationVersionNumber_iOS_6_1
@@ -283,10 +276,8 @@ const NSString *kBookmarkVersionKey = @"Version";
         if (!gUseSplitVC) {
             [UIView beginAnimations:nil context:NULL];
             [UIView setAnimationDuration:0.8];
-            [UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView:[
-             [[[self view] superview] superview]
-                                    superview]
-                                     cache:cache];
+            [UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView:
+                [[[[self view] superview] superview] superview] cache:cache];
             [UIView commitAnimations];
         }
     } else {
@@ -298,7 +289,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         [[[[self view] superview] layer] addAnimation:animation forKey:@"browseBack"];
     }
     m_backToStoryList = NO;
-//    [m_frotzInfoController dismissInfo];
+    //    [m_frotzInfoController dismissInfo];
 }
 
 -(UIActivityIndicatorView*)activityIndicator {
@@ -336,7 +327,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     CATransition *animation = [CATransition animation];
     [animation setType:kCATransitionFade];
     [animation setDuration: 0.3];
-    [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];	
+    [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
     [[[self view] layer] addAnimation:animation forKey:@"fadebar"];
 #endif
 }
@@ -345,18 +336,18 @@ const NSString *kBookmarkVersionKey = @"Version";
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
         //	[self setupFade];
-        
+
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y += kSearchBarHeight;
         webFrame.size.height -= kSearchBarHeight;
-        
+
         [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
         UIView *v = [self view];
         [v addSubview: urlView];
-        
+
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
-        
+
         [urlView setFrame: CGRectMake(0, 0, webFrame.size.width, kSearchBarHeight)];
         [v bringSubviewToFront: urlView];
         [UIView commitAnimations];
@@ -369,18 +360,17 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSURL *myURL;
     [m_urlBarController setText: url];
     [self dismissURLPrompt];
-    
+
     if ([url rangeOfString: @"://" ].length > 0)
         myURL = [NSURL URLWithString: url];
     else if ([url hasPrefix: @"//" ])
         myURL = [NSURL URLWithString: [@"http:" stringByAppendingString: url]];
     else
         myURL = [NSURL URLWithString: [@"http://" stringByAppendingString: url]];
-    
+
     (void)[self view]; // make sure view is loaded
     NSURLRequest *request = [NSURLRequest requestWithURL: myURL];
     [m_webView performSelector: @selector(loadRequest:) withObject:request afterDelay:1.0];
-//    [m_webView loadRequest: request];
 }
 
 
@@ -407,7 +397,6 @@ const NSString *kBookmarkVersionKey = @"Version";
         [UIView setAnimationDelegate: self];
         [UIView setAnimationDidStopSelector: @selector(animationDidFinish:finished:context:)];
         [UIView commitAnimations];
-//	[urlView removeFromSuperview];
     }
 }
 
@@ -443,9 +432,9 @@ const NSString *kBookmarkVersionKey = @"Version";
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     NSURLRequest *request = m_currentRequest;
 
-//    NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
+    //NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
 
-//    m_currentRequest = nil;
+    //m_currentRequest = nil;
     NSURL *url = [request mainDocumentURL];
     NSString *urlString = [[url relativeString] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
@@ -459,7 +448,7 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSString *storyFile = [[[m_delayedRequest mainDocumentURL] relativeString] lastPathComponent];
             NSString *story;
             if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
-            && m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
+                && m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
                 story = [m_expectedArchiveFiles[0] stringByDeletingPathExtension];
             else
                 story = [storyFile stringByDeletingPathExtension];
@@ -468,7 +457,7 @@ const NSString *kBookmarkVersionKey = @"Version";
                     [m_storyBrowser saveMetaData];
             }
         }
-	
+
         m_receivedData = nil;
 
         if (m_delayedRequest) {
@@ -496,8 +485,8 @@ const NSString *kBookmarkVersionKey = @"Version";
     UIAlertView *alert = nil;
     if (isBadLoad) {
         alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
-                                message:@"The web server returned an error page instead of the expected file"
-                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                                           message:@"The web server returned an error page instead of the expected file"
+                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
@@ -523,8 +512,8 @@ const NSString *kBookmarkVersionKey = @"Version";
         NSFileManager *fileMgr = [NSFileManager defaultManager];
         [fileMgr removeItemAtPath: outFile error: &error];
     } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
-	alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
-							delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
+                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
         [alert show];
     }
@@ -539,7 +528,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     [m_activityView stopAnimating];
-//    NSLog(@"m_currentRequest release connDidFailWithError");
+    //NSLog(@"m_currentRequest release connDidFailWithError");
     m_receivedData = nil;
     m_currentRequest = nil;
     m_state = kSWBIdle;
@@ -548,7 +537,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: [m_webView isLoading]];
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
-						    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                                                   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     [alert show];
 }
 
@@ -557,9 +546,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     __block NSString *result = nil;
     [m_webView evaluateJavaScript:jsExpr completionHandler: ^(NSString *r, NSError *error) {
-            result = r;
-            dispatch_semaphore_signal(sema);
-         }];
+        result = r;
+        dispatch_semaphore_signal(sema);
+    }];
     while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.001]];
     }
@@ -585,30 +574,30 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlPath = [url path];
     NSString *urlQuery = [url query];
     NSLog(@"ZDL from url w/host %@, path %@, query=%@", urlHost, urlPath, urlQuery);
-	
+
     if (!([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
-        && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
+          && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
         return NO;
 
-	BOOL saveMeta = NO;
-	NSUInteger len = [pageStr length];
-	NSRange range1 = [pageStr rangeOfString: @"<h1>"];
-	if (range1.length > 0) {
-	    range1.location += 4;
-	    range1.length = len - range1.location;
-	    NSRange range2 = [pageStr rangeOfString: @"</h1>" options:0 range:range1];
-	    if (range2.length > 0 && range2.location > range1.location) {
-		range1.length = range2.location - range1.location;
-		NSString *fullName = [pageStr substringWithRange: range1];
-		fullName = [fullName stringByReplacingOccurrencesOfString: @"Cover Art for " withString: @""];
-		fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
-		if (!story)
-		    story = [fullName lowercaseString];
+    BOOL saveMeta = NO;
+    NSUInteger len = [pageStr length];
+    NSRange range1 = [pageStr rangeOfString: @"<h1>"];
+    if (range1.length > 0) {
+        range1.location += 4;
+        range1.length = len - range1.location;
+        NSRange range2 = [pageStr rangeOfString: @"</h1>" options:0 range:range1];
+        if (range2.length > 0 && range2.location > range1.location) {
+            range1.length = range2.location - range1.location;
+            NSString *fullName = [pageStr substringWithRange: range1];
+            fullName = [fullName stringByReplacingOccurrencesOfString: @"Cover Art for " withString: @""];
+            fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
+            if (!story)
+                story = [fullName lowercaseString];
             if (story) {
                 [m_storyBrowser addTitle: fullName forStory: story];
-                
+
                 NSString *authorsStr = nil, *tuidStr = nil, *descriptStr = nil;
-                
+
                 //Look for authors: by <a href="search?searchfor=author%3ANick+Montfort">Nick Montfort</a></b>
                 range1.location = range2.location + range2.length;
                 range1.length = len - range1.location;
@@ -635,7 +624,7 @@ const NSString *kBookmarkVersionKey = @"Version";
                             range2.length = 0;
                     }
                 }
-                
+
                 // Look for tuid: >TUID</a>:            xi4s5ne9m6w821xd            </span>
                 range1.location = range1.location + range1.length;
                 range1.length = len - range1.location;
@@ -651,7 +640,7 @@ const NSString *kBookmarkVersionKey = @"Version";
                         tuidStr = [tuidStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
                     }
                 }
-                
+
                 range1 = [pageStr rangeOfString: @"<h3>About the Story</h3>" options:0 range:srange];
                 if (range1.length > 0) {
                     range2.location = range1.location + range1.length;
@@ -678,7 +667,7 @@ const NSString *kBookmarkVersionKey = @"Version";
                         srange.length = len - srange.location;
                     }
                 }
-                
+
                 if (authorsStr)
                     [m_storyBrowser addAuthors:authorsStr forStory:story];
                 if (tuidStr)
@@ -687,32 +676,32 @@ const NSString *kBookmarkVersionKey = @"Version";
                     [m_storyBrowser addDescript:descriptStr forStory:story];
                 saveMeta = YES;
             }
-	    }
-	}
-	if (story) {
-	    urlQuery = [urlQuery stringByReplacingOccurrencesOfString: @"&ldesc" withString:@""];
-	    NSURL *picURL = [NSURL URLWithString: [NSString stringWithFormat: @"http://%@%@?coverart&%@", urlHost, urlPath, urlQuery]];
-//	    NSData *picData = [NSURLConnection sendSynchronousRequest:[NSURLRequest requestWithURL: picURL] returningResponse:&response error:&error];
-//	    saveMeta |= [self savePicData: picData forStory:story];
+        }
+    }
+    if (story) {
+        urlQuery = [urlQuery stringByReplacingOccurrencesOfString: @"&ldesc" withString:@""];
+        NSURL *picURL = [NSURL URLWithString: [NSString stringWithFormat: @"http://%@%@?coverart&%@", urlHost, urlPath, urlQuery]];
+        //NSData *picData = [NSURLConnection sendSynchronousRequest:[NSURLRequest requestWithURL: picURL] returningResponse:&response error:&error];
+        //saveMeta |= [self savePicData: picData forStory:story];
 
-	    NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
-	    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
-	    if (connection) {
+        NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
+        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
+        if (connection) {
             m_delayedRequest = delayedRequest;
             m_receivedData = [NSMutableData data];
             m_state = kSWBFetchingImage;
             loadingPic = YES;
-	    } else {
+        } else {
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
-                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
             [alert show];
-	    }
+        }
 
-	}
-	if (saveMeta) {
-	    [m_storyBrowser saveMetaData];
-	    [m_storyBrowser refreshDetails];
-	}
+    }
+    if (saveMeta) {
+        [m_storyBrowser saveMetaData];
+        [m_storyBrowser refreshDetails];
+    }
     return loadingPic;
 }
 
@@ -742,7 +731,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.rightBarButtonItem = m_activButtonItem;
 
     [m_activityView startAnimating];
-    
+
     NSLog(@"Load meta, curreq=%@", m_currentRequest);
     if (m_currentRequest) {
         NSString *story = [[[[request mainDocumentURL] path] lastPathComponent] stringByDeletingPathExtension];
@@ -794,10 +783,10 @@ static bool bypassBundle = NO;
 #endif
     m_storyAlreadyInstalled = NO;
     [m_activityView startAnimating];
-    
+
     //NSLog(@"Load %@", request);
     m_currentRequest = request;
-    //    NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
+    //NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
     if (connection) {
         m_receivedData = [NSMutableData data];
@@ -816,7 +805,7 @@ static bool bypassBundle = NO;
     if (!bundledGamesPath || ![[NSFileManager defaultManager] fileExistsAtPath: bundledGamesPath])
         return NO;
     NSMutableArray *zList = listOfZFilesInZIP(bundledGamesPath);
-    if (!zList || [zList count] == 0) 
+    if (!zList || [zList count] == 0)
         return NO;
     else if (m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0 && [zList indexOfObject: m_expectedArchiveFiles[0]] != NSNotFound)
         return YES;
@@ -910,14 +899,14 @@ static bool bypassBundle = NO;
                 m_expectedArchiveFiles = [[NSMutableArray alloc] init];
             [m_expectedArchiveFiles addObject: urlString];
         }
-        
+
         m_storyAlreadyInstalled = [m_storyBrowser storyIsInstalled: urlString];
         if (![self IFDBContentExistsInBundle: urlString]  // in bundled
             && !m_storyAlreadyInstalled) { // or they've already manually installed it; allow redownload to get title and artwork
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"In-App Download unsupported"
                                                             message:@"Sorry, this story is not bundled and can't be downloaded by Frotz."
                                   //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
-                                                           delegate:self cancelButtonTitle:@"Dismiss" 
+                                                           delegate:self cancelButtonTitle:@"Dismiss"
                                                   otherButtonTitles: m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0 ? @"Open in Safari":nil, nil];
             [alert show];
             return NO;
@@ -927,7 +916,7 @@ static bool bypassBundle = NO;
         return NO;
     }
     m_currentRequest = request;
-    //    NSLog(@"m_currentRequest retain shouldStart %@", m_currentRequest);
+    //NSLog(@"m_currentRequest retain shouldStart %@", m_currentRequest);
     [m_urlBarController setText: [[m_currentRequest mainDocumentURL] absoluteString]];
     m_state = kSWBIdle;
     return YES;
@@ -951,14 +940,14 @@ static bool bypassBundle = NO;
 
 - (void)handleLoadFinished {
     if (m_currentRequest) {
-        //    	NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
-        
+        //NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
+
         NSURL *url = [m_currentRequest mainDocumentURL];
-        
+
         NSString *urlHost = [url host];
         NSString *urlPath = [url path];
         NSString *urlQuery = [url query];
-        
+
         if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
             if ([urlQuery hasPrefix: @"coverart&"])
                 [self snarfMetaData: m_currentRequest loadRequest:nil forStory: nil];
@@ -968,7 +957,7 @@ static bool bypassBundle = NO;
 
 - (void)handleLoadFailureWithError:(NSError *)error {
     UIAlertView *alert = nil;
-    
+
     if ([error code]==102) { //WebKitErrorDomain, no header in SDK?
         alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
                  //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
@@ -980,8 +969,8 @@ static bool bypassBundle = NO;
     if (alert) {
         [alert show];
     }
-    //    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
-    
+    //NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
+
     m_currentRequest = nil;
 }
 
