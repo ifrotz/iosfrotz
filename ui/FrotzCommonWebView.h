@@ -8,13 +8,8 @@
  */
 
 #import <UIKit/UIKit.h>
-
 #import <WebKit/WebKit.h>
-
-//#define UIWebView WKWebView
-
-#define UseWKWebViewForFrotzInfoDialogs 1
-#define UseWKWebViewForFrotzStoryDetails 1
+#import "iosfrotz.h"
 
 #if UseWKWebViewForFrotzInfoDialogs
 typedef WKWebView FrotzWebView;

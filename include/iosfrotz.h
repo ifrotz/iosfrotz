@@ -4,7 +4,8 @@
  * IPhone interface, declarations, definitions, and defaults, based on Unix/ frotz
  *
  */
-
+#ifndef __IOSFROTZ_H
+#define __IOSFROTZ_H 1
 #define FROTZ_IOS_FILE 1
 
 #include <stdbool.h>
@@ -151,6 +152,10 @@ extern bool gUseSplitVC;
 
 #define UseFullSizeStatusLineFont 1
 
+#define UseWKWebViewForFrotzInfoDialogs 1
+#define UseWKWebViewForFrotzStoryDetails 1
+#define UseWKWebViewForIFDBBrowser 0
+
 #define IPHONE_FROTZ_VERS "1.8.4"
 #define IPHONE_FROTZ_RN_VERS IPHONE_FROTZ_VERS // "1.8"
 #define FROTZ_BETA 0
@@ -160,3 +165,5 @@ extern bool gUseSplitVC;
 #define UseNewFTPServer 1
 
 #include "ifrotzdefs.h"
+
+#endif //__IOSFROTZ_H

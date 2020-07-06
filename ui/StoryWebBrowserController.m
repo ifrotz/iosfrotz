@@ -20,6 +20,7 @@
 #import "StoryWebBrowserController.h"
 #import "StoryBrowser.h"
 #import "ui_utils.h"
+#import "iosfrotz.h"
 
 #import "extractzfromz.h"
 #import <QuartzCore/QuartzCore.h>
@@ -75,9 +76,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     frame = [m_scrollView bounds];
     frame.size.height -= safeInsets.bottom;
-
-    m_webView = [[UIWebView alloc] initWithFrame: frame];
-
+    m_webView = [[StoryWebView alloc] initWithFrame: frame];
     [m_background setAutoresizesSubviews: YES];
 
     [m_webView setAutoresizesSubviews: YES];
@@ -89,11 +88,14 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_scrollView bringSubviewToFront: m_webView];
     
     [self setView: m_background];
+#if UseWKWebViewForIFDBBrowser
+    [m_webView setNavigationDelegate: self];
+#else
     [m_webView setScalesPageToFit: YES];
     [m_webView setDetectsPhoneNumbers: NO];
-    
     [m_webView setDelegate: self];
-    
+#endif
+
     frame.origin.y = frame.size.height;
     frame.size.height = toolBarHeight;
     m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
@@ -312,9 +314,10 @@ const NSString *kBookmarkVersionKey = @"Version";
     return m_backButtonItem;
 }
 
--(UIWebView*)webView {
+-(StoryWebView*)webView {
     return m_webView;
 }
+
 -(void)goBack {
     [[self webView] goBack];
 }
@@ -549,7 +552,33 @@ const NSString *kBookmarkVersionKey = @"Version";
     [alert show];
 }
 
+#if UseWKWebViewForIFDBBrowser
+-(NSString*)syncStringByEvaluatingJavaScriptFromString:(NSString*)jsExpr {
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    __block NSString *result = nil;
+    [m_webView evaluateJavaScript:jsExpr completionHandler: ^(NSString *r, NSError *error) {
+            result = r;
+            dispatch_semaphore_signal(sema);
+         }];
+    while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.001]];
+    }
+    return result;
+}
+#endif
+
 - (BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story {
+    NSString *pageStr;
+#if UseWKWebViewForIFDBBrowser
+    pageStr = [self syncStringByEvaluatingJavaScriptFromString: @"document.body.innerHTML;"];
+#else
+    pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
+#endif
+    BOOL loadingPic = [self snarfMetaDataFromPage:pageStr pageRequest:request loadRequest:delayedRequest forStory:story];
+    return loadingPic;
+}
+
+- (BOOL)snarfMetaDataFromPage:(NSString*)pageStr pageRequest:(NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story {
     BOOL loadingPic = NO;
     NSURL *url = [request mainDocumentURL];
     NSString *urlHost = [url host];
@@ -557,11 +586,11 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlQuery = [url query];
     NSLog(@"ZDL from url w/host %@, path %@, query=%@", urlHost, urlPath, urlQuery);
 	
-    if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
-        && ![story isEqualToString: @"hhgg"]) // ifdb hitchhiker pic is low-res, don't override built-in
-    {
+    if (!([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
+        && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
+        return NO;
+
 	BOOL saveMeta = NO;
-	NSString *pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
 	NSUInteger len = [pageStr length];
 	NSRange range1 = [pageStr rangeOfString: @"<h1>"];
 	if (range1.length > 0) {
@@ -684,7 +713,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 	    [m_storyBrowser saveMetaData];
 	    [m_storyBrowser refreshDetails];
 	}
-    }
     return loadingPic;
 }
 
@@ -717,10 +745,10 @@ const NSString *kBookmarkVersionKey = @"Version";
     
     NSLog(@"Load meta, curreq=%@", m_currentRequest);
     if (m_currentRequest) {
-	NSString *story = [[[[request mainDocumentURL] path] lastPathComponent] stringByDeletingPathExtension];
-	BOOL loadingPic = [self snarfMetaData: m_currentRequest loadRequest: request forStory: story];
-	if (loadingPic)
-	    return; // loadZFile will be done after pic loaded
+        NSString *story = [[[[request mainDocumentURL] path] lastPathComponent] stringByDeletingPathExtension];
+        BOOL loadingPic = [self snarfMetaData: m_currentRequest loadRequest: request forStory: story];
+        if (loadingPic)
+            return; // loadZFile will be done after pic loaded
     }
     [self loadZFile: request];
 }
@@ -798,7 +826,7 @@ static bool bypassBundle = NO;
 }
 #endif
 
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+- (BOOL)webViewShouldStartLoadWithRequest:(NSURLRequest *)request {
     NSURL *url = [request mainDocumentURL];
     NSString *urlRelPath = [url relativeString];
     NSString *urlString = [urlRelPath lastPathComponent];
@@ -905,6 +933,15 @@ static bool bypassBundle = NO;
     return YES;
 }
 
+- (void)updateButtonsForIdle:(StoryWebView*)webView
+{
+    [m_activityView stopAnimating];
+    [m_backButtonItem setEnabled: [webView canGoBack]];
+    [m_forwardButtonItem setEnabled: [webView canGoForward]];
+    [m_cancelButtonItem setEnabled: [webView isLoading]];
+    m_state = kSWBIdle;
+}
+
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex == 1) {
         if (m_currentRequest)
@@ -912,20 +949,7 @@ static bool bypassBundle = NO;
     }
 }
 
-
-
-- (void)webViewDidStartLoad:(UIWebView *)webView {
-    [m_activityView startAnimating];
-    [m_cancelButtonItem setEnabled: YES];
-}
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    [m_activityView stopAnimating];
-    [m_backButtonItem setEnabled: [webView canGoBack]];
-    [m_forwardButtonItem setEnabled: [webView canGoForward]];
-    [m_cancelButtonItem setEnabled: [webView isLoading]];
-    m_state = kSWBIdle;
-    
+- (void)handleLoadFinished {
     if (m_currentRequest) {
         //    	NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
         
@@ -942,6 +966,62 @@ static bool bypassBundle = NO;
     }
 }
 
+- (void)handleLoadFailureWithError:(NSError *)error {
+    UIAlertView *alert = nil;
+    
+    if ([error code]==102) { //WebKitErrorDomain, no header in SDK?
+        alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
+                 //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
+                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+    } else if ([error code] != NSURLErrorCancelled) {
+        alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
+                                          delegate:self cancelButtonTitle:@"OK"otherButtonTitles: nil];
+    }
+    if (alert) {
+        [alert show];
+    }
+    //    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
+    
+    m_currentRequest = nil;
+}
+
+#if UseWKWebViewForIFDBBrowser
+
+-(NSString*)currentURL {
+    return [self syncStringByEvaluatingJavaScriptFromString: @"document.URL;"];
+}
+
+-(NSString*)currentURLTitle {
+    return [self syncStringByEvaluatingJavaScriptFromString: @"document.title;"];
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    // if (navigationAction.navigationType == UIWebViewNavigationTypeLinkClicked) ...
+    //NSString *url = [navigationAction.request.URL query];
+
+    BOOL answer = [self webViewShouldStartLoadWithRequest: navigationAction.request];
+    decisionHandler(answer ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
+}
+
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
+    [m_activityView startAnimating];
+    [m_cancelButtonItem setEnabled: YES];
+}
+
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error {
+    [self updateButtonsForIdle: webView];
+}
+
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    [self updateButtonsForIdle: webView];
+    [self handleLoadFinished];
+}
+
+- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    [self updateButtonsForIdle: webView];
+    [self handleLoadFailureWithError: error];
+}
+#else
 -(NSString*)currentURL {
     NSString *url = [m_webView stringByEvaluatingJavaScriptFromString:@"document.URL;"];
     return url;
@@ -952,28 +1032,25 @@ static bool bypassBundle = NO;
     return title;
 }
 
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+    return [self webViewShouldStartLoadWithRequest: request];
+}
+
+- (void)webViewDidStartLoad:(UIWebView *)webView {
+    [m_activityView startAnimating];
+    [m_cancelButtonItem setEnabled: YES];
+}
+
+- (void)webViewDidFinishLoad:(UIWebView *)webView {
+    [self updateButtonsForIdle: webView];
+    [self handleLoadFinished];
+}
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
-    UIAlertView *alert = nil;
-    [m_activityView stopAnimating];
-    [m_backButtonItem setEnabled: [webView canGoBack]];
-    [m_forwardButtonItem setEnabled: [webView canGoForward]];
-    [m_cancelButtonItem setEnabled: [webView isLoading]];
-    
-    if ([error code]==102) { //WebKitErrorDomain, no header in SDK?
-        alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
-                 //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    } else if ([error code] != NSURLErrorCancelled) {
-        alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    }
-    if (alert) {
-        [alert show];
-    }
-    //    NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
-    
-    m_currentRequest = nil;
+    [self updateButtonsForIdle: webView];
+    [self handleLoadFailureWithError: error];
 }
+
+#endif
 
 @end

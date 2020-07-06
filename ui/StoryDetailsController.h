@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 
 #import "StoryBrowser.h"
+#import "iosfrotz.h"
 
 @class StoryDetailsController;
 

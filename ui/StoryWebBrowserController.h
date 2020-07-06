@@ -19,6 +19,7 @@
 #import "FrotzInfo.h"
 #import "URLPromptController.h"
 #import "BookmarkListController.h"
+#import "iosfrotz.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,9 +27,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory };
 
-@interface StoryWebBrowserController : UIViewController <UIWebViewDelegate, KeyboardOwner, URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
+#if UseWKWebViewForIFDBBrowser
+typedef WKWebView StoryWebView;
+#else
+typedef UIWebView StoryWebView;
+#endif
+
+@interface StoryWebBrowserController : UIViewController <KeyboardOwner,
+#if UseWKWebViewForIFDBBrowser
+    WKNavigationDelegate,
+#else
+    UIWebViewDelegate,
+#endif
+    URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
     UIView *m_background; // UIView
-    UIWebView *m_webView;
+    StoryWebView *m_webView;
     UIScrollView *m_scrollView;
     StoryBrowser *m_storyBrowser;
     UIToolbar *m_toolBar;
@@ -58,11 +71,10 @@ typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, k
 -(void)dismissURLPrompt;
 -(void)showBookmarks;
 -(void)hideBookmarks;
-@property (nonatomic, readonly, strong) UIWebView *webView;
+@property (nonatomic, readonly, strong) StoryWebView *webView;
 -(void)setupFade;
 @property (nonatomic, readonly, strong) UIActivityIndicatorView *activityIndicator;
 @property (nonatomic, readonly, strong) UIBarButtonItem *backButton;
--(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
 @property (nonatomic, readonly, strong) StoryBrowser *storyBrowser;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 -(void)browserDidPressBackButton;
@@ -74,6 +86,23 @@ typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, k
 -(void)loadBookmarksWithURLs:(NSArray* __autoreleasing  __nullable * __nullable)urls andTitles:( NSArray* __autoreleasing  __nullable * __nullable)titles;
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles;
 @property (nonatomic, readonly, copy) NSString *bookmarkPath;
+- (void)updateButtonsForIdle:(StoryWebView*)webView;
+- (BOOL)webViewShouldStartLoadWithRequest:(NSURLRequest *)request;
+- (void)handleLoadFinished;
+- (void)handleLoadFailureWithError:(NSError *)error;
+#if UseWKWebViewForIFDBBrowser
+-(void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+    decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
+-(void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation;
+-(void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error;
+-(void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
+-(void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error;
+#else
+-(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
+-(void)webViewDidStartLoad:(UIWebView *)webView;
+-(void)webViewDidFinishLoad:(UIWebView *)webView;
+-(void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
+#endif
 
 @end
 
