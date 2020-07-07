@@ -1667,8 +1667,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     [self view];
     UIBarButtonItem *kbdToggleItem = m_kbdToggleItem;
     UIView *kbdToggleItemView = [kbdToggleItem valueForKey:@"view"];
-    Class UILongPressGestureRecognizerClass = NSClassFromString(@"UILongPressGestureRecognizer");
-    if (kbdToggleItemView && UILongPressGestureRecognizerClass) {
+    if (kbdToggleItemView) {
         if ([[kbdToggleItemView gestureRecognizers] count] == 0) {
             UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
                                                               initWithTarget:self
@@ -2572,6 +2571,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 }
 
 -(void) setFont: (NSString*) fontname withSize:(NSInteger)size {
+    NSInteger maxFontSize = 32;
     if (fontname) {
         m_fontname = [fontname copy];
     } // else keep existing font, just change size
@@ -2581,8 +2581,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
     else if (m_fontSize < 8)
         m_fontSize = 8;
-    else if (m_fontSize > (gLargeScreenDevice ? 32 : 24))
-        m_fontSize = gLargeScreenDevice ? 32 : 24;
+    else if (m_fontSize > maxFontSize)
+        m_fontSize = maxFontSize;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
     bool normalSizedStatusFont = UseFullSizeStatusLineFont;
