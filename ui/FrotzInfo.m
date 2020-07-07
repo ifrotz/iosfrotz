@@ -87,31 +87,21 @@
 }
 
 -(void)dismissInfoModal {
-    UIViewController *svc = nil;
-    if ((svc = m_navigationController /*.splitViewController*/)) {
-        [svc dismissModalViewControllerAnimated:YES];
-    }
+    [m_navigationController dismissModalViewControllerAnimated:YES];
 }
 
 -(void)dismissInfo {
-    UIViewController *svc = nil;
-    if ((svc = m_navigationController /*.splitViewController*/)) {
-        UINavigationController *nc = nil;
-        if ((nc = (UINavigationController*)svc.modalViewController)) {
-            if ([nc topViewController] != m_settings)
+    if (m_navigationController) {
+        UINavigationController *nc;
+        if ((nc = (UINavigationController*)m_navigationController.modalViewController)) {
+            if ([nc respondsToSelector:@selector(topViewController)]
+                && [nc topViewController] != m_settings)
                 [nc popToViewController: m_settings animated:YES];
             [self performSelector:@selector(dismissInfoModal) withObject: nil afterDelay: 0.2];
         }
-    } else {
-        [self setupFade];
-        if (m_navigationController.topViewController != m_settings)
-            [m_navigationController popToViewController: m_settings animated:NO];
-        [m_navigationController popViewControllerAnimated: NO];
-        
-        if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
-            [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
-        [UIView commitAnimations];
     }
+    if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
+        [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
 }
 
 -(void)frotzInfo {
@@ -120,8 +110,7 @@
         if (m_kbdOwner)
             m_prevResponder = [m_kbdOwner dismissKeyboard];
         [m_settings setInfoDelegate: self];
-        
-        
+
         UINavigationController *settingsNavController = [m_settings navigationController];
         if (!settingsNavController) {
             settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
@@ -129,7 +118,7 @@
         if (!gLargeScreenDevice)
             [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
         [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
-        [m_navigationController /*.splitViewController*/ presentModalViewController: settingsNavController animated:YES];
+        [m_navigationController presentModalViewController: settingsNavController animated:YES];
     }
 }
 @end
