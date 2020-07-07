@@ -1639,27 +1639,43 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         NSString *storyName = [[m_storyNames[row] path] storyKey];
         NSString *title = [self fullTitleForStory: storyName];
         UIImage *image;
+        BOOL showFilename = NO;
+        if (row > 0 &&
+                [title isEqualToString: [self fullTitleForStory: [[m_storyNames[row-1] path] storyKey]]]
+            || row < [m_storyNames count]-1 &&
+                [title isEqualToString: [self fullTitleForStory: [[m_storyNames[row+1] path] storyKey]]]) {
+            showFilename = YES;
+        }
         cell.textLabel.text = title;
         cell.textLabel.frame = CGRectMake(10, 10, 0, 0);
+        if (showFilename)
+            cell.detailTextLabel.text = [NSString stringWithFormat: @" %@", [[m_storyNames[row] path] lastPathComponent]];
+        else
+            cell.detailTextLabel.text = @"";
+        cell.detailTextLabel.textColor = [UIColor grayColor];
         cell.imageView.image = nil;
         NSData *imageData = [self thumbDataForStory: storyName];
         if (imageData)
             image = [UIImage imageWithData: imageData];
         else
             image = m_defaultThumb;
-        cell.imageView.image = image;
-        cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
-        
-        CGFloat imgIndentWidth = 0;
+
         CGSize imgSize = image.size;
-        // Use indentation support to tweak alignment so text lines up.
-        // It's not worth it making a custom view to do this.
+        CGSize fullItemSize = CGSizeMake(40, 40);
+        CGSize itemSize = fullItemSize;
         if (imgSize.height > imgSize.width)
-            imgIndentWidth = 40.0 - (int)(imgSize.width * 40.0/imgSize.height) + 2;
-        if (imgIndentWidth < 0)
-            imgIndentWidth = 0;
-        cell.indentationWidth = imgIndentWidth + 1;
-        cell.indentationLevel = 1;
+            itemSize = CGSizeMake(imgSize.width/imgSize.height*fullItemSize.width, fullItemSize.height);
+        else if (imgSize.width > imgSize.height)
+            itemSize = CGSizeMake(fullItemSize.width, imgSize.height/imgSize.width*fullItemSize.height);
+
+        // https://stackoverflow.com/questions/2788028/, adapted for centered aspectFit
+        UIGraphicsBeginImageContextWithOptions(fullItemSize, NO, UIScreen.mainScreen.scale);
+        CGRect imageRect = CGRectMake(fullItemSize.width/2.0-itemSize.width/2.0, fullItemSize.height/2.0-itemSize.height/2.0, itemSize.width, itemSize.height);
+        [image drawInRect:imageRect];
+        cell.imageView.image = image = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+
+        cell.imageView.contentMode = UIViewContentModeCenter;
         
         NSUInteger titleLen = [title length];
         CGFloat fontsize = 22;
