@@ -1250,7 +1250,6 @@
 		44E145C9114C303B001926E1 /* compass-small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "compass-small.png"; path = "resources/compass-small.png"; sourceTree = "<group>"; };
 		44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReleaseNotes.h; sourceTree = "<group>"; };
 		44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReleaseNotes.m; sourceTree = "<group>"; };
-		44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DropboxSDK.framework; path = "dropbox-ios-sdk-1.3.13/DropboxSDK.framework"; sourceTree = "<group>"; };
 		44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = "Launch Screen.storyboard"; path = "resources/Launch Screen.storyboard"; sourceTree = "<group>"; };
 		44F2F5B611447AE0001AE868 /* CompletionLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompletionLabel.h; sourceTree = "<group>"; };
 		44F2F5B711447AE0001AE868 /* CompletionLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CompletionLabel.m; sourceTree = "<group>"; };
@@ -1589,7 +1588,6 @@
 			isa = PBXGroup;
 			children = (
 				55A50A4F1B8E7EA700E70F53 /* libz.dylib */,
-				44EBDB5A1B3D223F0061091E /* DropboxSDK.framework */,
 				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
 				4474905F0E85BA4C00A5310F /* CFNetwork.framework */,
 				2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */,
@@ -3183,7 +3181,6 @@
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -3238,7 +3235,6 @@
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
@@ -3688,7 +3684,6 @@
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
@@ -3789,7 +3784,6 @@
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/dropbox-ios-sdk-1.3.13\"",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
