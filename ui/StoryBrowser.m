@@ -834,13 +834,16 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                 @"seastalk": @"seastalker", @"sorceror": @"sorcerer",
                 @"spellbr": @"spellbreaker",@"spellbre": @"spellbreaker", @"starcros": @"starcross",
                 @"stationf": @"stationfall", @"suspend": @"suspended",
-                @"suspende": @"suspended", @"wishbrin": @"wishbringer"};
+                @"suspende": @"suspended", @"wishbrin": @"wishbringer",
+                @"zork 1": @"zork1", @"zork_1": @"zork1",
+                @"zork 2": @"zork2", @"zork_2": @"zork2",
+                @"zork 3": @"zork3", @"zork_3": @"zork3"};
     NSString *longStory;
     longStory = map[story];
     if (longStory)
         return longStory;
     NSRange r = [story rangeOfString: @"-"];
-    if (r.length > 0 && r.location > 4 && r.location < [story length]-1
+    if (r.length > 0 && r.location >= 4 && r.location < [story length]-1
         && (isdigit([story characterAtIndex: r.location+1])
             // try to allow the variations in Zarf's Infocom collection and ignore the version numbers
             || ([story rangeOfString: @"-r"].location != NSNotFound))) {
@@ -1608,7 +1611,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (UITableViewCell*)tableView:(UITableView*)tableView cellForRowAtIndexPath:(NSIndexPath*)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"storyCell"];
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:@"storyCell"];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"storyCell"];
     }
     cell.image = nil;
     cell.text = @"";
