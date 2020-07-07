@@ -264,7 +264,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [m_authorField setText: m_author];
         [m_TUIDField setText: m_tuid];
     }
-   // [m_artworkView magnifyImage: NO];
     
     if (m_descriptionWebView) {
         [m_realWebView loadHTMLString:
@@ -273,11 +272,12 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
           "h2 { font-size: 12pt; color:#cfcf00; } h3 { font-size: 11pt; color:#cfcf00; } p { font-size:10pt; }\n"
           "* { color:#ffffff; background: #666666 } ul { margin-left: 0.2em; padding-left: 1em; margin-right: 0.2em;}\n</style>\n"
           "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-          "%@\n<br>%@<br>\n"
+          "%@\n<br/>%@%@<br/>\n"
           "</body></html\n",
           ([m_descriptionHTML length] > 0
            ? [m_descriptionHTML stringByReplacingOccurrencesOfString:@"<img " withString:@"<!img "]
            : @"<i>No description available.</i><br><br>"),
+          [NSString stringWithFormat: @"Story filename: %@<br/>", [[m_storyInfo path] lastPathComponent]],
           ([m_tuid length] > 0
            ? @"<small>Tap 'View in IFDB' for more information.</small>" : @"")
           ] baseURL:nil];
