@@ -104,23 +104,14 @@ static const int kNotesTitleHeight = 24;
     m_notesTitle = [[UISegmentedControl alloc] initWithItems:@[@"Notes", glyph]];
     [m_notesTitle setWidth: 24 forSegmentAtIndex:1];
     [m_notesTitle setEnabled:FALSE forSegmentAtIndex:0];
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-        [m_notesTitle setTitleTextAttributes:@{UITextAttributeTextColor: [UIColor blackColor]} forState:UIControlStateDisabled];
-#endif
+
+    [m_notesTitle setTitleTextAttributes:@{UITextAttributeTextColor: [UIColor blackColor]} forState:UIControlStateDisabled];
 
     [m_notesTitle setMomentary:YES];
     m_notesTitle.segmentedControlStyle = UISegmentedControlStyleBar;
     m_notesTitle.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin;
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-       m_notesTitle.tintColor = [UIColor blackColor];
-    } else
-#endif
-    {
-        m_notesTitle.tintColor = [UIColor darkGrayColor];
-    }
+    m_notesTitle.tintColor = [UIColor blackColor];
+
     m_notesTitle.center = CGPointMake(self.view.frame.size.width/2, m_notesTitle.frame.size.height/2);
     [m_notesTitle addTarget:self action:@selector(notesAction:) forControlEvents:UIControlEventValueChanged];
     
@@ -140,21 +131,8 @@ static const int kNotesTitleHeight = 24;
     [m_notesView setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
     [m_notesView setFont: font];
 
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1) {
-        m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
-    }
     [m_notesView setAutocapitalizationType:UITextAutocapitalizationTypeNone];
-    //if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 QuickType completion screws up notes
-    //     [m_notesView setAutocorrectionType: UITextAutocorrectionTypeNo];
-    //}
-#else
-    m_notesView.keyboardAppearance = UIKeyboardAppearanceAlert;
-#endif
 
-    //    UIButton *scriptBrowseButton = [UIButton buttonWithType: UIButtonTypeDetailDisclosure];
-    //    [m_notesView addSubview: scriptBrowseButton];
-    
     [m_notesBGView addSubview: m_notesView];
 }
 
@@ -166,30 +144,15 @@ static const int kNotesTitleHeight = 24;
         [fileBrowser setPath: [m_delegate textFileBrowserPath]];
         [fileBrowser setDelegate: self];
         if ([fileBrowser textFileCount] > 0) {
-            if (gUseSplitVC) {
-                UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
-                nc.modalPresentationStyle = UIModalPresentationFormSheet;
-                [m_delegate.navigationController presentModalViewController: nc animated: YES];
-            } else {
-                if (!gLargeScreenDevice)
-                    [m_delegate.navigationController setNavigationBarHidden:NO animated:YES];
-                [m_delegate.navigationController pushViewController: fileBrowser animated: YES];
-            }
+            UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
+            nc.modalPresentationStyle = UIModalPresentationFormSheet;
+            [m_delegate.navigationController presentModalViewController: nc animated: YES];
         }
     }
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    if (gUseSplitVC) {
-        [m_delegate.navigationController dismissModalViewControllerAnimated:YES];
-    }
-    else {
-        [m_delegate.navigationController popViewControllerAnimated:YES];
-        if (!gLargeScreenDevice) {
-            BOOL isLandscape = UIInterfaceOrientationIsLandscape([self interfaceOrientation]);
-            [m_delegate.navigationController setNavigationBarHidden:isLandscape animated:YES];
-        }
-    }
+    [m_delegate.navigationController dismissModalViewControllerAnimated:YES];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser deleteFile: (NSString*)filePath {

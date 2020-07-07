@@ -104,8 +104,6 @@ static int numGlkViews;
 
 int ipzAllowInput = kIPZDisableInput;
 
-static BOOL isOS30 = NO, isOS32 = NO;
-
 static NSMutableString *ipzBufferStr = nil, *ipzStatusStr = nil, *ipzInputBufferStr = nil;
 static NSMutableString *ipzLineInputStr = nil;
 
@@ -1103,15 +1101,6 @@ static void setColorTable(RichTextView *v) {
     self = [super initWithNibName:nil bundle:nil];
     if (self)
     {
-        NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-        if (osVersStr && ([osVersStr characterAtIndex: 0] >= '3' || [osVersStr characterAtIndex: 0] == '1')) {
-            isOS30 = YES;
-            if ([osVersStr characterAtIndex: 0] != '3' || [osVersStr characterAtIndex: 2] >= '2')
-                isOS32 = YES;
-        }
-        
-        // this title will appear in the navigation bar
-        //	self.title = NSLocalizedString(@"Frotz", @"");
         [self resetSettingsToDefault];
         
         id fileMgr = [NSFileManager defaultManager];
@@ -1230,25 +1219,20 @@ static void setColorTable(RichTextView *v) {
                 [gfxView setTag: kGlkImageViewTag];
 
                 /// scrollable/zoomable glk graphics windows support, #if 0 to disable
-#if 1
                 UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame: CGRectZero];
                 [scrollView setDelegate: self];
                 [scrollView setMinimumZoomScale: 1.0];
                 [scrollView setMaximumZoomScale: 2.0];
                 [scrollView setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
-                
-                if (isOS32) {
-                    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(glkGraphicsWinTap:)];
-                    tap.numberOfTapsRequired = 1;
-                    [newView addGestureRecognizer:tap];
-                }
+
+                UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(glkGraphicsWinTap:)];
+                tap.numberOfTapsRequired = 1;
+                [newView addGestureRecognizer:tap];
+
                 [scrollView addSubview: gfxView];
                 [newView addSubview: scrollView];
-#else
-                [newView addSubview: gfxView];
-#endif
-                [newView setAutoresizesSubviews:YES];
 
+                [newView setAutoresizesSubviews:YES];
                 [newView setAutoresizingMask: 0];
             } else {
                 [newView setBackgroundColor: m_defaultBGColor];
@@ -1620,10 +1604,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 - (void)abortToBrowser {
     [self abandonStory: YES];
-    if (gUseSplitVC)
-        [m_storyBrowser didPressModalStoryListButton];
-    else
-        [self.navigationController popViewControllerAnimated: YES];
+    [m_storyBrowser didPressModalStoryListButton];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -1879,28 +1860,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
-     frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
-    float navHeight;
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        self.automaticallyAdjustsScrollViewInsets = NO;
-        self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
-        navHeight = self.topLayoutGuide.length;
-        frame.origin.y = navHeight;
-        frame.size.height -= navHeight;
-    } else
-#endif
-    {
-        navHeight = 44.0; //[self.navigationController.navigationBar bounds].size.height;
-        frame.origin.y += navHeight;
-        frame.size.height -= navHeight;
-        self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
-        frame.origin.y = 0;
-    }
+    frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
+
+    self.automaticallyAdjustsScrollViewInsets = NO;
+    self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
+    float navHeight = self.topLayoutGuide.length;
+    frame.origin.y = navHeight;
+    frame.size.height -= navHeight;
 
     [self.view setBackgroundColor: m_defaultBGColor];
 
-#if 1
     //notes page support
     if (!m_notesController) {
         m_notesController = [[NotesViewController alloc] initWithFrame: frame];
@@ -1909,7 +1878,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     m_background = [m_notesController containerScrollView];
     [m_background addSubview: m_notesController.view];
-#endif
+
     [m_background setBackgroundColor: m_defaultBGColor];
     [self.view addSubview: m_background];
 
@@ -2184,18 +2153,12 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         || self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         m_landscape = YES;
         if (!gLargeScreenDevice) {
-            if (isOS32)
-                [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation: UIStatusBarAnimationSlide];
-            else if (isOS30)
-                [[UIApplication sharedApplication] setStatusBarHidden:YES animated:YES];
+            [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation: UIStatusBarAnimationSlide];
         }
         [self.navigationController setNavigationBarHidden:gLargeScreenDevice?NO:YES animated:YES];
     } else {
         if (!gLargeScreenDevice) {
-            if (isOS32)
-                [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation: UIStatusBarAnimationSlide];
-            else if (isOS30)
-                [[UIApplication sharedApplication] setStatusBarHidden:NO animated:YES];
+            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation: UIStatusBarAnimationSlide];
         }
         m_landscape = NO;
         [self.navigationController setNavigationBarHidden:NO animated:YES];
@@ -2212,7 +2175,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // Work around weird bug where the owning NotesVC scrollview resizes the view 20
     // pixels smaller when presentModalViewController shows the view.  Dunno why, but this
     // compensates for it.
-    if (gUseSplitVC && m_landscape && m_autoRestoreDict!=nil)
+    if (m_landscape && m_autoRestoreDict!=nil)
         frame.size.height += 20;
 
     CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
@@ -2309,21 +2272,18 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         return;
     CGRect bounds = [boundsValue CGRectValue];
 
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) >= 1133.0) { // iOS 8.0 doesn't sent hide notifications for undocked kbd
-        // and instead sends another show notification with smaller frame height
-        NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-        if (gLargeScreenDevice && frameUserInfoValue) {
-            CGRect frameEnd = [frameUserInfoValue CGRectValue];
-            CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
-            if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
-                if (m_kbShown) // do our own hide notification
-                    [self keyboardWillHide:notif];
-                return;
-            }
+    // iOS 8.0 doesn't sent hide notifications for undocked kbd
+    // and instead sends another show notification with smaller frame height
+    NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
+    if (gLargeScreenDevice && frameUserInfoValue) {
+        CGRect frameEnd = [frameUserInfoValue CGRectValue];
+        CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
+        if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
+            if (m_kbShown) // do our own hide notification
+                [self keyboardWillHide:notif];
+            return;
         }
     }
-#endif
     m_kbShown = YES;
     
     CGRect frame = [self storyViewFullFrame];
@@ -2508,35 +2468,21 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
-    
+
     [fileBrowser setPath: storySavePath];
-    
+
     [fileBrowser setDelegate: self];
     [fileBrowser reloadData];
-    
-    if (gUseSplitVC) {
-        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
-        [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];   
-        nc.modalPresentationStyle = UIModalPresentationFormSheet;
-        [self.navigationController presentModalViewController: nc animated: YES];
-    } else {
-        if (!gLargeScreenDevice)
-            [self.navigationController setNavigationBarHidden:NO animated:YES];
-        [self.navigationController pushViewController: fileBrowser animated: YES];
-    }
-    
+
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
+    [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];
+    nc.modalPresentationStyle = UIModalPresentationFormSheet;
+    [self.navigationController presentModalViewController: nc animated: YES];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    if (gUseSplitVC) {
-        [self.navigationController dismissModalViewControllerAnimated:YES];
-    }
-    else {
-        if ([self.navigationController topViewController]==browser)
-            [self.navigationController popViewControllerAnimated: YES];
-        if (!gLargeScreenDevice)
-            [self.navigationController setNavigationBarHidden:m_landscape ? YES:NO animated:YES];
-    }
+    [self.navigationController dismissModalViewControllerAnimated:YES];
+
     if (file)
         strcpy(iosif_filename, [file fileSystemRepresentation]);
     else
@@ -2639,7 +2585,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         m_fontSize = gLargeScreenDevice ? 32 : 24;
     UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
 #if UseRichTextView
-    bool normalSizedStatusFont = UseFullSizeStatusLineFont && isOS32;
+    bool normalSizedStatusFont = UseFullSizeStatusLineFont;
 	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
     [m_storyView setFontFamily: [font familyName] size: m_fontSize];
     NSInteger fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
@@ -2807,7 +2753,9 @@ static int iosif_top_win_height = 1;
     }
     NSMutableString *buf = [[NSMutableString alloc] init];
     int color = gStoryInterp == kGlxStory ? 0 : screen_colors[0];
+#if UseFullSizeStatusLineFont
     BOOL noWhitespaceCompression = NO;
+#endif
     [view setTextColorIndex: color >> 4];
     [view setBgColorIndex: color & 0xf];
     [view clear];
@@ -2817,7 +2765,7 @@ static int iosif_top_win_height = 1;
 #if UseFullSizeStatusLineFont
         int needCols = 0;
         int skipCol = -1, skipCount = 0, skipCol2 = -1, skipCount2 = 0;
-        if (isOS32 && gStoryInterp==kZStory) {
+        if (gStoryInterp==kZStory) {
             CGFloat charWidth = m_statusFixedFontWidth;
             int displayCols = (int)(view.frame.size.width / charWidth + 0.5);
             int firstNonReversedRow = 0;
@@ -2911,6 +2859,7 @@ static int iosif_top_win_height = 1;
         tgline_t *ln = dwin && dwin->lines && i < dwin->height ? &(dwin->lines[i]) : NULL;
         for (j=0; j < maxCols; ++j) {
             wchar_t c = 0;
+#if UseFullSizeStatusLineFont
             if (j == skipCol) {
                 j += skipCount;
                 if (skipCol > 0 && skipCount == needCols-skipCount2-1)
@@ -2918,6 +2867,7 @@ static int iosif_top_win_height = 1;
             } else if (j == skipCol2) {
                 j += skipCount2;
             }
+#endif
             if (gStoryInterp == kGlxStory) {
                 if (!c)
                     c = glkGridArray[viewNum].gridArray[i * maxPossCols + j];
@@ -3499,8 +3449,7 @@ char *tempStatusLineScreenBuf() {
 }
 
 -(void) savePrefs {
-    if (gUseSplitVC)
-        [[m_storyBrowser detailsController] refresh];
+    [[m_storyBrowser detailsController] refresh];
     
     NSUserDefaults *dict = [NSUserDefaults standardUserDefaults];
     
@@ -3609,10 +3558,9 @@ static UIColor *scanColor(NSString *colorStr) {
             storyPath = storyLocDict[@"storyPath"];
             storyPath = [self relativePathToAppAbsolutePath: storyPath];
             [self setCurrentStory: storyPath];
-            if (gUseSplitVC) {
-                StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath browser:m_storyBrowser];
-                [m_storyBrowser setStoryDetails: si];	
-            }
+
+            StoryInfo *si = [[StoryInfo alloc] initWithPath: storyPath browser:m_storyBrowser];
+            [m_storyBrowser setStoryDetails: si];	
         }
     }
     if (isFirstLaunch) {

@@ -68,8 +68,6 @@
     CGSize m_artSizeLandscape, m_artSizePortrait;
 }
 
--(IBAction) toggleArtDescript;
--(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation;
 -(void)clear;
 -(void)refresh;
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode;

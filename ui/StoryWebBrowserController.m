@@ -102,11 +102,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
 
     [m_toolBar setBarStyle: UIBarStyleBlack];
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        [m_toolBar setTintColor: [UIColor whiteColor]];
-    }
-#endif
+    [m_toolBar setTintColor: [UIColor whiteColor]];
 
     m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack.png"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
@@ -146,12 +142,8 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.titleView = [m_frotzInfoController view];
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(browserDidPressBackButton)];
     self.navigationItem.leftBarButtonItem = backItem;
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        self.edgesForExtendedLayout=UIRectEdgeNone;
-    }
-#endif
+
+    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -253,34 +245,17 @@ const NSString *kBookmarkVersionKey = @"Version";
     // Convenient, but makes navigation feel inconsistent, and hides activity spinner.
     //self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
     [m_frotzInfoController setKeyboardOwner: self];
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
-        [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
-    }
-#endif
 
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
+    [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
 
-    if (m_backToStoryList) {
-        BOOL cache = YES;
-#ifdef NSFoundationVersionNumber_iOS_6_1
-        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-            cache = NO;
-#endif
-        if (!gUseSplitVC) {
-            [UIView beginAnimations:nil context:NULL];
-            [UIView setAnimationDuration:0.8];
-            [UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView:
-                [[[[self view] superview] superview] superview] cache:cache];
-            [UIView commitAnimations];
-        }
-    } else {
+    if (!m_backToStoryList) {
         CATransition *animation = [CATransition animation];
         [animation setType:kCATransitionReveal];
         [animation setSubtype: kCATransitionFromTop];
@@ -289,7 +264,6 @@ const NSString *kBookmarkVersionKey = @"Version";
         [[[[self view] superview] layer] addAnimation:animation forKey:@"browseBack"];
     }
     m_backToStoryList = NO;
-    //    [m_frotzInfoController dismissInfo];
 }
 
 -(UIActivityIndicatorView*)activityIndicator {

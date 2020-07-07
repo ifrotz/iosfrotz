@@ -197,22 +197,7 @@ void removeOldPngSplash(const char *filename) {
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
 
-#ifdef NSFoundationVersionNumber_iOS_6_1
-        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1) {
-            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
-        } else
-#endif
-        {
-            UIImage *img = [UIImage imageNamed: @"nowplaying.png"];
-            UIButton *nowPlayingButtonView = [UIButton buttonWithType: UIButtonTypeCustom];
-            [nowPlayingButtonView setImage: img forState: UIControlStateNormal];
-            [nowPlayingButtonView setFrame: CGRectMake(0,0,[img size].width, [img size].height)];
-            [nowPlayingButtonView addTarget:self action:@selector(resumeStory) forControlEvents: UIControlEventTouchDown];
-            m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithCustomView: nowPlayingButtonView];
-            [m_nowPlayingButtonItem setCustomView: nowPlayingButtonView];
-            if ([nowPlayingButtonView respondsToSelector: @selector(setAccessibilityLabel:)])
-                [nowPlayingButtonView setAccessibilityLabel: NSLocalizedString(@"Now playing",nil)];
-        }
+        m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
         
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
@@ -481,28 +466,6 @@ void removeOldPngSplash(const char *filename) {
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    if (gUseSplitVC && gLargeScreenDevice && !self.splitViewController.presentedViewController) {
-#if 000
-        [coordinator animateAlongsideTransition:^(id context){
-            if (self.splitViewController.presentedViewController)
-                ;
-            else if ([m_storyMainViewController navigationController])
-                self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-            else if (self.splitViewController.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
-               if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation])) {
-                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
-                   m_details.navigationItem.leftBarButtonItem = nil;
-               } else {
-                   self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
-                   [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-               }
-           } else {
-               self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
-           }
-            
-        } completion:^(id context) { } ];
-#endif
-    }
 }
 
 - (BOOL)canEditStoryInfo {
@@ -702,7 +665,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)launchBrowser {
     [[self navigationController] popToViewController:self animated:NO];
     
-    if (gUseSplitVC && self.splitViewController) {
+    if (self.splitViewController) {
         UINavigationController *nc = [m_webBrowserController navigationController];
         if (!nc) {
             nc = [[UINavigationController alloc] initWithRootViewController: m_webBrowserController];
@@ -1047,11 +1010,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)viewDidLoad {
     [super viewDidLoad];
     if (self.splitViewController) {
-        gUseSplitVC = YES;
         self.splitViewController.delegate = self;
     }
-    if (!gUseSplitVC)
-        self.navigationItem.titleView = [m_frotzInfoController view];
     [self updateNavButton];
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController: nil];
@@ -1071,10 +1031,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if (m_postLaunch || m_launchPath)
         ;
     else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
-        if (gUseSplitVC) // delay push of story controller so views have time to be sized correctly
-            [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.3];
-        else
-            [self autoRestoreAndShowMainStoryController];
+        [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.3];
     } else
         self.view.userInteractionEnabled = YES;
     [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
@@ -1087,13 +1044,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)updateNavButton {
-    //    NSLog(@"updatenav: %@ %d", self.navigationController.navigationBar, [self.navigationController.navigationBar barStyle]);
-    
-//    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
-    
-    if (!gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
-        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
-    else
+//    if (gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
+//        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
+//    else
         self.navigationItem.rightBarButtonItem = m_editButtonItem;
 }
 
@@ -1167,18 +1120,13 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)didPressModalStoryListButton {
-    if (gUseSplitVC && self.splitViewController) {
-        if (self.splitViewController.presentedViewController) {
-            [self.splitViewController dismissViewControllerAnimated:YES completion:nil];
-            NSString *storyPath = [[m_details storyInfo] path];
-            m_details.willResume = storyPath && [storyPath length] > 0
-            && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
-                || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
-            [m_details refresh];
-            
-            // There's a bug where if the split VC view was unloaded due to a memory warning, sometimes its first VC
-            // (StoryList) takes over the whole screen.  Dunno what to do to prevent it, but rotating the device fixes it.
-        }
+    if (self.splitViewController && self.splitViewController.presentedViewController) {
+        [self.splitViewController dismissViewControllerAnimated:YES completion:nil];
+        NSString *storyPath = [[m_details storyInfo] path];
+        m_details.willResume = storyPath && [storyPath length] > 0
+        && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
+            || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
+        [m_details refresh];
     }
 }
 
@@ -1353,10 +1301,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
                         [indexPaths addObject: [NSIndexPath indexPathWithIndexes: indexes length:2]];
                     [self saveRecents];
                 }
-                if (gUseSplitVC) {
-                    if ([[m_details storyInfo] isEqual: storyInfo])
-                        [m_details clear];
-                }
+                if ([[m_details storyInfo] isEqual: storyInfo])
+                    [m_details clear];
+
                 [m_storyNames removeObjectAtIndex: row];
                 m_numStories--;
                 if (isSearch) {
@@ -1550,7 +1497,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
     if (storyInfo) {
         [self setStoryDetails: storyInfo];
-        if (gUseSplitVC && self.splitViewController) {
+        if (self.splitViewController) {
             [m_details refresh];
             if ([self.splitViewController.viewControllers count] < 2)
                 [self.splitViewController showDetailViewController: m_details sender:self];
@@ -1575,14 +1522,14 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     static NSInteger lastRow = -1;
     BOOL secondTap = NO;
     
-    if (gUseSplitVC && indexPath.row == lastRow) {
+    if (indexPath.row == lastRow) {
         secondTap = YES;
     } else
         lastRow = indexPath.row;
     
     StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
-        if (gUseSplitVC && !self.splitViewController.isCollapsed && (!secondTap ||
+        if (!self.splitViewController.isCollapsed && (!secondTap ||
             self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
             if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)
                 [UIView animateWithDuration:0.3 animations:^{
@@ -1600,11 +1547,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             lastRow = -1;
         }
     }
-    
-    if (gUseSplitVC) {
-    	[m_details setEditing:NO animated: YES];
-        [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-    }
+
+    [m_details setEditing:NO animated: YES];
+    [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 }
 
 -(NSData*)thumbDataForStory:(NSString*)story {
@@ -1677,7 +1622,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     else if (indexPath.section == 0 && row < [m_recents count])
         row = [self indexRowFromStoryInfo: m_recents[row]];
     
-    if (gUseSplitVC && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         cell.accessoryType = UITableViewCellAccessoryNone;
     else if (row >= 0 && row < [m_storyNames count])
         cell.accessoryType = [tableView isEditing] ? UITableViewCellAccessoryNone : UITableViewCellAccessoryDetailDisclosureButton;
@@ -1714,21 +1659,18 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         cell.indentationLevel = 1;
         
         NSUInteger titleLen = [title length];
-        CGFloat fontsize = 20;
-        CGFloat fudge = gUseSplitVC ? 2 : 0;
-        if (gLargeScreenDevice && !gUseSplitVC)
-            fontsize = 22;
-        else if (titleLen > 34)
-            fontsize = 12;
-        else if (titleLen > 28)
+        CGFloat fontsize = 22;
+        if (titleLen > 34)
             fontsize = 14;
+        else if (titleLen > 28)
+            fontsize = 16;
         else if (titleLen > 24)
-            fontsize = 15;
-        else if (titleLen > 23)
             fontsize = 17;
+        else if (titleLen > 23)
+            fontsize = 19;
         else if (titleLen > 22)
-            fontsize = 18;
-        cell.font = [UIFont boldSystemFontOfSize: fontsize+fudge];
+            fontsize = 20;
+        cell.font = [UIFont boldSystemFontOfSize: fontsize];
     }
     return cell;
 }

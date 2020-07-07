@@ -113,7 +113,6 @@
             m_skipNextTap = NO;
         }
         else {
-            //	    [self setSelectionDisabled: YES]; // commented out to support hardware keyboard
             if (tapCount == 1) {
                 SavedTouch *st = [[SavedTouch alloc] initWithPhase:phase point:pt] ;
                 m_tapTimer = [[NSTimer alloc] initWithFireDate: [NSDate dateWithTimeIntervalSinceNow: 0.1] interval:0.0

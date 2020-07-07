@@ -26,15 +26,12 @@
 - (RichTextView*)initWithFrame: (CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-        if (osVersStr && ([osVersStr characterAtIndex: 0] >= '4' || [osVersStr characterAtIndex: 0] == '1')) { // 1x
-            UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)];
-            [self addGestureRecognizer:pinch];
-            
-            UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewTwoFingerTap:)];
-            tap.numberOfTouchesRequired = 2;
-            [self addGestureRecognizer:tap];
-        }
+        UIPinchGestureRecognizer *pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewPinch:)];
+        [self addGestureRecognizer:pinch];
+        
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(storyViewTwoFingerTap:)];
+        tap.numberOfTouchesRequired = 2;
+        [self addGestureRecognizer:tap];
     }
     return self;
 }
@@ -82,10 +79,7 @@
     CGRect bounds = [view bounds];
     CGFloat width = bounds.size.width/2.0;
     CGFloat height = bounds.size.height/2.0;
-    NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-    if (osVersStr && [osVersStr characterAtIndex: 0] == '3' && [osVersStr characterAtIndex: 2] < '2')
-        ;
-    else if (UseFullSizeStatusLineFont || gLargeScreenDevice)
+    if (UseFullSizeStatusLineFont || gLargeScreenDevice)
         return YES;
     CGFloat magThresY = height*2;
     if (magThresY > 140)

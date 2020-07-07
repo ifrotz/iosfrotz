@@ -91,15 +91,14 @@
         [m_detailsController dismissKeyboard];
         return;
     }
-    if (gUseSplitVC) {
-        UITouch *touch = [touches anyObject];
-        NSUInteger tapCount = [touch tapCount];
-        if ([self isMagnified] && tapCount == 1)
-            [self magnifyImage: NO];
-        else if (tapCount == 2)
-            [self magnifyImage: YES];
-    }
+    UITouch *touch = [touches anyObject];
+    NSUInteger tapCount = [touch tapCount];
+    if ([self isMagnified] && tapCount == 1)
+        [self magnifyImage: NO];
+    else if (tapCount == 2)
+        [self magnifyImage: YES];
 }
+
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
     [self releaseTapTimer];
 }
@@ -306,14 +305,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [m_ifdbButton setEnabled: enable];
     [m_ifdbButton setAlpha: enable ? 1.0 : 0.5];
     [m_restartButton.superview bringSubviewToFront: m_restartButton];
-    CGRect playFrame = m_playButton.frame, restartFrame = m_restartButton.frame;
-    if (!self.storyboard) {
-        BOOL largeSizeClass = gLargeScreenDevice && self.traitCollection.horizontalSizeClass== UIUserInterfaceSizeClassRegular;
-        if (largeSizeClass && playFrame.size.width < 160) // in landscape with 70/30% split screen and master/detail both showing, sometimes the horizSizeClass claims to be regular when it's clearly not
-            largeSizeClass = NO;
-        [m_restartButton setCenter: CGPointMake(playFrame.origin.x + restartFrame.size.width/2.0 + (largeSizeClass ?24:1),
-                                                playFrame.origin.y + restartFrame.size.height/2.0 + (largeSizeClass?2:1))];
-    }
     if (m_artworkView) {
         if (m_artwork) {
             [m_artworkView setImage: m_artwork];
@@ -324,50 +315,24 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         }
     }
     [self updateSelectStoryHint];
-    if (!self.storyboard) {
-        if (m_title && [m_title length] > 0 || m_storyInfo) {
-            if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-                if (m_artSizeLandscape.width != 0) {
-                    CGRect bounds = m_artworkView.bounds;
-                    bounds.size = m_artSizeLandscape;
-                    m_artworkView.bounds = bounds;
-                }
-            }
-        } else {
-            if (m_artSizePortrait.width != 0) {
-                CGRect bounds = m_artworkView.bounds;
-                bounds.size = m_artSizePortrait;
-                m_artworkView.bounds = bounds;
-            }
-        }
-        [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]];
-    }
 }
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated: animated];
     if (editing) {
-    	if ([m_descriptionWebView superview] && ![m_descriptionWebView isHidden])
-            [self toggleArtDescript];
         if (m_infoButton)
             [m_infoButton setEnabled:NO];
         [m_titleField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_authorField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_TUIDField setBorderStyle: UITextBorderStyleRoundedRect];
-//        [m_titleField setTextColor: [UIColor blackColor]];
-//        [m_authorField setTextColor: [UIColor blackColor]];
-//        [m_TUIDField setTextColor: [UIColor blackColor]];
         [m_titleField becomeFirstResponder];
     } else {
         [self dismissKeyboard];
         if (m_infoButton)
             [m_infoButton setEnabled:YES];
         [m_titleField setBorderStyle: UITextBorderStyleNone];
-        [m_titleField setTextColor: [UIColor whiteColor]];
         [m_authorField setBorderStyle: UITextBorderStyleNone];
-        [m_authorField setTextColor: [UIColor whiteColor]];
         [m_TUIDField setBorderStyle: UITextBorderStyleNone];
-        [m_TUIDField setTextColor: [UIColor whiteColor]];
     }
     [self refresh];
 }
@@ -375,8 +340,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)viewDidLoad {
     [super viewDidLoad];
 
-    if (self.storyboard)
-        [m_browser.splitViewController setDelegate: m_browser];
+    [m_browser.splitViewController setDelegate: m_browser];
 
     m_realWebView = [[WKWebView alloc] init];
     [m_descriptionWebView addSubview: m_realWebView];
@@ -410,23 +374,16 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
                 [sv setBounces:NO];
         }
     }
-    if (gUseSplitVC) {
-        if (!m_frotzInfoController)
-            m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_browser settings] navController:self.navigationController navItem:self.navigationItem];
-        self.navigationItem.titleView = [m_frotzInfoController view];
-    }
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        self.edgesForExtendedLayout=UIRectEdgeNone;
-    }
-#endif
+    if (!m_frotzInfoController)
+        m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_browser settings] navController:self.navigationController navItem:self.navigationItem];
+    self.navigationItem.titleView = [m_frotzInfoController view];
+
+    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
     [self updateSelectStoryHint];
     [self updateBarButtonAndSelectionInstructions: self.splitViewController.displayMode];
-    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]];
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -452,17 +409,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [self updateSelectStoryHint];
     [m_artworkView resetMagnification];
     [self refresh];
-    if (self.storyboard)
-        return;
-
-    if (!gLargeScreenDevice) {
-        [m_descriptionWebView removeFromSuperview];
-        [m_descriptionWebView setHidden: YES];
-    }
-    if (m_flipper) {
-        [m_flipper addSubview: m_artworkView];
-        [m_flipper addSubview: m_noArtworkLabel];
-    }
 }
 
 -(void)viewDidLayoutSubviews {
@@ -490,83 +436,18 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
--(void)repositionArtwork:(UIInterfaceOrientation)toInterfaceOrientation {
-    if (self.storyboard)
-        return;
-    if (m_flipper) {
-		CGPoint center = m_textFieldsView.superview.center;
-        CGRect textRect = m_textFieldsView.frame;
-        CGRect flipRect = m_flipper.frame;
-        CGRect butttonsRect = m_buttonsView.frame;
-        [m_textFieldsView.superview bringSubviewToFront:m_textFieldsView];
-
-        if (UIInterfaceOrientationIsLandscape(toInterfaceOrientation)) {
-            if ([m_descriptionWebView superview] && ![m_descriptionWebView isHidden])
-                [self toggleArtDescript];
-//			flipRect.origin = CGPointMake(textRect.origin.x + butttonsRect.size.width - flipRect.size.width + 20, textRect.origin.y);
-            flipRect.origin = CGPointMake(center.x, textRect.origin.y);
-			m_artworkView.center = CGPointMake(flipRect.size.width/2, m_artworkView.center.y);
-            m_infoButton.hidden = YES;
-        } else {
-			flipRect.size.width = butttonsRect.size.width;
-			m_textFieldsView.center = CGPointMake(center.x, m_textFieldsView.center.y);
-            m_flipper.transform = CGAffineTransformMakeScale(1.0, 1.0);
-			CGFloat flipX = m_flipper.superview.bounds.size.width/2-flipRect.size.width/2;
-            flipRect.origin = CGPointMake(flipX, textRect.origin.y + textRect.size.height);
-            m_infoButton.hidden = NO;
-        }
-        flipRect.size.height = butttonsRect.origin.y - flipRect.origin.y;
-        UINavigationBar *b =  self.navigationController.navigationBar;
-        if (b && !b.superview) // work around iOS bug where we're not resized correctly when a search bar has taken over the nav bar
-            flipRect.size.height -= b.frame.size.height+20;
-        m_flipper.frame = flipRect;
-        CGRect webFrame = m_descriptionWebView.frame;
-        webFrame.size.height = flipRect.size.height;
-		webFrame.size.width = flipRect.size.width - webFrame.origin.x*2;
-        m_descriptionWebView.frame = webFrame;
-    }
-    [self updateSelectStoryHint];
-    CGRect artBounds = m_artworkView.bounds;
-    if (m_title && [m_title length] > 0 || m_storyInfo) {
-        artBounds.size =  UIInterfaceOrientationIsLandscape(toInterfaceOrientation) ? m_artSizeLandscape: m_artSizePortrait;
-        m_artworkView.bounds = artBounds;
-    } else {
-        if (m_artSizePortrait.width != 0) {
-            artBounds.size =  m_artSizePortrait;
-            m_artworkView.bounds = artBounds;
-        }
-    }
-
-    if (gLargeScreenDevice) {
-		CGPoint center = [m_artworkView.superview center];
-        center.y = m_TUIDField.center.y + artBounds.size.height/2.0 + 20;
-        [m_artworkView setCenter: center];
-	}
-    [m_noArtworkLabel setCenter: [m_artworkView center]];
-}
-
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     [self updateSelectStoryHint];
     [m_artworkView magnifyImage:NO];
     [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-    [self repositionArtwork: toInterfaceOrientation];
 }
 
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode {
-    if (!gUseSplitVC)
-        return;
     if (displayMode == UISplitViewControllerDisplayModeAutomatic)
         displayMode = self.splitViewController.displayMode;
     if (displayMode == UISplitViewControllerDisplayModePrimaryOverlay && [self isEditing])
         [self setEditing:NO animated: YES];
-#if 000
-    if (displayMode == UISplitViewControllerDisplayModeAllVisible) {
-        if (m_browser.view.superview == nil) { // you lie!  Sometimes portrait mode reports this when only details vc is visible
-            self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryOverlay;
-            displayMode = UISplitViewControllerDisplayModePrimaryOverlay;
-        }
-    }
-#endif
+
     m_descriptionWebView.hidden = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact ? YES : NO;
     if (displayMode == UISplitViewControllerDisplayModeAllVisible
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
@@ -590,8 +471,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [self repositionArtwork: [[UIApplication sharedApplication] statusBarOrientation]]; //[[UIDevice currentDevice] orientation]];
-
     [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
     [self updateSelectStoryHint];
     [self refresh];
@@ -700,46 +579,13 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(IBAction)showRestartMenu {
     UIActionSheet *actionView = [[UIActionSheet alloc] initWithTitle:@"Restart the story?\nThis will abandon the current auto-saved game."
                                                             delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Restart from beginning"
-                                                   otherButtonTitles: gUseSplitVC ? @"Keep progress":nil, nil];
-    if (gUseSplitVC)
-        [actionView showFromRect:m_restartButton.frame inView:m_contentView animated:YES];
-    else
-        [actionView showInView: m_contentView];
+                                                   otherButtonTitles: @"Keep progress", nil];
+    [actionView showFromRect:m_restartButton.frame inView:m_contentView animated:YES];
 }
 
 -(IBAction)IFDBButtonPressed {
     if (m_tuid && [m_tuid length] >= 15)
         [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"http://ifdb.tads.org/viewgame?id=%@", m_tuid]];
-}
-
--(IBAction)toggleArtDescript {
-    if (gUseSplitVC)
-        return;
-    if (m_descriptionWebView) {
-        if ([self keyboardIsActive])
-            return;
-        BOOL descriptionShown = [m_descriptionWebView superview] && ![m_descriptionWebView isHidden];
-        if ([self isEditing] && !descriptionShown)
-            return;
-        
-        [UIView beginAnimations:@"sdflip" context:0];
-        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:m_flipper cache:YES];
-        if (descriptionShown) {
-            [m_descriptionWebView removeFromSuperview];
-            [m_flipper addSubview: m_artworkView];
-            [m_flipper addSubview: m_noArtworkLabel];
-            [m_descriptionWebView setHidden: YES];
-        } else {
-            [m_artworkView removeFromSuperview];
-            [m_noArtworkLabel removeFromSuperview];
-            [m_descriptionWebView setHidden: NO];
-            m_flipper.autoresizesSubviews = YES;
-            [m_flipper addSubview: m_descriptionWebView];
-            [m_flipper bringSubviewToFront: m_descriptionWebView];
-        }
-        [m_flipper bringSubviewToFront: m_infoButton];
-        [UIView commitAnimations];
-    }
 }
 
 #if UseWKWebViewForFrotzStoryDetails

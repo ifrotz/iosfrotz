@@ -655,12 +655,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 -(void)viewDidLoad {
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        self.edgesForExtendedLayout=UIRectEdgeNone;
-    }
-#endif
+    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 - (void)loadView {

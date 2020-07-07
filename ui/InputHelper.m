@@ -285,12 +285,7 @@ const CGFloat kHistoryLineHeight = 20.0;
 
 
 - (void)viewDidLoad {
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        self.edgesForExtendedLayout=UIRectEdgeNone;
-    }
-#endif
+    self.edgesForExtendedLayout=UIRectEdgeNone;
     [super viewDidLoad];
 }
 

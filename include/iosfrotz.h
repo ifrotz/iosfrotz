@@ -131,7 +131,6 @@ extern int iosif_ifrotz_verbose_debug;
 
 extern bool gLargeScreenDevice;
 extern int gLargeScreenPhone;
-extern bool gUseSplitVC;
 
 #ifdef __cplusplus
 } // extern "C"

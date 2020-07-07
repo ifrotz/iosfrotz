@@ -88,14 +88,14 @@
 
 -(void)dismissInfoModal {
     UIViewController *svc = nil;
-    if (gUseSplitVC && (svc = m_navigationController /*.splitViewController*/)) {
+    if ((svc = m_navigationController /*.splitViewController*/)) {
         [svc dismissModalViewControllerAnimated:YES];
     }
 }
 
 -(void)dismissInfo {
     UIViewController *svc = nil;
-    if (gUseSplitVC && (svc = m_navigationController /*.splitViewController*/)) {
+    if ((svc = m_navigationController /*.splitViewController*/)) {
         UINavigationController *nc = nil;
         if ((nc = (UINavigationController*)svc.modalViewController)) {
             if ([nc topViewController] != m_settings)
@@ -122,21 +122,14 @@
         [m_settings setInfoDelegate: self];
         
         
-        if (gUseSplitVC) {
-            UINavigationController *settingsNavController = [m_settings navigationController];
-            if (!settingsNavController) {
-                settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
-            }
-            if (!gLargeScreenDevice)
-                [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
-            [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
-            [m_navigationController /*.splitViewController*/ presentModalViewController: settingsNavController animated:YES];
+        UINavigationController *settingsNavController = [m_settings navigationController];
+        if (!settingsNavController) {
+            settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
         }
-        else {
-            [self setupFade];
-            [m_navigationController pushViewController:m_settings animated:NO];
-            [UIView commitAnimations];
-        }
+        if (!gLargeScreenDevice)
+            [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
+        [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
+        [m_navigationController /*.splitViewController*/ presentModalViewController: settingsNavController animated:YES];
     }
 }
 @end

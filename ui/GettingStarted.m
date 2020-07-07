@@ -33,10 +33,6 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
-    BOOL oldOS = NO;
-    NSString *osVersStr = [[UIDevice currentDevice] systemVersion];
-    if (osVersStr && [osVersStr characterAtIndex: 0] == '3' && [osVersStr characterAtIndex: 2] < '2')
-        oldOS = YES;
 
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];
@@ -127,11 +123,7 @@
                               "%@"
                               "<br/>"
                               "</body>\n",
-                              (oldOS) ?
-                              @"<p>Many games display a status line at the top of the screen with your current location, the time or score, or other relevant info.\n"
-                              "In order for the story to properly display all the info it expects to, the status line "
-                              "uses a small font.  If you have trouble reading the status line, you can <b>press and hold</b> on it magnify it.</p>\n"
-                              : !gLargeScreenDevice ?
+                              !gLargeScreenDevice ?
                               @"<p>Many games display a status line at the top of the screen with your current location, the time or score, or other relevant info.\n"
                               "In some cases the story can only display all the information it needs to when using a small font.  If you are "
                               "using a larger font and the status line is truncated, you can pinch to decrease the font size temporarily in order to see the full status line.</p>\n" : @""]

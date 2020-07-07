@@ -263,7 +263,6 @@
                                                     </state>
                                                     <connections>
                                                         <action selector="dismissKeyboard" destination="-1" eventType="touchUpInside" id="63"/>
-                                                        <action selector="toggleArtDescript" destination="-1" eventType="touchUpInside" id="62"/>
                                                     </connections>
                                                 </button>
                                             </subviews>

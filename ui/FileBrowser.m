@@ -292,12 +292,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 }
 
 -(void)viewDidLoad {
-#ifdef NSFoundationVersionNumber_iOS_6_1
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1)
-    {
-        self.edgesForExtendedLayout=UIRectEdgeNone;
-    }
-#endif
+    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -316,7 +311,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
     [super viewWillDisappear:animated];
-    if (gUseSplitVC && animated && UIInterfaceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
+    if (animated && UIInterfaceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
         [self.navigationController.view.superview setHidden: YES];
 }
 

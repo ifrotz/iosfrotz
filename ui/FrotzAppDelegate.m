@@ -88,8 +88,6 @@
 
 bool gLargeScreenDevice;
 int gLargeScreenPhone = 0;
-bool gUseSplitVC;
-
 
 - (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
     if ([[shortcutItem type] isEqualToString: @"storylist"]) {
@@ -103,53 +101,12 @@ bool gUseSplitVC;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOption {
     // Configure and show the window
     CGRect rect = [[UIScreen mainScreen] bounds];
-    BOOL usingStoryBoard = NO;
     gLargeScreenDevice = (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad);
 	gLargeScreenPhone = (rect.size.height >= 375 && rect.size.width >= 375) + (rect.size.height >= 414 && rect.size.width >= 414);
-    gUseSplitVC = gLargeScreenDevice;
-    //Create a full-screen window
-    if (!m_window) { // not using storyboard
-        m_window = [[FrotzWindow alloc] initWithFrame:rect];
-
-        rect = [[UIScreen mainScreen] applicationFrame];
-        BOOL useSplashTransition = NO;
-
-        if (useSplashTransition && !gLargeScreenDevice) { // Fade splash screen gradually to story browser, but not on iPad; see comment below
-            m_transitionView = [[TransitionView alloc] initWithFrame: rect];
-            m_transitionView.backgroundColor = [UIColor clearColor];
-        #if 1
-            UIImage *splashImage = [UIImage imageNamed: @"Default"];
-            if (!splashImage)
-                splashImage = [UIImage imageNamed: @"Default.png"];
-            m_splash = [[UIImageView alloc] initWithImage: splashImage];	
-        #else // Device orientation isn't yet correctly set when launched in landscape; this doesn't work, so we don't even try on iPad
-            if (!gLargeScreenDevice)
-                m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default.png"]];
-            else if (UIDeviceOrientationIsLandscape([[UIDevice currentDevice] orientation]))
-                m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Landscpe.png"]];
-            else
-                m_splash = [[UIImageView alloc] initWithImage: [UIImage imageNamed: @"Default-Portrait.png"]];
-        #endif
-            [m_transitionView setDelegate: self];
-            [m_transitionView addSubview: m_splash];
-            [m_transitionView bringSubviewToFront: m_splash];
-              
-            m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-
-            [m_activityView setFrame: CGRectMake(rect.size.width/2-10, rect.size.height - 80, 20, 20)];
-            [m_transitionView addSubview: m_activityView];
-            [m_transitionView bringSubviewToFront: m_activityView];
-            [m_activityView startAnimating];
-        }
-    } else
-        usingStoryBoard = YES;
 
     NSURL *launchURL = nil;
     BOOL handledShortcut = YES;
-    if (usingStoryBoard)
-        m_browser = [m_window.rootViewController.childViewControllers[0] childViewControllers][0];
-    else
-        m_browser = [[StoryBrowser alloc] init];
+    m_browser = [m_window.rootViewController.childViewControllers[0] childViewControllers][0];
 
     if (launchOption) {
         NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
@@ -160,47 +117,9 @@ bool gUseSplitVC;
             handledShortcut = YES;
         }
     }
-    if (usingStoryBoard) {
-        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
-        [m_browser storyMainViewController].storyNavController = navigationController;
-        //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
-        gUseSplitVC = YES;
-    } else {
-        if (gUseSplitVC) {
-            UISplitViewController* splitVC = [[UISplitViewController alloc] initWithNibName:nil bundle:nil];
-            [splitVC setDelegate: m_browser];
-
-            m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-
-            UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
-            [m_browser storyMainViewController].storyNavController = navigationController;
-
-            StoryDetailsController *detailsController = [m_browser detailsController];
-            UINavigationController *nc = [detailsController navigationController];
-            if (!nc) {
-                nc = [[UINavigationController alloc] initWithRootViewController: detailsController];
-                detailsController.detailsNavigationController = nc;
-                [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];
-            }
-            
-            splitVC.viewControllers = @[m_navigationController, nc];
-
-            if ([m_window respondsToSelector:@selector(setRootViewController:)])
-                [m_window setRootViewController: splitVC];
-            else
-                [m_window addSubview: splitVC.view];
-        } else {
-            m_navigationController = [[UINavigationController alloc] initWithRootViewController: m_browser];
-            if ([m_window respondsToSelector:@selector(setRootViewController:)])
-                [m_window setRootViewController: m_navigationController];
-            else
-                [m_window addSubview:[m_navigationController view]];
-            if (m_transitionView) {
-                [m_window addSubview: m_transitionView];
-                [m_window bringSubviewToFront: m_transitionView];
-            }
-        }
-    } // !usingStoryBoard
+    UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
+    [m_browser storyMainViewController].storyNavController = navigationController;
+    //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
 
     if (@available(iOS 13.0, *)) {
         [[UINavigationBar appearance] setTintColor:[UIColor labelColor]];
@@ -221,18 +140,12 @@ bool gUseSplitVC;
     [[UIButton appearanceWhenContainedIn: [StoryDetailsController class], nil] setTitleColor: [UIColor whiteColor] forState:UIControlStateNormal];
     
     [[m_browser storyMainViewController] initializeDropbox];
-#if 0
-    if (!usingStoryBoard) {
-        [m_window makeKeyAndVisible];
-        [self performSelector: @selector(fadeSplashScreen) withObject: nil afterDelay: 0.01];
-    }
-#endif
-    if (usingStoryBoard) {
-        [m_browser view];
-        m_browser.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
-    }
+
+    [m_browser view];
+    m_browser.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
     if (launchURL)
         [self application:application handleOpenURL: launchURL];
+
     return !handledShortcut;
 }
 
