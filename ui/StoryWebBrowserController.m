@@ -410,7 +410,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     //m_currentRequest = nil;
     NSURL *url = [request mainDocumentURL];
-    NSString *urlString = [[url relativeString] lastPathComponent];
+    NSString *urlString = [[url path] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
     NSError *error;
     BOOL stay = NO, isBadLoad = NO;
@@ -419,7 +419,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
     if (m_state == kSWBFetchingImage) {
         if (m_receivedData && m_delayedRequest) {
-            NSString *storyFile = [[[m_delayedRequest mainDocumentURL] relativeString] lastPathComponent];
+            NSString *storyFile = [[[m_delayedRequest mainDocumentURL] path] lastPathComponent];
             NSString *story;
             if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
                 && m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
@@ -547,7 +547,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlHost = [url host];
     NSString *urlPath = [url path];
     NSString *urlQuery = [url query];
-    NSLog(@"ZDL from url w/host %@, path %@, query=%@", urlHost, urlPath, urlQuery);
+    NSLog(@"ZDL from url w/host %@, path %@, query=%@, story='%@'", urlHost, urlPath, urlQuery, story);
 
     if (!([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
           && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
@@ -706,7 +706,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     [m_activityView startAnimating];
 
-    NSLog(@"Load meta, curreq=%@", m_currentRequest);
+    NSLog(@"Load meta, curreq=%@, req=%@", m_currentRequest, request);
     if (m_currentRequest) {
         NSString *story = [[[[request mainDocumentURL] path] lastPathComponent] stringByDeletingPathExtension];
         BOOL loadingPic = [self snarfMetaData: m_currentRequest loadRequest: request forStory: story];
