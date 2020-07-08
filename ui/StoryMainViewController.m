@@ -4145,8 +4145,14 @@ static void setScreenDims(char *storyNameBuf) {
                 path = [path substringFromIndex: r.location+1];
         }
     }
-    if (![path isAbsolutePath])
-        path = [[[self rootPath] stringByDeletingLastPathComponent] stringByAppendingPathComponent: path];
+    if (![path isAbsolutePath]) {
+        NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
+        NSString *appComp = [resourcePath lastPathComponent];
+        if ([path hasPrefix: appComp])
+            path = [[resourcePath stringByDeletingLastPathComponent] stringByAppendingPathComponent: path];
+        else
+            path = [[[self rootPath] stringByDeletingLastPathComponent] stringByAppendingPathComponent: path];
+    }
     return path;
 }
 
