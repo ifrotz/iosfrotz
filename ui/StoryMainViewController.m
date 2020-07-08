@@ -891,8 +891,8 @@ void iosif_glk_window_graphics_update(int viewNum) {
 void iosif_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 width, glui32 height) {
 //    NSLog(@"glk_window_erase_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, 0, left, top, width, height };
-//    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
-    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
+    [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
+//    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
 }
 
 void iosif_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
