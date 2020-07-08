@@ -70,7 +70,7 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
 static giblorb_result_t handleBlorb (strid_t stream)
 {
     giblorb_err_t err;
-    giblorb_result_t blorbres;
+    giblorb_result_t blorbres = { 0, {NULL}, 0, 0};
     giblorb_map_t *map;
 
     err = giblorb_set_resource_map (stream);
@@ -90,18 +90,18 @@ static giblorb_result_t handleBlorb (strid_t stream)
         default:
             fatalError ("Can't read the Blorb file because an unknown error occurred.");
     }
-    
-    map = giblorb_get_resource_map();
-    if (map == NULL)
-        fatalError ("Can't find the Blorb file's resource map.");
-        
-    err = giblorb_load_resource(map, giblorb_method_FilePos, &blorbres, giblorb_ID_Exec, 0);
-    if (err)
-        fatalError ("This Blorb file does not contain an executable Glulx chunk.");
-
-    if (blorbres.chunktype != giblorb_make_id('G', 'L', 'U', 'L'))
-        fatalError ("This Blorb file contains an executable chunk, but it is not a Glulx file.");
-
+    if (!err) {
+        map = giblorb_get_resource_map();
+        if (map == NULL)
+            fatalError ("Can't find the Blorb file's resource map.");
+        else {
+            err = giblorb_load_resource(map, giblorb_method_FilePos, &blorbres, giblorb_ID_Exec, 0);
+            if (err)
+                fatalError ("This Blorb file does not contain an executable Glulx chunk.");
+            if (blorbres.chunktype != giblorb_make_id('G', 'L', 'U', 'L'))
+                fatalError ("This Blorb file contains an executable chunk, but it is not a Glulx file.");
+        }
+    }
     return blorbres;
 }
 
@@ -123,6 +123,8 @@ void gitWithStream (strid_t str, git_uint32 cacheSize, git_uint32 undoSize)
     if (read32 (buffer) == FORM)
     {
         giblorb_result_t result = handleBlorb (str);
+        if (result.chunktype != giblorb_make_id('G', 'L', 'U', 'L'))
+            return;
         gamePos = result.data.startpos;
         gameSize = result.length;
     }
