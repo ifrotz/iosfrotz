@@ -277,7 +277,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
           ([m_descriptionHTML length] > 0
            ? [m_descriptionHTML stringByReplacingOccurrencesOfString:@"<img " withString:@"<!img "]
            : @"<i>No description available.</i><br><br>"),
-          [NSString stringWithFormat: @"Story filename: %@<br/>", [[m_storyInfo path] lastPathComponent]],
+          [NSString stringWithFormat: @"<small>Story filename: %@</small><br/>", [[m_storyInfo path] lastPathComponent]],
           ([m_tuid length] > 0
            ? @"<small>Tap 'View in IFDB' for more information.</small>" : @"")
           ] baseURL:nil];
