@@ -995,11 +995,21 @@ static bool bypassBundle = NO;
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
-    // if (navigationAction.navigationType == UIWebViewNavigationTypeLinkClicked) ...
-    //NSString *url = [navigationAction.request.URL query];
-
-    BOOL answer = [self webViewShouldStartLoadWithRequest: navigationAction.request];
-    decisionHandler(answer ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
+    NSURL *url = navigationAction.request.URL;
+    if ([url.scheme isEqualToString:@"itms-appss"])
+    {
+        UIApplication *app = [UIApplication sharedApplication];
+        if ([app canOpenURL:url]) {
+            [webView stopLoading];
+            [app openURL: url];
+            decisionHandler(WKNavigationActionPolicyCancel);
+        } else{
+            decisionHandler(WKNavigationActionPolicyCancel);
+        }
+    } else {
+        BOOL answer = [self webViewShouldStartLoadWithRequest: navigationAction.request];
+        decisionHandler(answer ? WKNavigationActionPolicyAllow : WKNavigationActionPolicyCancel);
+    }
 }
 
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
