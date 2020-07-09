@@ -71,7 +71,7 @@
 - (void)add {
     [self setEditing:NO];
     if (m_delegate) {
-        NSString *currentURL = [[m_delegate currentURL] stringByReplacingOccurrencesOfString:@"http://" withString:@""];
+        NSString *currentURL = [[[m_delegate currentURL] stringByReplacingOccurrencesOfString:@"http://" withString:@""] stringByReplacingOccurrencesOfString:@"https://" withString:@""];
         NSString *currentTitle = [m_delegate currentURLTitle];
 
         if (currentURL) {

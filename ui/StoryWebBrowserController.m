@@ -170,16 +170,38 @@ const NSString *kBookmarkVersionKey = @"Version";
         NSMutableArray *urls = bmDict[kBookmarkURLsKey];
         NSMutableArray *titles = bmDict[kBookmarkTitlesKey];
         NSString *vers = bmDict[kBookmarkVersionKey];
-        if (!vers) {
-            NSArray *addUrls = @[ @"https://eblong.com/infocom" ];
-            NSArray *addTitles = @[ @"The Obsessively Complete Infocom Catalog" ];
+        if (!vers || [vers compare: @"2"] == NSOrderedAscending) {
+            NSUInteger firstAddIndex = 0, firstObsoleteIndex = 0;
+            NSArray *addUrls = @[
+                @"eblong.com/infocom",
+                @"planet-if.com",
+                @"intfiction.org",
+                @"eblong.com/zarf/if.html",
+                @"m.youtube.com/watch?feature=youtu.be&v=4nigRT2KmCE"
+            ];
+            NSArray *addTitles = @[
+                @"The Obsessively Complete Infocom Catalog",
+                @"Planet Interactive Fiction",
+                @"The Interactive Fiction Community Forum",
+                @"Zarf's Interactive Fiction",
+                @"MC Frontalot - It Is Pitch Dark"
+            ];
             NSArray *obsoleteUrls = @[
                 @"www.xyzzynews.com",
                 @"sparkynet.com/spag",
                 @"www.wurb.com/if",
-                @"www.csd.uwo.ca/Infocom/"];
+                @"www.csd.uwo.ca/Infocom/",
+                @"https://eblong.com/infocom"
+            ];
             BOOL changed = NO;
+            NSUInteger i = 0;
+            if (vers) { // must be "1"
+                firstAddIndex = 0; // re-add w/o https
+                firstObsoleteIndex = 4;
+            }
             for (NSString *oUrl in obsoleteUrls) {
+                if (i++ < firstObsoleteIndex)
+                    continue;
                 NSUInteger foundIndex = [urls indexOfObject: oUrl];
                 if (foundIndex != NSNotFound) {
                     [urls removeObjectAtIndex: foundIndex];
@@ -187,15 +209,16 @@ const NSString *kBookmarkVersionKey = @"Version";
                     changed = YES;
                 }
             }
-            NSUInteger i = 0;
+            i = 0;
             for (NSString *aUrl in addUrls) {
+                if (i++ < firstAddIndex)
+                    continue;
                 NSUInteger foundIndex = [urls indexOfObject: aUrl];
                 if (foundIndex == NSNotFound) {
                     [urls addObject: aUrl];
-                    [titles addObject: [addTitles objectAtIndex: i]];
+                    [titles addObject: [addTitles objectAtIndex: i-1]];
                     changed = YES;
                 }
-                i++;
             }
             if (changed)
                 [self saveBookmarksWithURLs:urls andTitles:titles];
@@ -214,9 +237,14 @@ const NSString *kBookmarkVersionKey = @"Version";
                    @"www.ifwiki.org/index.php/Main_Page",
                    @"www.ifarchive.org",
                    @"www.ifcomp.org",
-                   @"https://eblong.com/infocom",
+                   @"eblong.com/infocom",
                    @"brasslantern.org",
-                   @"nickm.com/if"];
+                   @"nickm.com/if",
+                   @"planet-if.com",
+                   @"intfiction.org",
+                   @"eblong.com/zarf/if.html",
+                   @"m.youtube.com/watch?feature=youtu.be&v=4nigRT2KmCE"
+        ];
     if (pTitles)
         *pTitles = @[@"Interactive Fiction Database - IF and Text Adventures",
                      @"Infocom Gallery (Artwork, Docs)",
@@ -226,14 +254,19 @@ const NSString *kBookmarkVersionKey = @"Version";
                      @"The Annual Interactive Fiction Competition",
                      @"The Obsessively Complete Infocom Catalog",
                      @"Brass Latern",
-                     @"Interactive Fiction - Nick Montfort"];
+                     @"Interactive Fiction - Nick Montfort",
+                     @"Planet Interactive Fiction",
+                     @"The Interactive Fiction Community Forum",
+                     @"Zarf's Interactive Fiction",
+                     @"MC Frontalot - It Is Pitch Dark"
+        ];
 }
 
 -(void)saveBookmarksWithURLs:(NSArray*)urls andTitles:(NSArray*)titles {
     NSString *bmPath = [self bookmarkPath];
     NSDictionary *bmDict = [NSDictionary dictionaryWithObjectsAndKeys:
                             urls, kBookmarkURLsKey, titles, kBookmarkTitlesKey,
-                            @"1", kBookmarkVersionKey,
+                            @"2", kBookmarkVersionKey,
                             nil, nil];
     if (bmDict)
         [bmDict writeToFile:bmPath atomically:YES];
@@ -932,8 +965,11 @@ static bool bypassBundle = NO;
 - (void)handleLoadFailureWithError:(NSError *)error {
     UIAlertView *alert = nil;
 
-    if ([error code]==102) { //WebKitErrorDomain, no header in SDK?
-        alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
+    if ([error code]==102) { //WebKitErrorDomain, Frame Load Error
+        if (m_currentRequest && [[[m_currentRequest URL] host] isEqualToString: @"www.youtube.com"])
+            ; // ignore (happens when you use YT 'Open in App' button, which succeeds, but also fails here)
+        else
+            alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
                  //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     } else if ([error code] != NSURLErrorCancelled) {
@@ -973,6 +1009,7 @@ static bool bypassBundle = NO;
 
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error {
     [self updateButtonsForIdle: webView];
+    [self handleLoadFailureWithError: error];
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
