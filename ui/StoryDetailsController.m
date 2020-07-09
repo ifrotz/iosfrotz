@@ -580,7 +580,8 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     UIActionSheet *actionView = [[UIActionSheet alloc] initWithTitle:@"Restart the story?\nThis will abandon the current auto-saved game."
                                                             delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Restart from beginning"
                                                    otherButtonTitles: @"Keep progress", nil];
-    [actionView showFromRect:m_restartButton.frame inView:m_contentView animated:YES];
+    CGRect r = [m_restartButton convertRect:m_restartButton.bounds toView: m_contentView];
+    [actionView showFromRect:r inView:m_contentView animated:YES];
 }
 
 -(IBAction)IFDBButtonPressed {
