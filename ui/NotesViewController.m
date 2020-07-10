@@ -89,17 +89,9 @@ static const int kNotesTitleHeight = 24;
     [m_notesBGView setAutoresizesSubviews: YES];
     [m_notesBGView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_notesBGView setUserInteractionEnabled:YES];
-    //[m_notesBGView setContentMode:UIViewContentModeScaleAspectFill];
 
-    //new
     self.view = m_notesBGView;
 
-    //    m_notesTitle = [[UILabel alloc] initWithFrame: CGRectMake(0, 0, m_frame.size.width, kNotesTitleHeight)];
-    //    [m_notesTitle setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
-    //    [m_notesTitle setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
-    //    [m_notesTitle setTextAlignment: UITextAlignmentCenter];
-    //    [m_notesTitle setFont: font];
-    
     UIImage *glyph = [UIImage imageNamed: @"notes.png"];
     m_notesTitle = [[UISegmentedControl alloc] initWithItems:@[@"Notes", glyph]];
     [m_notesTitle setWidth: 24 forSegmentAtIndex:1];
@@ -129,6 +121,7 @@ static const int kNotesTitleHeight = 24;
         m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
     [m_notesView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin];
     [m_notesView setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
+    [m_notesView setTextColor: [UIColor blackColor]];
     [m_notesView setFont: font];
 
     [m_notesView setAutocapitalizationType:UITextAutocapitalizationTypeNone];
