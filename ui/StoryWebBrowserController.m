@@ -129,7 +129,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     self.navigationItem.title = @"Story Browser";
 
-    NSURL *myURL = [NSURL URLWithString: @"http://ifdb.tads.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"];
+    NSURL *myURL = [NSURL URLWithString: @"https://ifdb.tads.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"];
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: NO];
