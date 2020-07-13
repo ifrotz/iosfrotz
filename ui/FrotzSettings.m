@@ -99,7 +99,7 @@ enum ControlTableSections
     if (m_infoDelegate && [m_infoDelegate respondsToSelector:@selector(dismissInfo)]) {
         if (m_storyDelegate) {
             if (m_newFontSize != m_origFontSize)
-                [m_storyDelegate setFont: [m_storyDelegate font] withSize: m_newFontSize];
+                [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: m_newFontSize];
             [m_storyDelegate savePrefs];
         }
 
@@ -123,7 +123,7 @@ enum ControlTableSections
     {
         m_colorPicker = [[ColorPicker alloc] init];
         [m_colorPicker setDelegate: self];
-        m_fontPicker = [[FontPicker alloc] init];
+        m_fontPicker = [FontPicker frotzFontPicker];
         m_frotzDB = [[FrotzDBController alloc] init];
         m_releaseNotes = [[ReleaseNotes alloc] init];
     }
@@ -209,7 +209,7 @@ enum ControlTableSections
         m_fontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, value];
         m_newFontSize = (int)value;
         if (gLargeScreenDevice)
-            [m_storyDelegate setFont: [m_storyDelegate font] withSize: value];
+            [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: value];
     }
     lastValue = value;
 }
@@ -257,7 +257,7 @@ enum ControlTableSections
 }
 
 -(UIFont*)fontForColorDemo {
-    return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate font] size:m_newFontSize] : nil;
+    return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate fontName] size:m_newFontSize] : nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {

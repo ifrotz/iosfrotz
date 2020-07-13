@@ -38,7 +38,7 @@
     FileTransferInfo *m_fileTransferInfo;
 
     ColorPicker	*m_colorPicker;
-    FontPicker	*m_fontPicker;
+    FrotzFontPickerController *m_fontPicker;
     FrotzDBController *m_frotzDB;
 
     BOOL	m_resetting;

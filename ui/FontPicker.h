@@ -11,8 +11,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol FrotzFontDelegate <NSObject>
--(void) setFont: (nullable NSString*)font withSize:(NSInteger)size;
-@property (nonatomic, readonly, copy) NSString *font;
+-(void) setFont: (nullable NSString*)fontName withSize:(NSInteger)size;
+-(void) setFont: (nullable UIFont*)font;
+@property (nonatomic, readonly, copy) NSString *fontName;
 @property (nonatomic, copy) NSString *fixedFont;
 @property (nonatomic, readonly) NSInteger fontSize;
 @end
@@ -30,17 +31,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,strong) UIFont *font;
 @end
 
-@interface FontPicker : UITableViewController {
-    NSMutableArray *m_fonts;
-    NSMutableArray *m_fixedFonts;
-    id<FrotzFontDelegate> __weak m_delegate;
-    BOOL m_fixedFontsOnly;
-}
+@protocol FrotzFontPicker <NSObject>
 @property (nonatomic, weak) id<FrotzFontDelegate> delegate;
 @property (nonatomic, assign) BOOL fixedFontsOnly;
-
-- (instancetype)init;
 @end
+
+typedef UIViewController<FrotzFontPicker> FrotzFontPickerController;
+@interface FontPicker : NSObject {
+}
++(FrotzFontPickerController*)frotzFontPicker;
+@end
+
 
 NS_ASSUME_NONNULL_END
 

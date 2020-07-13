@@ -7,7 +7,6 @@
 //
 
 #import "FontPicker.h"
-#import "UIFontExt.h"
 
 @implementation FrotzFontInfo
 @synthesize family;
@@ -22,9 +21,67 @@
     }
     return self;
 }
+-(NSString*)description {
+    return self.fontName;
+}
+@end
+
+// FrotzFontPicker implemented directly using UITableViewController
+@interface FontPickerImpl_TV : UITableViewController<FrotzFontPicker> {
+    NSMutableArray *m_fonts;
+    NSMutableArray *m_fixedFonts;
+    id<FrotzFontDelegate> __weak m_delegate;
+    BOOL m_fixedFontsOnly;
+}
+@property (nonatomic, weak) id<FrotzFontDelegate> delegate;
+@property (nonatomic, assign) BOOL fixedFontsOnly;
+- (instancetype)init;
+@end
+
+// FrotzFontPicker implemented as a lightweight shim on UIFontPickerViewController (iOS 13+ only)
+API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewController<FrotzFontPicker, UIFontPickerViewControllerDelegate> {
+    id<FrotzFontDelegate> __weak m_delegate;
+    BOOL m_fixedFontsOnly;  // unused/unimplemented
+}
+-(void)setDelegate:(id<FrotzFontDelegate> _Nullable)delegate;
+@property (nonatomic, assign) BOOL fixedFontsOnly;
 @end
 
 @implementation FontPicker
++(UIViewController<FrotzFontPicker>*) frotzFontPicker {
+    UIViewController<FrotzFontPicker> *fp;
+    if (@available(iOS 13.0, *)) {
+        UIFontPickerViewControllerConfiguration *config = [[UIFontPickerViewControllerConfiguration alloc] init];
+        // The filteredTraits interface is fucking next to useless.  You can't show only fonts with normal
+        // weights, and you can't filter out the font with only symbols, because just a mask is not enough.
+        // config.filteredTraits = ...
+        fp = [[FontPickerImpl_FP alloc] initWithConfiguration: config];
+    } else
+    {
+        fp = [[FontPickerImpl_TV alloc] init];
+    }
+    return fp;
+}
+@end
+
+@implementation FontPickerImpl_FP
+@synthesize fixedFontsOnly = m_fixedFontsOnly;
+-(void)setDelegate:(id<FrotzFontDelegate> _Nullable)delegate {
+    [super setDelegate: self];
+    m_delegate = delegate;
+}
+
+- (void)fontPickerViewControllerDidPickFont:(UIFontPickerViewController *)viewController {
+    UIFontDescriptor *fontDesc = viewController.selectedFontDescriptor;
+    UIFont *font = [UIFont fontWithDescriptor:fontDesc size:[m_delegate fontSize]];
+    [m_delegate setFont:font];
+}
+
+- (void)fontPickerViewControllerDidCancel:(UIFontPickerViewController *)viewController {
+}
+@end
+
+@implementation FontPickerImpl_TV
 @synthesize delegate = m_delegate;
 @synthesize fixedFontsOnly = m_fixedFontsOnly;
 
@@ -38,9 +95,11 @@ static NSInteger sortFontsByFamilyName(id a, id b, void *context) {
 enum { kUIFontItalic=1, kUIFontBold=2 };
 
 - (instancetype)init {
-    m_fonts = [[NSMutableArray alloc] initWithCapacity: 50];
-    m_fixedFonts = [[NSMutableArray alloc] initWithCapacity: 50];
     self = [super initWithStyle:UITableViewStyleGrouped];
+    if (self) {
+        m_fonts = [[NSMutableArray alloc] initWithCapacity: 75];
+        m_fixedFonts = [[NSMutableArray alloc] initWithCapacity: 10];
+    }
     return self;
 }
 
@@ -50,26 +109,27 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     [m_fixedFonts removeAllObjects];
     NSArray *fontFamilies = [UIFont familyNames];
     for (NSString *familyName in fontFamilies) {
-        if ([familyName hasPrefix: @"STHeiti"] || [familyName hasPrefix: @"Hira"]
-            || [familyName hasPrefix: @"Zapf"] || [familyName hasPrefix: @"Heit"]
-            || [familyName hasPrefix: @"Geeza"])
-            continue;
         NSArray *fonts = [UIFont fontNamesForFamilyName: familyName];
         NSString *fontName = nil;
         UIFont *font = nil;
+        BOOL isMonoSpace = NO;
         for (NSString *aFontName in fonts) {
-            font = [UIFont fontWithName: aFontName size: 12];
-            int traits = [font fontTraits];  // skip italic, etc. fonts.  traits not documented
-            if (!traits) {
-                fontName = aFontName;
-                break;
-            }
+            font = [UIFont fontWithName: aFontName size: 16];
+            UIFontDescriptorSymbolicTraits symtraits = font.fontDescriptor.symbolicTraits;
+            if ((symtraits & UIFontDescriptorClassMask) == UIFontDescriptorClassSymbolic)
+                continue;
+            if ((symtraits & (UIFontDescriptorTraitBold|UIFontDescriptorTraitItalic)) != 0)
+                continue;
+            if (symtraits & UIFontDescriptorTraitMonoSpace)
+                isMonoSpace = YES;
+            fontName = aFontName;
+            break;
         }
         if (fontName) {
             [m_fonts addObject: [[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font]];
-            if (//[font isFixedPitch] || // this doesn't seem to ever return true forcing us to do nasty name comparisons
-                [familyName hasPrefix: @"Courier"] || [familyName hasPrefix: @"American Typewriter"])
+            if (isMonoSpace) {
                 [m_fixedFonts addObject: [[FrotzFontInfo alloc] initWithFamily: familyName fontName:fontName font:font]];
+            }
         }
     }
     [m_fonts sortUsingFunction: sortFontsByFamilyName context: nil];
@@ -79,7 +139,6 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
-
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return [m_fixedFontsOnly ? m_fixedFonts : m_fonts count];
@@ -97,7 +156,7 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     // Configure the cell
     FrotzFontInfo *f = (m_fixedFontsOnly ? m_fixedFonts : m_fonts)[indexPath.row];
     cell.text = f.family;
-    cell.font = [UIFont fontWithName: cell.text size:12];
+    cell.font = [UIFont fontWithName: cell.text size:16];
     return cell;
 }
 
@@ -114,32 +173,6 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     }
 }
 
-/*
- - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
- 
- if (editingStyle == UITableViewCellEditingStyleDelete) {
- }
- if (editingStyle == UITableViewCellEditingStyleInsert) {
- }
- }
- */
-/*
- - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
- return YES;
- }
- */
-/*
- - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
- }
- */
-/*
- - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
- return YES;
- }
- */
-
-
-
 - (void)viewWillAppear:(BOOL)animated {
     
     if (m_fixedFontsOnly)
@@ -149,14 +182,14 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     
     [super viewWillAppear:animated];
     [[self tableView] reloadData];
-    if (m_delegate && [m_delegate respondsToSelector: @selector(font)]) {
-        NSString *font = m_fixedFontsOnly ? [m_delegate fixedFont] : [m_delegate font];
-        if (font) {
+    if (m_delegate && [m_delegate respondsToSelector: @selector(fontName)]) {
+        NSString *fontName = m_fixedFontsOnly ? [m_delegate fixedFont] : [m_delegate fontName];
+        if (fontName) {
             NSArray *fontArr = m_fixedFontsOnly ? m_fixedFonts : m_fonts;
             int i;
             for (i = 0; i < [fontArr count]; ++i) {
                 FrotzFontInfo *f = fontArr[i];
-                if ([[f fontName] isEqualToString: font]) {
+                if ([[f fontName] isEqualToString: fontName]) {
                     [[self tableView] selectRowAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0] animated:NO scrollPosition:UITableViewScrollPositionMiddle];
                     break;
                 }
@@ -166,11 +199,4 @@ enum { kUIFontItalic=1, kUIFontBold=2 };
     
 }
 
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-}
-
-
 @end
-

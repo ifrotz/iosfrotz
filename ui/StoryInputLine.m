@@ -291,7 +291,7 @@ BOOL cursorVisible = YES;
 
 -(BOOL)updatePosition {
     static BOOL insideUpdatePosition;
-    if (insideUpdatePosition) // prevent recursive update (setText: can cause htis)
+    if (insideUpdatePosition) // prevent recursive update (setText: can cause this)
         return NO;
     insideUpdatePosition = YES;
     CGRect myFrame = [self frame];

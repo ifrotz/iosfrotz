@@ -1092,7 +1092,7 @@ static void setColorTable(RichTextView *v) {
 
 
 @implementation StoryMainViewController 
-@synthesize font = m_fontname;
+@synthesize fontName = m_fontname;
 @synthesize fontSize = m_fontSize;
 @synthesize completionEnabled = m_completionEnabled;
 @synthesize canEditStoryInfo = m_canEditStoryInfo;
@@ -2570,10 +2570,10 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     m_landscape = landscape;
 }
 
--(void) setFont: (NSString*) fontname withSize:(NSInteger)size {
+-(void) setFont: (NSString*)fontName withSize:(NSInteger)size {
     NSInteger maxFontSize = 32;
-    if (fontname) {
-        m_fontname = [fontname copy];
+    if (fontName) {
+        m_fontname = [fontName copy];
     } // else keep existing font, just change size
     if (size)
         m_fontSize = size;
@@ -2583,13 +2583,25 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         m_fontSize = 8;
     else if (m_fontSize > maxFontSize)
         m_fontSize = maxFontSize;
-    UIFont *font = [UIFont fontWithName:m_fontname  size:m_fontSize];
+    UIFont *font = [UIFont fontWithName: m_fontname size:m_fontSize];
+    [self setFont: font];
+}
+
+-(void) setFont: (UIFont*)font {
+    m_fontname = [font fontName];
+    m_fontSize = [font pointSize];
+    UIFontDescriptor *fontDesc = font.fontDescriptor;
+    UIFont *normalFont = [UIFont fontWithDescriptor:[fontDesc fontDescriptorWithSymbolicTraits:0] size:m_fontSize];
+    if (normalFont) // remove bold/italic traits if possible
+        font = normalFont;
+    if ([font pointSize] != m_fontSize)
+        font = [font fontWithSize: m_fontSize];
 #if UseRichTextView
     bool normalSizedStatusFont = UseFullSizeStatusLineFont;
 	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
-    [m_storyView setFontFamily: [font familyName] size: m_fontSize];
+    [m_storyView setFontBase: font size: m_fontSize];
     NSInteger fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
-    [m_storyView setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
+    [m_storyView setFixedFontBase: [m_storyView fixedFont] size: fixedFontSize];
     [m_storyView reflowText];
     if (normalSizedStatusFont) {
         int lowRange = gLargeScreenDevice ? 12 : 8;
@@ -2600,9 +2612,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         m_statusFixedFontSize = 15;
     else
         m_statusFixedFontSize = normalSizeFixedFont ? 9 : 8;
-    NSString *statusFixedFontFamily = [[m_statusLine fixedFont] familyName];
-    [m_statusLine setFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
-    [m_statusLine setFixedFontFamily: statusFixedFontFamily size: m_statusFixedFontSize];
+    UIFont *statusFixedFont = [m_statusLine fixedFont] ;
+    if ([statusFixedFont pointSize] != m_statusFixedFontSize)
+        statusFixedFont = [statusFixedFont fontWithSize: m_statusFixedFontSize];
+    [m_statusLine setFontBase: statusFixedFont size: m_statusFixedFontSize];
+    [m_statusLine setFixedFontBase: statusFixedFont size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
     m_statusFixedFontWidth = !normalSizeFixedFont ? 5.0 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4.0;
     m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont lineHeight];
@@ -2613,11 +2627,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         for (NSUInteger k = 0; k < c; ++k) {
             RichTextView *rtv = m_glkViews[k];
             if (glkGridArray[k].win->type == wintype_TextGrid) {
-                [rtv setFixedFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
-                [rtv setFontFamily: statusFixedFontFamily size:m_statusFixedFontSize];
+                [rtv setFixedFontBase: statusFixedFont size:m_statusFixedFontSize];
+                [rtv setFontBase: statusFixedFont size:m_statusFixedFontSize];
             } else {
-                [rtv setFontFamily: [font familyName] size:m_fontSize];
-                [rtv setFixedFontFamily: [[m_storyView fixedFont] familyName] size: fixedFontSize];
+                [rtv setFontBase: font size:m_fontSize];
+                [rtv setFixedFontBase: [m_storyView fixedFont] size: fixedFontSize];
             }
             [rtv reflowText];
         }
@@ -4363,7 +4377,7 @@ static void setScreenDims(char *storyNameBuf) {
         [self setBackgroundColor: m_defaultBGColor makeDefault:NO];
     }
     m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
-    [self setFont: kVariableWidthFontName withSize: m_fontSize];
+    [self setFont: [UIFont fontWithName:kVariableWidthFontName size:m_fontSize]];
     m_completionEnabled = YES;
     m_canEditStoryInfo = NO;
     [m_storyBrowser unHideAll];

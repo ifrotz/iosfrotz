@@ -2,7 +2,6 @@
 //  TextViewBug
 #import <UIKit/UIKit.h>
 #import "WordSelectionProtocol.h"
-#import "UIFontExt.h"
 #import "RichTextStyle.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -152,8 +151,8 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 @property (nonatomic, copy) UIFont *font;
 @property (nonatomic, copy) UIFont *fixedFont;
 @property (nonatomic, readonly) CGSize fixedFontSize;
-- (BOOL)setFontFamily:(NSString*)fontFamily size:(NSInteger)newSize;
-- (BOOL)setFixedFontFamily:(NSString*)familyName size:(NSInteger)newSize;
+- (BOOL)setFontBase:(UIFont*)fontBase size:(NSInteger)newSize;
+- (BOOL)setFixedFontBase:(UIFont*)fontBase size:(NSInteger)newSize;
 - (void)setFontSize:(CGFloat)newFontSize;
 - (void)setTextColor:(UIColor*)color;
 @property (nonatomic, readonly) CGRect visibleRect;

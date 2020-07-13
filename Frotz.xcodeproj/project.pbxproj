@@ -212,7 +212,6 @@
 		44910BE51256F85800409694 /* FrotzDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 44910BE41256F85800409694 /* FrotzDB.m */; };
 		44910FFD1259972F00409694 /* colorflipbg.png in Resources */ = {isa = PBXBuildFile; fileRef = 44910FFB1259972F00409694 /* colorflipbg.png */; };
 		44910FFE1259972F00409694 /* colorflipfg.png in Resources */ = {isa = PBXBuildFile; fileRef = 44910FFC1259972F00409694 /* colorflipfg.png */; };
-		449119D6125D306200409694 /* UIFontExt.m in Sources */ = {isa = PBXBuildFile; fileRef = 449119D5125D306200409694 /* UIFontExt.m */; };
 		449127E312643AA10013AD7C /* GlkView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449127E212643AA10013AD7C /* GlkView.m */; };
 		449A51D51052DA34001B884B /* glare.png in Resources */ = {isa = PBXBuildFile; fileRef = 449A51D41052DA34001B884B /* glare.png */; };
 		449A528710530749001B884B /* glarels.png in Resources */ = {isa = PBXBuildFile; fileRef = 449A528610530749001B884B /* glarels.png */; };
@@ -1077,8 +1076,6 @@
 		44910BE41256F85800409694 /* FrotzDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzDB.m; sourceTree = "<group>"; };
 		44910FFB1259972F00409694 /* colorflipbg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = colorflipbg.png; path = resources/colorflipbg.png; sourceTree = "<group>"; };
 		44910FFC1259972F00409694 /* colorflipfg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = colorflipfg.png; path = resources/colorflipfg.png; sourceTree = "<group>"; };
-		449119D4125D306200409694 /* UIFontExt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIFontExt.h; sourceTree = "<group>"; };
-		449119D5125D306200409694 /* UIFontExt.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIFontExt.m; sourceTree = "<group>"; };
 		449127E012643AA10013AD7C /* FrotzSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzSettings.h; sourceTree = "<group>"; };
 		449127E112643AA10013AD7C /* GlkView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlkView.h; sourceTree = "<group>"; };
 		449127E212643AA10013AD7C /* GlkView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlkView.m; sourceTree = "<group>"; };
@@ -1433,8 +1430,6 @@
 				440DAAFA125D68DE0014A8FD /* TextViewExt.h */,
 				44CA12EF0E41076D009AEF85 /* TransitionView.h */,
 				44CA12F00E41076D009AEF85 /* TransitionView.m */,
-				449119D4125D306200409694 /* UIFontExt.h */,
-				449119D5125D306200409694 /* UIFontExt.m */,
 				44C28D031238C41C00EE9FA3 /* URLPromptController.h */,
 				44C28D041238C41C00EE9FA3 /* URLPromptController.m */,
 				44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */,
@@ -2776,7 +2771,6 @@
 				449C92461122188D006CCDF9 /* StoryView.m in Sources */,
 				4488D1D30E21E81F008C6FE0 /* StoryWebBrowserController.m in Sources */,
 				44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */,
-				449119D6125D306200409694 /* UIFontExt.m in Sources */,
 				44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */,
 				441EC8670E10BD4400E74625 /* ui_audio_none.c in Sources */,
 				441EC8690E10BD4400E74625 /* ui_init.c in Sources */,
@@ -3179,9 +3173,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = 6KG7666N88;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3233,9 +3225,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = 6KG7666N88;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
@@ -3682,9 +3672,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = 6KG7666N88;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
@@ -3782,9 +3770,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = 6KG7666N88;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Frotz_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;

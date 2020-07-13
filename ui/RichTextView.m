@@ -248,29 +248,16 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return pt;
 }
 
--(BOOL)setFontFamily:(NSString*)familyName size:(NSInteger)newSize {
+// Sets normal (regular), bold and italic fonts based on a given font
+// (which is converted to regular if not already and possible)
+-(BOOL)setFontBase:(UIFont*)fontBase size:(NSInteger)newSize {
     UIFont *normalFont = nil, *boldFont = nil, *italicFont = nil, *boldItalicFont = nil;
-    
-    NSArray *fonts = [UIFont fontNamesForFamilyName: familyName];
-    UIFont *font = nil;
-    for (NSString *aFontName in fonts) {
-        font = [UIFont fontWithName: aFontName size: newSize];
-        int traits = [font fontTraits];  // skip italic, etc. fonts.  traits not documented
-        switch (traits & (UIBoldFontMask|UIItalicFontMask)) {
-            case UINormalFontMask:
-                normalFont = font;
-                break;
-            case UIItalicFontMask:
-                italicFont = font;
-                break;
-            case UIBoldFontMask:
-                boldFont = font;
-                break;
-            case UIItalicFontMask+UIBoldFontMask:
-                boldItalicFont = font;
-                break;
-        }
-    }
+
+    normalFont = fontBase;
+    boldFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold] size: newSize];
+    italicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitItalic] size: newSize];
+    boldItalicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold|UIFontDescriptorTraitItalic] size: newSize];
+
     if (normalFont) {
         [self rememberTopLineForReflow];
         m_fontSize = newSize;
@@ -293,29 +280,14 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 
--(BOOL)setFixedFontFamily:(NSString*)familyName size:(NSInteger)newSize {
+-(BOOL)setFixedFontBase:(UIFont*)fontBase size:(NSInteger)newSize {
     UIFont *normalFont = nil, *boldFont = nil, *italicFont = nil, *boldItalicFont = nil;
-    
-    NSArray *fonts = [UIFont fontNamesForFamilyName: familyName];
-    UIFont *font = nil;
-    for (NSString *aFontName in fonts) {
-        font = [UIFont fontWithName: aFontName size: newSize];
-        int traits = [font fontTraits];  // skip italic, etc. fonts.  traits not documented
-        switch (traits & (UIBoldFontMask|UIItalicFontMask)) {
-            case UINormalFontMask:
-                normalFont = font;
-                break;
-            case UIItalicFontMask:
-                italicFont = font;
-                break;
-            case UIBoldFontMask:
-                boldFont = font;
-                break;
-            case UIItalicFontMask+UIBoldFontMask:
-                boldItalicFont = font;
-                break;
-        }
-    }
+
+    normalFont = fontBase;
+    boldFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold] size: newSize];
+    italicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitItalic] size: newSize];
+    boldItalicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold|UIFontDescriptorTraitItalic] size: newSize];
+
     if (normalFont) {
         [self rememberTopLineForReflow];
         m_fixedFontSize = newSize;
@@ -335,9 +307,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(void)setFont:(UIFont*)newFont {
-    NSString *familyName = [newFont familyName];
-    int newSize = [newFont pointSize];
-    [self setFontFamily: familyName size:newSize];
+    [self setFontBase: newFont size:[newFont pointSize]];
 }
 
 -(void)setFontSize:(CGFloat)newFontSize {
@@ -345,9 +315,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(void)setFixedFont:(UIFont*)newFont {
-    NSString *familyName = [newFont familyName];
-    int newSize = [newFont pointSize];
-    [self setFixedFontFamily: familyName size:newSize];
+    [self setFixedFontBase: newFont size:[newFont pointSize]];
 }
 
 - (UIFont*)font {
