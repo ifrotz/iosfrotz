@@ -29,6 +29,7 @@
 
 @implementation NotesViewController
 @synthesize delegate = m_delegate;
+@synthesize fontName = m_fontName;
 
 - (NotesViewController*)initWithFrame:(CGRect)frame {
     if ((self = [super initWithNibName:nil bundle:nil])) {
@@ -62,15 +63,7 @@ static const int kNotesTitleHeight = 24;
         self.view = m_notesBGView;
         return;
     }
-#if 0
-    if (m_scrollView) {
-        self.view = m_scrollView;
-        return;
-    }
-#endif
-    UIFont *font = [UIFont fontWithName:@"MarkerFelt-Wide" size:gLargeScreenDevice ? 20:16];
-    if (!font)
-        font = [UIFont fontWithName:@"MarkerFelt-Thin" size:gLargeScreenDevice ? 20:16];
+    UIFont *font = [UIFont fontWithName:m_fontName ? m_fontName : @"MarkerFelt-Wide" size:self.defaultFontSize];
 
     m_scrollView = [[HScrollView alloc] initWithFrame:m_frame];
     [m_scrollView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
@@ -127,6 +120,36 @@ static const int kNotesTitleHeight = 24;
     [m_notesView setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 
     [m_notesBGView addSubview: m_notesView];
+}
+
+-(NSInteger)defaultFontSize {
+    return gLargeScreenDevice ? 20 : 16;
+}
+
+-(NSInteger)fontSize {
+    return m_notesView ? (NSInteger)(m_notesView.font.pointSize) : self.defaultFontSize;
+}
+
+// note, m_fontName is only set when the font is explicitly set; the default marker felt font name isn't stored,
+// so the synthesized self.fontName may return nil, but you can still query the actual font. This way we can change the
+// default font in the future and it will only be saved in settings if the user explicitly changed it.
+-(UIFont*)font {
+    return m_notesView ? m_notesView.font : nil;
+}
+
+-(void)setFont:(UIFont*)font {
+    m_fontName = [font fontName];
+    if (m_notesView)
+        [m_notesView setFont: font];
+}
+
+-(void)setFontName: (nullable NSString*)fontName {
+    NSInteger size = self.fontSize;
+    [self setFont: [UIFont fontWithName: fontName size:(CGFloat)size]];
+}
+
+-(UIFont*)fixedFont {
+    return nil;
 }
 
 -(void)notesAction:(id)sender {

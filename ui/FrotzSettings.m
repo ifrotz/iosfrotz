@@ -34,11 +34,12 @@
 #define kUIRowHeight                    50.0
 #define kUIRowLabelHeight               22.0
 
-#define kFontSizeStr "Font size (%d)"
+#define kFontSizeStr "Story Font Size (%d)"
 
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
 @synthesize infoDelegate = m_infoDelegate;
+@synthesize notesDelegate = m_notesDelegate;
 
 enum ControlTableSections
 {
@@ -46,6 +47,30 @@ enum ControlTableSections
     kFrotzPrefsSection,
     kFrotzResetSection,
     kFrotzNumSections
+};
+
+enum FrotzInfoRows
+{
+    kFrotzInfoAbout,
+    kFrotzInfoGettingStarted,
+    kFrotzInfoReleaseNotes,
+    kFrotzInfoFileTransfer,
+    kFrotzInfoNumRows
+};
+
+enum FrotzPrefsRows
+{
+    kFrotzPrefsTextColor,
+    kFrotzPrefsBGColor,
+    kFrotzPrefsStoryFont,
+    kFrotzPrefsStoryFontSize,
+    kFrotzPrefsNotesFont,
+    kFrotzPrefsWordCompletion,
+    kFrotzPrefsStoryInfoEditing,
+#ifdef FROTZ_DB_APP_KEY
+    kFrotzPrefsDropbox,
+#endif
+    kFrotzPrefsNumRows
 };
 
 -(void)setupFade {
@@ -112,18 +137,14 @@ enum ControlTableSections
     }
 }
 
-#include <objc/runtime.h>
-
--(void)viewDidDisappear:(BOOL)animated {
-}
-
 - (instancetype)init
 {
     if ((self = [super init]))
     {
         m_colorPicker = [[ColorPicker alloc] init];
         [m_colorPicker setDelegate: self];
-        m_fontPicker = [FontPicker frotzFontPicker];
+        m_storyFontPicker = [FontPicker frotzFontPickerWithTitle:@"Story Font" includingFaces:NO monospaceOnly:NO];
+        m_notesFontPicker = [FontPicker frotzFontPickerWithTitle:@"Notes Font" includingFaces:YES monospaceOnly:NO];
         m_frotzDB = [[FrotzDBController alloc] init];
         m_releaseNotes = [[ReleaseNotes alloc] init];
     }
@@ -132,8 +153,13 @@ enum ControlTableSections
 
 - (void)setStoryDelegate:(id<FrotzSettingsStoryDelegate,FrotzFontDelegate>)delegate {
     m_storyDelegate = delegate;
-    [m_fontPicker setDelegate: m_storyDelegate];
+    [m_storyFontPicker setDelegate: m_storyDelegate];
     [m_frotzDB setDelegate: m_storyDelegate];
+}
+
+- (void)setNotesDelegate:(id<FrotzFontDelegate>)delegate {
+    m_notesDelegate = delegate;
+    [m_notesFontPicker setDelegate: m_notesDelegate];
 }
 
 - (NSString*)rootPath {
@@ -152,7 +178,8 @@ enum ControlTableSections
     m_releaseNotes = nil;
 
     m_colorPicker = nil;
-    m_fontPicker = nil;
+    m_storyFontPicker = nil;
+    m_notesFontPicker = nil;
 
     m_frotzDB = nil;
 
@@ -342,14 +369,10 @@ enum ControlTableSections
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     if (section == kFrotzInfoSection) {
-        return 4;
+        return kFrotzInfoNumRows;
     } else if (section == kFrotzResetSection)
         return 1;
-#ifdef FROTZ_DB_APP_KEY
-    return 7;
-#else
-    return 6;
-#endif
+    return kFrotzPrefsNumRows;
 }
 
 // to determine specific row height for each cell, override this.  In this example, each row is determined
@@ -361,12 +384,10 @@ enum ControlTableSections
 
     switch ([indexPath row])
     {
-        case 0:
         default:
             result = kUIRowHeight;
             break;
     }
-
     return result;
 }
 
@@ -395,7 +416,12 @@ enum ControlTableSections
 {
     NSInteger row = [indexPath row];
     DisplayCell *cell = [self obtainTableCellForRow:row];
-    if (indexPath.section == kFrotzPrefsSection && indexPath.row >= 3 && indexPath.row != 6 || indexPath.section == kFrotzResetSection)
+    if (indexPath.section == kFrotzPrefsSection && indexPath.row >= kFrotzPrefsStoryFontSize
+        && indexPath.row != kFrotzPrefsNotesFont
+#ifdef FROTZ_DB_APP_KEY
+        && indexPath.row != kFrotzPrefsDropbox
+#endif
+        || indexPath.section == kFrotzResetSection)
         cell.accessoryType = UITableViewCellAccessoryNone;
     else
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
@@ -405,16 +431,16 @@ enum ControlTableSections
         case kFrotzInfoSection:
         {
             switch (row) {
-                case 0:
+                case kFrotzInfoAbout:
                     cell.text = @"About Frotz";
                     break;
-                case 1:
+                case kFrotzInfoGettingStarted:
                     cell.text = @"Getting Started";
                     break;
-                case 2:
+                case kFrotzInfoReleaseNotes:
                     cell.text = @"What's New?";
                     break;
-                case 3:
+                case kFrotzInfoFileTransfer:
                     cell.text = @"File Transfer";
                     break;
             }
@@ -423,30 +449,33 @@ enum ControlTableSections
         case kFrotzPrefsSection:
         {
             switch (row) {
-                case 0:
+                case kFrotzPrefsTextColor:
                     cell.text = @"Text Color";
                     break;
-                case 1:
+                case kFrotzPrefsBGColor:
                     cell.text = @"Background Color";
                     break;
-                case 2:
+                case kFrotzPrefsStoryFont:
                     cell.text = @"Story Font";
                     break;
-                case 3:
+                case kFrotzPrefsNotesFont:
+                    cell.text = @"Notes Font";
+                    break;
+                case kFrotzPrefsStoryFontSize:
                     m_fontSizeCell = cell;
                     cell.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_sliderCtl value]];
                     cell.view = m_sliderCtl;
                     break;
-                case 4:
-                    cell.text = @"Word completion";;
+                case kFrotzPrefsWordCompletion:
+                    cell.text = @"Word Completion";;
                     cell.view = m_switchCtl;
                     break;
-                case 5:
+                case kFrotzPrefsStoryInfoEditing:
                     cell.text = @"Story Info Editing";
                     cell.view = m_switchCtl2;
                     break;
 #ifdef FROTZ_DB_APP_KEY
-                case 6:
+                case kFrotzPrefsDropbox:
                     cell.text = @"Dropbox Settings";
                     break;
 #endif
@@ -489,16 +518,16 @@ enum ControlTableSections
     switch (section)  {
         case kFrotzInfoSection: {
             switch (row) {
-                case 0:
+                case kFrotzInfoAbout:
                     viewController = m_aboutFrotz;
                     break;
-                case 1:
+                case kFrotzInfoGettingStarted:
                     viewController = m_gettingStarted;
                     break;
-                case 2:
+                case kFrotzInfoReleaseNotes:
                     viewController = m_releaseNotes;
                     break;
-                case 3:
+                case kFrotzInfoFileTransfer:
                     viewController = m_fileTransferInfo;
                     break;
             }
@@ -506,23 +535,23 @@ enum ControlTableSections
         }
         case kFrotzPrefsSection:
             //	case kFrotzColorsSection:
-            if (row==0) {
+            if (row==kFrotzPrefsTextColor) {
                 [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
                 m_colorPicker.title = NSLocalizedString(@"Text Color", @"");
                 viewController = m_colorPicker;
-            } else if (row==1) {
+            } else if (row==kFrotzPrefsBGColor) {
                 [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
                 m_colorPicker.title = NSLocalizedString(@"Background Color", @"");
                 viewController = m_colorPicker;
-            } else if (row==2) {
-                [m_fontPicker setFixedFontsOnly: false];
-                viewController = m_fontPicker;
+            } else if (row==kFrotzPrefsStoryFont) {
+                viewController = m_storyFontPicker;
+            } else if (row==kFrotzPrefsNotesFont)
+                viewController = m_notesFontPicker;
 #ifdef FROTZ_DB_APP_KEY
-            }
-            else if (row==6) {
+            else if (row==kFrotzPrefsDropbox) {
                 viewController = m_frotzDB;
-#endif
             }
+#endif
             break;
         case kFrotzResetSection: {
             m_resetting = YES;

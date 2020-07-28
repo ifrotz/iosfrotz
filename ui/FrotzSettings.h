@@ -38,14 +38,16 @@
     FileTransferInfo *m_fileTransferInfo;
 
     ColorPicker	*m_colorPicker;
-    FrotzFontPickerController *m_fontPicker;
+    FrotzFontPickerController *m_storyFontPicker;
+    FrotzFontPickerController *m_notesFontPicker;
     FrotzDBController *m_frotzDB;
 
     BOOL	m_resetting;
 
     NSObject<FrotzSettingsInfoDelegate> *m_infoDelegate;
     NSObject<FrotzSettingsStoryDelegate, FrotzFontDelegate>	*m_storyDelegate;
-    
+    NSObject<FrotzFontDelegate>    *m_notesDelegate;
+
     NSInteger m_selectedRow, m_selectedSection;
 
     UISwitch		    *m_switchCtl, *m_switchCtl2;
@@ -57,6 +59,7 @@
 - (instancetype)init;
 @property (nonatomic, strong) id<FrotzSettingsInfoDelegate> infoDelegate;
 @property (nonatomic, strong) id<FrotzSettingsStoryDelegate,FrotzFontDelegate> storyDelegate;
+@property (nonatomic, strong) id<FrotzFontDelegate> notesDelegate;
 @property (nonatomic, readonly, copy) NSString *rootPath;
 - (void)donePressed;
 - (void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color;

@@ -152,6 +152,7 @@ void removeOldPngSplash(const char *filename) {
         m_webBrowserController = [[StoryWebBrowserController alloc] initWithBrowser: self];
         m_settings = [[FrotzSettingsController alloc] init];
         [m_settings setStoryDelegate: m_storyMainViewController];
+        [m_settings setNotesDelegate: m_storyMainViewController.notesController];
 
         if (!hasStoryBoard) {
             m_details = [[StoryDetailsController alloc] initWithNibName:gLargeScreenDevice ? @"StoryDetailsController-ipad":@"StoryDetailsController"

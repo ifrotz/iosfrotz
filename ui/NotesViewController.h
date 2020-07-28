@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
     UITextView *m_notesView;
     UIView *m_notesBGView;
     UIResponder *m_chainResponder;
+    NSString *m_fontName;
     
     UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> __weak *m_delegate;
 }
@@ -33,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 @property (nullable, nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *text;
+@property (nonatomic, copy) UIFont *font;
 -(void)setFrame:(CGRect)frame;
 -(void)setChainResponder:(UIResponder*)responder;
 -(void)activateKeyboard;
@@ -46,6 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 -(void)hide;
 -(void)loadView;
 -(void)autosize;
+-(void)setFontName: (nullable NSString*)fontName;
+-(UIFont*)fixedFont;
+-(NSInteger)defaultFontSize;
+-(NSInteger)fontSize;
+@property (nonatomic, readonly, copy) NSString *fontName;
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView;
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;

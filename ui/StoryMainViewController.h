@@ -210,7 +210,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) keyboardDidShow:(NSNotification*)notif;
 -(void) keyboardDidHide:(NSNotification*)notif;
 @property (nonatomic, readonly) CGSize keyboardSize;
-@property (nonatomic, readonly, strong) NotesViewController *notesController;
+@property (nonatomic, readonly, strong) NotesViewController<FrotzFontDelegate> *notesController;
 @property (nonatomic, readonly) BOOL splashVisible;
 -(void) textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
 -(void) textFieldFakeDidEndEditing:(UITextField *)textField;

@@ -1568,6 +1568,11 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 -(NotesViewController*)notesController {
+    if (!m_notesController) {
+        m_notesController = [[NotesViewController alloc] initWithFrame: CGRectZero];
+        [m_notesController setDelegate: self];
+        [self addChildViewController:m_notesController];
+    }
     return m_notesController;
 }
 
@@ -1870,11 +1875,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [self.view setBackgroundColor: m_defaultBGColor];
 
     //notes page support
-    if (!m_notesController) {
-        m_notesController = [[NotesViewController alloc] initWithFrame: frame];
-        [m_notesController setDelegate: self];
-        [self addChildViewController:m_notesController];
-    }
+    self.notesController.frame = frame;
+
     m_background = [m_notesController containerScrollView];
     [m_background addSubview: m_notesController.view];
 
@@ -3472,6 +3474,9 @@ char *tempStatusLineScreenBuf() {
         if (m_fontSize)
             [dict setObject: @(m_fontSize) forKey: @"fontSize"];
     }
+    if (m_notesController && m_notesController.fontName) {
+        [dict setObject: m_notesController.fontName forKey:@"notesFont"];
+    }
     CGColorRef textColor = [[self textColor] CGColor];
     CGColorRef bgColor = [[self backgroundColor] CGColor];
     const CGFloat *textColorRGB = CGColorGetComponents(textColor);
@@ -3520,6 +3525,10 @@ static UIColor *scanColor(NSString *colorStr) {
         NSInteger fontSize= [[dict objectForKey: @"fontSize"] longValue];
         if (!fontSize)
             fontSize = m_fontSize;
+        NSString *notesFontName = [dict objectForKey: @"notesFont"];
+        if (notesFontName) {
+            m_notesController.fontName = notesFontName;
+        }
         NSNumber *ivd = [dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ];
         if (ivd)
             iosif_ifrotz_verbose_debug = (int)[ivd longValue];
