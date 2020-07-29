@@ -3474,8 +3474,11 @@ char *tempStatusLineScreenBuf() {
         if (m_fontSize)
             [dict setObject: @(m_fontSize) forKey: @"fontSize"];
     }
-    if (m_notesController && m_notesController.fontName) {
-        [dict setObject: m_notesController.fontName forKey:@"notesFont"];
+    if (m_notesController) {
+        if (m_notesController.fontName)
+            [dict setObject: m_notesController.fontName forKey:@"notesFont"];
+        if (m_notesController.hasCustomDefaultFontSize)
+            [dict setObject: [NSNumber numberWithInteger: m_notesController.defaultFontSize] forKey:@"notesFontSize"];
     }
     CGColorRef textColor = [[self textColor] CGColor];
     CGColorRef bgColor = [[self backgroundColor] CGColor];
@@ -3526,9 +3529,11 @@ static UIColor *scanColor(NSString *colorStr) {
         if (!fontSize)
             fontSize = m_fontSize;
         NSString *notesFontName = [dict objectForKey: @"notesFont"];
-        if (notesFontName) {
+        NSNumber *notesFontSize = [dict objectForKey: @"notesFontSize"];
+        if (notesFontSize)
+            m_notesController.defaultFontSize = [notesFontSize longValue];
+        if (notesFontName)
             m_notesController.fontName = notesFontName;
-        }
         NSNumber *ivd = [dict objectForKey: @"debug_flags_" IPHONE_FROTZ_VERS ];
         if (ivd)
             iosif_ifrotz_verbose_debug = (int)[ivd longValue];

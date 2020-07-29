@@ -51,10 +51,11 @@
     NSInteger m_selectedRow, m_selectedSection;
 
     UISwitch		    *m_switchCtl, *m_switchCtl2;
-    UISlider		    *m_sliderCtl;    
-    UITableViewCell	    *m_fontSizeCell;
-    
-    int m_origFontSize, m_newFontSize;
+    UISlider		    *m_storyFontSliderCtl, *m_notesFontSliderCtl;
+    UITableViewCell	    *m_storyFontSizeCell, *m_notesFontSizeCell;
+
+    int m_origStoryFontSize, m_newStoryFontSize;
+    int m_origNotesFontSize, m_newNotesFontSize;
 }
 - (instancetype)init;
 @property (nonatomic, strong) id<FrotzSettingsInfoDelegate> infoDelegate;

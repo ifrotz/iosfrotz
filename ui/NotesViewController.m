@@ -34,6 +34,7 @@
 - (NotesViewController*)initWithFrame:(CGRect)frame {
     if ((self = [super initWithNibName:nil bundle:nil])) {
         m_frame = frame;
+        m_defaultFontSize = 0;
         // Initialization code
     }
     return self;
@@ -123,7 +124,15 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(NSInteger)defaultFontSize {
-    return gLargeScreenDevice ? 20 : 16;
+    return m_defaultFontSize ? m_defaultFontSize : gLargeScreenDevice ? 20 : 16;
+}
+
+-(BOOL)hasCustomDefaultFontSize {
+    return m_defaultFontSize != 0;
+}
+
+-(void)setDefaultFontSize:(NSInteger)size {
+    m_defaultFontSize = size;
 }
 
 -(NSInteger)fontSize {
@@ -144,8 +153,20 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(void)setFontName: (nullable NSString*)fontName {
-    NSInteger size = self.fontSize;
+    NSInteger size = self.defaultFontSize;
     [self setFont: [UIFont fontWithName: fontName size:(CGFloat)size]];
+}
+
+-(void)setFont: (NSString*)fontName withSize:(NSInteger)size {
+    self.defaultFontSize = size;
+    if (!fontName)
+        fontName = m_fontName;
+    if (fontName) {
+        [self setFont: [UIFont fontWithName: fontName size:(CGFloat)size]];
+    } else { // font name never set, leave default and just change size
+        if (m_notesView)
+            [m_notesView setFont: [m_notesView.font fontWithSize: (CGFloat)size]];
+    }
 }
 
 -(UIFont*)fixedFont {

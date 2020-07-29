@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
     UIView *m_notesBGView;
     UIResponder *m_chainResponder;
     NSString *m_fontName;
+    NSInteger m_defaultFontSize;
     
     UIViewController<TextFileBrowser,FileSelected, LockableKeyboard> __weak *m_delegate;
 }
@@ -49,8 +50,10 @@ NS_ASSUME_NONNULL_BEGIN
 -(void)loadView;
 -(void)autosize;
 -(void)setFontName: (nullable NSString*)fontName;
+-(void)setFont: (NSString*)fontName withSize:(NSInteger)size;
 -(UIFont*)fixedFont;
--(NSInteger)defaultFontSize;
+@property (nonatomic) NSInteger defaultFontSize;
+-(BOOL)hasCustomDefaultFontSize;
 -(NSInteger)fontSize;
 @property (nonatomic, readonly, copy) NSString *fontName;
 -(void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView;

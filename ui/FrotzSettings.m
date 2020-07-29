@@ -35,6 +35,7 @@
 #define kUIRowLabelHeight               22.0
 
 #define kFontSizeStr "Story Font Size (%d)"
+#define kNotesSizeStr "Notes Font Size (%d)"
 
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
@@ -65,6 +66,7 @@ enum FrotzPrefsRows
     kFrotzPrefsStoryFont,
     kFrotzPrefsStoryFontSize,
     kFrotzPrefsNotesFont,
+    kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
 #ifdef FROTZ_DB_APP_KEY
@@ -90,8 +92,10 @@ enum FrotzPrefsRows
         m_resetting = NO;
         if (buttonIndex == 1) {
             [m_storyDelegate resetSettingsToDefault];
-            m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
-            m_sliderCtl.value = (float)m_origFontSize;
+            m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
+            m_newNotesFontSize = m_origNotesFontSize = (int)[m_notesDelegate fontSize];
+            m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
+            m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
             [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
             [[self tableView] reloadData];
         }
@@ -123,8 +127,10 @@ enum FrotzPrefsRows
     }
     if (m_infoDelegate && [m_infoDelegate respondsToSelector:@selector(dismissInfo)]) {
         if (m_storyDelegate) {
-            if (m_newFontSize != m_origFontSize)
-                [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: m_newFontSize];
+            if (m_newStoryFontSize != m_origStoryFontSize)
+                [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: m_newStoryFontSize];
+            if (m_newNotesFontSize != m_origNotesFontSize)
+                [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: m_newNotesFontSize];
             [m_storyDelegate savePrefs];
         }
 
@@ -185,7 +191,7 @@ enum FrotzPrefsRows
 
 }
 
-- (void)create_UISwitch
+- (void)create_UISwitches
 {
     CGRect frame = CGRectMake(0.0, 0.0, kSwitchButtonWidth, kSwitchButtonHeight);
     m_switchCtl = [[UISwitch alloc] initWithFrame:frame];
@@ -211,32 +217,30 @@ enum FrotzPrefsRows
         [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
 }
 
-- (void)create_UISlider
-{
-    CGRect frame = CGRectMake(0.0, 0.0, 120.0, kSliderHeight);
-    m_sliderCtl = [[UISlider alloc] initWithFrame:frame];
-    [m_sliderCtl addTarget:self action:@selector(sliderAction:) forControlEvents:UIControlEventValueChanged];
-
-    // in case the parent view draws with a custom color or gradient, use a transparent color
-    m_sliderCtl.backgroundColor = [UIColor clearColor];
-
-    m_sliderCtl.minimumValue = 8.0;
-    m_sliderCtl.maximumValue = 32.0;
-    m_sliderCtl.continuous = YES;
-    m_origFontSize = (int)[m_storyDelegate fontSize];
-    m_sliderCtl.value = (float)m_origFontSize;
-}
-
-- (void)sliderAction:(UISlider*)sender
+- (void)storyFontSliderAction:(UISlider*)sender
 {
     static int lastValue;
     int value = [sender value];
 
     if (value != lastValue) {
-        m_fontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, value];
-        m_newFontSize = (int)value;
+        m_storyFontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, value];
+        m_newStoryFontSize = (int)value;
         if (gLargeScreenDevice)
             [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: value];
+    }
+    lastValue = value;
+}
+
+- (void)notesFontSliderAction:(UISlider*)sender
+{
+    static int lastValue;
+    int value = [sender value];
+
+    if (value != lastValue) {
+        m_notesFontSizeCell.text = [NSString stringWithFormat: @kNotesSizeStr, value];
+        m_newNotesFontSize = (int)value;
+        if (gLargeScreenDevice)
+            [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: value];
     }
     lastValue = value;
 }
@@ -271,8 +275,28 @@ enum FrotzPrefsRows
         m_releaseNotes = [[ReleaseNotes alloc] init];
     m_fileTransferInfo = [[FileTransferInfo alloc] initWithController: m_storyDelegate];
 
-    [self create_UISwitch];
-    [self create_UISlider];
+    [self create_UISwitches];
+
+    CGRect sframe = CGRectMake(0.0, 0.0, 120.0, kSliderHeight);
+
+    m_storyFontSliderCtl = [[UISlider alloc] initWithFrame:sframe];
+    [m_storyFontSliderCtl addTarget:self action:@selector(storyFontSliderAction:) forControlEvents:UIControlEventValueChanged];
+    // in case the parent view draws with a custom color or gradient, use a transparent color
+    m_storyFontSliderCtl.backgroundColor = [UIColor clearColor];
+    m_storyFontSliderCtl.minimumValue = 8.0;
+    m_storyFontSliderCtl.maximumValue = 32.0;
+    m_storyFontSliderCtl.continuous = YES;
+    m_origStoryFontSize = (int)[m_storyDelegate fontSize];
+    m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
+
+    m_notesFontSliderCtl = [[UISlider alloc] initWithFrame:sframe];
+    [m_notesFontSliderCtl addTarget:self action:@selector(notesFontSliderAction:) forControlEvents:UIControlEventValueChanged];
+    m_notesFontSliderCtl.backgroundColor = [UIColor clearColor];
+    m_notesFontSliderCtl.minimumValue = 8.0;
+    m_notesFontSliderCtl.maximumValue = 32.0;
+    m_notesFontSliderCtl.continuous = YES;
+    m_origNotesFontSize = (int)[m_notesDelegate fontSize];
+    m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 
 }
 
@@ -284,7 +308,7 @@ enum FrotzPrefsRows
 }
 
 -(UIFont*)fontForColorDemo {
-    return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate fontName] size:m_newFontSize] : nil;
+    return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate fontName] size:m_newStoryFontSize] : nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -312,10 +336,15 @@ enum FrotzPrefsRows
 
     self.title = NSLocalizedString(@"Settings", @"");
     if (m_storyDelegate)
-        m_newFontSize = m_origFontSize = (int)[m_storyDelegate fontSize];
-    if (m_fontSizeCell)
-        m_fontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, m_origFontSize];
-    m_sliderCtl.value = (float)m_origFontSize;
+        m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
+    if (m_notesDelegate)
+        m_newNotesFontSize = m_origNotesFontSize = (int)[m_notesDelegate fontSize];
+    if (m_storyFontSizeCell)
+        m_storyFontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, m_origStoryFontSize];
+    if (m_notesFontSizeCell)
+        m_notesFontSizeCell.text = [NSString stringWithFormat: @kNotesSizeStr, m_origNotesFontSize];
+    m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
+    m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 }
 
 #pragma mark - UITableView delegates
@@ -462,9 +491,14 @@ enum FrotzPrefsRows
                     cell.text = @"Notes Font";
                     break;
                 case kFrotzPrefsStoryFontSize:
-                    m_fontSizeCell = cell;
-                    cell.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_sliderCtl value]];
-                    cell.view = m_sliderCtl;
+                    m_storyFontSizeCell = cell;
+                    cell.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_storyFontSliderCtl value]];
+                    cell.view = m_storyFontSliderCtl;
+                    break;
+                case kFrotzPrefsNotesFontSize:
+                    m_notesFontSizeCell = cell;
+                    cell.text = [NSString stringWithFormat: @kNotesSizeStr, (int)[m_notesFontSliderCtl value]];
+                    cell.view = m_notesFontSliderCtl;
                     break;
                 case kFrotzPrefsWordCompletion:
                     cell.text = @"Word Completion";;
