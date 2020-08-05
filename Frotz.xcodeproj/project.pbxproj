@@ -438,7 +438,6 @@
 		44F7B2321B22D1AD00DDD2A3 /* libfrotzlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F7B1FE1B22CFF100DDD2A3 /* libfrotzlib.a */; };
 		44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */; };
 		44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393B0E612A3D00142D85 /* FrotzSettings.m */; };
-		44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB393C0E612A3D00142D85 /* DisplayCell.m */; };
 		44FB39FA0E62406C00142D85 /* ColorPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 44FB39F90E62406C00142D85 /* ColorPicker.m */; };
 		44FB3BA50E6390DC00142D85 /* hsv-crosshair.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FB3BA30E6390DC00142D85 /* hsv-crosshair.png */; };
 		44FB3BA60E6390DC00142D85 /* val-crosshair.png in Resources */ = {isa = PBXBuildFile; fileRef = 44FB3BA40E6390DC00142D85 /* val-crosshair.png */; };
@@ -1150,7 +1149,6 @@
 		44BE71BF19EB7C6F00036AA6 /* trd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trd.c; path = tads/tads2/trd.c; sourceTree = "<group>"; };
 		44BE71C019EB7C6F00036AA6 /* voc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = voc.c; path = tads/tads2/voc.c; sourceTree = "<group>"; };
 		44BE71C119EB7C6F00036AA6 /* vocab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vocab.c; path = tads/tads2/vocab.c; sourceTree = "<group>"; };
-		44C28D011238C41C00EE9FA3 /* DisplayCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayCell.h; sourceTree = "<group>"; };
 		44C28D031238C41C00EE9FA3 /* URLPromptController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = URLPromptController.h; sourceTree = "<group>"; };
 		44C28D041238C41C00EE9FA3 /* URLPromptController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = URLPromptController.m; sourceTree = "<group>"; };
 		44C3B01E1B26B733004116F8 /* HTTPLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPLogging.h; path = Core/HTTPLogging.h; sourceTree = "<group>"; };
@@ -1260,7 +1258,6 @@
 		44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BookmarkListController.h; sourceTree = "<group>"; };
 		44FA76C10E4A5D89007DCC99 /* BookmarkListController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BookmarkListController.m; sourceTree = "<group>"; };
 		44FB393B0E612A3D00142D85 /* FrotzSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzSettings.m; sourceTree = "<group>"; };
-		44FB393C0E612A3D00142D85 /* DisplayCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DisplayCell.m; sourceTree = "<group>"; };
 		44FB39F80E62406C00142D85 /* ColorPicker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorPicker.h; sourceTree = "<group>"; };
 		44FB39F90E62406C00142D85 /* ColorPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorPicker.m; sourceTree = "<group>"; };
 		44FB3BA30E6390DC00142D85 /* hsv-crosshair.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "hsv-crosshair.png"; path = "resources/hsv-crosshair.png"; sourceTree = "<group>"; };
@@ -1374,8 +1371,6 @@
 				44FB39F90E62406C00142D85 /* ColorPicker.m */,
 				44F2F5B611447AE0001AE868 /* CompletionLabel.h */,
 				44F2F5B711447AE0001AE868 /* CompletionLabel.m */,
-				44C28D011238C41C00EE9FA3 /* DisplayCell.h */,
-				44FB393C0E612A3D00142D85 /* DisplayCell.m */,
 				446B9EA50E2075D1002BDD65 /* FileBrowser.h */,
 				446B9EA60E2075D1002BDD65 /* FileBrowser.m */,
 				44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */,
@@ -2745,7 +2740,6 @@
 				44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */,
 				44FB39FA0E62406C00142D85 /* ColorPicker.m in Sources */,
 				44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */,
-				44FB393E0E612A3D00142D85 /* DisplayCell.m in Sources */,
 				446B9EAB0E2075D1002BDD65 /* FileBrowser.m in Sources */,
 				44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */,
 				448167DD0E7259280022EDC0 /* FontPicker.m in Sources */,

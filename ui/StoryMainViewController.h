@@ -165,7 +165,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) loadPrefs;
 @property (nonatomic, getter=isLandscape) BOOL landscape;
 -(void) setFont: (nullable NSString*)font withSize:(NSInteger)size;
-@property (nonatomic, readonly, copy) NSString *font;
+//@property (nonatomic, readonly, copy) NSString *font;
 -(void) setFixedFont: (NSString*)font;
 -(NSMutableString*) fixedFont;
 @property (nonatomic, readonly) NSInteger fontSize;

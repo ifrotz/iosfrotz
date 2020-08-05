@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol FrotzFontDelegate <NSObject>
 -(void) setFont: (nullable NSString*)fontName withSize:(NSInteger)size;
 -(void) setFont: (nullable UIFont*)font;
+@property (nonatomic, readonly) UIFont *font;
 @property (nonatomic, readonly, copy) NSString *fontName;
 @property (nonatomic, copy) NSString *fixedFont;
 @property (nonatomic, readonly) NSInteger fontSize;

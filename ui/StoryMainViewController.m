@@ -2655,6 +2655,10 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [m_storyView setFixedFont: [UIFont fontWithName: font size: fixedFontSize]];
 }
 
+-(UIFont*)font {
+    return [m_storyView font];
+}
+
 -(NSString*) fixedFont {
     return [[m_storyView fixedFont] fontName];
 }

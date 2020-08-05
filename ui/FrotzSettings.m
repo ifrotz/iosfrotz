@@ -1,5 +1,4 @@
 #import "FrotzSettings.h"
-#import "DisplayCell.h"
 #import "FileTransferInfo.h"
 
 #import "iosfrotz.h"
@@ -223,7 +222,7 @@ enum FrotzPrefsRows
     int value = [sender value];
 
     if (value != lastValue) {
-        m_storyFontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, value];
+        m_storyFontSizeCell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, value];
         m_newStoryFontSize = (int)value;
         if (gLargeScreenDevice)
             [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: value];
@@ -237,7 +236,7 @@ enum FrotzPrefsRows
     int value = [sender value];
 
     if (value != lastValue) {
-        m_notesFontSizeCell.text = [NSString stringWithFormat: @kNotesSizeStr, value];
+        m_notesFontSizeCell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, value];
         m_newNotesFontSize = (int)value;
         if (gLargeScreenDevice)
             [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: value];
@@ -339,10 +338,15 @@ enum FrotzPrefsRows
         m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
     if (m_notesDelegate)
         m_newNotesFontSize = m_origNotesFontSize = (int)[m_notesDelegate fontSize];
+    if (m_storyFontCell)
+        m_storyFontCell.detailTextLabel.text = [[m_storyDelegate font] familyName];
     if (m_storyFontSizeCell)
-        m_storyFontSizeCell.text = [NSString stringWithFormat: @kFontSizeStr, m_origStoryFontSize];
+        m_storyFontSizeCell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, m_origStoryFontSize];
+    if (m_notesFontCell)
+        m_notesFontCell.detailTextLabel.text = [[m_notesDelegate font] familyName];
     if (m_notesFontSizeCell)
-        m_notesFontSizeCell.text = [NSString stringWithFormat: @kNotesSizeStr, m_origNotesFontSize];
+        m_notesFontSizeCell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, m_origNotesFontSize];
+
     m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
     m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 }
@@ -422,19 +426,20 @@ enum FrotzPrefsRows
 
 // utility routine leveraged by 'cellForRowAtIndexPath' to determine which UITableViewCell to be used on a given row
 //
-- (DisplayCell *)obtainTableCellForRow:(NSInteger)row
+- (UITableViewCell *)obtainTableCellForRow:(NSInteger)row
 {
-    DisplayCell *cell = nil;
+    UITableViewCell *cell = nil;
+    NSString *kReuseIdentifier = @"frotzSettings_ID";
 
-    cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
+    cell = [m_tableView dequeueReusableCellWithIdentifier: kReuseIdentifier];
 
     if (cell == nil) {
-        cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
+        cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleValue1 reuseIdentifier: kReuseIdentifier];
     }
     cell.textAlignment = UITextAlignmentLeft;
-    cell.text = nil;
+    cell.textLabel.text = nil;
+    cell.detailTextLabel.text = nil;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    [cell setView: nil];
 
     return cell;
 }
@@ -444,7 +449,7 @@ enum FrotzPrefsRows
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSInteger row = [indexPath row];
-    DisplayCell *cell = [self obtainTableCellForRow:row];
+    UITableViewCell *cell = [self obtainTableCellForRow:row];
     if (indexPath.section == kFrotzPrefsSection && indexPath.row >= kFrotzPrefsStoryFontSize
         && indexPath.row != kFrotzPrefsNotesFont
 #ifdef FROTZ_DB_APP_KEY
@@ -461,16 +466,16 @@ enum FrotzPrefsRows
         {
             switch (row) {
                 case kFrotzInfoAbout:
-                    cell.text = @"About Frotz";
+                    cell.textLabel.text = @"About Frotz";
                     break;
                 case kFrotzInfoGettingStarted:
-                    cell.text = @"Getting Started";
+                    cell.textLabel.text = @"Getting Started";
                     break;
                 case kFrotzInfoReleaseNotes:
-                    cell.text = @"What's New?";
+                    cell.textLabel.text = @"What's New?";
                     break;
                 case kFrotzInfoFileTransfer:
-                    cell.text = @"File Transfer";
+                    cell.textLabel.text = @"File Transfer";
                     break;
             }
             break;
@@ -479,38 +484,42 @@ enum FrotzPrefsRows
         {
             switch (row) {
                 case kFrotzPrefsTextColor:
-                    cell.text = @"Text Color";
+                    cell.textLabel.text = @"Text Color";
                     break;
                 case kFrotzPrefsBGColor:
-                    cell.text = @"Background Color";
+                    cell.textLabel.text = @"Background Color";
                     break;
                 case kFrotzPrefsStoryFont:
-                    cell.text = @"Story Font";
+                    m_storyFontCell = cell;
+                    cell.textLabel.text = @"Story Font";
+                    cell.detailTextLabel.text = [[m_storyDelegate font] familyName];
                     break;
                 case kFrotzPrefsNotesFont:
-                    cell.text = @"Notes Font";
+                    m_notesFontCell = cell;
+                    cell.textLabel.text = @"Notes Font";
+                    cell.detailTextLabel.text = [[m_notesDelegate font] familyName];
                     break;
                 case kFrotzPrefsStoryFontSize:
                     m_storyFontSizeCell = cell;
-                    cell.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_storyFontSliderCtl value]];
-                    cell.view = m_storyFontSliderCtl;
+                    cell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_storyFontSliderCtl value]];
+                    cell.accessoryView = m_storyFontSliderCtl;
                     break;
                 case kFrotzPrefsNotesFontSize:
                     m_notesFontSizeCell = cell;
-                    cell.text = [NSString stringWithFormat: @kNotesSizeStr, (int)[m_notesFontSliderCtl value]];
-                    cell.view = m_notesFontSliderCtl;
+                    cell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, (int)[m_notesFontSliderCtl value]];
+                    cell.accessoryView = m_notesFontSliderCtl;
                     break;
                 case kFrotzPrefsWordCompletion:
-                    cell.text = @"Word Completion";;
-                    cell.view = m_switchCtl;
+                    cell.textLabel.text = @"Word Completion";
+                    cell.accessoryView = m_switchCtl;
                     break;
                 case kFrotzPrefsStoryInfoEditing:
-                    cell.text = @"Story Info Editing";
-                    cell.view = m_switchCtl2;
+                    cell.textLabel.text = @"Story Info Editing";
+                    cell.accessoryView = m_switchCtl2;
                     break;
 #ifdef FROTZ_DB_APP_KEY
                 case kFrotzPrefsDropbox:
-                    cell.text = @"Dropbox Settings";
+                    cell.textLabel.text = @"Dropbox Settings";
                     break;
 #endif
             }
@@ -519,7 +528,7 @@ enum FrotzPrefsRows
         case kFrotzResetSection:
         {
             cell.selectionStyle = UITableViewCellSelectionStyleBlue;
-            cell.text = @"Reset Preferences to Default";
+            cell.textLabel.text = @"Reset Preferences to Default";
             cell.textAlignment = UITextAlignmentCenter;
             break;
         }
@@ -527,9 +536,9 @@ enum FrotzPrefsRows
         case kFrotzFontSection:
         {
             if (row == 0)
-                cell.text = @"Main Story Font";
+                cell.textLabel.text = @"Main Story Font";
             else
-                cell.text = @"Fixed Width Font";
+                cell.textLabel.text = @"Fixed Width Font";
             break;
         }
 #endif

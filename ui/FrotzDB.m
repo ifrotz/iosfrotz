@@ -1,5 +1,4 @@
 #import "FrotzDB.h"
-#import "DisplayCell.h"
 
 #import "iosfrotz.h"
 #import "StoryMainViewController.h"
@@ -288,20 +287,19 @@
 
 // utility routine leveraged by 'cellForRowAtIndexPath' to determine which UITableViewCell to be used on a given row
 //
-- (DisplayCell *)obtainTableCellForRow:(NSInteger)row
+- (UITableViewCell *)obtainTableCellForRow:(NSInteger)row
 {
-    DisplayCell *cell = nil;
+    UITableViewCell *cell = nil;
+    NSString *kReuseIdentifier = @"frotzDB_ID";
 
-    cell = (DisplayCell*)[m_tableView dequeueReusableCellWithIdentifier:kDisplayCell_ID];
+    cell = [m_tableView dequeueReusableCellWithIdentifier:kReuseIdentifier];
 	
     if (cell == nil) {
-        cell = [[DisplayCell alloc] initWithFrame:CGRectZero reuseIdentifier:kDisplayCell_ID];
+        cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleValue1 reuseIdentifier: kReuseIdentifier];
     }
     cell.textAlignment = UITextAlignmentLeft;
     cell.textLabel.text = nil;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    cell.nameLabel.text = nil;
-    [cell setView: nil];
 
     return cell;
 }
@@ -311,7 +309,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSInteger row = [indexPath row];
-    DisplayCell *cell = [self obtainTableCellForRow:row];
+    UITableViewCell *cell = [self obtainTableCellForRow:row];
     cell.accessoryType = UITableViewCellAccessoryNone;
     BOOL isLinked = [self isLinked];
     switch (indexPath.section)
@@ -325,12 +323,13 @@
                 cell.textLabel.text = @"Unlink Account";
                 cell.textLabel.enabled = isLinked;
             }
+            cell.accessoryView = nil;
             break;
         }
 	case 1:
         {
             cell.textLabel.text = @"Sync Folder";
-            cell.view = m_textField;
+            cell.accessoryView = m_textField;
             break;
         }
     }

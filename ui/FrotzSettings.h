@@ -52,6 +52,7 @@
 
     UISwitch		    *m_switchCtl, *m_switchCtl2;
     UISlider		    *m_storyFontSliderCtl, *m_notesFontSliderCtl;
+    UITableViewCell     *m_storyFontCell, *m_notesFontCell;
     UITableViewCell	    *m_storyFontSizeCell, *m_notesFontSizeCell;
 
     int m_origStoryFontSize, m_newStoryFontSize;
