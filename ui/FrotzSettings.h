@@ -28,7 +28,7 @@
 
 @class FileTransferInfo;
 
-@interface FrotzSettingsController : UITableViewController <UITableViewDelegate, UITableViewDataSource, ColorPickerDelegate>
+@interface FrotzSettingsController : UITableViewController <UITableViewDelegate, UITableViewDataSource, ColorPickerDelegate, UIAdaptivePresentationControllerDelegate>
 {
     UITableView	    *m_tableView;
     

@@ -310,6 +310,16 @@ enum FrotzPrefsRows
     return m_storyDelegate ? [UIFont fontWithName:[m_storyDelegate fontName] size:m_newStoryFontSize] : nil;
 }
 
+-(void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
+    [self donePressed];
+}
+
+-(BOOL)presentationControllerShouldDismiss:(UIPresentationController *)presentationController {
+    if (m_fileTransferInfo && [m_fileTransferInfo serverIsRunning])
+        return NO;
+    return YES;
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
@@ -332,6 +342,7 @@ enum FrotzPrefsRows
 
     UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
     self.navigationItem.rightBarButtonItem = doneItem;
+    self.navigationController.presentationController.delegate = self;
 
     self.title = NSLocalizedString(@"Settings", @"");
     if (m_storyDelegate)

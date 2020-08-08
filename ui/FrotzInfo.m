@@ -20,8 +20,8 @@
         
 	    m_navigationController = navController;
 	    m_navItem = navItem;
-	    m_settings = settings;
-	    [m_settings setInfoDelegate: self];
+        m_settings = settings;
+        // don't set settings infoDelegate here; we could be loaded while settings is already up (e.g. StoryDetailsController because of rotation)
 	}
 	return self;
 }
