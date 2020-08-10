@@ -421,19 +421,23 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     [m_artworkView resetMagnification];
-    [self updateSelectStoryHint];
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context)
+     {
+        [self updateSelectStoryHint];
+     } completion:^(id<UIViewControllerTransitionCoordinatorContext> context)
+     {
+        [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
+        [self refresh];
+     }];
+
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_artworkView magnifyImage: NO];
     [self setEditing: NO animated: animated];
-}
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
@@ -468,12 +472,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         else
             self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Select Story" style:UIBarButtonItemStylePlain target:self.splitViewController.displayModeButtonItem.target action:self.splitViewController.displayModeButtonItem.action];
     }
-}
-
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-    [self updateSelectStoryHint];
-    [self refresh];
 }
 
 - (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
