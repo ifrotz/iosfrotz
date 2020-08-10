@@ -50,14 +50,6 @@
     return self;
 }
 
--(void)viewDidUnload {
-    [m_tableView setDelegate: nil];
-    m_tableView = nil;
-    m_headerLabel = nil;
-    m_folderLabel = nil;
-    m_textField = nil;
-}
-
 - (void)dealloc
 {
     [m_tableView setDelegate:nil];
@@ -65,10 +57,6 @@
     m_headerLabel = nil;
     m_folderLabel = nil;
     m_textField = nil;
-}
-
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
 }
 
 - (void)loadView

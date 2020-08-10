@@ -146,10 +146,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown;
-}
-
 -(void)browserDidPressBackButton {
     m_backToStoryList = YES;
     [self.storyBrowser didPressModalStoryListButton];

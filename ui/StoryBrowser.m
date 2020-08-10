@@ -460,10 +460,6 @@ void removeOldPngSplash(const char *filename) {
     return m_navTitleView;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
@@ -931,11 +927,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSData *imgData = [NSData dataWithContentsOfFile: gameSplashPath];
     return imgData;
-}
-
--(void)viewDidUnload {
-    m_tableView = nil;
-    m_background = nil;
 }
 
 - (void)loadView {

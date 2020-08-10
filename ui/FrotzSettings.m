@@ -244,17 +244,6 @@ enum FrotzPrefsRows
     lastValue = value;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
--(void)viewDidUnload {
-    m_gettingStarted = nil;
-    m_aboutFrotz = nil;
-    m_fileTransferInfo = nil;
-    m_tableView = nil;
-}
-
 - (void)loadView
 {
     CGRect frame = CGRectMake(0, 0, 240, 200);

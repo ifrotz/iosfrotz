@@ -107,12 +107,6 @@
 #endif
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
-
-
 - (void)showReleaseNotes {
     NSError *error;
     FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];

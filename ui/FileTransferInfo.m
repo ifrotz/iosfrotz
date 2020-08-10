@@ -69,10 +69,6 @@ BOOL isHiddenFile(NSString *file) {
     }
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     [self updateMessage];

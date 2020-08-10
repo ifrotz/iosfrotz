@@ -645,11 +645,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     return self;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
-
 - (BOOL)shouldAutorotate {
     return YES;
 }
@@ -793,11 +788,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [super viewWillAppear:animated];
     [self updateUserInterfaceStyle];
     [self layoutViews];
-}
-
--(void)viewDidUnload {
-    m_textColor = nil;
-    m_bgColor = nil;
 }
 
 - (void)dealloc {
