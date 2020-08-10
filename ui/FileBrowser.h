@@ -35,7 +35,7 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
 -(void)fileBrowser:(FileBrowser*)browser deleteFile: (NSString*)filePath;
 @end
 
-@interface FileBrowser : UIViewController <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface FileBrowser : UITableViewController <UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate, UIAdaptivePresentationControllerDelegate>
 {
     UITableViewController *m_tableViewController;
     NSMutableArray *m_extensions;
@@ -47,7 +47,6 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
     UIView *m_backgroundView;
     UITableView *m_tableView;
     UITextField *m_textField;
-    UIButton *m_saveButton;
     UIAlertView *m_alertView;
     int m_textFileCount;
 }

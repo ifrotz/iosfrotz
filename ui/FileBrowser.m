@@ -62,7 +62,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
 - (instancetype)initWithDialogType:(FileBrowserState)dialogType {
     if ((self = [super initWithNibName:nil bundle:nil]) != nil) {
-        m_tableViewController = [[UITableViewController alloc] init];
+        //m_tableViewController = [[UITableViewController alloc] init];
+        m_tableViewController = self;
         m_dialogType = dialogType;
         NSString *title = @"";
         switch (m_dialogType) {
@@ -98,28 +99,31 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     return self;
 }
 
-#define ShowSaveButton 0 // keyboard Done button is sufficient
-
 - (void)loadView {
+    [super loadView];
+
     m_tableView = m_tableViewController.tableView;
     [m_tableView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin];
     [m_tableView setDelegate: self];
     [m_tableView setDataSource: self];
-    CGRect origFrame = [[UIScreen mainScreen] applicationFrame];
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
-        CGFloat t = origFrame.size.width; origFrame.size.width = origFrame.size.height; origFrame.size.height = t;
-        t = origFrame.origin.x; origFrame.origin.x = origFrame.origin.y; origFrame.origin.y = t;
-    }
-
-    m_backgroundView = [[UIView alloc] initWithFrame: origFrame]; // CGRectMake(0, 0, origFrame.size.width, origFrame.size.height)]; //34)];
-    [m_backgroundView setBackgroundColor: [UIColor blackColor]];
-    [m_backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleBottomMargin];
+    CGRect origFrame = self.view.frame; //[[UIScreen mainScreen] applicationFrame];
+    m_backgroundView = [[UIView alloc] initWithFrame: origFrame];
+    [m_backgroundView setBackgroundColor: [UIColor grayColor]];
+    [m_backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|
+     UIViewAutoresizingFlexibleWidth|
+     UIViewAutoresizingFlexibleBottomMargin];
     [m_backgroundView setAutoresizesSubviews: YES];
     self.view = m_backgroundView;
+    [m_backgroundView addSubview: m_tableView];
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
-        m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width - (ShowSaveButton ? 56: 0), 30)];
-        
-        [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height /*28*/,
+        m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width, 30)];
+        if (@available(iOS 11.0,*)) {
+            UIEdgeInsets insets = UIEdgeInsetsMake(m_textField.frame.size.height, 0, 0, 0);
+            self.additionalSafeAreaInsets = insets;
+        }
+        [m_backgroundView addSubview: m_textField];
+
+        [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           origFrame.size.width,
                                           origFrame.size.height-m_textField.bounds.size.height)];
         [m_textField setReturnKeyType: UIReturnKeyDone];
@@ -129,7 +133,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
             [m_textField setBackgroundColor: [UIColor whiteColor]];
         }
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
-        [m_textField setPlaceholder: @"filename"];
+        [m_textField setPlaceholder: @" filename"];
         [m_textField setDelegate: self];
         [m_textField setClearButtonMode:UITextFieldViewModeWhileEditing];
         [m_textField setAutocorrectionType: UITextAutocorrectionTypeNo];
@@ -138,24 +142,12 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         m_textField.text = @(iosif_filename);
         
         //	[m_tableView setBounces: NO];
-        
-#if ShowSaveButton
-        m_saveButton = [[UIButton buttonWithType:UIButtonTypeCustom] retain];
-        [m_saveButton setImage:[UIImage imageNamed: @"save.png"] forState:UIControlStateNormal];
-        m_saveButton.frame = CGRectMake(origFrame.size.width-55, 2, 54, 30);
-        [m_saveButton setAutoresizingMask: UIViewAutoresizingFlexibleLeftMargin];
-        [m_saveButton setBackgroundColor: [UIColor darkGrayColor]];
-        [m_saveButton addTarget:self action:@selector(commit:) forControlEvents:UIControlEventTouchUpInside];
-        [m_saveButton setEnabled: NO];
-#endif
-        [m_backgroundView addSubview: m_saveButton];
-		
-        [m_backgroundView addSubview: m_textField];
         [m_textField becomeFirstResponder];
         [m_backgroundView setNeedsLayout];
     } else
-    	[m_tableView setFrame: CGRectMake(0, 00 /*28*/, origFrame.size.width, origFrame.size.height)];
-    [m_backgroundView addSubview: m_tableView];
+        [m_tableView setFrame: CGRectMake(0, 0, origFrame.size.width, origFrame.size.height)];
+    [m_backgroundView bringSubviewToFront: m_textField];
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidChangeFrame:) name:UIKeyboardDidChangeFrameNotification object:nil];
 
 }
@@ -187,18 +179,18 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated:animated];
-    [m_tableViewController setEditing: editing animated:animated];
+    if (m_tableViewController != self)
+        [m_tableViewController setEditing: editing animated:animated];
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    return gLargeScreenDevice ? YES : interfaceOrientation == UIInterfaceOrientationPortrait;
-}
-
--(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
-        [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
-                                          m_backgroundView.frame.size.width,
-                                          m_backgroundView.frame.size.height-m_textField.bounds.size.height)];
+-(void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    if (@available(iOS 11.0,*)) {
+        if (m_textField) {
+            CGRect frame = m_textField.frame;
+            frame.origin.y = m_tableView.adjustedContentInset.top;
+            m_textField.frame = frame;
+        }
     }
 }
 
@@ -211,10 +203,8 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     NSMutableString *newFilename = [NSMutableString stringWithString: [textField text]];
     [newFilename replaceCharactersInRange: range withString:string];
     if ([newFilename length] == 0) {
-        [m_saveButton setEnabled: NO];
         return YES;
     }
-    [m_saveButton setEnabled: YES];
     int row = 0;
     for (FileInfo *fi in m_files) {
         NSString *file = [fi.path lastPathComponent];
@@ -234,7 +224,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     NSIndexPath *indexPath = [m_tableView indexPathForSelectedRow];
     if (indexPath != nil)
         [m_tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [m_saveButton setEnabled: NO];
     return YES;
 }
 
@@ -292,10 +281,15 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
 }
 
 -(void)viewDidLoad {
-    self.edgesForExtendedLayout=UIRectEdgeNone;
+    if (@available(iOS 11.0,*)) {
+    } else {
+        self.edgesForExtendedLayout= UIRectEdgeNone;
+    }
 }
 
--(void)viewDidAppear:(BOOL)animated {
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+
     UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(didPressCancel:)];
     self.navigationItem.leftBarButtonItem = backItem;
 
@@ -304,7 +298,17 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     self.navigationItem.rightBarButtonItem = editItem;
     [editItem setEnabled: (m_rowCount > 0)];
 
-    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    if (@available(iOS 13.0, *)) {
+        // Oddly, it's always black when the view comes up anyway (but fixes after rotation),
+        // so let's just keep black style.
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
+    } else {
+        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
+        [self.navigationController.navigationBar setTintColor:  [UIColor darkGrayColor]];
+    }
+
+    self.navigationController.presentationController.delegate = self;
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -335,6 +339,9 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     }
 }
 
+-(void)presentationControllerDidDismiss:(UIPresentationController *)presentationController {
+    [self didPressCancel: self];
+}
 
 -(void)didPressCancel:(id)sender {
     if (m_textField) {
@@ -460,7 +467,6 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
                 [m_textField setText:[file stringByDeletingPathExtension]];
             else
                 [m_textField setText: file];
-            [m_saveButton setEnabled: YES];
         }
     }
     else {
