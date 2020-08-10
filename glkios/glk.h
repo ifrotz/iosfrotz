@@ -452,6 +452,6 @@ extern strid_t glk_stream_open_resource_uni(glui32 filenum, glui32 rock);
 
 #endif /* GLK_MODULE_RESOURCE_STREAM */
 
-extern void glk_game_loaded();
+extern void glk_game_loaded(void);
 
 #endif /* GLK_H */

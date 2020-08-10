@@ -254,7 +254,7 @@ extern glui32 do_gestalt(glui32 val, glui32 val2);
 
 /* glkop.c */
 extern int init_dispatch(void);
-void glulxe_shutdown_dispatch();
+void glulxe_shutdown_dispatch(void);
 extern glui32 perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist);
 extern strid_t find_stream_by_id(glui32 objid);
 

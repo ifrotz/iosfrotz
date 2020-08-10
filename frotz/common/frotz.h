@@ -386,7 +386,7 @@ extern char *option_zcode_path;	/* dg */
 
 extern long reserve_mem;
 
-void refresh_cwin();
+void refresh_cwin(void);
 
 /*** Blorb stuff ***/
 /*
@@ -603,7 +603,7 @@ void	storew (zword, zword);
 void 	os_beep (int);
 int  	os_char_width (zchar);
 void 	os_display_char (unsigned int);
-void    os_backspace();
+void    os_backspace(void);
 void 	os_display_string (const zchar *);
 void 	os_draw_picture (int, int, int);
 void 	os_erase_area (int, int, int, int, int);
@@ -633,18 +633,18 @@ int  	os_string_width (const zchar *);
 void    os_init_setup (void);
 int     os_speech_output(const zchar *);
 FILE	*os_path_open (const char *, const char *);
-void    os_frotz_init_screen();
+void    os_frotz_init_screen(void);
 
 #if FROTZ_IOS_PORT
 void	os_new_line(bool);
 void	os_split_win (int);
-void	os_mark_recent_save();
-void	os_start_script();
-void	os_stop_script();
+void	os_mark_recent_save(void);
+void	os_start_script(void);
+void	os_stop_script(void);
 #endif
 
-extern void init_buffer(), init_screen(), init_interpreter(), init_sound(), init_undo(), split_window(zword), interpret(), reset_memory(), resize_screen();
-extern int init_memory();
+extern void init_buffer(void), init_screen(void), init_interpreter(void), init_sound(void), init_undo(void), split_window(zword), interpret(void), reset_memory(void), resize_screen(void);
+extern int init_memory(void);
 
 #include "setup.h"
 

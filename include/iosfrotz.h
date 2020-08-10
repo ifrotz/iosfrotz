@@ -64,29 +64,29 @@ void iosif_set_input_line(wchar_t *s, int len);
 void iosif_puts(char *s);
 void iosif_win_puts(int winNum, char *s);
 void iosif_win_putwcs(int winNum, wchar_t *s, int len);
-void iosif_enable_input();
-void iosif_enable_single_key_input();
-void iosif_disable_input();
+void iosif_enable_input(void);
+void iosif_enable_single_key_input(void);
+void iosif_disable_input(void);
 void iosif_enable_tap(int winNum);
 void iosif_disable_tap(int winNum);
 void iosif_putchar(wchar_t c);
 void iosif_win_putchar(int winNum, wchar_t c);
-void iosif_disable_autocompletion();
-void iosif_enable_autocompletion();
-void iosif_erase_screen();
-void iosif_erase_mainwin();
+void iosif_disable_autocompletion(void);
+void iosif_enable_autocompletion(void);
+void iosif_erase_screen(void);
+void iosif_erase_mainwin(void);
 void iosif_erase_win(int winnum);
 void iosif_set_top_win_height(int height);
-void iosif_mark_recent_save();
-void iosif_more_prompt();
-char *iosif_get_temp_filename();
+void iosif_mark_recent_save(void);
+void iosif_more_prompt(void);
+char *iosif_get_temp_filename(void);
 void iosif_set_text_attribs(int viewNum, int style, int color, bool lock);
 void iosif_put_image(int viewNum, int imageNum, int imageAlign, bool lock);
 void iosif_set_hyperlink_value(int viewNum, int val, bool lock);
 int iosif_prompt_file_name (char *file_name, const char *default_name, int flag);
 int iosif_read_file_name(char *file_name, const char *default_name, int flag);
 void iosif_start_script(char *scriptName);
-void iosif_stop_script();
+void iosif_stop_script(void);
 void iosif_set_glk_default_colors(int winNum);
 void iosif_glk_window_graphics_update(int viewNum);
 glui32 iosif_glk_image_draw(int viewNum, glui32 image, glsi32 val1, glsi32 val2, glui32 width, glui32 height);
@@ -109,11 +109,11 @@ typedef struct {
     bool tapsEnabled;
 } IPGlkGridArray;
 
-void iosif_glk_wininit();
+void iosif_glk_wininit(void);
 int iosif_new_glk_view(window_t *win);
 void iosif_glk_view_rearrange(int viewNum, window_t *win);
 void iosif_destroy_glk_view(int viewNum);
-void iosif_glk_game_loaded();
+void iosif_glk_game_loaded(void);
 
 IPGlkGridArray *iosif_glk_getGridArray(int viewNum);
 
@@ -125,7 +125,7 @@ extern char AUTOSAVE_FILE[];
 extern int iosif_textview_width, iosif_textview_height; // in characters
 extern int iosif_screenwidth, iosif_screenheight; // in pixels
 extern int iosif_fixed_font_width, iosif_fixed_font_height;
-void iosif_recompute_screensize();
+void iosif_recompute_screensize(void);
 
 extern int iosif_ifrotz_verbose_debug;
 
