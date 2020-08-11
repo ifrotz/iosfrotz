@@ -1178,17 +1178,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         exit(1);
 }
 
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 0) {
-        [m_storyMainViewController abandonStory: YES];
-        NSIndexPath *indexPath = [[self tableView] indexPathForSelectedRow];
-        NSString *story = [self storyForIndexPath: indexPath tableView:[self tableView]];
-        if (story)
-            [self launchStory: story];
-    }
-    [self updateNavButton];
-}
-
 -(void)resumeStory {
     if ([[m_storyMainViewController currentStory] length] > 0) {
         [[self navigationController] popToViewController:self animated:NO];

@@ -46,12 +46,12 @@ BOOL isHiddenFile(NSString *file) {
 -(void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     // This doesn't seem to be called when we are the secondary app and transition from 1/2 to 1/3 width.
     // *sigh*  Nothing to be done.  Apple, do you test your $#!+?
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 
     [self updateMessage];
     [coordinator animateAlongsideTransition:nil completion: ^(id context) {
         [self updateButtonLocation];
     }];
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -66,25 +66,6 @@ BOOL isHiddenFile(NSString *file) {
          CGRectMake(cgSize.width/2 - 130,
                     gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
-    }
-}
-
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {    // Notification of rotation ending.
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-    [self updateMessage];
-    [self updateButtonLocation];
-}
-
-- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    [super willRotateToInterfaceOrientation: toInterfaceOrientation duration:duration];
-    if (m_startButton && m_webView)
-        [self updateButtonLocation];
-}
-
--(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    if (m_startButton && m_webView) {
-        [self updateMessage];
-        [self updateButtonLocation];
     }
 }
 

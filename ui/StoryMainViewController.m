@@ -968,10 +968,10 @@ void run_zinterp(bool autorestore) {
 
 BOOL gForceUseGlulxe = NO;
 
-void glk_main_glulxe();
+void glk_main_glulxe(void);
 
-void glk_main_tads();
-void glk_main_tads23();
+void glk_main_tads(void);
+void glk_main_tads23(void);
 
 void run_glxinterp(const char *story, bool autorestore) {
     char glulHeader[48];
@@ -1576,20 +1576,6 @@ extern void gli_ios_set_focus(window_t *winNum);
     return m_notesController;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-    
-    if (!gLargeScreenDevice && interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown)
-        return NO;
-    
-    if (m_storyView) {
-        [[self view] setTransform: CGAffineTransformIdentity];
-        [self hideInputHelper];
-    }
-    
-    return YES;
-}
-
-
 -(NSString*)storyGamePath {
     return storyGamePath;
 }
@@ -1610,12 +1596,6 @@ extern void gli_ios_set_focus(window_t *winNum);
 - (void)abortToBrowser {
     [self abandonStory: YES];
     [m_storyBrowser didPressModalStoryListButton];
-}
-
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 0) {
-        [self abortToBrowser];
-    }
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -2126,17 +2106,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [[m_background layer] addAnimation:animation forKey:@"storyfade"];
 }
 
-- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    m_rotationInProgress = YES;
-    if (!self.navigationController.modalViewController)
-        [m_frotzInfoController dismissInfo];
-    if (m_storyView)
-        [self hideInputHelper];
-
-    if (m_notesController)
-        [m_notesController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
-}
-
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
     if (m_storyView)
@@ -2164,7 +2133,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         m_landscape = NO;
         [self.navigationController setNavigationBarHidden:NO animated:YES];
     }
-    [self performSelector: @selector(_clearRotationInProgress) withObject: nil afterDelay:0.05];
 
     CGRect frame = [self storyViewFullFrame];
 
@@ -2206,6 +2174,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 - (void)viewWillTransitionToSize:(CGSize)size
        withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    if (m_storyView)
+        [self hideInputHelper];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     
     [coordinator animateAlongsideTransition:^(id context){
@@ -2216,10 +2186,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     } completion:^(id context) {
         [self setNavBarTint];
     } ];
-}
-
--(void)_clearRotationInProgress {
-    m_rotationInProgress = NO;
 }
 
 -(CGRect) storyViewFullFrame {
@@ -2303,12 +2269,9 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
     [UIView commitAnimations];
-    
-    if (m_rotationInProgress)
-        [self performSelector: @selector(scrollStoryViewToEnd) withObject:nil afterDelay:0.2];
 
     [m_inputLine updatePosition];
-    
+
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();
         screen_size_changed = 1;
@@ -2354,13 +2317,10 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [UIView setAnimationDuration: 0.3];
     [UIView setAnimationBeginsFromCurrentState:YES];
 
-#if 1
-    if (!m_rotationInProgress) {
-        CGPoint cofst = [m_storyView contentOffset];
-        cofst.y += bounds.size.height;
-        [m_storyView setContentOffset: cofst];
-    }
-#endif
+    CGPoint cofst = [m_storyView contentOffset];
+    cofst.y += bounds.size.height;
+    [m_storyView setContentOffset: cofst];
+    
     [m_storyView setFrame: frame];
     //NSLog(@"keyboardwillshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
     CGRect statusFrame = [m_statusLine frame];
@@ -2368,9 +2328,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [m_statusLine setFrame: statusFrame];
     
     [UIView commitAnimations];
-    
-    if (!m_rotationInProgress)
-        [self scrollStoryViewToEnd: YES];
+
+    [self scrollStoryViewToEnd: YES];
     
     [m_inputLine updatePosition];
     
@@ -2482,7 +2441,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    [self.navigationController dismissModalViewControllerAnimated:YES];
+    if ([self.navigationController modalViewController])
+        [self.navigationController dismissModalViewControllerAnimated:YES];
 
     if (file)
         strcpy(iosif_filename, [file fileSystemRepresentation]);

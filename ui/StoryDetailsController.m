@@ -164,14 +164,17 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)paste:(id)sender {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Paste artwork?" message:@"This will replace previous artwork"
-                                                   delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Paste", nil];
-    [alert show];
-}
-
-- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 1)
-        [self doPaste];
+        UIAlertController *alertController =
+          [UIAlertController alertControllerWithTitle: @"Paste artwork?"
+                                              message: @"This will replace previous artwork"
+                                       preferredStyle: UIAlertControllerStyleAlert];
+        [alertController addAction:
+        [UIAlertAction actionWithTitle: @"Paste" style: UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+                    [self doPaste];
+                }]];
+        [alertController addAction:
+        [UIAlertAction actionWithTitle: @"Cancel" style: UIAlertActionStyleCancel handler:^(UIAlertAction *action) { }]];
+    [m_detailsController presentViewController:alertController animated:YES completion:^{ }];
 }
 
 -(void)doPaste {
@@ -440,12 +443,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [self setEditing: NO animated: animated];
 }
 
--(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    [self updateSelectStoryHint];
-    [m_artworkView magnifyImage:NO];
-    [self updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
-}
-
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode {
     if (displayMode == UISplitViewControllerDisplayModeAutomatic)
         displayMode = self.splitViewController.displayMode;
@@ -566,20 +563,23 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [m_browser launchStoryInfo: m_storyInfo];
 }
 
-- (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 0) {
-        [[m_browser storyMainViewController] deleteAutoSaveForStory: m_storyInfo.path];
-        m_willResume = NO;
-        [self refresh];
-    }
-}
-
 -(IBAction)showRestartMenu {
-    UIActionSheet *actionView = [[UIActionSheet alloc] initWithTitle:@"Restart the story?\nThis will abandon the current auto-saved game."
-                                                            delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:@"Restart from beginning"
-                                                   otherButtonTitles: @"Keep progress", nil];
-    CGRect r = [m_restartButton convertRect:m_restartButton.bounds toView: m_contentView];
-    [actionView showFromRect:r inView:m_contentView animated:YES];
+    UIAlertController *alertController =
+      [UIAlertController alertControllerWithTitle: @"Restart the story?"
+                                          message: @"This will abandon the current auto-saved game."
+                                   preferredStyle: UIAlertControllerStyleActionSheet];
+    [alertController addAction:
+    [UIAlertAction actionWithTitle: @"Restart from beginning"
+            style: UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
+                [[m_browser storyMainViewController] deleteAutoSaveForStory: m_storyInfo.path];
+                m_willResume = NO;
+                [self refresh];
+            }]];
+    [alertController addAction:
+    [UIAlertAction actionWithTitle: @"Cancel (Keep progress)"
+             style: UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+            }]];
+    [self presentViewController:alertController animated:YES completion:^{ }];
 }
 
 -(IBAction)IFDBButtonPressed {

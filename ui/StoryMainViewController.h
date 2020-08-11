@@ -100,7 +100,6 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_kbShown;
     BOOL m_landscape;
     UIInterfaceOrientation m_lastOrientation;
-    BOOL m_rotationInProgress;
     BOOL m_completionEnabled;
     BOOL m_canEditStoryInfo;
     BOOL m_autoRestoreEnabled;

@@ -175,9 +175,8 @@ int gLargeScreenPhone = 0;
 - (void)applicationDidReceiveMemoryWarning:(UIApplication*)app {
     NSLog(@"memory warning!");
 }
-
-- (BOOL)application: (UIApplication*)application handleOpenURL: (NSURL*)launchURL {
-    NSLog(@"handleOpenURL %@", launchURL);
+- (BOOL)application: (UIApplication*)application openURL:(nonnull NSURL *)launchURL options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+    NSLog(@"openURL %@", launchURL);
 #if UseNewDropBoxSDK
     DBOAuthResult *authResult = [DBClientsManager handleRedirectURL:launchURL];
     if (authResult != nil) {
@@ -225,7 +224,5 @@ int gLargeScreenPhone = 0;
 
     return NO;
 }
-
-
 
 @end
