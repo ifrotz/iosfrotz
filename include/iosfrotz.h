@@ -155,7 +155,7 @@ extern int gLargeScreenPhone;
 #define UseWKWebViewForFrotzStoryDetails 1
 #define UseWKWebViewForIFDBBrowser 1
 
-#define IPHONE_FROTZ_VERS "1.8.4"
+#define IPHONE_FROTZ_VERS "1.8.5"
 #define IPHONE_FROTZ_RN_VERS IPHONE_FROTZ_VERS // "1.8"
 #define FROTZ_BETA 0
 

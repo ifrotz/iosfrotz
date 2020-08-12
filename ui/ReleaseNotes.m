@@ -135,31 +135,40 @@
         htmlString = @
         "<h2>What's New in Frotz?</h2>\n"
         "<hr/>\n"
-        "<p>New in <b>Frotz 1.8.4</b>:</p>\n"
+        "<p>New in <b>Frotz 1.8.5</b>:</p>\n"
         "<p><ul>\n"
-        "<li>Fix an unfortunate bug introduced in 1.8.3 causing manual saved games to fail.  Sorry for the inconvenience!</li>\n"
-        "<li><b>[1.8.3]</b> Improved support for iOS 13, including light/dark mode.</li>\n"
-        "<li>Better support for newer devices/screen sizes.</li>\n"
-        "<li>Other bug fixes.</li>\n"
-        "</ul>\n"
+        "<li>Allow changing text size and font on Notes screen.</li>\n"
+        "<li>Fix unreadable Notes text in dark mode.</li>\n"
+        "<li>General bug fixes and refactoring to use newer iOS APIs.</li>\n"
+        "</ul></p>\n"
         "<h3>If you enjoy Frotz, please rate it in the App Store.  Or write a review! Thanks!</h3>"
-        "<p><small><i>Craig Smith, July 3, 2020</i><br>\n"
+        "<p><small><i>Craig Smith, August 12, 2020</i><br>\n"
         "<hr>\n"
         "<p><i>Previous release notes</i></p>\n"
         "\n"
+        "<p>Version 1.8.4:</p>\n"
+        "<p><ul>\n"
+        "<li>Bug fixes, more light/dark mode enhancements.</li>\n"
+        "</ul></p>\n"
+        "<p>Version 1.8.3:</p>\n"
+        "<p><ul>\n"
+        "<li>Improved support for iOS 13, including light/dark mode.</li>\n"
+        "<li>Better support for newer devices/screen sizes.</li>\n"
+        "<li>Other bug fixes.</li>\n"
+        "</ul></p>\n"
         "<p>Version 1.8.2:</p>\n"
         "<p><ul>\n"
         "<li>Prevent games from being confused by iOS 11's &#x201c;smart punctuation&#x201d;.</li>\n"
         "<li>Fix bug with text window partition sizing in glulx games.</li>\n"
         "<li>Add launch shortcut to Story List (without resuming current story).</li>\n"
         "<li>Other bug fixes.</li>\n"
-        "</ul>\n"
+        "</ul></p>\n"
         "<p>Version 1.8.1:</p>\n"
         "<p><ul>\n"
         "<li>Update to <b>Dropbox</b> API v2.</li>\n"
         "<li>Improvements for iOS 11.</li>\n"
         "<li>Bug fixes, but a couple new bugs.</li>\n"
-        "</ul>\n"
+        "</ul></p>\n"
         "<p>Version 1.8:</p>\n"
         "<p><ul>\n"
         "<li>Now plays games in <b>TADS</b> format (v2/v3).</li>\n"
@@ -167,14 +176,14 @@
         "<li>Split-screen <b>multitasking</b> support on iPads.</li>\n"
         "<li>Fix crash when task-switching back to Frotz in iOS 9.x.</li>\n"
         "<li>Various other bug fixes.</b></li>\n"
-        "</ul>\n"
+        "</ul></p>\n"
         "<p>Version 1.7.1:</p>\n"
         "<p><ul>\n"
         "<li>Improved support for iPhone 6, iPhone 6 Plus, and iOS 8.</li>\n"
         "<li>Fixed bug printing accented characters in status window.</li>\n"
         "<li>Allow pinch gesture to change story font size.</li>\n"
         "<li>Several minor bug fixes in glk game support.</li>\n"
-        "</ul>\n"
+        "</ul></p>\n"
 
         "<p>Version 1.7:</p>\n"
         "<p><ul>\n"
@@ -187,7 +196,7 @@
         "<li>Ability to long-press keyboard toggle button to hide and lock keyboard (for menu-only command input).</li>\n"
         "<li>Update to glk spec 0.7.4, git interpreter 1.3.3.</li>\n"
         "<li>Lots of other minor bug fixes.</li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #if 1
         "<p>Version 1.6:</p>\n"
         "<p><ul>\n"
@@ -195,7 +204,7 @@
         "<li><b>Hyperlinks</b>:  now supports hyperlinks in glulx games.</li>\n"
         "<li><b>Dropbox</b>: updated to latest Dropbox API.</li>\n"
         "<li><b>Other minor bug fixes.</b></li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #endif
 #if 1 // 1.5.3
         "<p>Version 1.5.3:</p>\n"
@@ -207,7 +216,7 @@
         "<li><b>VoiceOver support</b>: Fixed bug preventing automatic announcement of new output in glulx games.</li>\n"
         "<li><b>Keyboard</b>: Improved support for playing with a Bluetooth keyboard (you can now scroll via keyboard and no longer have to tap the screen).</li>\n"
         "<li><b>Other bug fixes</b>: New FTP server compatible with more clients; restored 'Open in' functionality for launching Frotz from other apps.</li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #endif
 #if 1 // 1.5.2
         "<p>Version 1.5.2:</p>\n"
@@ -215,13 +224,13 @@
         "<li><b>Fixed crash on older devices</b>: iPod Touch (1st/2nd gen.) and iPhone 3G would crash on launch due to bugs in the compiler used to build Frotz. This has been resolved.</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue where navigation bar would disappear after viewing save/restore/transcript dialog on small screen "
         "devices; allow transfer of transcripts in web file transfer server; fixed crash when restarting a story immediately after quitting..</li>"
-        "</ul>"
+        "</ul></p>\n"
 #endif
 #if 1 // 1.5.1
         "<p>Version 1.5.1:</p><ul>\n"
         "<li><b>iOS 4.3 compatibility</b>: Fixed crash when deleting text that occurred only in iOS 4.3</li>"
         "<li><b>Other minor bug fixes</b>: Fixed issue deleting files via web interface, viewing transcripts in landscape, and text color issues in glulx games.</li>"
-        "</ul>"
+        "</ul></p>\n"
 #endif
         "<p>New features in 1.5:</p><ul>\n"
 #if 1 // 1.5
@@ -233,7 +242,7 @@
         "<li><b>Bookmarks in Story Browser</b>: You can now bookmark individual pages in the IFDB browser.</li>\n"
         "<li><b>More bundled games added from IFDB</b>: Includes an updated IFDB snapshot with more recent well-rated works.</li>\n"
         "<li><b>Miscellaneous bug fixes</b>: Fixed Bluetooth keyboard support, status line/text resizing bugs, and various other minor bugs.</li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #endif
 #if 1 // 1.4
         "<p>New features in 1.4:</p><ul>\n"
@@ -245,7 +254,7 @@
         "<li><b>Infocom support</b>: More filename variants of Infocom data files are now recognized.</li>\n"
         "<li><b>Text color bug fixed</b>: Fixed a problem where text color would draw in black instead of customized color.</li>\n"
         "<li><b>Other Bug fixes</b>: Various other minor bugs have been fixed too uninteresting to mention by name.</li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #endif
 #if 1 // 1.3
         "<p>New features in 1.3:</p><ul>\n"
@@ -263,7 +272,7 @@
         "</li>\n"
         "<li><b>Bug fixes (OS 3.0)</b>: restored the ability to tap on the story output to scroll one page, or show the keyboard if at the end.</li>\n"
         "<li><b>Bundled stories</b>: includes a large subset of well-rated stories from the IFDB bundled with Frotz; the IFDB story browser uses these bundled files instead of downloading them from the Internet. </li>\n"
-        "</ul>"
+        "</ul></p>\n"
 #endif
         "<br/>\n";
         // 1.6: sep xx, 2012
