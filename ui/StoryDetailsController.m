@@ -70,7 +70,9 @@
             superSize.width *= kFactor;
             superSize.height *= kFactor;
         }
-        if (m_detailsController.artwork && (imageSize.width > bounds.size.width * 1.1 || imageSize.height > bounds.size.height * 1.1))
+        if (m_detailsController.artwork
+            && self.traitCollection.verticalSizeClass != UIUserInterfaceSizeClassCompact 
+            && (imageSize.width > bounds.size.width * 1.1 || imageSize.height > bounds.size.height * 1.1))
         {
             [UIView beginAnimations:@"artmag" context:0];
             [UIView setAnimationTransition:UIViewAnimationTransitionNone forView:self cache:YES];
