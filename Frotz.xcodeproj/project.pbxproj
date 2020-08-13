@@ -1501,6 +1501,7 @@
 				44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */,
 				4436611C1F8355C8004F8871 /* StoryStoryboard.storyboard */,
 				447DF3B9123C136500689076 /* StoryDetailsController.xib */,
+				4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */,
 				445484C71B1D04C200E8EE7B /* Images.xcassets */,
 				44AF586A19491BB900E3EF8A /* locale */,
 				446B9D960E2059E3002BDD65 /* Games */,
@@ -1525,7 +1526,6 @@
 				44E145C9114C303B001926E1 /* compass-small.png */,
 				440018FC15D9EB50007612E4 /* compass-small@2x.png */,
 				44418F7D124576E800F49BC4 /* flip.png */,
-				4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */,
 				44D013B01372799D00B7F616 /* ftp_commands.plist */,
 				449A51D41052DA34001B884B /* glare.png */,
 				4400190015E03720007612E4 /* glare@2x.png */,
@@ -3166,7 +3166,7 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = NO;
+				COPY_PHASE_STRIP = YES;
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3202,6 +3202,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = YES;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Debug;
@@ -3253,6 +3254,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = YES;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Release;
@@ -3629,7 +3631,7 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -3656,7 +3658,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=*]" = "";
 				SDKROOT = iphoneos;
-				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
 				VALIDATE_PRODUCT = YES;
@@ -3712,6 +3714,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = YES;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Distribution;
@@ -3736,7 +3739,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -3762,7 +3765,7 @@
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
 				VALID_ARCHS = "$(ARCHS_STANDARD)";
@@ -3820,6 +3823,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = YES;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = "Release armv6";
@@ -4834,7 +4838,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
 				VALID_ARCHS = "$(ARCHS_STANDARD)";
@@ -4861,7 +4865,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -4887,7 +4891,7 @@
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
-				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				USER_HEADER_SEARCH_PATHS = "";
 				VALID_ARCHS = "$(ARCHS_STANDARD)";
