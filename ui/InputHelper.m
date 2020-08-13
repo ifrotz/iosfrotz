@@ -239,9 +239,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     return m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands count] : [m_history count];
 }
 
-#if __IPHONE_5_1 < __IPHONE_OS_VERSION_MAX_ALLOWED
-
-// iOS 6 and later
 - (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section
 {
     // Background color
@@ -251,7 +248,6 @@ const CGFloat kHistoryLineHeight = 20.0;
     UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
     [header.textLabel setTextColor:[UIColor whiteColor]];
 }
-#endif
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	
@@ -312,7 +308,6 @@ const CGFloat kHistoryLineHeight = 20.0;
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
-
 
 @end
 
