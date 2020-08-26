@@ -283,7 +283,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 -(BOOL)setFixedFontBase:(UIFont*)fontBase size:(NSInteger)newSize {
     UIFont *normalFont = nil, *boldFont = nil, *italicFont = nil, *boldItalicFont = nil;
 
-    normalFont = fontBase;
+    normalFont = [fontBase fontWithSize: newSize];
     boldFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold] size: newSize];
     italicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitItalic] size: newSize];
     boldItalicFont = [UIFont fontWithDescriptor:[[fontBase fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold|UIFontDescriptorTraitItalic] size: newSize];
