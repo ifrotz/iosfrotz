@@ -311,17 +311,15 @@ zchar os_read_key (int timeout, int cursor)
 {
     zchar c;
 
-//    if (!cursor) curs_set(0); //xxx
     iosif_enable_single_key_input();
     unix_set_global_timeout(timeout);
     c = (zchar) unix_read_char(0);
     if (cwin == 1 && c == ZC_BACKSPACE) {
-	os_backspace();
-	iosif_putchar(c);
+        os_backspace();
+        iosif_putchar(c);
     }
     iosif_disable_input();
 
-//    if (!cursor) curs_set(1); //xxx
     return c;
 
 }/* os_read_key */

@@ -435,7 +435,7 @@ void os_set_cursor (int row, int col)
 
 void os_more_prompt (void)
 {
-    //    iosif_more_prompt();
+    iosif_more_prompt();
 }/* os_more_prompt */
 
 /*

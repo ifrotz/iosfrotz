@@ -326,20 +326,41 @@ void iosif_set_input_line(wchar_t *ws, int len) {
     [theInputLine performSelectorOnMainThread:@selector(setText:) withObject:str waitUntilDone:YES];    
 }
 
+static BOOL gHandleDelayedMorePrompt = NO;
+
 void iosif_clear_input(NSString *initStr) {
     pthread_mutex_lock(&inputMutex);
+    gHandleDelayedMorePrompt = NO;
     [ipzInputBufferStr setString: initStr ? initStr : @""];
     pthread_mutex_unlock(&inputMutex);
 }
 
+void iosif_more_prompt() {
+    if (gStoryInterp == kZStory && h_version == 4) {
+        // Some V4 stories (specifically, Trinity when entering the white door, possibly others)
+        // depend on the automatic [More] prompt in Infocom interpreters to pause
+        // the story output so the user can read text before clearing the screen;
+        // the game don't explicitly pause or wait for a key itself.
+        // A [More] prompt isn't normally displyed by Frotz on iOS because gesture-based
+        // scrolling is a better experience on a touchscreen, but in this case, we try
+        // to detect when the game clears the screen after older engines would have displayed
+        // a [More] prompt, and do so before the clear takes effect.
+        pthread_mutex_lock(&inputMutex);
+        gHandleDelayedMorePrompt = YES;
+        pthread_mutex_unlock(&inputMutex);
+    }
+}
+
 void iosif_feed_input(NSString *str) {
     pthread_mutex_lock(&inputMutex);
+    gHandleDelayedMorePrompt = NO;
     [ipzInputBufferStr appendString: str];
     pthread_mutex_unlock(&inputMutex);
 }
 
 void iosif_feed_input_line(NSString *str) {
     pthread_mutex_lock(&inputMutex);
+    gHandleDelayedMorePrompt = NO;
     [ipzLineInputStr setString: str ? str: @""];
     pthread_mutex_unlock(&inputMutex);
 }
@@ -348,16 +369,13 @@ int iosif_peek_inputline(const wchar_t *inputbuf, int maxlen) {
     iosif_flush(YES);
     
     pthread_mutex_lock(&inputMutex);
-#if 1
+
     NSUInteger len = [ipzLineInputStr length];
     CFRange r = {0,len};
     CFIndex usedBufferLength;
     len = (int)CFStringGetBytes((CFStringRef)ipzLineInputStr, r, kCFStringEncodingUTF32, '?', FALSE,
                            (UInt8 *)inputbuf, maxlen*sizeof(wchar_t), &usedBufferLength);
-#else
-    [ipzLineInputStr getCString:(char*)inputbuf maxLength:maxlen encoding:NSUTF32StringEncoding];
-    size_t len = wcslen(inputbuf);
-#endif
+
     pthread_mutex_unlock(&inputMutex);
     return (int)len;
 }
@@ -508,6 +526,10 @@ void iosif_erase_screen() {
     iosif_flush(YES);
     //NSLog(@"erase screen\n");
     if (!finished) {
+        if (gHandleDelayedMorePrompt) {
+            iosif_puts("[More]");
+            os_read_key(0, 0);
+        }
         pthread_mutex_lock(&winSizeMutex);
         cwin = 1;
         iosif_putchar(kClearEscChar);
@@ -3062,7 +3084,6 @@ char *tempStatusLineScreenBuf() {
     if (finished)
         iosif_flush(NO);
     textLen = [inputBufferStr length];
-    
     BOOL clearStory = ([inputBufferStr hasPrefix: @kClearEscCode]);
     BOOL setDefColors = ([inputBufferStr hasPrefix: @kSetDefColorsCode]);
     if (textLen > 0) {
@@ -3204,7 +3225,7 @@ char *tempStatusLineScreenBuf() {
         continuousPrintCount++;
     } else
         continuousPrintCount = 0;
-    
+
     if (statusLen > 0 || clearStory || setDefColors) {
         if (statusLen == 1 && [inputStatusStr isEqualToString: @kClearEscCode] || clearStory || setDefColors) {
             int color, j;
