@@ -1,10 +1,18 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+**Update 09/03/2020**
+
+**Frotz 1.8.5** is now available, with the following changes:
+
+  * Configurable text size and font on Notes screen.
+  * Fix unreadable Notes text in dark mode.
+  * General bug fixes and refactoring to use more modern iOS APIs.
+
 **Update 07/03/2020**
 
 **Frotz 1.8.4** is now available, with the following changes:
 
-  * Support for iOS 13, including light/dark mode
+  * Support for iOS 13, including light/dark mode.
   * Support for newer devices with larger screen sizes.
   * Bug fixes.
 
