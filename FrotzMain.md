@@ -14,6 +14,12 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+**Update - Version 1.8.5 now available.**
+
+**9/03/2020**
+
+* This update contains bug fixes, font settings for the Notes screen, and internal refactors to remove deprecated iOS API usage.
+
 **Update - Version 1.8.4 now available.**
 
 **7/03/2020**
