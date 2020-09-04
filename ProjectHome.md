@@ -1,3 +1,7 @@
+### 2020/09/03 Update ###
+
+Version 1.8.5, with bug fixes and support for custom fonts on the Notes screen, now available.
+
 ### 2020/07/03 Update ###
 
 Version 1.8.4, with support for iOS 13 and devices with larger screens, now available.
