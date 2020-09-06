@@ -459,6 +459,7 @@ enum FrotzPrefsRows
         cell.accessoryType = UITableViewCellAccessoryNone;
     else
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    cell.accessoryView = nil;
 
     switch (indexPath.section)
     {
