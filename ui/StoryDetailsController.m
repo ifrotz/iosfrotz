@@ -570,6 +570,10 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
       [UIAlertController alertControllerWithTitle: @"Restart the story?"
                                           message: @"This will abandon the current auto-saved game."
                                    preferredStyle: UIAlertControllerStyleActionSheet];
+    UIPopoverPresentationController *popPresenter = [alertController
+                                                  popoverPresentationController];
+    popPresenter.sourceView = m_restartButton;
+    popPresenter.sourceRect = m_restartButton.bounds;
     [alertController addAction:
     [UIAlertAction actionWithTitle: @"Restart from beginning"
             style: UIAlertActionStyleDestructive handler:^(UIAlertAction *action) {
