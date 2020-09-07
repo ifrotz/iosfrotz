@@ -141,7 +141,7 @@
         "<li>Fix hang which can occur when scrolling in Frotz Settings.</li>\n"
         "</ul></p>\n"
         "<h3>If you enjoy Frotz, please rate it in the App Store.  Or write a review! Thanks!</h3>"
-        "<p><small><i>Craig Smith, September 7, 2020</i><br>\n"
+        "<p><small><i>Craig Smith, September 6, 2020</i><br>\n"
         "<hr>\n"
         "<p><i>Previous release notes</i></p>\n"
         "\n"
