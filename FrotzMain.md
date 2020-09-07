@@ -14,6 +14,13 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+
+**Update - Version 1.8.6 now available.**
+
+**9/07/2020**
+
+* Fix a couple bugs introduced in 1.8.5.
+
 **Update - Version 1.8.5 now available.**
 
 **9/03/2020**
