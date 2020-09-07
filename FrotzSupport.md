@@ -1,5 +1,11 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+**Update 09/07/2020**
+
+**Frotz 1.8.6** is now available, with the following changes:
+  * Fix crash on iPad when trying to restart story from Story Details view.<
+  * Fix hang which can occur when scrolling in Frotz Settings.
+
 **Update 09/03/2020**
 
 **Frotz 1.8.5** is now available, with the following changes:
