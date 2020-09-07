@@ -1,3 +1,7 @@
+### 2020/09/07 Update ###
+
+Version 1.8.6, with bug fixes.
+
 ### 2020/09/03 Update ###
 
 Version 1.8.5, with bug fixes and support for custom fonts on the Notes screen, now available.
