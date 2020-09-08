@@ -20,8 +20,8 @@
 -(UIColor*)backgroundColor;
 -(UIColor*)textColor;
 -(NSString*)rootPath;
-@property (nonatomic, getter=isCompletionEnabled) BOOL completionEnabled;
-@property (nonatomic) BOOL canEditStoryInfo;
+@property (nonatomic, readwrite, getter=isCompletionEnabled) BOOL completionEnabled;
+@property (nonatomic, readwrite) BOOL canEditStoryInfo;
 -(void)savePrefs;
 -(StoryBrowser*)storyBrowser;
 @end

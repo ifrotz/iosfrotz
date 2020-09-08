@@ -872,7 +872,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [self updateColorWithHue:hue Saturation:saturation Value:value];
 }
 
--(void)updateColorWithHue:(float)hue Saturation:(float)saturation Value:(float)value {
+-(void)updateColorWithHue:(CGFloat)hue Saturation:(CGFloat)saturation Value:(CGFloat)value {
     //  float oldValue = m_value;
     m_hue = hue == hue ? hue : 0; // NaN guard
     m_saturation = saturation;

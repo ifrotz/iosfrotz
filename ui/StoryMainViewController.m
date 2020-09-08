@@ -2120,7 +2120,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 
--(void)setupFadeWithDuration:(float)duration {
+-(void)setupFadeWithDuration:(CFTimeInterval)duration {
     CATransition *animation = [CATransition animation];
     [animation setType:kCATransitionFade];
     [animation setDuration: duration];

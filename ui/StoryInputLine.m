@@ -262,18 +262,8 @@
     return [m_inputHelper addHistoryItem:  historyItem];
 }
 
--(StoryView*) storyView {
-    return m_storyView;
-}
--(void)setStoryView:(StoryView*)sv {
-    m_storyView = sv;
-}
--(StatusLine*) statusLine {
-    return m_statusLine;
-}
--(void)setStatusLine:(StatusLine*)sl {
-    m_statusLine = sl;
-}
+@synthesize storyView=m_storyView;
+@synthesize statusLine=m_statusLine;
 
 -(void)resetState {
     m_firstKeyPressed = NO;

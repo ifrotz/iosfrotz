@@ -18,7 +18,7 @@ CF_IMPLICIT_BRIDGING_DISABLED
 void drawRectInCGContext(CGContextRef cgctx, unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height);
 void drawCGImageInCGContext(CGContextRef cgctx, CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight);
 
-CGImageRef drawCGImageInCGImage(CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight, CGImageRef destImageRef) CF_RETURNS_NOT_RETAINED;
+CGImageRef drawCGImageInCGImage(CGImageRef imageRef, int x, int y, size_t scaleWidth, size_t scaleHeight, CGImageRef destImageRef) CF_RETURNS_RETAINED;
 
 CF_IMPLICIT_BRIDGING_ENABLED
 
@@ -26,7 +26,7 @@ CGImageRef createBlankCGImage(unsigned int bgColor, size_t destWidth, size_t des
 
 CF_IMPLICIT_BRIDGING_DISABLED
 
-CGImageRef drawRectInCGImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, CGImageRef destImageRef) CF_RETURNS_NOT_RETAINED;
+CGImageRef drawRectInCGImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, CGImageRef destImageRef) CF_RETURNS_RETAINED;
 
 UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight);
 UIImage *drawUIImageInUIImage(UIImage *image, int x, int y, size_t scaleWidth, size_t scaleHeight, UIImage *destImage);

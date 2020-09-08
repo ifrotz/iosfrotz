@@ -166,7 +166,7 @@ const CGFloat kHistoryLineHeight = 20.0;
     return m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands count] : [m_history count];
 }
 
-- (NSString*)historyItem:(int)item {
+- (NSString*)historyItem:(NSInteger)item {
     if (m_mode == FrotzInputHelperModeMoreWords) {
         if (item < [m_commonCommands count])
             return m_commonCommands[item];

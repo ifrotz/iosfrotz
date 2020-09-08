@@ -31,7 +31,7 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
     NSMutableArray *m_colorIndex; // fg/bg color for run
     NSMutableArray *m_hyperlinks;
 
-    NSMutableArray *m_textPos;     // beginning point of each text run
+    NSMutableArray<NSValue*> *m_textPos;     // beginning point of each text run
     NSMutableArray *m_textLineNum; // which line (0..n) each run starts on
 
     NSMutableArray *m_lineYPos;    // Y position of each line; indexed by line number, not run
@@ -154,15 +154,15 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 - (BOOL)setFontBase:(UIFont*)fontBase size:(NSInteger)newSize;
 - (BOOL)setFixedFontBase:(UIFont*)fontBase size:(NSInteger)newSize;
 - (void)setFontSize:(CGFloat)newFontSize;
-- (void)setTextColor:(UIColor*)color;
+@property (nonatomic, strong) UIColor *textColor;
 @property (nonatomic, readonly) CGRect visibleRect;
 - (NSUInteger)getOrAllocColorIndex:(UIColor*)color;
 - (void)populateAccessibilityElements;
 - (void)clearAE;
-@property (nonatomic, readonly, strong) RichTextAE *updateAE;
+- (RichTextAE *)updateAE;
 - (void)appendAE;
 - (void)markWaitForInput;
-@property (nonatomic, getter=getTextPos, readonly, copy) NSArray *textPos;
+@property (nonatomic, getter=getTextPos, readonly, copy) NSArray<NSValue*> *textPos;
 @property (nonatomic, getter=getSaveDataDict, readonly, copy) NSDictionary *saveDataDict;
 - (void)restoreFromSaveDataDict: (NSDictionary*)saveData;
 @property (nonatomic, readonly) CGPoint cursorPoint;

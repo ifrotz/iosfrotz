@@ -24,8 +24,7 @@
 #define kBundledZIPFile  "bundle/bundled.zip"
 #define kBundledFileList "bundle/bundled.txt"
 
-@interface StoryDetailsControllerNC : UINavigationController {    
-}
+@interface StoryDetailsControllerNC : UINavigationController
 @end
 
 @class StoryDetailsController;
@@ -154,8 +153,6 @@ IBOutlet    StoryDetailsController *m_details;
 
 @property(nonatomic,strong) UISearchController *searchController;
 @end
-
-extern NSString *storyGamePath;
 
 @interface NSString (storyKey)
 @property (nonatomic, readonly, copy) NSString *storyKey;

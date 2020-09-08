@@ -40,9 +40,7 @@
     return self;
 }
 
--(void)setChainResponder:(UIResponder*)responder {
-    m_chainResponder = responder;
-}
+@synthesize chainResponder=m_chainResponder;
 
 -(void)setFrame:(CGRect)frame {
     m_frame = frame;

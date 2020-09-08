@@ -65,8 +65,8 @@ int cursor_row = 0, cursor_col = 0;
 static cell *scr_row(int r) { return screen_data + r * MAX_COLS; }
 static cellcolor *scr_color(int r) { return screen_colors + r * MAX_COLS; }
 
-static inline int frotz_to_richtext_style(int fstyle) {
-    int style = kFTNormal;
+static inline RichTextStyle frotz_to_richtext_style(int fstyle) {
+    RichTextStyle style = kFTNormal;
     if (fstyle & BOLDFACE_STYLE)
         style |= kFTBold;
     if (fstyle & EMPHASIS_STYLE)
