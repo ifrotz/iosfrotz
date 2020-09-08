@@ -315,7 +315,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
             [m_artworkView setImage: m_artwork];
             [m_artworkView setAlpha: 1.0];
         } else {
-            [m_artworkView setImage: [UIImage imageNamed: @"compass-med.png"]];
+            [m_artworkView setImage: [UIImage imageNamed: @"compass-med"]];
             [m_artworkView setAlpha: 0.25];
         }
     }

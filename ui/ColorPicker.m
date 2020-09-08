@@ -105,8 +105,8 @@
         m_text.text = @"West of House\nThis is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n";
         m_text.numberOfLines = 0;
         [self addSubview: m_text];
-        m_flipFgImg = [UIImage imageNamed: @"colorflipfg.png"];
-        m_flipBgImg = [UIImage imageNamed: @"colorflipbg.png"];
+        m_flipFgImg = [UIImage imageNamed: @"colorflipfg"];
+        m_flipBgImg = [UIImage imageNamed: @"colorflipbg"];
         m_imgView = [[UIImageView alloc] initWithImage: m_flipFgImg];
         m_imgView.frame=CGRectMake(frame.size.width - m_flipFgImg.size.width - 1, frame.size.height - m_flipFgImg.size.height-1, m_flipFgImg.size.width, m_flipFgImg.size.height);
         m_imgView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
@@ -681,12 +681,10 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [m_valuePicker setAutoresizingMask: UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin];
     [m_valuePicker setLeftMargin: 16];
 
-    UIImage *hsvCursorImage = [[UIImage alloc]
-                               initWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"hsv-crosshair" ofType:@"png" inDirectory: @"/"]];
+    UIImage *hsvCursorImage = [UIImage imageNamed:@"hsv-crosshair"];
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
-    UIImage *valCursorImage = [[UIImage alloc]
-                               initWithContentsOfFile: [[NSBundle mainBundle] pathForResource:
-                                                        (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair") ofType:@"png" inDirectory: @"/"]];
+    UIImage *valCursorImage = [UIImage imageNamed:
+                                                        (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair")];
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
 
     CGRect cursFrame = [m_hsvCursor frame];

@@ -1658,9 +1658,9 @@ extern void gli_ios_set_focus(window_t *winNum);
     BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
         
     if (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked.png"]];
+        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked"]];
     else
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard.png"]];
+        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard"]];
     if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
         [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
 }
@@ -1973,7 +1973,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_storyView setDelegate: self];
     
 //    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
-    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard.png"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
+    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     

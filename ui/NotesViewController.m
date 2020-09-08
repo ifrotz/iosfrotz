@@ -86,7 +86,7 @@ static const int kNotesTitleHeight = 24;
 
     self.view = m_notesBGView;
 
-    UIImage *glyph = [UIImage imageNamed: @"notes.png"];
+    UIImage *glyph = [UIImage imageNamed: @"notes"];
     m_notesTitle = [[UISegmentedControl alloc] initWithItems:@[@"Notes", glyph]];
     [m_notesTitle setWidth: 24 forSegmentAtIndex:1];
     [m_notesTitle setEnabled:FALSE forSegmentAtIndex:0];

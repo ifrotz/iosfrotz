@@ -104,8 +104,8 @@
 	    
             UIImageView *img = [[UIImageView alloc] initWithImage:
                                 [UIImage imageNamed:
-                                 view.superview.frame.size.width >= 568 ? @"glarels5.png" :
-                                 view.superview.frame.size.width > 320 ? @"glarels.png" : @"glare.png"]];
+                                 view.superview.frame.size.width >= 568 ? @"glarels5" :
+                                 view.superview.frame.size.width > 320 ? @"glarels" : @"glare"]];
             if (img) {
                 [img setTag: 1];
                 [img setAlpha: 0.50];

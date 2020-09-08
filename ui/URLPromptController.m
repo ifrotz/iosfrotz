@@ -47,7 +47,7 @@
     
     m_textbar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.0, 0.0, appFrame.size.width, kSearchBarHeight)];
     
-    UIImage *img = [UIImage imageNamed: @"icon-url-srch.png"];
+    UIImage *img = [UIImage imageNamed: @"icon-url-srch"];
     UIImageView *imgView = [[UIImageView alloc] initWithImage: img];
     [m_textbar addSubview: imgView];
     [m_textbar bringSubviewToFront:imgView];
