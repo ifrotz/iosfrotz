@@ -44,7 +44,7 @@
         [enterButton sizeToFit];
 
         //UIImage *enterButtonImage = [UIImage imageNamed: @"glyph-enter"];
-        UIImage *clearButtonImage = [UIImage imageNamed: @"glyph-input-clear.png"];
+        UIImage *clearButtonImage = [UIImage imageNamed: @"glyph-input-clear"];
         CGFloat ecHeight = [clearButtonImage size].height+4;
         //[enterButton setImage: enterButtonImage forState: UIControlStateNormal];
         [enterButton setFrame: CGRectMake(0,1, enterButton.frame.size.width, ecHeight)];
@@ -67,7 +67,7 @@
         self.rightViewMode = UITextFieldViewModeWhileEditing;
         
         UIButton *inputHelperButton = [UIButton buttonWithType: UIButtonTypeCustom];
-        UIImage *inputMenuImage = [UIImage imageNamed: @"glyph-input-helper.png"];
+        UIImage *inputMenuImage = [UIImage imageNamed: @"glyph-input-helper"];
         [inputHelperButton setImage: inputMenuImage forState: UIControlStateNormal];
         [inputHelperButton setFrame: CGRectMake(0,0,[inputMenuImage size].width, [inputMenuImage size].height)];
         [inputHelperButton addTarget:self action:@selector(toggleInputHelper) forControlEvents: UIControlEventTouchUpInside];
@@ -262,18 +262,8 @@
     return [m_inputHelper addHistoryItem:  historyItem];
 }
 
--(StoryView*) storyView {
-    return m_storyView;
-}
--(void)setStoryView:(StoryView*)sv {
-    m_storyView = sv;
-}
--(StatusLine*) statusLine {
-    return m_statusLine;
-}
--(void)setStatusLine:(StatusLine*)sl {
-    m_statusLine = sl;
-}
+@synthesize storyView=m_storyView;
+@synthesize statusLine=m_statusLine;
 
 -(void)resetState {
     m_firstKeyPressed = NO;

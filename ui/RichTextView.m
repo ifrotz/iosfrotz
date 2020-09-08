@@ -332,6 +332,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return CGRectMake(ofst.x, ofst.y, frame.size.width, frame.size.height);
 }
 
+@synthesize textColor=m_fgColor;
 - (void)setTextColor:(UIColor*)color {
     if (m_fgColor != color) {
         m_fgColor = color;

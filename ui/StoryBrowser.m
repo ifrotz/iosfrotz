@@ -166,7 +166,7 @@ void removeOldPngSplash(const char *filename) {
         [self addPath: [m_storyMainViewController resourceGamePath]];
         [self addPath: [m_storyMainViewController storyGamePath]];
         
-        m_defaultThumb = [UIImage imageNamed: @"compass-small.png"];
+        m_defaultThumb = [UIImage imageNamed: @"compass-small"];
         
         
 #ifdef NO_SANDBOX

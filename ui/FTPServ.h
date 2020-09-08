@@ -6,6 +6,8 @@
 //  Copyright 2008-2010 Craig Smith. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
+
 
 @interface FTPServer : NSObject <NSNetServiceDelegate> {
     int m_listenSocket;   // main connection

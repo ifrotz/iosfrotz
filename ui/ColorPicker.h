@@ -31,7 +31,7 @@
 - (void)setColor: (UIColor *)color;
 - (void)setColorOnly: (UIColor *)color; // doesn't update cursors or callback delegate
 - (void)setColorValue: (UIColor*)color;
-- (void)updateColorWithHue:(float)hue Saturation:(float)saturation Value:(float)value;
+- (void)updateColorWithHue:(CGFloat)hue Saturation:(CGFloat)saturation Value:(CGFloat)value;
 - (void)updateHSVCursors;
 - (void)toggleMode;
 @property (nonatomic, getter=isTextColorMode, readonly) BOOL textColorMode;

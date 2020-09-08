@@ -26,8 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef UIViewController<FrotzFontPicker> FrotzFontPickerController;
 
-@interface FontPicker : NSObject {
-}
+@interface FontPicker : NSObject
 +(UIViewController<FrotzFontPicker>*) frotzFontPickerWithTitle:(nullable NSString*)title includingFaces:(BOOL)includeFaces monospaceOnly:(BOOL)monospaceOnly;
 +(FrotzFontPickerController*)frotzFontPicker;
 @end

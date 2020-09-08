@@ -104,12 +104,12 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_toolBar setBarStyle: UIBarStyleBlack];
     [m_toolBar setTintColor: [UIColor whiteColor]];
 
-    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack.png"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
+    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
     UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     m_cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel)];
     m_reloadButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refresh)];
-    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavForward.png"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
-    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"icon-url-tool.png"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavForward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
+    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"icon-url-tool"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
 
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     m_activButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_activityView];

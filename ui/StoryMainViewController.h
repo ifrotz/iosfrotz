@@ -195,7 +195,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void)enableTaps:(NSNumber*)viewNum;
 -(void)disableTaps:(NSNumber*)viewNum;
 
--(void) setupFadeWithDuration:(float)duration;
+-(void) setupFadeWithDuration:(CFTimeInterval)duration;
 @property (nonatomic, readonly, strong) StoryInputLine *inputLine;
 -(void) resetSettingsToDefault;
 -(void) hideInputHelper;
@@ -267,9 +267,6 @@ extern StoryBrowser *theStoryBrowser;
 -(NSComparisonResult)caseInsensitiveCompare:(DBMetadata*)other;
 @end
 #endif
-
-extern const int kFixedFontSize;
-extern const int kFixedFontPixelHeight;
 
 //extern NSString *storySIPPath;  // SIP == Story In Progress
 

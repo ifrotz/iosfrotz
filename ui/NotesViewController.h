@@ -35,9 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 -(nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 @property (nullable, nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *text;
-@property (nonatomic, copy) UIFont *font;
+@property (nonatomic, copy, nullable) UIFont *font;
 -(void)setFrame:(CGRect)frame;
--(void)setChainResponder:(UIResponder*)responder;
+@property (nonatomic, strong) UIResponder *chainResponder;
 -(void)activateKeyboard;
 -(void)dismissKeyboard;
 -(void)toggleKeyboard;

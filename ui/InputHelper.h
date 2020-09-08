@@ -22,8 +22,8 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
     };
 
 @interface FrotzInputHelper : UITableViewController {
-    NSMutableArray *m_history;
-    NSArray *m_commonCommands;
+    NSMutableArray<NSString*> *m_history;
+    NSArray<NSString*> *m_commonCommands;
     id<FrotzInputDelegate> __weak m_delegate;
     FrotzWordPicker *m_wordPicker;
     FrotzInputHelperMode m_mode;
@@ -35,7 +35,7 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
 - (void)clearHistory;
 @property (nonatomic, readonly) NSUInteger historyCount;
 @property (nonatomic, readonly) NSUInteger menuCount;
-- (NSString*)historyItem:(int)item;
+- (NSString*)historyItem:(NSInteger)item;
 - (NSUInteger)addHistoryItem:(NSString*)historyItem;
 @property (nonatomic, getter=getNextHistoryItem, readonly, copy) NSString *nextHistoryItem;
 @property (nonatomic, getter=getPrevHistoryItem, readonly, copy) NSString *prevHistoryItem;
