@@ -159,7 +159,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     return bmPath;
 }
 
--(void)loadBookmarksWithURLs:(NSArray**)pUrls andTitles:(NSArray**)pTitles {
+-(void)loadBookmarksWithURLs:(NSArray<NSString*>**)pUrls andTitles:(NSArray<NSString*>**)pTitles {
     NSString *bmPath = [self bookmarkPath];
     NSMutableDictionary *bmDict = [NSMutableDictionary dictionaryWithContentsOfFile: bmPath];
     if (bmDict) {

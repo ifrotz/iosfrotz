@@ -38,8 +38,6 @@ static BOOL hasAccessibility;
 @end
 #endif
 
-void removeAnim(UIView *view);
-
 @interface  RichTextAE : UIAccessibilityElement
 {
     NSInteger m_textIndex;
@@ -49,11 +47,6 @@ void removeAnim(UIView *view);
 @property(assign) NSInteger textIndex;
 @property(assign) NSInteger aeIndex;
 @property(assign) NSUInteger runCount;
-@end
-
-@interface UIAnimator
-+(UIAnimator*)sharedAnimator;
--(void)removeAnimationsForTarget:(id)target;
 @end
 
 #if 0 // unused, debugging
@@ -1555,11 +1548,6 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
         [self setContentSize: CGSizeMake(self.contentSize.width, m_topMargin+ m_lastPt.y + (m_lastPt.x>0?m_fontHeight+m_extraLineSpacing:0) + m_bottomMargin)];
         //NSLog(@"appendtext new contentsize (%.0f,%.0f) : %@", self.contentSize.width, self.contentSize.height, text);
 	}
-    int yoff = self.contentOffset.y;
-    if (yoff < m_topMargin) {
-        removeAnim(self);
-        //	[[UIAnimator sharedAnimator] removeAnimationsForTarget:self];
-    }
     
     if (m_topMargin+ m_lastPt.y - m_origY > DEFAULT_TILE_HEIGHT/2) {
         [self setNeedsLayout];

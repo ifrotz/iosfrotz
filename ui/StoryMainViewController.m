@@ -2402,7 +2402,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if (height < 0)
         height = 0;
     CGPoint contentOffset = CGPointMake(0, height);
-    removeAnim(storyView);
     [storyView setContentOffset: contentOffset animated: animated];
 }
 
@@ -5203,21 +5202,4 @@ static BOOL migateDropboxAuth() {
 }
 @end
 #endif
-
-void removeAnim(UIView *view) {
-#if 0 // the iOS bug this was needed to work around doesn't seem to exist anymore
-    //    [[UIAnimator sharedAnimator] removeAnimationsForTarget:view];
-    static id c;
-    static SEL s,r;
-    if (!c) {
-        c = NSClassFromString(@"UIAnimator");
-        NSString *sa = [@"shared" stringByAppendingString: @"Animator"];
-        NSString *rt = [@"remove" stringByAppendingString: @"AnimationsForTarget:"];
-        s = NSSelectorFromString(sa);
-        r = NSSelectorFromString(rt);
-    }
-    if (c && [c respondsToSelector: s])
-        [[c performSelector: s] performSelector:r withObject:view];
-#endif
-}
 

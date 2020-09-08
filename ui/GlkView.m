@@ -81,8 +81,6 @@
             else if (tapCount == 3) {
                 if ([touch timestamp] > lastTimestamp + 0.5) {
 #if UseRichTextView
-                    removeAnim(self);
-                    //		    [[UIAnimator sharedAnimator] removeAnimationsForTarget:self];
                     [self clearSelection];
                     [[delegate inputLine] setText: @""];
 #endif

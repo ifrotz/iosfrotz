@@ -22,10 +22,3 @@
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt;
 -(BOOL)keyboardInputShouldDelete:(id)sender;
 @end
-
-@interface UIAnimator
-+(UIAnimator*)sharedAnimator;
--(void)removeAnimationsForTarget:(id)target;
-@end
-
-void removeAnim(UIView *view);
