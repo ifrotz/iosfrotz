@@ -129,7 +129,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     self.navigationItem.title = @"Story Browser";
 
-    NSURL *myURL = [NSURL URLWithString: @"https://ifdb.tads.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"];
+    NSURL *myURL = [NSURL URLWithString: @"https://ifdb.org/search?sortby=ttl&newSortBy.x=9&newSortBy.y=9&searchfor=system%3Ainform+rating%3A3-+%23ratings%3A2-+language%3Aenglish&browse=1"];
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: NO];
@@ -227,7 +227,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
 
     if (pUrls)
-        *pUrls = @[@"ifdb.tads.org",
+        *pUrls = @[@"ifdb.org",
                    @"gallery.guetech.org/greybox.html",
                    @"inform7.com",
                    @"www.ifwiki.org/index.php/Main_Page",
@@ -578,7 +578,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlQuery = [url query];
     NSLog(@"ZDL from url w/host %@, path %@, query=%@, story='%@'", urlHost, urlPath, urlQuery, story);
 
-    if (!([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
+    if (!([urlHost isEqualToString: @"ifdb.org"] && [urlPath isEqualToString:@"/viewgame"]
           && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
         return NO;
 
@@ -866,7 +866,7 @@ static bool bypassBundle = NO;
             if (m_expectedArchiveFiles) {
                 m_expectedArchiveFiles = nil;
             }
-            if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+            if ([urlHost isEqualToString: @"ifdb.org"] && [urlPath isEqualToString:@"/viewgame"]) {
                 if ([urlQuery length]==19) {
                     NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
                     if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
@@ -951,7 +951,7 @@ static bool bypassBundle = NO;
         NSString *urlPath = [url path];
         NSString *urlQuery = [url query];
 
-        if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+        if ([urlHost isEqualToString: @"ifdb.org"] && [urlPath isEqualToString:@"/viewgame"]) {
             if ([urlQuery hasPrefix: @"coverart&"])
                 [self snarfMetaData: m_currentRequest loadRequest:nil forStory: nil];
         }
