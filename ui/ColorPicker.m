@@ -649,10 +649,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     return YES;
 }
 
--(void)viewDidLoad {
-    self.edgesForExtendedLayout=UIRectEdgeNone;
-}
-
 - (void)loadView {
     CGRect frame = [[UIScreen mainScreen] applicationFrame];
     BOOL fullScreenLarge = (frame.size.width > 760);
@@ -727,21 +723,23 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         rightMargin += 20;
     }
     CGFloat leftNotch = 0, rightNotch = 0;
-    if (@available(iOS 11.0,*)) {
-        UIEdgeInsets safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-        if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
-            if (safeInsets.left > 0) {
-                leftNotch = safeInsets.left;
-                leftNotch -= leftMargin;
-                leftMargin += leftNotch;
-            }
-        } else if (UIInterfaceOrientationLandscapeLeft == [self interfaceOrientation]) {
-            if (safeInsets.right > 0) {
-                rightNotch = safeInsets.right;
-            }
+    UIEdgeInsets safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
+    CGFloat topMargin = safeInsets.top;
+    if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
+        topMargin = 24;
+        if (safeInsets.left > 0) {
+            leftNotch = safeInsets.left;
+            leftNotch -= leftMargin;
+            leftMargin += leftNotch;
+        }
+    } else if (UIInterfaceOrientationLandscapeLeft == [self interfaceOrientation]) {
+        topMargin = 24;
+        if (safeInsets.right > 0) {
+            rightNotch = safeInsets.right;
         }
     }
-    CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f,
+
+    CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f + topMargin,
                                        isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-leftNotch-rightNotch-328,
                                        colorTileHeight);
     if (!isPortraitish && !fullScreenLarge)
@@ -751,12 +749,12 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     
     CGFloat radius = fullScreenLarge ? frame.size.width/3 : isPortraitish ? 128.0f : 116.0f;
     if (fullScreenLarge) {
-        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-        [m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin, 96.0f, radius*2)];
+        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin + topMargin, radius*2, radius*2)];
+        [m_valuePicker setFrame: CGRectMake(frame.size.width - 80.0f - leftMargin, hsvBaseYOrigin + topMargin, 96.0f, radius*2)];
         [m_valuePicker setBarWidth: 64];
     } else {
-        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin, radius*2, radius*2)];
-        [m_valuePicker setFrame: CGRectMake(frame.size.width - rightNotch - (isPortraitish ? rightMargin : 60.0f), hsvBaseYOrigin, 56.0f, radius*2)];
+        [m_hsvPicker setFrame: CGRectMake(leftMargin, hsvBaseYOrigin + topMargin, radius*2, radius*2)];
+        [m_valuePicker setFrame: CGRectMake(frame.size.width - rightNotch - (isPortraitish ? rightMargin : 60.0f), hsvBaseYOrigin + topMargin, 56.0f, radius*2)];
         [m_valuePicker setBarWidth: 32];
     }
 
