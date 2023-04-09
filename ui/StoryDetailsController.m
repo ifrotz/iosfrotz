@@ -8,6 +8,8 @@
 #import "StoryDetailsController.h"
 #import "iosfrotz.h"
 
+#import "StoryWebBrowserController.h"
+
 @implementation StoryDetailsControllerNC
 @end
 
@@ -590,7 +592,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(IBAction)IFDBButtonPressed {
     if (m_tuid && [m_tuid length] >= 15)
-        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://ifdb.org/viewgame?id=%@", m_tuid]];
+        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://%@/viewgame?id=%@", kIFDBHost, m_tuid]];
 }
 
 #if UseWKWebViewForFrotzStoryDetails

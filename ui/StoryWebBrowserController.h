@@ -106,4 +106,7 @@ typedef UIWebView StoryWebView;
 
 @end
 
+static const NSString *kIFDBHost = @"ifdb.org";
+static const NSString *kIFDBOldHost = @"ifdb.tads.org";
+
 NS_ASSUME_NONNULL_END
