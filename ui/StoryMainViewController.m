@@ -1730,7 +1730,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_background bringSubviewToFront: m_inputLine];
     if (m_notesController) {
         [m_notesController hide];
-        [m_notesController viewWillAppear:animated];
+        [m_notesController autosize];
     }
 }
 
