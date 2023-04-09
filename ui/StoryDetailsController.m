@@ -590,7 +590,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(IBAction)IFDBButtonPressed {
     if (m_tuid && [m_tuid length] >= 15)
-        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://ifdb.tads.org/viewgame?id=%@", m_tuid]];
+        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://ifdb.org/viewgame?id=%@", m_tuid]];
 }
 
 #if UseWKWebViewForFrotzStoryDetails
