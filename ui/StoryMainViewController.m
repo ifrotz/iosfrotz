@@ -1747,7 +1747,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     if ([self inputHelperShown])
         [self hideInputHelper];
     if (m_notesController)
-        [m_notesController viewWillDisappear:animated];
+        [m_notesController dismissKeyboard];
 }
 
 - (void)willMoveToParentViewController:(UIViewController *)parent
