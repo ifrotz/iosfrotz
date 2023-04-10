@@ -418,7 +418,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     else {
         CGRect webFrame = [m_webView frame];
         UIView *bmView = [m_bookmarkListController view];
-        [bmView setFrame: CGRectMake(0, 40, webFrame.size.width, webFrame.size.height+44)];
+        [bmView setFrame: CGRectMake(0, 40+kSearchBarHeight, webFrame.size.width, webFrame.size.height+44-kSearchBarHeight)];
         //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];

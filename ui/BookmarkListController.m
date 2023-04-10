@@ -56,7 +56,7 @@
     [addButtonItem setTintColor: [UIColor whiteColor]];
     [editButtonItem setTintColor: [UIColor whiteColor]];
     [cancelButtonItem setTintColor: [UIColor whiteColor]];
-    [toolBar setItems: @[addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem]];
+    [toolBar setItems: @[spaceButtonItem, addButtonItem, spaceButtonItem, editButtonItem, spaceButtonItem, cancelButtonItem, spaceButtonItem]];
     
     [self.view addSubview: toolBar];
     [self.view bringSubviewToFront: toolBar];
