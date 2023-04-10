@@ -723,7 +723,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         rightMargin += 20;
     }
     CGFloat leftNotch = 0, rightNotch = 0;
-    UIEdgeInsets safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
     CGFloat topMargin = safeInsets.top;
     if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
         topMargin = 24;

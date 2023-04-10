@@ -2456,7 +2456,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [fileBrowser reloadData];
 
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
-    [nc.navigationBar setBarStyle: UIBarStyleBlackOpaque];
     nc.modalPresentationStyle = UIModalPresentationFormSheet;
     [self.navigationController presentModalViewController: nc animated: YES];
 }

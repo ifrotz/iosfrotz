@@ -298,9 +298,7 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
     [editItem setEnabled: (m_rowCount > 0)];
 
     if (@available(iOS 13.0, *)) {
-        // Oddly, it's always black when the view comes up anyway (but fixes after rotation),
-        // so let's just keep black style.
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
+        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor labelColor]};
     } else {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
         [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
@@ -472,13 +470,18 @@ static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
         if( [m_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] ) {
             
             if (m_dialogType == kFBDoShowViewScripts) {
-                UITextView *textView = [[UITextView alloc] initWithFrame: self.view.bounds];
+                CGRect bounds = self.view.bounds;
+                CGFloat margin = self.view.safeAreaInsets.top;
+                bounds.origin.y += margin;
+                bounds.size.height -= margin;
+                UITextView *textView = [[UITextView alloc] initWithFrame: bounds];
                 NSString *text = [[NSString alloc] initWithData: [[NSFileManager defaultManager] contentsAtPath: [self selectedFile]] encoding:NSUTF8StringEncoding];
                 textView.text = text;
                 textView.editable = NO;
                 [self.view addSubview: textView];
-                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone
-                                                                                                       target:self action:@selector(doneWithTextFile:)];
+                self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
+                    initWithBarButtonSystemItem: UIBarButtonSystemItemDone
+                    target:self action:@selector(doneWithTextFile:)];
                 self.navigationItem.rightBarButtonItem = nil;
                 return;
             }
