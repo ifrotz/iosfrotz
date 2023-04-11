@@ -1675,14 +1675,16 @@ extern void gli_ios_set_focus(window_t *winNum);
     UIBarButtonItem *kbdToggleItem = m_kbdToggleItem;
     UIView *kbdToggleItemView = [kbdToggleItem valueForKey:@"view"];
     if (kbdToggleItemView) {
-        if ([[kbdToggleItemView gestureRecognizers] count] == 0) {
-            UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
-                                                              initWithTarget:self
-                                                              action:@selector(toggleKeyboardLongPress:)];
-            //Broken because there is no customView in a UIBarButtonSystemItemUndo item
-            [kbdToggleItemView addGestureRecognizer:longPressGesture];
-            [self showKeyboardLockStateInView: kbdToggleItemView];
+        for (UIGestureRecognizer *recognizer in kbdToggleItemView.gestureRecognizers) {
+            if ([recognizer isKindOfClass:[UILongPressGestureRecognizer class]])
+                return;
         }
+        UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
+                                                          initWithTarget:self
+                                                          action:@selector(toggleKeyboardLongPress:)];
+        //Broken because there is no customView in a UIBarButtonSystemItemUndo item
+        [kbdToggleItemView addGestureRecognizer:longPressGesture];
+        [self showKeyboardLockStateInView: kbdToggleItemView];
     }
 
 }
@@ -1817,16 +1819,16 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 - (void) toggleKeyboardLongPress:(UILongPressGestureRecognizer*)sender {
-    if ([sender respondsToSelector:@selector(view)]) {
-        UIView *view = [sender view];
-        [self showKeyboardLockStateInView: view];
-    }
     if (m_notesController && [m_notesController isVisible])
         return;
 
     if (m_kbShown)
         [self dismissKeyboard];
     m_kbLocked = YES;
+    if ([sender respondsToSelector:@selector(view)]) {
+        UIView *view = [sender view];
+        [self showKeyboardLockStateInView: view];
+    }
     [m_inputLine setClearButtonMode];
 }
 
