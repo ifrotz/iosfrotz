@@ -288,6 +288,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Frotz uses speech recognition to allow you to dictate commands to the story.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Frotz uses the microphone for speech recognition to input story commands.</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>

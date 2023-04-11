@@ -19,6 +19,7 @@
  */
 
 #import <UIKit/UIKit.h>
+#import <Speech/Speech.h>
 
 #import "FrotzAppDelegate.h"
 #import "StoryMainViewController.h"
@@ -4758,6 +4759,93 @@ static void setScreenDims(char *storyNameBuf) {
     return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
 }
 
+- (void)listenForSpeech {
+#if 1
+    if (!m_sfrecog) {
+        m_sfrecog =  [[SFSpeechRecognizer alloc] initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]];
+        m_sfrecog.delegate = self;
+
+        m_audioEngine = [[AVAudioEngine alloc] init];
+        m_audioSession = [AVAudioSession sharedInstance];
+    }
+    m_audioInputNode = [m_audioEngine inputNode];
+    NSError *error = nil;
+    // Cancel the previous task if it's running.
+    if (m_recognitionTask) {
+        [m_audioEngine stop];
+        [m_audioInputNode removeTapOnBus: 0];
+        [m_sfRecogRequest endAudio];
+        [m_recognitionTask cancel];
+        m_recognitionTask = nil;
+        m_sfRecogRequest = nil;
+    }
+    [m_audioSession setCategory:AVAudioSessionCategoryRecord mode:AVAudioSessionModeMeasurement options:AVAudioSessionCategoryOptionDuckOthers error: &error];
+    if (error) {
+        NSLog(@"Error1: %@", error);
+    }
+    [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
+    if (error) {
+        NSLog(@"Error2: %@", error);
+    }
+    m_sfRecogRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
+    m_sfRecogRequest.shouldReportPartialResults = YES;
+    __block NSString *currentTranscription = @"";
+    m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest resultHandler:^(SFSpeechRecognitionResult * _Nullable result, NSError * _Nullable error) {
+            BOOL isFinal = NO;
+            if (result && !error) {
+                isFinal = [result isFinal];
+                SFTranscription *transcription = [result bestTranscription];
+                NSString *text = [transcription formattedString];
+                NSLog(@"Final: %d Recog: %@", isFinal, text);
+                currentTranscription = text;
+            }
+            if (error || isFinal) {
+                [m_audioEngine stop];
+                [m_audioInputNode removeTapOnBus: 0];
+                m_sfRecogRequest = nil;
+                m_recognitionTask = nil;
+            }
+        }];
+    if (error) {
+        NSLog(@"Error3: %@", error);
+    }
+    AVAudioFormat *recordingFormat = [m_audioInputNode outputFormatForBus: 0];
+    [m_audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
+        [m_sfRecogRequest appendAudioPCMBuffer: buffer];
+    }];
+
+    [m_audioEngine prepare];
+    [m_audioEngine startAndReturnError: &error];
+    if (error) {
+        NSLog(@"Error4: %@", error);
+    }
+    m_inputLine.text = @"(Listening)";
+  
+    __block NSTimer *timer;
+    timer = [NSTimer scheduledTimerWithTimeInterval:3.0 repeats:NO
+               block:^(NSTimer * _Nonnull timer) {
+        if (currentTranscription.length > 0) {
+            // If the user has stopped speaking for 1 second, stop recording and recognition.
+            [m_audioEngine stop];
+            [m_audioInputNode removeTapOnBus:0];
+            [m_sfRecogRequest endAudio];
+            [m_recognitionTask cancel];
+            m_sfRecogRequest = nil;
+            m_recognitionTask = nil;
+            
+            // Print the final transcription.
+            NSLog(@"Final xscipt: %@", currentTranscription);
+            m_inputLine.text = currentTranscription;
+            currentTranscription = nil;
+            [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: m_inputLine afterDelay: 0.1];
+            [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
+        } else {
+           // [timer rest]
+        }
+    }];
+#endif
+}
+
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
@@ -4775,6 +4863,16 @@ static void setScreenDims(char *storyNameBuf) {
     [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: duration];
     
     [self checkAccessibility];
+    if ([[textField text] length] == 0) {
+        [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status)
+         {
+            if (status == SFSpeechRecognizerAuthorizationStatusAuthorized) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self listenForSpeech];
+                });
+            }
+        }];
+    }
     return YES;
 }
 

@@ -433,6 +433,20 @@ const int kCompletionViewTag = 21;
     iosif_feed_input(text);
 }
 
+#if 0
+-(BOOL)respondsToSelector:(SEL)aSelector {
+    NSLog(@"rts %s", aSelector);
+    if (aSelector == @selector(keyboardInput:shouldInsertText:isMarkedText:))
+        return YES;
+    return [super respondsToSelector: aSelector];
+}
+
+-(void)dictationRecordingDidEnd {
+    NSLog(@"");
+}
+#endif
+
+
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt {
     if (!m_firstKeyPressed && self.text.length==0) {
         // the clearButtonMode set is done to work around a bug where the input line doesn't draw

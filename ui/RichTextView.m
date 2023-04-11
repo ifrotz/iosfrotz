@@ -11,7 +11,7 @@
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/CALayer.h>
-
+#import <AVFoundation/AVFoundation.h>
 #include "RichTextView.h"
 
 #define NoAccessibility 0 // Set to turn off UIAccessibility support completely
@@ -1472,7 +1472,22 @@ static BOOL hasAccessibility;
             [self appendAE];
     }
     m_prevLineNotTerminated = lineNotTerminated;
-    
+#if 0
+    AVSpeechUtterance *utter = [AVSpeechUtterance speechUtteranceWithString: text];
+    AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice voiceWithIdentifier:
+                                     //AVSpeechSynthesisVoiceIdentifierAlex];
+                                    // @"com.apple.ttsbundle.siri_male_en-US_compact"];
+    @"com.apple.voice.enhanced.en-US.Evan"];
+                                     //@"com.apple.ttsbundle.Tom-premium"];
+    NSArray<AVSpeechSynthesisVoice *> *voices = [AVSpeechSynthesisVoice speechVoices];
+    NSLog(@"voices: %@", voices);
+    utter.voice = voice;
+    utter.rate = 0.6;
+    static AVSpeechSynthesizer *avsynth;
+    if (!avsynth)
+        avsynth = [[AVSpeechSynthesizer alloc] init];
+    [avsynth speakUtterance: utter];
+#endif
 }
 
 -(void)setNeedsLayout {

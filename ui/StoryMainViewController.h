@@ -16,6 +16,7 @@
 
 */
 #import <UIKit/UIKit.h>
+#import <Speech/SFSpeechRecognizer.h>
 #import "TransitionView.h"
 #import "FrotzInfo.h"
 #import "InputHelper.h"
@@ -54,8 +55,10 @@ extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
+@class SFSpeechRecognizer, SFSpeechAudioBufferRecognitionRequest, AVAudioEngine, AVAudioSession, AVAudioInputNode, SFSpeechRecognitionTask;
+
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
-    TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    UIActionSheetDelegate, SFSpeechRecognizerDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
     LockableKeyboard>
 {
@@ -120,6 +123,13 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableDictionary *m_dbCachedMetadata;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
+    
+    SFSpeechRecognizer *m_sfrecog;
+    SFSpeechAudioBufferRecognitionRequest *m_sfRecogRequest;
+    AVAudioEngine *m_audioEngine;
+    AVAudioSession *m_audioSession;
+    AVAudioInputNode *m_audioInputNode;
+    SFSpeechRecognitionTask *m_recognitionTask;
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;
