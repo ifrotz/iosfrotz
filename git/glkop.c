@@ -138,7 +138,7 @@ static char * DecodeVMString (git_uint32 addr)
     data = glulx_malloc (end - addr + 1);
     if (data == NULL)
         fatalError ("Couldn't allocate string");
-
+    
     c = data;
     while (addr < end)
         *c++ = memRead8(addr++);
@@ -167,7 +167,7 @@ static glui32 * DecodeVMUstring (git_uint32 addr)
     data = glulx_malloc (end - addr + 4);
     if (data == NULL)
         fatalError ("Couldn't allocate string");
-
+    
     c = data;
     while (addr < end)
     {
@@ -232,10 +232,9 @@ typedef struct classtable_struct {
     classref_t *bucket[CLASSHASH_SIZE];
 } classtable_t;
 
-/* The list of hash tables, for the classes. */
+/* The list of hash tables, for the git_classes. */
 static int num_classes = 0;
-#define classes git_classes
-classtable_t **classes = NULL;
+classtable_t **git_classes = NULL;
 
 static classtable_t *new_classtable(glui32 firstid);
 static void *classes_get(int classid, glui32 objid);
@@ -252,7 +251,7 @@ static void glulxe_retained_unregister(void *array, glui32 len,
                                        char *typecode, gidispatch_rock_t objrock);
 
 /* The library_select_hook is called every time the VM blocks for input.
-   The app might take this opportunity to autosave, for example. */
+ The app might take this opportunity to autosave, for example. */
 static void (*library_select_hook)(glui32) = NULL;
 
 static char *grab_temp_c_array(glui32 addr, glui32 len, int passin);
@@ -271,34 +270,33 @@ static void unparse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
 static char *get_game_id(void);
 
 /* git_init_dispatch():
- Set up the class hash tables and other startup-time stuff. 
+ Set up the class hash tables and other startup-time stuff.
  */
 int git_init_dispatch()
 {
     int ix;
-
-  /* What with one thing and another, this *could* be called more than
+    
+    /* What with one thing and another, this *could* be called more than
      once. We only need to allocate the tables once. */
-  if (classes)
-      return TRUE;
-  
-  /* Set up the game-ID hook. (This is ifdeffed because not all Glk
+    if (git_classes)
+        return TRUE;
+    
+    /* Set up the game-ID hook. (This is ifdeffed because not all Glk
      libraries have this call.) */
 #ifdef GI_DISPA_GAME_ID_AVAILABLE
     gidispatch_set_game_id_hook(&get_game_id);
 #endif /* GI_DISPA_GAME_ID_AVAILABLE */
     
-
     /* Allocate the class hash tables. */
     num_classes = gidispatch_count_classes();
-    classes = (classtable_t **)glulx_malloc(num_classes
+    git_classes = (classtable_t **)glulx_malloc(num_classes 
                                                 * sizeof(classtable_t *));
-    if (!classes)
+    if (!git_classes)
         return FALSE;
     
     for (ix=0; ix<num_classes; ix++) {
-        classes[ix] = new_classtable((glulx_random() % (glui32)(101)) + 1);
-        if (!classes[ix])
+        git_classes[ix] = new_classtable((glulx_random() % (glui32)(101)) + 1);
+        if (!git_classes[ix])
             return FALSE;
     }
     
@@ -310,7 +308,6 @@ int git_init_dispatch()
     
     return TRUE;
 }
-
 
 /* git_perform_glk():
  Turn a list of Glulx arguments into a list of Glk arguments,
@@ -324,6 +321,7 @@ glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist)
             /* To speed life up, we implement commonly-used Glk functions
              directly -- instead of bothering with the whole prototype 
              mess. */
+            
         case 0x0047: /* stream_set_current */
             if (numargs != 1)
                 goto WrongArgNum;
@@ -371,11 +369,11 @@ glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist)
                 goto WrongArgNum;
             glk_put_char_stream_uni(git_find_stream_by_id(arglist[0]), arglist[1]);
             break;
-
+            
         WrongArgNum:
             fatalError("Wrong number of arguments to Glk function.");
             break;
-
+            
         FullDispatcher:
         default: {
             /* Go through the full dispatcher prototype foo. */
@@ -417,7 +415,7 @@ glui32 git_perform_glk(glui32 funcnum, glui32 numargs, glui32 *arglist)
             unparse_glk_args(&splot, &cx, 0, &argnum2, 0, 0);
             if (argnum != argnum2)
                 fatalError("Argument counts did not match.");
-
+            
             break;
         }
     }
@@ -656,7 +654,7 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                         /* See comment above. */
                         if (varglist[ix+1] > gEndMem/4 || varglist[ix+1] > (gEndMem-varglist[ix])/4)
                             varglist[ix+1] = (gEndMem - varglist[ix]) / 4;
-
+                        
                         garglist[gargnum].array = CaptureIArray(varglist[ix], varglist[ix+1], passin);
                         gargnum++;
                         ix++;
@@ -880,7 +878,7 @@ static void unparse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                         gargnum++;
                         cx++;
                         break;
-                     default:
+                    default:
                         fatalError("Illegal format string.");
                         break;
                 }
@@ -960,15 +958,11 @@ static void unparse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                 else if (depth > 0) {
                     /* Definitely not isref or isarray. */
                     if (subpassout)
-                    {
                         WriteStructField(subaddress, ix, thisval);
-                    }
                 }
                 else if (isref) {
                     if (passout)
-                    {
-                        WriteMemory(varglist[ix], thisval);
-                    }
+                        WriteMemory(varglist[ix], thisval); 
                 }
             }
         }
@@ -1029,8 +1023,8 @@ strid_t git_find_stream_by_id(glui32 objid)
 }
 
 /* git_find_id_for_window():
-   Return the ID of a given Glk window.
-*/
+ Return the ID of a given Glk window.
+ */
 glui32 git_find_id_for_window(winid_t win)
 {
     gidispatch_rock_t objrock;
@@ -1084,7 +1078,6 @@ glui32 git_find_id_for_schannel(schanid_t schan)
     return ((classref_t *)objrock.ptr)->id;
 }
 
-
 /* Build a hash table to hold a set of Glk objects. */
 static classtable_t *new_classtable(glui32 firstid)
 {
@@ -1108,7 +1101,7 @@ static void *classes_get(int classid, glui32 objid)
     classref_t *cref;
     if (classid < 0 || classid >= num_classes)
         return NULL;
-    ctab = classes[classid];
+    ctab = git_classes[classid];
     cref = ctab->bucket[objid % CLASSHASH_SIZE];
     for (; cref; cref = cref->next) {
         if (cref->id == objid)
@@ -1118,7 +1111,7 @@ static void *classes_get(int classid, glui32 objid)
 }
 
 /* Put a Glk object in the appropriate hash table. If origid is zero,
-   invent a new unique ID for it. */
+ invent a new unique ID for it. */
 static classref_t *classes_put(int classid, void *obj, glui32 origid)
 {
     int bucknum;
@@ -1126,7 +1119,7 @@ static classref_t *classes_put(int classid, void *obj, glui32 origid)
     classref_t *cref;
     if (classid < 0 || classid >= num_classes)
         return NULL;
-    ctab = classes[classid];
+    ctab = git_classes[classid];
     cref = (classref_t *)glulx_malloc(sizeof(classref_t));
     if (!cref)
         return NULL;
@@ -1156,8 +1149,7 @@ static void classes_remove(int classid, void *obj)
     gidispatch_rock_t objrock;
     if (classid < 0 || classid >= num_classes)
         return;
-
-    ctab = classes[classid];
+    ctab = git_classes[classid];
     objrock = gidispatch_get_objrock(obj, classid);
     cref = objrock.ptr;
     if (!cref)
@@ -1204,7 +1196,7 @@ static char *grab_temp_c_array(glui32 addr, glui32 len, int passin)
     if (len) {
         arr = (char *)glulx_malloc(len * sizeof(char));
         arref = (arrayref_t *)glulx_malloc(sizeof(arrayref_t));
-        if (!arr || !arref)
+        if (!arr || !arref) 
             fatalError("Unable to allocate space for array argument to Glk call.");
         
         arref->array = arr;
@@ -1327,36 +1319,36 @@ static void release_temp_i_array(glui32 *arr, glui32 addr, glui32 len, int passo
 
 static void **grab_temp_ptr_array(glui32 addr, glui32 len, int objclass, int passin)
 {
-  arrayref_t *arref = NULL;
-  void **arr = NULL;
-  glui32 ix, addr2;
-
-  if (len) {
-    arr = (void **)glulx_malloc(len * sizeof(void *));
-    arref = (arrayref_t *)glulx_malloc(sizeof(arrayref_t));
-    if (!arr || !arref)
-      fatalError("Unable to allocate space for array argument to Glk call.");
-
-    arref->array = arr;
-    arref->addr = addr;
-    arref->elemsize = sizeof(void *);
-    arref->retained = FALSE;
-    arref->len = len;
-    arref->next = arrays;
-    arrays = arref;
-
-    if (passin) {
-      for (ix=0, addr2=addr; ix<len; ix++, addr2+=4) {
-        glui32 thisval = memRead32(addr2);
-        if (thisval)
-          arr[ix] = classes_get(objclass, thisval);
-        else
-          arr[ix] = NULL;
-      }
+    arrayref_t *arref = NULL;
+    void **arr = NULL;
+    glui32 ix, addr2;
+    
+    if (len) {
+        arr = (void **)glulx_malloc(len * sizeof(void *));
+        arref = (arrayref_t *)glulx_malloc(sizeof(arrayref_t));
+        if (!arr || !arref) 
+            fatalError("Unable to allocate space for array argument to Glk call.");
+        
+        arref->array = arr;
+        arref->addr = addr;
+        arref->elemsize = sizeof(void *);
+        arref->retained = FALSE;
+        arref->len = len;
+        arref->next = arrays;
+        arrays = arref;
+        
+        if (passin) {
+            for (ix=0, addr2=addr; ix<len; ix++, addr2+=4) {
+                glui32 thisval = memRead32(addr2);
+                if (thisval)
+                    arr[ix] = classes_get(objclass, thisval);
+                else
+                    arr[ix] = NULL;
+            }
+        }
     }
-  }
-
-  return arr;
+    
+    return arr;
 }
 
 static void release_temp_ptr_array(void **arr, glui32 addr, glui32 len, int objclass, int passout)
@@ -1387,7 +1379,7 @@ static void release_temp_ptr_array(void **arr, glui32 addr, glui32 len, int objc
             for (ix=0, addr2=addr; ix<len; ix++, addr2+=4) {
                 void *opref = arr[ix];
                 if (opref) {
-                    gidispatch_rock_t objrock =
+                    gidispatch_rock_t objrock = 
                     gidispatch_get_objrock(opref, objclass);
                     val = ((classref_t *)objrock.ptr)->id;
                 }
@@ -1402,7 +1394,8 @@ static void release_temp_ptr_array(void **arr, glui32 addr, glui32 len, int objc
     }
 }
 
-static gidispatch_rock_t glulxe_retained_register(void *array, glui32 len, char *typecode)
+static gidispatch_rock_t glulxe_retained_register(void *array,
+                                                  glui32 len, char *typecode)
 {
     gidispatch_rock_t rock;
     arrayref_t *arref = NULL;
@@ -1442,7 +1435,7 @@ static gidispatch_rock_t glulxe_retained_register(void *array, glui32 len, char 
 }
 
 static void glulxe_retained_unregister(void *array, glui32 len,
-                                char *typecode, gidispatch_rock_t objrock)
+                                       char *typecode, gidispatch_rock_t objrock)
 {
     arrayref_t *arref = NULL;
     arrayref_t **aptr;
@@ -1474,10 +1467,10 @@ static void glulxe_retained_unregister(void *array, glui32 len,
         fatalError("Unretained array reference in Glk call.");
     if (arref->elemsize != elemsize || arref->len != len)
         fatalError("Mismatched array argument in Glk call.");
-
+    
     *aptr = arref->next;
     arref->next = NULL;
-
+    
     if (elemsize == 1) {
         for (ix=0, addr2=arref->addr; ix<arref->len; ix++, addr2+=1) {
             val = ((char *)array)[ix];
@@ -1485,13 +1478,12 @@ static void glulxe_retained_unregister(void *array, glui32 len,
         }
     }
     else if (elemsize == 4) {
-        
         for (ix=0, addr2=arref->addr; ix<arref->len; ix++, addr2+=4) {
             val = ((glui32 *)array)[ix];
             memWrite32(addr2, val);
         }
     }
-
+    
     glulx_free(array);
     glulx_free(arref);
 }
@@ -1524,28 +1516,6 @@ static char *get_game_id()
     buf[jx++] = '\0';
     
     return buf;
-}
-
-static void git_shutdown2(gidispatch_rock_t objrock, int classid) {
-    classref_t *cref, **crefp;
-    classtable_t *ctab = classes[classid];
-    cref = objrock.ptr;
-    if (!cref)
-        return;
-    crefp = &(ctab->bucket[cref->bucknum]);
-    for (; *crefp; crefp = &((*crefp)->next)) {
-        if ((*crefp) == cref) {
-            *crefp = cref->next;
-            if (!cref->obj) {
-                fprintf(stderr, "attempt to free NULL object!\n");
-            }
-            cref->obj = NULL;
-            cref->id = 0;
-            cref->next = NULL;
-            glulx_free(cref);
-            return;
-        }
-    }
 }
 
 void git_shutdown_dispatch() {
@@ -1581,17 +1551,18 @@ void git_shutdown_dispatch() {
         gli_delete_fileref(fref);
     }
     
-    if (classes) {
+    if (git_classes) {
         for (int classid=0; classid<num_classes; classid++) {
-            glulx_free(classes[classid]);
-            classes[classid] = 0;
+            glulx_free(git_classes[classid]);
+            git_classes[classid] = 0;
         }
-        glulx_free(classes);
-        classes = 0;
+        glulx_free(git_classes);
+        git_classes = 0;
     }
 }
 
 #define GlulxRAM (gRam)
+#define classes git_classes
 #include "../glkios/glkautosave.c"
 
 void saveObjectClasses(int objectCount, void * objectsP) {

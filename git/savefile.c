@@ -30,7 +30,8 @@ static int sort_heap_summary(const void *p1, const void *p2)
 }
 
 git_sint32 restoreFromFile (git_sint32 * base, git_sint32 id,
-    git_uint32 protectPos, git_uint32 protectSize) {
+    git_uint32 protectPos, git_uint32 protectSize)
+{
     // Find out what stream they want to use, and make sure it's valid.
     strid_t file = git_find_stream_by_id (id);
     if (file == 0)

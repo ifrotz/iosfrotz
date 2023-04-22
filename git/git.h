@@ -139,11 +139,13 @@ extern glui32 git_linear_search(glui32 key, glui32 keysize,
 // savefile.c
 
 extern git_sint32 saveToFile (git_sint32* base, git_sint32 * sp, git_sint32 file);
+extern git_sint32 restoreFromFile (git_sint32* base, git_sint32 file,
+                      git_uint32 protectPos, git_uint32 protectSize);
+
 extern git_sint32 saveToFileStrWithClasses(git_sint32 * base, git_sint32 * sp, strid_t file);
 typedef void (*SaveClassesCallback)(int objectCount, void *objects);
 extern git_sint32 saveToFileStrCore(git_sint32 * base, git_sint32 * sp, strid_t file, int objectCount, void *objects, SaveClassesCallback saveClassesCallback);
 
-extern git_sint32 restoreFromFile (git_sint32* base, git_sint32 file, git_uint32 protectPos, git_uint32 protectSize);
 extern git_sint32 restoreFromFileStr (git_sint32* base, strid_t fstr, git_uint32 protectPos, git_uint32 protectSize);
 extern git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize);
 

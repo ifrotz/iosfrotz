@@ -264,7 +264,7 @@ static void reserveSpace (git_uint32 n)
             if (n > 0)
             {
                 gUndo = NULL;
-                
+
                 deleteRecord (u);
                 assert (gUndoSize == 0);
             }

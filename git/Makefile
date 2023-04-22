@@ -5,20 +5,19 @@
 
 # Note: when using xglk, do NOT define USE_MMAP in step 2, below.
 
-#
-#GLK = cheapglk
-GLK = glkterm
+GLK = cheapglk
+#GLK = glkterm
 #GLK = xglk
 
 GLKINCLUDEDIR = ../$(GLK)
 GLKLIBDIR = ../$(GLK)
-GLKMAKEFILE = Make.$(GLK)w
+GLKMAKEFILE = Make.$(GLK)
 
 # -----------------------------------------------------------------
 # Step 2: pick a C compiler.
 
 # Generic C compiler
-CC = cc -O2 -m32
+CC = cc -O2
 OPTIONS = 
 
 # Best settings for GCC 2.95. This generates faster code than
@@ -44,8 +43,8 @@ INSTALLDIR = /usr/local/bin
 # You shouldn't have to change anything from here on down.
 
 MAJOR = 1
-MINOR = 2
-PATCH = 4
+MINOR = 3
+PATCH = 3
 
 include $(GLKINCLUDEDIR)/$(GLKMAKEFILE)
 

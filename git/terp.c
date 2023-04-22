@@ -14,33 +14,6 @@
 #include "ipw_buf.h"
 #include "iosfrotz.h"
 
-typedef struct {
-        // pc
-        UInt32 git_pc;  // abs
-        // stack
-        UInt32 git_sp;  // abs
-        UInt32 frame;   // abs
-        UInt32 values;  // abs
-        UInt32 locals;  // abs
-        UInt32 protectPos;      // rel
-        UInt32 protectSize;     // rel
-        UInt32 ioMode;
-        UInt32 ioRock;
-} GLK_MEMORY;
-
-
-extern UInt32 perform_save_buffer(unsigned char **ptr, UInt32 *len);
-extern UInt32 perform_restore_buffer(unsigned char *ptr);
-extern	git_uint32 restoreBuffer(unsigned char *buf) ;
-extern 	git_uint32 saveBuffer(unsigned char **buf, git_uint32 *buflen) ;
-extern git_uint32 denormalizePc(git_uint32 pc) ;
-extern UInt32 glkRandomSeed;
-
-extern GLK_MEMORY last_glk;
-extern char *stackbuf;
-extern UInt32 stackbuflen;
-
-
 // -------------------------------------------------------------
 // Global variables
 

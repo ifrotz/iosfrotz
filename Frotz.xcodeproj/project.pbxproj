@@ -202,6 +202,7 @@
 		44A45D6A1D7E56A000C073D9 /* tads-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D651D7E56A000C073D9 /* tads-320.png */; };
 		44A45D6B1D7E56A000C073D9 /* tads-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D661D7E56A000C073D9 /* tads-640.png */; };
 		44A45D6C1D7E56A000C073D9 /* tads.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D671D7E56A000C073D9 /* tads.png */; };
+		44ABAED829F4858B00304FBB /* glkios.c in Sources */ = {isa = PBXBuildFile; fileRef = 44ABAED729F4858B00304FBB /* glkios.c */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
 		44B0ECC61B23D0B200C36380 /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D23126A402400B283FF /* accel.c */; };
 		44B0ECC71B23D0B200C36380 /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D24126A402400B283FF /* compiler.c */; };
@@ -1043,6 +1044,7 @@
 		44A45D6D1D7E60E800C073D9 /* osios.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = osios.h; sourceTree = "<group>"; };
 		44A45D6E1D7E664E00C073D9 /* h_arm32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm32.h; sourceTree = "<group>"; };
 		44A45D6F1D7E664E00C073D9 /* h_arm64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm64.h; sourceTree = "<group>"; };
+		44ABAED729F4858B00304FBB /* glkios.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glkios.c; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; path = locale; sourceTree = "<group>"; };
 		44B0ECAB1B23D00100C36380 /* libgit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgit.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B0ECDA1B23D1D800C36380 /* libglulxe.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglulxe.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1550,6 +1552,7 @@
 				4423590A1261894100BFB245 /* cgunicod.c */,
 				4423590B1261894100BFB245 /* gi_blorb.c */,
 				442358BC1261882100BFB245 /* gi_dispa.c */,
+				44ABAED729F4858B00304FBB /* glkios.c */,
 				442358C21261882100BFB245 /* ipblorb.c */,
 				442358C31261882100BFB245 /* ipevent.c */,
 				442358C41261882100BFB245 /* ipfref.c */,
@@ -2912,6 +2915,7 @@
 				44F7B1F41B20DAF300DDD2A3 /* ipw_grid.c in Sources */,
 				44F7B1E71B20DAF300DDD2A3 /* gi_dispa.c in Sources */,
 				44F7B1E91B20DAF300DDD2A3 /* ipevent.c in Sources */,
+				44ABAED829F4858B00304FBB /* glkios.c in Sources */,
 				44F7B1EE1B20DAF300DDD2A3 /* ipschan.c in Sources */,
 				44F7B1EC1B20DAF300DDD2A3 /* ipinput.c in Sources */,
 				44F7B1F71B20DAF300DDD2A3 /* test-multiwin.c in Sources */,

@@ -204,7 +204,7 @@ void parseInstruction (git_uint32* pc, int * done)
         }
     }
 
-    if (1 || gDebug || opcode == op_glk)
+    if (gDebug || opcode == op_glk)
     {
         emitCode (label_debug_step);
         emitData (pcStart);
