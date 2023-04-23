@@ -74,9 +74,6 @@
 #include "gi_dispa.h"
 #include "glkios.h"
 #include "glkios.h"
-#include "ipw_buf.h"
-#include "ipw_grid.h"
-#include "ipw_graphics.h"
 #include "iosfrotz.h"
 
 typedef struct dispatch_splot_struct {
