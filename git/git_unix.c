@@ -7,7 +7,10 @@
 #include "git.h"
 #include "glk.h"
 #include "glkstart.h" // This comes with the Glk library.
+
+#if !GIT_TEST
 #include "iosfrotz.h"
+#endif
 
 #include <string.h>
 
@@ -30,10 +33,12 @@ glkunix_argumentlist_t glkunix_arguments[] =
 
 void fatalError (const char * s)
 {
+#if !GIT_TEST
     iosif_puts("*** fatal error: ");
     iosif_puts((char*)s);
     iosif_puts(" ***\n");
     finished = 1;
+#endif
 }
 
 #ifdef USE_MMAP
@@ -111,7 +116,10 @@ void glk_main ()
         fatalError ("could not open game file");
 
     gitWithStream (gStream, CACHE_SIZE, UNDO_SIZE);
+
+#if !GIT_TEST
     git_shutdown_dispatch();
+#endif
 
     gStream = NULL;
 }

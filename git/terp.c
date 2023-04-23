@@ -9,10 +9,13 @@
 #include <time.h>
 
 #include "git.h"
-#include "glkios.h"
 #include "opcodes.h"
+
+#if !GIT_TEST
+#include "glkios.h"
 #include "ipw_buf.h"
 #include "iosfrotz.h"
+#endif
 
 // -------------------------------------------------------------
 // Global variables
@@ -194,7 +197,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
     L1 = startPos; // Initial PC.
     L2 = 0; // No arguments.
     
-    
+#if !GIT_TEST
     if (do_autosave) {
 
         frefid_t fref;
@@ -227,6 +230,7 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
         }
     }
     do_autosave = 0;
+#endif // GIT_TEST
 
     goto do_enter_function_L1;
 
@@ -236,8 +240,10 @@ void startProgram (size_t cacheSize, enum IOMode ioMode)
 #define NEXT goto next
 //#define NEXT do { CHECK_USED(0); CHECK_FREE(0); goto next; } while (0)
 next:
+#if !GIT_TEST
     if (finished)
         goto finished;
+#endif
     switch (*pc++)
     {
 #define LABEL(foo) case label_ ## foo: goto do_ ## foo;
@@ -1345,7 +1351,8 @@ do_tailcall:
         gStackPointer = sp;
         S1 = git_perform_glk (L1, L2, (glui32*) args);
         sp = gStackPointer;
-	
+
+#if !GIT_TEST
         if (do_autosave) {
             for (L3 = L2-1 ; L3 >= 0 ; --L3)
                 PUSH(savedArgs[L3]);
@@ -1372,7 +1379,8 @@ do_tailcall:
             autosave_done = 1;
             (void)POP; (void)POP; (void)POP; (void)POP;
         }
-    
+#endif // GIT_TEST
+
         NEXT;
 
     do_binarysearch:

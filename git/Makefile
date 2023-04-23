@@ -18,7 +18,7 @@ GLKMAKEFILE = Make.$(GLK)
 
 # Generic C compiler
 CC = cc -O2
-OPTIONS = 
+OPTIONS = -DGIT_TEST=1
 
 # Best settings for GCC 2.95. This generates faster code than
 # GCC 3, so you should use this setup if possible.

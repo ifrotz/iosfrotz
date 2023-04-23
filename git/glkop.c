@@ -116,8 +116,11 @@
 #include "glk.h"
 #include "git.h"
 #include "gi_dispa.h"
+
+#if !GIT_TEST
 #include "glkios.h"
 #include "iosfrotz.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -717,8 +720,11 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                         if (thisval) {
                             opref = classes_get(*cx-'a', thisval);
                             if (!opref) {
-                                if (*cx=='b' || *cx=='c') /// stream; hack to make autorestore of saved game with active transcript (bug) not fatal
+                                if (*cx=='b' || *cx=='c') { /// stream; hack to make autorestore of saved game with active transcript (bug) not fatal
+#if !GIT_TEST
                                     iosif_win_puts(0, "[Reference to nonexistent Glk stream or file.]\n");
+#endif
+                                }
                                 else
                                     fatalError("Reference to nonexistent Glk object.");
                             }
@@ -1522,6 +1528,7 @@ static char *get_game_id()
     return buf;
 }
 
+#if !GIT_TEST
 void git_shutdown_dispatch() {
     window_t *win = NULL;
     stream_t *str = NULL;
@@ -1618,3 +1625,4 @@ git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize) {
         return FALSE;
     }
 }
+#endif // GIT_TEST

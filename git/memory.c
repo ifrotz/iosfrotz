@@ -161,6 +161,7 @@ void memWriteError (git_uint32 address)
     fatalError ("Out-of-bounds memory access");
 }
 
+#if !GIT_TEST
 int glulxDictWordCmp(const void *a, const void *b) {
     const char *k = (const char*)a;
     int l = strlen(k);
@@ -316,3 +317,5 @@ int glulxCompleteWord(const char *word, char *result) {
     }
     return status;
 }
+
+#endif // GIT_TEST

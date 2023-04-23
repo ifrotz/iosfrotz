@@ -1,7 +1,10 @@
 // $Id: savefile.c,v 1.6 2003/10/20 16:05:06 iain Exp $
 
 #include "git.h"
+
+#if !GIT_TEST
 #include "glkios.h"
+#endif
 
 static void writeWord (git_sint32 word)
 {
@@ -193,10 +196,12 @@ git_sint32 restoreFromFileStr (git_sint32* base, strid_t file,
                 free (heap);
             }
         }
+#if !GIT_TEST
         else if (chunkType == readtag("iFzA")) {
             if (!restoreClassesChunk(file, chunkSize))
                 return 1;
         }
+#endif
         else
         {
             // Unknown chunk type -- just skip it.
