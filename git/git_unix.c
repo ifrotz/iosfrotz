@@ -60,9 +60,9 @@ int glkunix_startup_code(glkunix_startup_t *data)
 
 void glk_main ()
 {
-    int          file;
-    struct stat  info;
-    const char * ptr;
+    int         file;
+    struct stat info;
+    git_uint8 * ptr;
 
 	if (gStartupError)
 		fatalError(gStartupError);
