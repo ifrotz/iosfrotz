@@ -58,7 +58,7 @@ GIT_INLINE git_float DECODE_FLOAT(git_uint32 n) {
 
 #define IS_SUBNORMAL(n)  ((n) != 0 && ((n) & 0x7f800000)==0)
 
-double DECODE_DOUBLE(git_sint32 i) {
+double DECODE_DBL_FLOAT(git_sint32 i) {
     if (IS_SUBNORMAL(i)) {
         // subnormal will be normalized to zero by ARM FPU on any arith op including conversion to double,
         // so we must convert manually
@@ -104,7 +104,7 @@ git_float DOUBLE_TO_SUBNORMAL_FLOAT(double d) {
 }
 #else
 #define IS_SUBNORMAL(n)  (0) // no reason to special case; let compiler optimize out
-#define DECODE_DOUBLE(i) ((double)DECODE_FLOAT(i))
+#define DECODE_DBL_FLOAT(i) ((double)DECODE_FLOAT(i))
 #define DOUBLE_TO_SUBNORMAL_FLOAT(d) ((git_float)(d))
 #endif // TARGET_CPU_ARM
 
@@ -118,8 +118,8 @@ int floatCompare(git_sint32 L1, git_sint32 L2, git_sint32 L3)
         return (L1 == L2);
     
     if (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2) || IS_SUBNORMAL(L2)) {
-        double DF1 = DECODE_DOUBLE(L2) - DECODE_DOUBLE(L1);
-        double DF2 = fabs(DECODE_DOUBLE(L3));
+        double DF1 = DECODE_DBL_FLOAT(L2) - DECODE_DBL_FLOAT(L1);
+        double DF2 = fabs(DECODE_DBL_FLOAT(L3));
         return ((DF1 <= DF2) && (DF1 >= -DF2));
     }
     F1 = DECODE_FLOAT(L2) - DECODE_FLOAT(L1);
@@ -465,22 +465,22 @@ do_enter_function_L1: // Arg count is in L2.
 
     PEEPHOLE_STORE(fadd,   
                    F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) + DECODE_DOUBLE(L2)) :
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DBL_FLOAT(L1) + DECODE_DBL_FLOAT(L2)) :
                     DECODE_FLOAT(L1) + DECODE_FLOAT(L2);
                    S1 = ENCODE_FLOAT(F1));
     PEEPHOLE_STORE(fsub,
                    F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) - DECODE_DOUBLE(L2)) :
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DBL_FLOAT(L1) - DECODE_DBL_FLOAT(L2)) :
                    DECODE_FLOAT(L1) - DECODE_FLOAT(L2);
                    S1 = ENCODE_FLOAT(F1));
     PEEPHOLE_STORE(fmul,
                    F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) * DECODE_DOUBLE(L2)) :
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DBL_FLOAT(L1) * DECODE_DBL_FLOAT(L2)) :
                    DECODE_FLOAT(L1) * DECODE_FLOAT(L2);
                    S1 = ENCODE_FLOAT(F1));
     PEEPHOLE_STORE(fdiv,
                    F1 = (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DOUBLE(L1) / DECODE_DOUBLE(L2)) :
+                   DOUBLE_TO_SUBNORMAL_FLOAT(DECODE_DBL_FLOAT(L1) / DECODE_DBL_FLOAT(L2)) :
                    DECODE_FLOAT(L1) / DECODE_FLOAT(L2);
                    S1 = ENCODE_FLOAT(F1));
 
@@ -531,18 +531,19 @@ do_enter_function_L1: // Arg count is in L2.
     DO_JUMP(jgtu,   L3, ((git_uint32)L1 > (git_uint32)L2));
     DO_JUMP(jleu,   L3, ((git_uint32)L1 <= (git_uint32)L2));
     DO_JUMP(jisnan, L2, (((L1 & 0x7F800000) == 0x7F800000) && ((L1 & 0x007FFFFF) != 0)));
+    DO_JUMP(jisnan, L2, (((L1 & 0x7F800000) == 0x7F800000) && ((L1 & 0x007FFFFF) != 0)));
     DO_JUMP(jisinf, L2, ((L1 == 0x7F800000) || (L1 == 0xFF800000)));
     DO_JUMP(jflt,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                        DECODE_DOUBLE(L1) < DECODE_DOUBLE(L2) :
+                        DECODE_DBL_FLOAT(L1) < DECODE_DBL_FLOAT(L2) :
                         DECODE_FLOAT(L1) < DECODE_FLOAT(L2));
     DO_JUMP(jfge,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                        DECODE_DOUBLE(L1) >= DECODE_DOUBLE(L2) :
+                        DECODE_DBL_FLOAT(L1) >= DECODE_DBL_FLOAT(L2) :
                         DECODE_FLOAT(L1) >= DECODE_FLOAT(L2));
     DO_JUMP(jfgt,   L3,(IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                        DECODE_DOUBLE(L1) > DECODE_DOUBLE(L2) :
+                        DECODE_DBL_FLOAT(L1) > DECODE_DBL_FLOAT(L2) :
                         DECODE_FLOAT(L1) > DECODE_FLOAT(L2));
     DO_JUMP(jfle,   L3, (IS_SUBNORMAL(L1) || IS_SUBNORMAL(L2)) ?
-                        DECODE_DOUBLE(L1) <= DECODE_DOUBLE(L2) :
+                        DECODE_DBL_FLOAT(L1) <= DECODE_DBL_FLOAT(L2) :
                         DECODE_FLOAT(L1) <= DECODE_FLOAT(L2));
     DO_JUMP(jfeq,   L4, floatCompare(L1, L2, L3) != 0);
     DO_JUMP(jfne,   L4, floatCompare(L1, L2, L3) == 0);
@@ -1558,7 +1559,7 @@ do_tailcall:
     do_exp:
         F1 = DECODE_FLOAT(L1);
         if (F1 < -85.0f)
-            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(exp(DECODE_DOUBLE(L1)));
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(exp(DECODE_DBL_FLOAT(L1)));
         else
             F1 =  expf(DECODE_FLOAT(L1));
         S1 = ENCODE_FLOAT(F1);
@@ -1566,7 +1567,7 @@ do_tailcall:
 
     do_log:
         if (IS_SUBNORMAL(L1))
-            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(log(DECODE_DOUBLE(L1)));
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(log(DECODE_DBL_FLOAT(L1)));
         else
             F1 = logf(DECODE_FLOAT(L1));
         S1 = ENCODE_FLOAT(F1);
@@ -1578,7 +1579,7 @@ do_tailcall:
 #else
         F2 = DECODE_FLOAT(L2);
         if (F2 > -150.0f && F2 < -126.0)
-            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(pow(DECODE_DOUBLE(L1), (double)F2));
+            F1 = DOUBLE_TO_SUBNORMAL_FLOAT(pow(DECODE_DBL_FLOAT(L1), (double)F2));
         else
             F1 = powf(DECODE_FLOAT(L1), DECODE_FLOAT(L2));
 #endif
