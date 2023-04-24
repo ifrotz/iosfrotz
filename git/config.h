@@ -14,7 +14,7 @@
 // #define USE_BIG_ENDIAN_UNALIGNED
 
 // Define this to use GCC's labels-as-values extension for a big speedup.
-// #define USE_DIRECT_THREADING
+#define USE_DIRECT_THREADING
 
 // Define this if we can use the "inline" keyword.
 // #define USE_INLINE
