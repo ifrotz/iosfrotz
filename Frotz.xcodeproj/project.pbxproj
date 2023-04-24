@@ -203,6 +203,7 @@
 		44A45D6B1D7E56A000C073D9 /* tads-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D661D7E56A000C073D9 /* tads-640.png */; };
 		44A45D6C1D7E56A000C073D9 /* tads.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D671D7E56A000C073D9 /* tads.png */; };
 		44ABAED829F4858B00304FBB /* glkios.c in Sources */ = {isa = PBXBuildFile; fileRef = 44ABAED729F4858B00304FBB /* glkios.c */; };
+		44ABAEDA29F6035700304FBB /* labels.inc in Sources */ = {isa = PBXBuildFile; fileRef = 44ABAED929F6035700304FBB /* labels.inc */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
 		44B0ECC61B23D0B200C36380 /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D23126A402400B283FF /* accel.c */; };
 		44B0ECC71B23D0B200C36380 /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D24126A402400B283FF /* compiler.c */; };
@@ -1045,6 +1046,7 @@
 		44A45D6E1D7E664E00C073D9 /* h_arm32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm32.h; sourceTree = "<group>"; };
 		44A45D6F1D7E664E00C073D9 /* h_arm64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm64.h; sourceTree = "<group>"; };
 		44ABAED729F4858B00304FBB /* glkios.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glkios.c; sourceTree = "<group>"; };
+		44ABAED929F6035700304FBB /* labels.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = labels.inc; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; path = locale; sourceTree = "<group>"; };
 		44B0ECAB1B23D00100C36380 /* libgit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgit.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B0ECDA1B23D1D800C36380 /* libglulxe.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglulxe.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1629,6 +1631,7 @@
 		44690D22126A3FFD00B283FF /* git */ = {
 			isa = PBXGroup;
 			children = (
+				44ABAED929F6035700304FBB /* labels.inc */,
 				44690D23126A402400B283FF /* accel.c */,
 				44690D24126A402400B283FF /* compiler.c */,
 				44690D25126A402400B283FF /* compiler.h */,
@@ -2577,6 +2580,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				44F7B1F91B22C6B800DDD2A3 /* main.m in Sources */,
+				44ABAEDA29F6035700304FBB /* labels.inc in Sources */,
 				447F882A1044DC0B002CA22D /* AboutFrotz.m in Sources */,
 				44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */,
 				44FB39FA0E62406C00142D85 /* ColorPicker.m in Sources */,

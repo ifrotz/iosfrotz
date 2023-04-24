@@ -310,19 +310,23 @@ void startProgram (size_t cacheSize)
 #endif // GIT_TEST
 
     goto do_enter_function_L1;
+#if !GIT_TEST
+#define CHECK_FINISHED \
+    if (finished) \
+        goto finished
+#else
+#define CHECK_FINISHED do {} while(0)
+#endif
 
 #if defined(USE_DIRECT_THREADING) && (UINTPTR_MAX > 0xffffffffULL)
-#define NEXT do { goto *(Opcode)(*(pc++) | opcodeHi); } while(0)
+#define NEXT do { CHECK_FINISHED; goto *(Opcode)(*(pc++) | opcodeHi); } while(0)
 #elif defined(USE_DIRECT_THREADING)
-#define NEXT do { goto *(Opcode)(*(pc++)); } while(0)
+#define NEXT do { CHECK_FINISHED; goto *(Opcode)(*(pc++)); } while(0)
 #else
 #define NEXT goto next
 //#define NEXT do { CHECK_USED(0); CHECK_FREE(0); goto next; } while (0)
 next:
-#if !GIT_TEST
-    if (finished)
-        goto finished;
-#endif
+    CHECK_FINISHED;
     switch (*pc++)
     {
 #define LABEL(foo) case label_ ## foo: goto do_ ## foo;
