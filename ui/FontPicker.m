@@ -90,7 +90,7 @@ API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewControll
 - (void)loadView {
     [super loadView];
 
-    m_navBarBlocker = [[UIView alloc] initWithFrame: CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    m_navBarBlocker = [[UIView alloc] init];
     m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
 
     [self.view addSubview:m_navBarBlocker];
@@ -105,14 +105,8 @@ API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewControll
     // Trying to use additionalSafeAreaInsets left space below the nav bar, not under it.
     CGFloat navigationBarHeight = self.navigationController.navigationBar.frame.size.height;
     m_navBarBlocker.frame = CGRectMake(0, 0, self.view.frame.size.width, navigationBarHeight);
-    m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
 
     [self.view bringSubviewToFront: m_navBarBlocker];
-}
-
--(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
-    m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
 }
 @end
 
