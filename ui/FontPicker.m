@@ -12,6 +12,7 @@
 API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewController<FrotzFontPicker, UIFontPickerViewControllerDelegate> {
     id<FrotzFontDelegate> __weak m_delegate;
     BOOL m_fixedFontsOnly;
+    UIView *m_navBarBlocker; // workaround UIFontPickerViewController bug; the font list bleeds under the nav bar, ignoring safe insets
 }
 -(void)setDelegate:(id<FrotzFontDelegate> _Nullable)delegate;
 @property (nonatomic, assign) BOOL fixedFontsOnly;
@@ -86,10 +87,33 @@ API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewControll
 - (void)fontPickerViewControllerDidCancel:(UIFontPickerViewController *)viewController {
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
+- (void)loadView {
+    [super loadView];
+
+    m_navBarBlocker = [[UIView alloc] initWithFrame: CGRectMake(0, 0, self.view.frame.size.width, 44)];
+    m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
+
+    [self.view addSubview:m_navBarBlocker];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+
+    // Work around iOS bug where the font list draws under the nav bar when you scroll up by creating
+    // an opaque view at the top of the content area (positioned underneath the nav bar).
+    // Attempts at using content insets to fix this failed; they are already set correctly but are being ignored.
+    // Trying to use additionalSafeAreaInsets left space below the nav bar, not under it.
+    CGFloat navigationBarHeight = self.navigationController.navigationBar.frame.size.height;
+    m_navBarBlocker.frame = CGRectMake(0, 0, self.view.frame.size.width, navigationBarHeight);
+    m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
+
+    [self.view bringSubviewToFront: m_navBarBlocker];
+}
+
+-(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    m_navBarBlocker.backgroundColor = [UIColor systemBackgroundColor];
+}
 @end
 
 // TableView-based implementation (pre-iOS 13) font picker classes
@@ -217,6 +241,7 @@ static NSInteger sortFontsByFamilyName(id a, id b, void *context) {
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [[self tableView] reloadData];
+
     if (m_delegate && [m_delegate respondsToSelector: @selector(fontName)]) {
         NSString *fontName = m_fixedFontsOnly ? [m_delegate fixedFont] : [m_delegate fontName];
         if (fontName) {

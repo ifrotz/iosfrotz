@@ -60,7 +60,7 @@ void gli_initialize_windows()
     compute_content_box();
     
     if (!do_autosave)
-	screen_size_changed = FALSE;
+        screen_size_changed = FALSE;
     has_stylehints = FALSE;
  
     /* Draw the initial setup (no windows) */
