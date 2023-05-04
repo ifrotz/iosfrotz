@@ -4,6 +4,13 @@
 <dict>
 	<key>UIMainStoryboardFile</key>
 	<string>StoryStoryboard</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>
