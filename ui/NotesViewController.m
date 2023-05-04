@@ -44,7 +44,7 @@
 
 -(void)setFrame:(CGRect)frame {
     m_frame = frame;
-    NSLog(@"note setframe h=%f w=%f", frame.size.height, frame.size.width);
+    //NSLog(@"note setframe h=%f w=%f", frame.size.height, frame.size.width);
     if (m_notesView)
         [m_scrollView setFrame:frame];
 }
