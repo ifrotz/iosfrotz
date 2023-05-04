@@ -384,8 +384,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_browser settings] navController:self.navigationController navItem:self.navigationItem];
     self.navigationItem.titleView = [m_frotzInfoController view];
-
-    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
