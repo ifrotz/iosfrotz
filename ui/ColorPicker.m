@@ -562,7 +562,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     CGContextRelease(bmcontext);
 
     CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextDrawImage(context, CGRectMake(0,0,m_width,m_height), m_imageRef);
+    CGContextDrawImage(context, rect, m_imageRef);
     CGImageRelease(m_imageRef);
     m_imageRef = NULL;
     free (bitmapData);
