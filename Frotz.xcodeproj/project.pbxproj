@@ -2374,6 +2374,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 44F7B20F1B22CFF200DDD2A3 /* Build configuration list for PBXNativeTarget "frotzlib" */;
 			buildPhases = (
+				44BC4E7E2A0592A700FCDCA3 /* ShellScript */,
 				44F7B1FA1B22CFF100DDD2A3 /* Sources */,
 				44F7B1FB1B22CFF100DDD2A3 /* Frameworks */,
 				44F7B1FC1B22CFF100DDD2A3 /* CopyFiles */,
@@ -2510,7 +2511,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo Build Number $CONFIGURATION\ntail -1 buildnumber.xcconfig\nif [ \"$CONFIGURATION\" = \"Distribution\" ]; then    # AdHoc_Distribution\n    /usr/bin/perl -pe 's/(BUILD_NUMBER = )(\\d+)/$1.($2+1)/eg' -i buildnumber.xcconfig\nfi";
+			shellScript = "echo Build Number $CONFIGURATION\ntail -1 buildnumber.xcconfig\nif [ \"$CONFIGURATION\" = \"Distribution\" ]; then    # AdHoc_Distribution\n    /usr/bin/perl -pe 's/(BUILD_NUMBER = )(\\d+)/$1.($2+1)/eg' -i buildnumber.xcconfig\nfi\n";
 		};
 		44A2E71F11227AA000E35CCC /* Copy bundled stories */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2524,7 +2525,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
+			shellScript = "if [ ! -e $SRCROOT/include/ifrotzdefs.h ]; then\n    /bin/cp $SRCROOT/include/ifrotzdefdefs.h $SRCROOT/include/ifrotzdefs.h\nfi\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
+		};
+		44BC4E7E2A0592A700FCDCA3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -e $SRCROOT/include/ifrotzdefs.h ]; then\n    /bin/cp $SRCROOT/include/ifrotzdefdefs.h $SRCROOT/include/ifrotzdefs.h\nfi\n";
 		};
 		44D42FD91F6ECE31003406FB /* Script - Make subsequent Pods scripts optional */ = {
 			isa = PBXShellScriptBuildPhase;
