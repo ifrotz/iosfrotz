@@ -121,9 +121,9 @@
     cell.accessoryType = UITableViewCellAccessoryNone;
     NSInteger row = [indexPath row];
     if (row < [m_sites count]) {
-	cell.textLabel.text = m_sites[row];
+	cell.textLabel.text = m_titles[row];
 	if (row < [m_titles count])
-	    cell.detailTextLabel.text = m_titles[row];
+	    cell.detailTextLabel.text = m_sites[row];
     }
     return cell;
 }

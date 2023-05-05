@@ -25,6 +25,10 @@
 #import "extractzfromz.h"
 #import <QuartzCore/QuartzCore.h>
 
+NSString *const kIFDBHost = @"ifdb.org";
+NSString *const kIFDBOldHost = @"ifdb.tads.org";
+
+
 NSString *kBookmarksFN = @"bookmarks.plist";
 const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
@@ -167,6 +171,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         NSMutableArray *urls = bmDict[kBookmarkURLsKey];
         NSMutableArray *titles = bmDict[kBookmarkTitlesKey];
         NSString *vers = bmDict[kBookmarkVersionKey];
+        BOOL changed = NO;
         if (!vers || [vers compare: @"2"] == NSOrderedAscending) {
             NSUInteger firstAddIndex = 0, firstObsoleteIndex = 0;
             NSArray *addUrls = @[
@@ -190,7 +195,6 @@ const NSString *kBookmarkVersionKey = @"Version";
                 @"www.csd.uwo.ca/Infocom/",
                 @"https://eblong.com/infocom"
             ];
-            BOOL changed = NO;
             NSUInteger i = 0;
             if (vers) { // must be "1"
                 firstAddIndex = 0; // re-add w/o https
@@ -217,9 +221,20 @@ const NSString *kBookmarkVersionKey = @"Version";
                     changed = YES;
                 }
             }
-            if (changed)
-                [self saveBookmarksWithURLs:urls andTitles:titles];
+        } else if ([vers compare: @"3"] == NSOrderedAscending) {
+            NSUInteger i = 0, n = [urls count];
+            NSString *aUrl;
+            for (; i < n; ++i) {
+                aUrl = [urls objectAtIndex: i];
+                if ([aUrl containsString: kIFDBOldHost]) {
+                    NSString *repl = [aUrl stringByReplacingOccurrencesOfString:kIFDBOldHost withString:kIFDBHost];
+                    [urls replaceObjectAtIndex:i withObject:repl];
+                    changed = YES;
+                }
+            }
         }
+        if (changed)
+            [self saveBookmarksWithURLs:urls andTitles:titles];
         if (pUrls)
             *pUrls = urls;
         if (pTitles)
@@ -263,7 +278,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *bmPath = [self bookmarkPath];
     NSDictionary *bmDict = [NSDictionary dictionaryWithObjectsAndKeys:
                             urls, kBookmarkURLsKey, titles, kBookmarkTitlesKey,
-                            @"2", kBookmarkVersionKey,
+                            @"3", kBookmarkVersionKey,
                             nil, nil];
     if (bmDict)
         [bmDict writeToFile:bmPath atomically:YES];
