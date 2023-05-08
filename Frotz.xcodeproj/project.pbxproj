@@ -241,6 +241,7 @@
 		44B0ED061B23D2A200C36380 /* libglulxe.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44B0ECDA1B23D1D800C36380 /* libglulxe.a */; };
 		44B63FD219F0DD0D00A143FE /* vmconnom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 44B63FD119F0DD0D00A143FE /* vmconnom.cpp */; };
 		44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */; };
+		44BC4E822A0887D500FCDCA3 /* Frotz-1280x1280F.png in Resources */ = {isa = PBXBuildFile; fileRef = 44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */; };
 		44BE71C319EB7C6F00036AA6 /* bif.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719A19EB7C6F00036AA6 /* bif.c */; };
 		44BE71C419EB7C6F00036AA6 /* bifgdum.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719B19EB7C6F00036AA6 /* bifgdum.c */; };
 		44BE71C519EB7C6F00036AA6 /* cmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719C19EB7C6F00036AA6 /* cmap.c */; };
@@ -1054,6 +1055,7 @@
 		44B63FD119F0DD0D00A143FE /* vmconnom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vmconnom.cpp; sourceTree = "<group>"; };
 		44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileTransferInfo.h; sourceTree = "<group>"; };
 		44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileTransferInfo.m; sourceTree = "<group>"; };
+		44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Frotz-1280x1280F.png"; sourceTree = "<group>"; };
 		44BE719A19EB7C6F00036AA6 /* bif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bif.c; sourceTree = "<group>"; };
 		44BE719B19EB7C6F00036AA6 /* bifgdum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bifgdum.c; sourceTree = "<group>"; };
 		44BE719C19EB7C6F00036AA6 /* cmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmap.c; sourceTree = "<group>"; };
@@ -2178,6 +2180,7 @@
 				4472003C1F67A13900DAB193 /* Frotz-2048x2048.png */,
 				44DA420C15E987A1007F61DA /* Frotz-512x512.png */,
 				44DA420D15E987A1007F61DA /* Frotz-1024x1024.png */,
+				44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */,
 				44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */,
 				44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */,
 			);
@@ -2474,6 +2477,7 @@
 				445484C81B1D04C200E8EE7B /* Images.xcassets in Resources */,
 				44418F7E124576E800F49BC4 /* flip.png in Resources */,
 				44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */,
+				44BC4E822A0887D500FCDCA3 /* Frotz-1280x1280F.png in Resources */,
 				44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */,
 				44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */,
 				44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */,
