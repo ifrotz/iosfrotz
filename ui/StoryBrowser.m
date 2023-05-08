@@ -976,6 +976,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         
         [m_storyMainViewController autoRestoreSession];
     }
+    m_postLaunch = YES;
 }
 
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController
@@ -1023,15 +1024,17 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     CGRect newBounds = self.tableView.bounds;
     newBounds.origin.y += searchBar.frame.size.height;
     self.tableView.bounds = newBounds;
-    if (m_postLaunch || m_launchPath)
-        ;
-    else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
-        [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.3];
-    } else
-        self.view.userInteractionEnabled = YES;
     [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 
-    m_postLaunch = YES;
+    if (m_launchPath)
+        m_postLaunch = YES;
+    else if (!m_postLaunch
+             && [m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
+        [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.1];
+    } else {
+        self.view.userInteractionEnabled = YES;
+        m_postLaunch = YES;
+    }
 }
 
 - (void)setPostLaunch {
@@ -1110,7 +1113,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
             [self.splitViewController dismissViewControllerAnimated:NO completion:nil];
-        [self.splitViewController presentViewController:nc animated:YES completion:nil];
+        [self.splitViewController presentViewController:nc animated:m_postLaunch completion:nil];
     }
 }
 
