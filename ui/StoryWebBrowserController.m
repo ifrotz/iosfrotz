@@ -610,6 +610,22 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSString *fullName = [pageStr substringWithRange: range1];
             fullName = [fullName stringByReplacingOccurrencesOfString: @"Cover Art for " withString: @""];
             fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
+            // class="zip-contents-arrow">Contains <b>stor.z8</b>
+            NSRange zipContentsRange = [pageStr rangeOfString: @"class=\"zip-contents-arrow\">Contains <b>"];
+            if (zipContentsRange.length > 0) {
+                NSUInteger zb = zipContentsRange.location + zipContentsRange.length;
+                NSRange zipEndRange = [pageStr rangeOfString: @"</b>" options:0 range: NSMakeRange(zb, len-zb)];
+                NSString *zipContentsName = [pageStr substringWithRange: NSMakeRange(zb, zipEndRange.location-zb)];
+                NSRange slashRange = [zipContentsName rangeOfString: @"/" options:NSBackwardsSearch range:NSMakeRange(0, [zipContentsName length])];
+                if (slashRange.length)
+                    zipContentsName = [zipContentsName substringFromIndex:slashRange.location+1];
+                NSUInteger extOffset = [zipContentsName rangeOfString: @"."].location;
+                if (extOffset != NSNotFound) {
+                    zipContentsName = [zipContentsName substringToIndex: extOffset];
+                    NSLog(@"ZIP contents name %@ replacing story %@", zipContentsName, story);
+                    story = zipContentsName;
+                }
+            }
             if (!story)
                 story = [fullName lowercaseString];
             if (story) {
