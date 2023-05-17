@@ -1706,6 +1706,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 
 - (void)reflowText {
     [self clearSelection];
+    CGRect frame = [self bounds];
+    if (frame.size.height <= 0)
+        return;
+
     [m_textPos removeAllObjects];
     [m_textLineNum removeAllObjects];
     [m_lineYPos removeAllObjects];
@@ -1722,9 +1726,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     CGPoint nextPoint;
     CGFloat prevY = 0;
     m_prevPt = m_lastPt;
-    CGRect frame = [self bounds];
     int curImageIndex = 0;
-
     [self updateLine: m_numLines withYPos: m_lastPt.y];
     RichTextStyle textStyle = kFTNormal;
     for (int i = 0; i < len; ++i) {
@@ -2013,6 +2015,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     
 //    NSLog(@"rich setframe (%f,%f,%f,%f) topmarg=%d self=%x", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, m_topMargin, self);
     CGRect oldFrame = self.frame;
+    if (frame.size.height < 0)
+        frame.size.height = 0;
     if (m_freezeDisplay) {
         m_delayedFrame = frame;
         return;
