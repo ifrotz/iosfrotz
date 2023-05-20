@@ -25,6 +25,8 @@
 #import "extractzfromz.h"
 #import <QuartzCore/QuartzCore.h>
 
+#import "Frotz-Swift.h"
+
 NSString *const kIFDBHost = @"ifdb.org";
 NSString *const kIFDBOldHost = @"ifdb.tads.org";
 
@@ -35,6 +37,8 @@ const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
 
 @implementation StoryWebBrowserController
+
+@synthesize snarfedStoryName;
 
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb {
     if ((self = [super initWithNibName:nil bundle:nil])) {
@@ -149,6 +153,49 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.leftBarButtonItem = backItem;
 
     self.edgesForExtendedLayout=UIRectEdgeNone;
+}
+
+-(void)pickFilesFromZip:(NSString*)zipFile list:(NSMutableArray *)zList{
+    NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
+    NSString *storyboardName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UIMainStoryboardFile"];
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
+    SelectFilesViewController *selectFilesVC = [storyboard instantiateViewControllerWithIdentifier:@"SelectFilesViewController"];
+    [selectFilesVC setTitle: @"Select story files to add" files: zList
+        doneHandler:^(NSArray<NSString*>* files) {
+            NSUInteger count = 0;
+            NSString *storyFile, *storyList = @"";
+            for (storyFile in files) {
+                if ([storyFile hasPrefix: @"SAVE"])
+                    continue;
+                if (extractOneFileFromZIP(zipFile, gamePath, storyFile) == 0) {
+                    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
+                    ++count;
+                }
+            }
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: zipFile error: nil];
+            if (count > 0) {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:" message: storyList delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                [alert show];
+                [self browserDidPressBackButton];
+            }
+        }
+        canceledHandler: ^{
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: zipFile error: nil];
+        }];
+    [selectFilesVC setInstructions: @"\n"
+        "The ZIP file contains more than one story file.\n"
+        "\n"
+        "(Frotz may not retain meta-data for stories other than the loaded IFDB page.)\n"];
+    if (self.snarfedStoryName)
+        [selectFilesVC checkAllMatches: self.snarfedStoryName];
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: selectFilesVC];
+
+    [self presentViewController:nc animated:YES completion: nil];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
 }
 
 -(void)browserDidPressBackButton {
@@ -458,7 +505,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlString = [[url path] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
     NSError *error;
-    BOOL stay = NO, isBadLoad = NO;
+    BOOL stay = NO, isBadLoad = NO, doAddedAlert = NO;
     char tempbuf[16];
 
     NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
@@ -502,6 +549,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     m_receivedData = nil;
     m_currentRequest = nil;
     UIAlertView *alert = nil;
+    NSString *storyFile = nil;
     if (isBadLoad) {
         alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
                                            message:@"The web server returned an error page instead of the expected file"
@@ -510,28 +558,36 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
         NSMutableArray *zList = listOfZFilesInZIP(outFile);
+        BOOL delZip = NO;
         if (!zList || [zList count] == 0) {
             alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
                                                message:@"Sorry, this archive contains no playable story files"
                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            stay = YES;
+            delZip = YES;
         } else {
-            NSString *storyFile;
-            NSString *storyList = @"";
-            for (storyFile in zList) {
-                if ([storyFile hasPrefix: @"SAVE"])
-                    continue;
-                if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0)
-                    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
+            if ([zList count] > 1) {
+                [self pickFilesFromZip: outFile list:zList];
+                stay = YES;
+            } else {
+                for (storyFile in zList) {
+                    if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0) {
+                        doAddedAlert = YES;
+                        break;
+                    }
+                }
+                delZip = YES;
             }
-            alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:"
-                                               message: storyList
-                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         }
-        NSFileManager *fileMgr = [NSFileManager defaultManager];
-        [fileMgr removeItemAtPath: outFile error: &error];
-    } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
-        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
+        if (delZip) {
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: outFile error: &error];
+        }
+    } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"]) {
+        storyFile = urlString;
+        doAddedAlert = YES;
+    }
+    if (doAddedAlert)
+        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: storyFile]
                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
         [alert show];
@@ -592,6 +648,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlHost = [url host];
     NSString *urlPath = [url path];
     NSString *urlQuery = [url query];
+    self.snarfedStoryName = nil;
     NSLog(@"ZDL from url w/host %@, path %@, query=%@, story='%@'", urlHost, urlPath, urlQuery, story);
     if (!(([urlHost isEqualToString: kIFDBHost] || [urlHost isEqualToString: kIFDBOldHost])
           && [urlPath isEqualToString:@"/viewgame"]
@@ -629,6 +686,7 @@ const NSString *kBookmarkVersionKey = @"Version";
             if (!story)
                 story = [fullName lowercaseString];
             if (story) {
+                self.snarfedStoryName = story;
                 [m_storyBrowser addTitle: fullName forStory: story];
 
                 NSString *authorsStr = nil, *tuidStr = nil, *descriptStr = nil;
