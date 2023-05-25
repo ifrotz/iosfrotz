@@ -178,20 +178,22 @@ int gLargeScreenPhone = 0;
 - (BOOL)application: (UIApplication*)application openURL:(nonnull NSURL *)launchURL options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
     NSLog(@"openURL %@", launchURL);
 #if UseNewDropBoxSDK
-    DBOAuthResult *authResult = [DBClientsManager handleRedirectURL:launchURL];
-    if (authResult != nil) {
-        if ([authResult isSuccess]) {
-            NSLog(@"Success! User is logged into Dropbox.");
-            [[m_browser navigationController] popViewControllerAnimated: YES];
-            [[m_browser storyMainViewController] dropboxDidLinkAccount];
-            return YES;
-        } else if ([authResult isCancel]) {
-            NSLog(@"Authorization flow was manually canceled by user!");
-        } else if ([authResult isError]) {
-            NSLog(@"Error: %@", authResult);
+    DBOAuthCompletion completion = ^(DBOAuthResult *authResult) {
+        if (authResult != nil) {
+            if ([authResult isSuccess]) {
+                NSLog(@"Success! User is logged into Dropbox.");
+                [[m_browser navigationController] popViewControllerAnimated: YES];
+                [[m_browser storyMainViewController] dropboxDidLinkAccount];
+            } else if ([authResult isCancel]) {
+                NSLog(@"Authorization flow was manually canceled by user!");
+            } else if ([authResult isError]) {
+                NSLog(@"Error: %@", authResult);
+            }
         }
+    };
+    BOOL canHandle = [DBClientsManager handleRedirectURL:launchURL completion: completion];
+    if (canHandle)
         return YES;
-    }
 #else
     if ([[DBSession sharedSession] handleOpenURL:launchURL]) {
         if ([[DBSession sharedSession] isLinked]) {

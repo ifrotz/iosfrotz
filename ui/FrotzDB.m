@@ -329,6 +329,15 @@
     return NO;
 }
 
++ (UIViewController*)topMostController
+{
+    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    while (topController.presentedViewController) {
+        topController = topController.presentedViewController;
+    }
+    return topController;
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {   
     NSInteger section = indexPath.section, row = indexPath.row;
@@ -337,15 +346,22 @@
 	case 0: {
 	    [m_textField resignFirstResponder];
 	    switch (row) {
-		case 0: {
+            case 0: {
 #if UseNewDropBoxSDK
-            Class DBMobileSafariViewControllerClass = NSClassFromString(@"DBMobileSafariViewController"); // will fail in iOS 8
-            if (DBMobileSafariViewControllerClass) {
-                [DBClientsManager authorizeFromController:[UIApplication sharedApplication]
-                                           controller:self
-                                              openURL:^(NSURL *url) {
-                                                  [[UIApplication sharedApplication] openURL:url];
-                                              }];
+                Class DBMobileSafariViewControllerClass = NSClassFromString(@"DBMobileSafariViewController"); // will fail in iOS 8
+                if (DBMobileSafariViewControllerClass) {
+                    DBScopeRequest *scopeRequest = [[DBScopeRequest alloc] initWithScopeType:DBScopeTypeUser
+                                                                                      scopes:@[@"account_info.read",
+                                                                                               @"files.metadata.write",
+                                                                                               @"files.metadata.read",
+                                                                                               @"files.content.write",
+                                                                                               @"files.content.read"]
+                                                                        includeGrantedScopes:NO];
+                    [DBClientsManager authorizeFromControllerV2:[UIApplication sharedApplication]
+                                                     controller:[[self class] topMostController]
+                                          loadingStatusDelegate:nil
+                                                        openURL:^(NSURL *url) { [[UIApplication sharedApplication] openURL:url]; }
+                                                   scopeRequest:scopeRequest];
             } else { // iOS 8 fallback, since DropBox SDK 2 Pod v3.2.* only supports iOS 9+
                 UIApplication *sharedApplication = [UIApplication sharedApplication];
                 DBMobileSharedApplication *sharedMobileApplication =
