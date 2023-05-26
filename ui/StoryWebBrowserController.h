@@ -111,4 +111,6 @@ typedef UIWebView StoryWebView;
 extern NSString *const kIFDBHost; // @"ifdb.org";
 extern NSString *const kIFDBOldHost; // @"ifdb.tads.org";
 
+extern NSString *const kBookmarksFN;
+
 NS_ASSUME_NONNULL_END

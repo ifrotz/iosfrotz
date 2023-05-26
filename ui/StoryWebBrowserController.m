@@ -29,9 +29,8 @@
 
 NSString *const kIFDBHost = @"ifdb.org";
 NSString *const kIFDBOldHost = @"ifdb.tads.org";
+NSString *const kBookmarksFN = @"bookmarks.plist";
 
-
-NSString *kBookmarksFN = @"bookmarks.plist";
 const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
@@ -205,9 +204,8 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 -(NSString*)bookmarkPath {
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = array[0];
-    NSString *bmPath = [docPath stringByAppendingPathComponent: kBookmarksFN];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *bmPath = [appSuppPath stringByAppendingPathComponent: kBookmarksFN];
     return bmPath;
 }
 

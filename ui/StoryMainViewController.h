@@ -251,3 +251,5 @@ extern StoryBrowser *theStoryBrowser;
 #endif
 
 NS_ASSUME_NONNULL_END
+
+extern NSString *const kDBCFilename; // dropbox cache

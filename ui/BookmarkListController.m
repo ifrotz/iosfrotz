@@ -141,12 +141,12 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     NSInteger row = indexPath.row;
     if (row < [m_sites count] && editingStyle == UITableViewCellEditingStyleDelete) {
-	[m_sites removeObjectAtIndex: row];
-	if (row < [m_titles count])
-	    [m_titles removeObjectAtIndex: row];
-	if (m_delegate)
-	    [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
-	[tableView reloadData];
+        [m_sites removeObjectAtIndex: row];
+        if (row < [m_titles count])
+            [m_titles removeObjectAtIndex: row];
+        if (m_delegate)
+            [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
+        [tableView reloadData];
     }
 }
 
@@ -155,18 +155,16 @@
     NSInteger toRow = toIndexPath.row;
     NSUInteger count = [m_sites count];
     if (fromRow < count && toRow < count) {
-	NSString *url = m_sites[fromRow];
-	NSString *title = (fromRow < [m_titles count]) ? m_titles[fromRow] : nil;
-	[m_sites removeObjectAtIndex: fromRow];
-	if (title)
-	    [m_titles removeObjectAtIndex: fromRow];
-	if (toRow > fromRow)
-	    --toRow;
-	[m_sites insertObject:url atIndex:toRow];
-	if (title)
-	    [m_titles insertObject: title atIndex:toRow];
-	if (m_delegate)
-	    [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
+        NSString *url = m_sites[fromRow];
+        NSString *title = (fromRow < [m_titles count]) ? m_titles[fromRow] : nil;
+        [m_sites removeObjectAtIndex: fromRow];
+        if (title)
+            [m_titles removeObjectAtIndex: fromRow];
+        [m_sites insertObject:url atIndex:toRow];
+        if (title)
+            [m_titles insertObject: title atIndex:toRow];
+        if (m_delegate)
+            [m_delegate saveBookmarksWithURLs:m_sites andTitles:m_titles];
     }
 }
 

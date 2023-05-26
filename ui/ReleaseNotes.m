@@ -24,9 +24,8 @@
 - (instancetype)init {
     if ((self = [super initWithNibName:nil bundle:nil])) {
         self.title = NSLocalizedString(@"Release Notes", @"");
-        NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-        NSString *docPath = array[0];
-        m_relNotesPath = [docPath stringByAppendingPathComponent: @kRelNotesFilename];
+        NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+        m_relNotesPath = [appSuppPath stringByAppendingPathComponent: @kRelNotesFilename];
         [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:1.0];
     }
     return self;

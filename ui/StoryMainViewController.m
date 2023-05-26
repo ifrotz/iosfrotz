@@ -1133,8 +1133,8 @@ static void setColorTable(RichTextView *v) {
         
         storyGamePath = [docPath stringByAppendingPathComponent: @kFrotzGameDir];
         storyTopSavePath = [docPath stringByAppendingPathComponent: @kFrotzSaveDir];
-        
-        
+
+
         if (![fileMgr fileExistsAtPath: storyGamePath]) {
             [fileMgr createDirectoryAtPath: storyGamePath attributes: @{}];
         }
@@ -4509,7 +4509,7 @@ extern int glulxCompleteWord(const char *word, char *result);
 
 /////// Dropbox Support
 
-static NSString *kDBCFilename = @"dbcache.plist";
+NSString *const kDBCFilename = @"dbcache.plist";
 static NSString *kTimestampKey = @"timestamps";
 static NSString *kHashKey = @"hash";
 static NSString *kActiveKey = @"active";
@@ -4600,7 +4600,8 @@ static BOOL migateDropboxAuth() {
 
 -(void) initializeDropbox {
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-    NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *dbcPath = [appSuppPath stringByAppendingPathComponent: kDBCFilename];
     
     m_dbCachedMetadata = [NSMutableDictionary dictionaryWithContentsOfFile: dbcPath];
     if (!m_dbCachedMetadata)
@@ -4626,7 +4627,8 @@ static BOOL migateDropboxAuth() {
 - (void)saveDBCacheDict {
     if (!m_dbCachedMetadata)
         return;
-    NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *dbcPath = [appSuppPath stringByAppendingPathComponent: kDBCFilename];
     NSString *error;
     
     NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:m_dbCachedMetadata
