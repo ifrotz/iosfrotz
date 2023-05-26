@@ -177,7 +177,7 @@ int gLargeScreenPhone = 0;
 }
 - (BOOL)application: (UIApplication*)application openURL:(nonnull NSURL *)launchURL options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
     NSLog(@"openURL %@", launchURL);
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
     DBOAuthCompletion completion = ^(DBOAuthResult *authResult) {
         if (authResult != nil) {
             if ([authResult isSuccess]) {
@@ -194,17 +194,6 @@ int gLargeScreenPhone = 0;
     BOOL canHandle = [DBClientsManager handleRedirectURL:launchURL completion: completion];
     if (canHandle)
         return YES;
-#else
-    if ([[DBSession sharedSession] handleOpenURL:launchURL]) {
-        if ([[DBSession sharedSession] isLinked]) {
-            if ([[launchURL path] hasSuffix: @"/cancel"])
-                return YES;
-            NSLog(@"DB App linked successfully!");
-            [[m_browser storyMainViewController] dropboxDidLinkAccount];
-            // At this point you can start making API calls
-        }
-        return YES;
-    }
 #endif
     if (launchURL && [launchURL isFileURL]) {
         NSString *launchPath = [launchURL path];

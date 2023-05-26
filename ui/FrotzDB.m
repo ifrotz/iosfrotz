@@ -17,7 +17,7 @@
 #define kUIRowLabelHeight               22.0
 #define kFontSizeStr "Font size (%d)"
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 @interface DBOAuthManager (Ext)
 - (NSURL *)authURL;
 @end
@@ -29,11 +29,11 @@
 }
 
 -(BOOL)isLinked {
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     BOOL isLinked = (client != nil);
 #else
-    BOOL isLinked = [[DBSession sharedSession] isLinked];
+    BOOL isLinked = NO;
 #endif
     return isLinked;
 }
@@ -122,10 +122,8 @@
         m_isUnlinking = NO;
 
         if (buttonIndex == 1) {
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
             [DBClientsManager unlinkAndResetClients];
-#else
-            [[DBSession sharedSession] unlinkAll];
 #endif
             [[self tableView] reloadData];
         }
@@ -343,13 +341,11 @@
     NSInteger section = indexPath.section, row = indexPath.row;
 
     switch (section)  {
-	case 0: {
-	    [m_textField resignFirstResponder];
-	    switch (row) {
-            case 0: {
-#if UseNewDropBoxSDK
-                Class DBMobileSafariViewControllerClass = NSClassFromString(@"DBMobileSafariViewController"); // will fail in iOS 8
-                if (DBMobileSafariViewControllerClass) {
+        case 0: {
+            [m_textField resignFirstResponder];
+            switch (row) {
+                case 0: {
+#if UseDropBoxSDK
                     DBScopeRequest *scopeRequest = [[DBScopeRequest alloc] initWithScopeType:DBScopeTypeUser
                                                                                       scopes:@[@"account_info.read",
                                                                                                @"files.metadata.write",
@@ -362,35 +358,22 @@
                                           loadingStatusDelegate:nil
                                                         openURL:^(NSURL *url) { [[UIApplication sharedApplication] openURL:url]; }
                                                    scopeRequest:scopeRequest];
-            } else { // iOS 8 fallback, since DropBox SDK 2 Pod v3.2.* only supports iOS 9+
-                UIApplication *sharedApplication = [UIApplication sharedApplication];
-                DBMobileSharedApplication *sharedMobileApplication =
-                    [[DBMobileSharedApplication alloc] initWithSharedApplication:
-                     sharedApplication controller:self openURL:^(NSURL *url) {
-                         [[UIApplication sharedApplication] openURL:url];
-                        }];
-                [DBMobileSharedApplication setMobileSharedApplication:sharedMobileApplication];
-                NSURL *authUrl = [[DBOAuthManager sharedOAuthManager] authURL];
-                [[UIApplication sharedApplication] openURL: authUrl];
-            }
-#else
-            [[DBSession sharedSession] linkFromController:self];
 #endif
-		    break;
-		    }
-		case 1: {
-		    if ([self isLinked]) {
-                m_isUnlinking = YES;
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
-                        message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
-                        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
-                [alert show];
-		    }
-		    break;
-		}
-	    break;
-	    }
-	}
+                    break;
+                }
+                case 1: {
+                    if ([self isLinked]) {
+                        m_isUnlinking = YES;
+                        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
+                                                                        message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
+                                                                       delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
+                        [alert show];
+                    }
+                    break;
+                }
+            }
+            break;
+        }
     }
 }
 

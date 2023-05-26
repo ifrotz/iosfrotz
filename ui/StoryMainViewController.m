@@ -2481,7 +2481,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [fileMgr removeItemAtPath: filePath error: &error];
     NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, filePath.length)];
     NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client) {
         [[client.filesRoutes delete_:dbPath] setResponseBlock:^(DBFILESMetadata *result, DBFILESDeleteError * routeError, DBRequestError *error) {
@@ -2489,9 +2489,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
                 [self handleDropboxError: routeError withRequestError:error];
         }];
     }
-#else
-    if ([[DBSession sharedSession] isLinked])
-        [self.restClient deletePath: dbPath];
 #endif
     [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
 }
@@ -3425,15 +3422,12 @@ char *tempStatusLineScreenBuf() {
     }
     if (refresh_savedir > 0) {
         refresh_savedir = 0;
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
         DBUserClient *client = [DBClientsManager authorizedClient];
         if (client) {
             NSString *folder = [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
             [self dbRefreshFolder: folder createIfNotExists:YES];
         }
-#else
-        if ([[DBSession sharedSession] isLinked])
-            [self.restClient loadMetadata: [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]]];
 #endif
     }
 }
@@ -4524,7 +4518,7 @@ static NSString *kDBTopPath = @"topPath";
 static NSString *kDefaultDBTopPath = @"/Frotz";
 
 static BOOL migateDropboxAuth() {
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 
 #ifdef FROTZ_DB_APP_KEY
 #ifdef FROTZ_DB_APP_SECRET
@@ -4569,7 +4563,7 @@ static BOOL migateDropboxAuth() {
 #endif
 }
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 -(void) handleDropboxError:(NSObject*)routeError withRequestError:(DBRequestError*)error {
     NSString *title = @"";
     NSString *message = @"";
@@ -4605,7 +4599,7 @@ static BOOL migateDropboxAuth() {
 #endif
 
 -(void) initializeDropbox {
-#ifdef FROTZ_DB_APP_KEY
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     NSString *dbcPath = [docPath stringByAppendingPathComponent: kDBCFilename];
     
     m_dbCachedMetadata = [NSMutableDictionary dictionaryWithContentsOfFile: dbcPath];
@@ -4615,7 +4609,6 @@ static BOOL migateDropboxAuth() {
     
     m_dbActive = [m_dbCachedMetadata[kActiveKey] boolValue];
 
-#if UseNewDropBoxSDK
     /*BOOL willPerformMigration = */ migateDropboxAuth();
     if (m_dbCachedMetadata[kHashKey]) {
         // New API doesn't support hashes for folders anymore, remove cache
@@ -4623,17 +4616,7 @@ static BOOL migateDropboxAuth() {
         [self saveDBCacheDict];
     }
     [self dbRefreshFolder: [self dbSavePath] createIfNotExists:YES];
-#else
-#ifdef FROTZ_DB_APP_SECRET
-    DBSession* session = [[DBSession alloc] initWithAppKey:@FROTZ_DB_APP_KEY  appSecret:@FROTZ_DB_APP_SECRET root:kDBRootDropbox];
-    session.delegate = self; // DBSessionDelegate methods allow you to handle re-authenticating
-    [DBSession setSharedSession:session];
-    if ([[DBSession sharedSession] isLinked]) {
-        [self.restClient loadMetadata: [self dbTopPath]];
-    }
-#endif // FROTZ_DB_APP_SECRET
-#endif // UseNewDropBoxSDK
-#endif // FROTZ_DB_APP_KEY
+#endif // UseDropBoxSDK
 }
 
 -(BOOL)dbIsActive {
@@ -4677,48 +4660,10 @@ static BOOL migateDropboxAuth() {
         [timeStampDict removeObjectForKey: saveFile];
 }
 
-#if !UseNewDropBoxSDK
--(NSString*)getHashForDBPath:(NSString*)path {
-    NSMutableDictionary *hashDict = m_dbCachedMetadata[kHashKey];
-    if (!hashDict) 
-        return nil;
-    
-    return (NSString*)hashDict[path];
-}
-
--(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path {
-    if (!hash || !path)
-        return;
-    NSMutableDictionary *hashDict = m_dbCachedMetadata[kHashKey];
-    if (!hashDict) {
-        hashDict = [[NSMutableDictionary alloc] initWithCapacity:32];
-        [m_dbCachedMetadata setValue: hashDict forKey: kHashKey];
-    }
-    [hashDict setValue: hash forKey:path];
-}
-
-- (DBRestClient*)restClient {
-    if (!m_restClient) {
-        m_restClient = [[DBRestClient alloc] initWithSession:[DBSession sharedSession]];
-        m_restClient.delegate = self;
-    }
-    return m_restClient;
-}
-
-- (void)sessionDidReceiveAuthorizationFailure:(DBSession*)session {
-}
-
-- (void)sessionDidReceiveAuthorizationFailure:(DBSession *)session userId:(NSString *)userId {
-}
-#endif // !UseNewDropBoxSDK
-
 - (void)dropboxDidLinkAccount {
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client)
-#else
-    if ([[DBSession sharedSession] isLinked])
-#endif
     {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
                                                         message: 
@@ -4728,12 +4673,9 @@ static BOOL migateDropboxAuth() {
                                "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
                                                        delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
-#if UseNewDropBoxSDK
         [self dbRefreshFolder: [self dbSavePath] createIfNotExists:YES];
-#else
-        [self.restClient loadMetadata: [self dbTopPath]];
-#endif
     }
+#endif
 }
 
 -(NSString*)metadataSubPath:(NSString*)path {
@@ -4741,7 +4683,7 @@ static BOOL migateDropboxAuth() {
     return [path stringByReplacingOccurrencesOfString:dbTopPathT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, path.length)];
 }
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 - (void)dbRefreshFolder:(NSString*)folder createIfNotExists:(BOOL)createIfNotExists{
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (!client)
@@ -4780,50 +4722,6 @@ static BOOL migateDropboxAuth() {
          }
      }];
 }
-#else
-- (void)restClient:(DBRestClient*)client loadedMetadata:(DBMetadata*)metadata
-{
-    NSLog(@"Loaded metadata! %@ (%@)", metadata.path, metadata.hash);
-    NSString *dbTopPath = [self dbTopPath];
-    NSString *dbGamePath = [self dbGamePath];
-    NSString *dbSavePath = [self dbSavePath];
-    NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-    
-    BOOL foundGames = NO, foundSaves = NO;
-    if ([metadata.path isEqualToString: dbTopPath]) {
-        for (DBMetadata* child in metadata.contents) {
-            if (child.isDirectory) {
-                if ([child.path isEqualToString: dbGamePath])
-                    foundGames = YES;
-                else if ([child.path isEqualToString: dbSavePath])
-                    foundSaves = YES;
-            }
-        }
-#if 0 // creating this if we're not going to populate it will mislead people...
-        if (!foundGames) {
-            NSLog(@"creating dbgamepath");
-            [self.restClient createFolder: dbGamePath];
-        }
-#endif
-        if (!foundSaves) {
-            NSLog(@"creating dbsavepath");
-            [self.restClient createFolder: dbSavePath];
-        }
-        if (!m_dbActive) {
-            m_dbActive = YES;
-            [m_dbCachedMetadata setValue: @(m_dbActive) forKey: kActiveKey];
-            [self saveDBCacheDict];
-        }
-        //	[self.restClient performSelector:@selector(loadMetadata:) withObject:dbGamePath afterDelay:0.2];
-        [self.restClient performSelector:@selector(loadMetadata:) withObject:dbSavePath afterDelay:0.3];
-    } else if ([metadata.path isEqualToString: dbGamePath]) {
-    } else if ([metadata.path isEqualToString: dbSavePath]) {
-        [self dbCheckSaveDirs:metadata];
-    } else if ([metadata.path hasPrefix: dbSavePathT]) {
-        [self dbSyncSingleSaveDir: metadata];
-    }
-}
-#endif
 
 -(void)dbUploadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
     
@@ -4834,7 +4732,6 @@ static BOOL migateDropboxAuth() {
     NSLog(@"Uploading to DB: %@", saveGameSubPath);
 
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
-#if UseNewDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath];
 
@@ -4848,12 +4745,6 @@ static BOOL migateDropboxAuth() {
          } else if (routeError || error)
              [self handleDropboxError:routeError withRequestError:error];
     }];
-#else
-    NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: [saveGameSubPath stringByDeletingLastPathComponent]];
-    NSString *saveGameFile = [saveGameSubPath lastPathComponent];
-    [self.restClient deletePath: [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath]]; // delete to force upload (& timestamp update!) even if file is same
-    [self.restClient uploadFile:saveGameFile toPath:dbSGPath fromPath:localSavePath];
-#endif
 }
 
 -(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
@@ -4861,7 +4752,6 @@ static BOOL migateDropboxAuth() {
     
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath];
-#if UseNewDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     [[client.filesRoutes downloadUrl:dbSGPath overwrite:YES destination: [NSURL fileURLWithPath: localSavePath]]
      setResponseBlock:^(DBFILESFileMetadata *result, DBFILESDownloadError *routeError, DBRequestError *error, NSURL *url
@@ -4875,10 +4765,8 @@ static BOOL migateDropboxAuth() {
          if (routeError || error)
              [self handleDropboxError:routeError withRequestError:error];
      }];
-#else
-    [self.restClient loadFile:dbSGPath intoPath:localSavePath];
-#endif
 }
+#endif // UseDropBoxSDK
 
 -(NSString*)dbTopPath {
     if (m_dbTopPath)
@@ -4894,7 +4782,7 @@ static BOOL migateDropboxAuth() {
         m_dbTopPath = path;
         m_dbCachedMetadata[kDBTopPath] = m_dbTopPath;
         [self saveDBCacheDict];
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
         DBUserClient *client = [DBClientsManager authorizedClient];
         if (client) {
             [[client.filesRoutes moveV2:origPath toPath: path]
@@ -4909,16 +4797,6 @@ static BOOL migateDropboxAuth() {
                       }];
              }];
         }
-#else
-        if (m_dbActive && [[DBSession sharedSession] isLinked]) {
-
-            [self dbRecursiveMakeParents: [path stringByDeletingLastPathComponent]];
-            // NOTE: this doesn't work if they try something like move /Frotz -> /Frotz/foo/bar.
-            // For that to work we'd have to move each top-level subfolder individually.  Oh well.
-            [self.restClient moveFrom: [self dbTopPath] toPath: path];
-        }
-        if ([[DBSession sharedSession] isLinked])
-            [self.restClient performSelector:@selector(loadMetadata:) withObject:m_dbTopPath afterDelay:1.0];
 #endif
     }
 }
@@ -4935,15 +4813,11 @@ static BOOL migateDropboxAuth() {
     return [self.dbTopPath stringByAppendingFormat: @"/" kFrotzSaveDir];
 }
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 -(void)dbSyncSingleSaveDir:(DBFILESMetadata *)folderResult withEntries:(NSArray<DBFILESMetadata *>*)metadata
-#else
--(void)dbSyncSingleSaveDir:(DBMetadata*)metadata
-#endif
 {
     NSString *dbSavePath = [self dbSavePath];
     NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-#if UseNewDropBoxSDK
     NSString *topPath = folderResult.pathDisplay;
     NSString *subSavePath = [topPath stringByReplacingOccurrencesOfString: dbSavePathT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, topPath.length)];
     NSMutableArray<DBFILESFileMetadata*> *dbSaveFiles = [NSMutableArray<DBFILESFileMetadata*> arrayWithCapacity:[metadata count]];
@@ -4951,15 +4825,6 @@ static BOOL migateDropboxAuth() {
         if ([entry isKindOfClass:[DBFILESFileMetadata class]])
             [dbSaveFiles addObject: (DBFILESFileMetadata*)entry];
     }
-#else
-    NSString *subSavePath = [metadata.path stringByReplacingOccurrencesOfString: dbSavePathT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, metadata.path.length)];
-    NSString *dbSavePathWithSubT = [metadata.path stringByAppendingString: @"/"];
-    NSMutableArray *dbSaveFiles = [NSMutableArray arrayWithCapacity:metadata.contents.count];
-    for (DBMetadata* child in metadata.contents) {
-        if (!child.isDirectory)
-            [dbSaveFiles addObject: child]; // [child.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@""]];
-    }
-#endif
     [dbSaveFiles sortUsingSelector: @selector(caseInsensitiveCompare:)];
     
     //    NSLog(@"SingleSaveDir: %@: %@", subSavePath, dbSaveFiles);
@@ -4975,15 +4840,9 @@ static BOOL migateDropboxAuth() {
     NSString *locSF, *dbSF;
     while (localIndex < localCount && dbIndex < dbCount) {
         locSF = localSaveFiles[localIndex];
-#if UseNewDropBoxSDK
         DBFILESFileMetadata *md = dbSaveFiles[dbIndex];
         dbSF = md.name;
         NSDate *dbModDate = md.serverModified;
-#else
-        DBMetadata *md = dbSaveFiles[dbIndex];
-        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
-        NSDate *dbModDate = md.lastModifiedDate;
-#endif
         NSComparisonResult cr = [locSF caseInsensitiveCompare: dbSF];
         if (cr == NSOrderedSame) {
             NSDictionary *fileAttribs = [defaultManager fileAttributesAtPath:[localSavePath stringByAppendingPathComponent:locSF] traverseLink:NO];
@@ -5034,143 +4893,17 @@ static BOOL migateDropboxAuth() {
         ++localIndex;
     }
     while (dbIndex < dbCount) {
-#if UseNewDropBoxSDK
         DBFILESFileMetadata *md = dbSaveFiles[dbIndex];
         dbSF = md.name;
         NSDate *dbModDate = md.serverModified;
-#else
-    	DBMetadata *md = dbSaveFiles[dbIndex];
-        dbSF = [md.path stringByReplacingOccurrencesOfString:dbSavePathWithSubT withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, md.path.length)];
-        NSDate *dbModDate = md.lastModifiedDate;
-#endif
         NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
         [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
         [self dbDownloadSaveGameFile: sfPath];
         ++dbIndex;
     }
-#if !UseNewDropBoxSDK
-    [self cacheHash:metadata.hash forDBPath:[self metadataSubPath: metadata.path]];
-#endif
     [self saveDBCacheDict];
 }
-
-#if !UseNewDropBoxSDK
--(void)dbCheckSaveDirs:(DBMetadata*)metadata {
-    NSString *dbSavePath = [self dbSavePath];
-    NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
-    
-    NSArray *storyNames = [m_storyBrowser storyNames];
-    NSMutableArray *dbSaveDirs = [NSMutableArray arrayWithCapacity:32];
-    NSMutableArray *localSaveDirs = [NSMutableArray arrayWithCapacity:32];
-    for (StoryInfo *si in storyNames) {
-        NSString *story = [si path];
-        [localSaveDirs addObject: [self saveSubFolderForStory: story]];
-    }	
-    for (DBMetadata* child in metadata.contents) {
-        if (child.isDirectory)
-            [dbSaveDirs addObject: [child.path stringByReplacingOccurrencesOfString:dbSavePathT withString:@""  options:NSCaseInsensitiveSearch range:NSMakeRange(0, child.path.length)]];
-    }
-    [localSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
-    [dbSaveDirs sortUsingSelector: @selector(caseInsensitiveCompare:)];
-    
-    NSUInteger localCount = [localSaveDirs count];
-    NSUInteger dbCount = [dbSaveDirs count];
-    NSUInteger localIndex = 0, dbIndex = 0, i = 0;
-    NSString *locSD, *dbSD;
-    while (localIndex < localCount && dbIndex < dbCount) {
-        locSD = localSaveDirs[localIndex];
-        dbSD = dbSaveDirs[dbIndex];
-        NSComparisonResult cr = [locSD caseInsensitiveCompare: dbSD];
-        NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
-        if (cr == NSOrderedSame) {
-            ++localIndex;
-            ++dbIndex;
-            [self.restClient loadMetadata: subPath withHash:[self getHashForDBPath: [self metadataSubPath: subPath]]];
-        } else if (cr == NSOrderedAscending) { // local, not in db
-            NSLog(@"create folder in db: %@", locSD);
-            [self.restClient createFolder: subPath];
-            [self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
-            ++localIndex;
-        } else { // cr == NSOrderDescending, db, not in local
-            // if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
-            //NSLog(@"create folder local: %@", dbSD);	    
-            ++dbIndex;
-        }
-        ++i;
-    }
-    while (localIndex < localCount) {
-        locSD = localSaveDirs[localIndex];
-        NSString *subPath = [dbSavePath stringByAppendingPathComponent: locSD];
-        NSLog(@"create folder in db: %@", locSD);
-        [self.restClient createFolder: subPath];
-        [self.restClient performSelector:@selector(loadMetadata:) withObject:subPath afterDelay:0.5];
-        ++localIndex;
-    }
-    while (dbIndex < dbCount) {
-        // if the dir isn't in the local list, the game isn't installed, don't create a dir for it.
-        //NSLog(@"create folder local: %@", dbSD);
-        //dbSD = [dbSaveDirs objectAtIndex: dbIndex];
-        ++dbIndex;
-    }
-    if (localCount > 0 || dbCount > 0)
-        [self saveDBCacheDict];
-}
-
--(void)dbRecursiveMakeParents:(NSString*)path {
-    if (![path hasPrefix: @"/"] || [path isEqualToString: @"/"])
-        return;
-    [self dbRecursiveMakeParents: [path stringByDeletingLastPathComponent]];
-    [self.restClient createFolder: path];
-}
-
-- (void)restClient:(DBRestClient*)client loadedFile:(NSString*)destPath {
-    NSLog(@"db downloaded %@", destPath);
-    [self cacheTimestamp:[NSDate date] forSaveFile:
-     [@kFrotzSaveDir stringByAppendingPathComponent:[destPath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, destPath.length)]]];
-    [self saveDBCacheDict];
-}
-
-- (void)restClient:(DBRestClient*)client loadProgress:(CGFloat)progress forFile:(NSString*)destPath {
-    //    NSLog(@"db download progress : %f : %@", progress, destPath);
-}
-
-- (void)restClient:(DBRestClient*)client loadFileFailedWithError:(NSError*)error {
-    NSLog(@"db download failed %@ : %@", error.userInfo, error);
-}
-
-- (void)restClient:(DBRestClient*)client uploadedFile:(NSString*)destPath from:(NSString*)srcPath {
-    NSLog(@"db uploadedFile: %@ from %@", destPath, srcPath);
-    [self cacheTimestamp:[NSDate date] forSaveFile: [destPath stringByReplacingOccurrencesOfString:[self dbTopPathT] withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, destPath.length)]];
-    [self saveDBCacheDict];
-}
-
-- (void)restClient:(DBRestClient*)client uploadProgress:(CGFloat)progress forFile:(NSString*)destPath from:(NSString*)srcPath {
-    //    NSLog(@"db uploadProg: %f : %@ from %@", progress, destPath, srcPath);
-}
-
-- (void)restClient:(DBRestClient*)client uploadFileFailedWithError:(NSError*)error {
-    NSLog(@"Error uploading file: %@ : %@", error.userInfo, error);
-}
-
--(void)restClient:(DBRestClient*)client metadataUnchangedAtPath:(NSString*)path {
-    //    NSLog(@"Metadata unchanged for path %@!", path);
-}
-
-- (void)restClient:(DBRestClient*)client loadMetadataFailedWithError:(NSError*)error {
-    NSLog(@"Error loading metadata: %@ : %@", error.userInfo, error);
-    NSInteger errCode = [error code];
-    if (errCode == 404) {
-        NSString *topPath = [self dbTopPath];
-        NSString *path = (error.userInfo)[@"path"];
-        if (path && [path isEqualToString: topPath]) {
-            NSLog(@"creating dbtoppath");
-    	    [self dbRecursiveMakeParents: [topPath stringByDeletingLastPathComponent]];
-            [self.restClient createFolder: topPath];
-            [self.restClient loadMetadata: topPath];
-        }
-    }
-}
-#endif // !UseNewDropBoxSDK
+#endif // UseDropBoxSDK
 
 @end // StoryMainViewController
 
@@ -5190,16 +4923,10 @@ static BOOL migateDropboxAuth() {
 
 @end
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 @implementation DBFILESMetadata (MySort)
 -(NSComparisonResult)caseInsensitiveCompare:(DBFILESMetadata*)other {
     return [self.pathDisplay caseInsensitiveCompare: other.pathDisplay];
-}
-@end
-#else
-@implementation DBMetadata (MySort)
--(NSComparisonResult)caseInsensitiveCompare:(DBMetadata*)other {
-    return [self.path caseInsensitiveCompare: other.path];
 }
 @end
 #endif

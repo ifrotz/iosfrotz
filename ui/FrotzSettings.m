@@ -68,7 +68,7 @@ enum FrotzPrefsRows
     kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
-#ifdef FROTZ_DB_APP_KEY
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
 #endif
     kFrotzPrefsNumRows
@@ -452,7 +452,7 @@ enum FrotzPrefsRows
     UITableViewCell *cell = [self obtainTableCellForRow:row];
     if (indexPath.section == kFrotzPrefsSection && indexPath.row >= kFrotzPrefsStoryFontSize
         && indexPath.row != kFrotzPrefsNotesFont
-#ifdef FROTZ_DB_APP_KEY
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
         && indexPath.row != kFrotzPrefsDropbox
 #endif
         || indexPath.section == kFrotzResetSection)
@@ -518,7 +518,7 @@ enum FrotzPrefsRows
                     cell.textLabel.text = @"Story Info Editing";
                     cell.accessoryView = m_switchCtl2;
                     break;
-#ifdef FROTZ_DB_APP_KEY
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
                 case kFrotzPrefsDropbox:
                     cell.textLabel.text = @"Dropbox Settings";
                     break;
@@ -591,7 +591,7 @@ enum FrotzPrefsRows
                 viewController = m_storyFontPicker;
             } else if (row==kFrotzPrefsNotesFont)
                 viewController = m_notesFontPicker;
-#ifdef FROTZ_DB_APP_KEY
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
             else if (row==kFrotzPrefsDropbox) {
                 viewController = m_frotzDB;
             }

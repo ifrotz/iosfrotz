@@ -57,9 +57,6 @@ extern StoryBrowser *theStoryBrowser;
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
     UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
-#if !UseNewDropBoxSDK
-    DBSessionDelegate, DBRestClientDelegate,
-#endif
     LockableKeyboard>
 {
     StoryView *m_storyView;
@@ -115,9 +112,6 @@ extern StoryBrowser *theStoryBrowser;
     NSString *m_launchMessage;
 
     NSMutableDictionary *m_dbCachedMetadata;
-#if !UseNewDropBoxSDK
-    DBRestClient *m_restClient;
-#endif
     NSString *m_dbTopPath;
     BOOL m_dbActive;
 }
@@ -238,36 +232,22 @@ extern StoryBrowser *theStoryBrowser;
 -(NSString*)metadataSubPath:(NSString*)path;
 -(void)dropboxDidLinkAccount;
 
+#if UseDropBoxSDK
 -(NSDate*)getCachedTimestampForSaveFile:(NSString*)saveFile;
 -(void)cacheTimestamp:(nullable NSDate*)timeStamp forSaveFile:(NSString*)saveFile;
 
 -(void)dbUploadSaveGameFile:(NSString*)saveGameSubPath;
 -(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath;
-#if UseNewDropBoxSDK
 -(void)dbRefreshFolder:(NSString*)folder createIfNotExists:(BOOL)createIfNotExists;
 -(void)dbSyncSingleSaveDir:(DBFILESMetadata*)folderResult withEntries:(NSArray<DBFILESMetadata *>*)metadata;
 -(void)handleDropboxError:(NSObject*)routeError withRequestError:(DBRequestError*)error;
-#else
--(void)dbSyncSingleSaveDir:(DBMetadata*)metadata;
--(void)dbCheckSaveDirs:(DBMetadata*)metadata;
--(void)dbRecursiveMakeParents:(NSString*)path;
--(NSString*)getHashForDBPath:(NSString*)path;
--(void)cacheHash:(NSString*)hash forDBPath:(NSString*)path;
-@property (nonatomic, readonly, strong) DBRestClient *restClient;
--(void)sessionDidReceiveAuthorizationFailure:(DBSession*)session;
 #endif
 @end
 
-#if UseNewDropBoxSDK
+#if UseDropBoxSDK
 @interface DBFILESMetadata (MySort)
 -(NSComparisonResult)caseInsensitiveCompare:(DBFILESMetadata*)other;
 @end
-#else
-@interface DBMetadata (MySort)
--(NSComparisonResult)caseInsensitiveCompare:(DBMetadata*)other;
-@end
 #endif
-
-//extern NSString *storySIPPath;  // SIP == Story In Progress
 
 NS_ASSUME_NONNULL_END
