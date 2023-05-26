@@ -4861,7 +4861,21 @@ static BOOL migateDropboxAuth() {
             
             if ([locModDate compare: dbModDate] == NSOrderedDescending && (!cachedDBModDate || [locModDate compare: cachedDBModDate] == NSOrderedDescending)) {
                 // If filesystem mod date is newer than db (and cache is same or older than db), upload new file
-                [self dbUploadSaveGameFile: sfPath];
+                NSString *encodedLocSF = [locSF stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                NSString *encodedDBSF = [dbSF stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                BOOL deleteFirst = ([encodedLocSF compare:encodedDBSF] != NSOrderedSame);
+                if (deleteFirst) { // files differ in case or UTF-8 encoding, DB doesn't support case-only rename.  Delete first.
+                    DBUserClient *client = [DBClientsManager authorizedClient];
+                    NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: sfPath];
+                    DBRpcTask *dbDelTask = [client.filesRoutes delete_V2: dbSGPath];
+                    [dbDelTask setResponseBlock:^(DBFILESFileMetadata *result, DBFILESDeleteError *routeError, DBRequestError *error) {
+                         if (result) {
+                             [self dbUploadSaveGameFile: sfPath];
+                         } else if (routeError || error)
+                             [self handleDropboxError:routeError withRequestError:error];
+                    }];
+                } else
+                    [self dbUploadSaveGameFile: sfPath];
             } else if ([dbModDate compare: cachedDBModDate] == NSOrderedDescending) {
                 if ([locModDate compare: cachedDBModDate] == NSOrderedDescending)
                     ; // conflict; ignore
@@ -4875,7 +4889,7 @@ static BOOL migateDropboxAuth() {
             // If we don't have the file but do have a cached timestamp, the file was deleted in DB.
             // We won't delete it locally; the user must delete it by hand, but we won't auto-reupload it either.
             // When they delete it locally, we'll also delete the cache, so if the file is recreated it will be uploaded.
-           if (![self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]])
+            if (![self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]])
                 [self dbUploadSaveGameFile: sfPath];
             ++localIndex;
         } else { // cr == NSOrderDescending, db, not in local
