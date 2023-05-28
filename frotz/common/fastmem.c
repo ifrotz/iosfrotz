@@ -283,7 +283,7 @@ int init_memory (void)
 	    pos += 8;
 	    z = zblorbbuf+4;
 	    chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
-	    if (chunkSize % 1 == 1)
+	    if (chunkSize % 2 == 1)
             chunkSize++;
 	    z = zblorbbuf;
 	    if (z[0]=='Z' && z[1]=='C' && z[2]=='O' && z[3]=='D') {

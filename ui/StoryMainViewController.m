@@ -638,8 +638,10 @@ int iosif_read_file_name(char *file_name, const char *default_name,	int flag) {
     *iosif_filename = 0;
     switch (flag) {
         case FILE_SAVE:
+        case FILE_SAVE_AUX:
             do_filebrowser = kFBDoShowSave;
             break;
+        case FILE_LOAD_AUX:
         case FILE_RESTORE:
             do_filebrowser = kFBDoShowRestore;
             break;
@@ -996,7 +998,7 @@ void glk_main_tads(void);
 void glk_main_tads23(void);
 
 void run_glxinterp(const char *story, bool autorestore) {
-    char glulHeader[48];
+    char glulHeader[128];
 
     BOOL useTADS = NO;
     BOOL useGlulxe = gForceUseGlulxe;
@@ -1005,7 +1007,7 @@ void run_glxinterp(const char *story, bool autorestore) {
         useTADS = YES;
     else if (strcasestr(story, ".t3"))
         useTADS = YES;
-    else if (readGLULheaderFromUlxOrBlorb(story, glulHeader)) {
+    else if (ReadGLULheaderFromUlxOrBlorb(story, glulHeader)) {
         // Inform-created stories have 'INFO' at offset 36.
         if (glulHeader[36]!='I' && glulHeader[4]==0 && glulHeader[5]==2) // glulxa-asssembled, probably SuperGLUS?
             useGlulxe = YES;
@@ -1130,10 +1132,9 @@ static void setColorTable(RichTextView *v) {
         NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
         docPath = [array[0] copy];
         chdir([docPath fileSystemRepresentation]);
-        
+
         storyGamePath = [docPath stringByAppendingPathComponent: @kFrotzGameDir];
         storyTopSavePath = [docPath stringByAppendingPathComponent: @kFrotzSaveDir];
-
 
         if (![fileMgr fileExistsAtPath: storyGamePath]) {
             [fileMgr createDirectoryAtPath: storyGamePath attributes: @{}];
@@ -1141,7 +1142,7 @@ static void setColorTable(RichTextView *v) {
         if (![fileMgr fileExistsAtPath: storyTopSavePath]) {
             [fileMgr createDirectoryAtPath: storyTopSavePath attributes: @{}];
         }
-        
+
         NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
         resourceGamePath = [resourcePath stringByAppendingPathComponent: @kFrotzGameDir];
         
@@ -2651,7 +2652,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 }
 
 -(NSString*) saveSubFolderForStory:(NSString*)storyPath {
-    return [[storyPath lastPathComponent] stringByAppendingString: @".d"];
+    return [[storyPath lastPathComponent] stringByAppendingString: @kFrotzGameSaveDirExt];
 }
 
 -(BOOL)autoSaveExistsForStory:(NSString*)storyPath {

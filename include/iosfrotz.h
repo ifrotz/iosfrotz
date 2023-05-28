@@ -138,6 +138,7 @@ extern int gLargeScreenPhone;
 
 #define kFrotzGameDir "Games"
 #define kFrotzSaveDir "Saves"
+#define kFrotzGameSaveDirExt ".d"
 
 #define kFrotzOldAutoSaveFile "FrotzSIP.sav"
 #define kFrotzAutoSaveFile "autosave.sav"

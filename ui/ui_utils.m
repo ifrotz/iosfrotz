@@ -329,23 +329,278 @@ CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh)
     return context;
 }
 
-BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
-    BOOL found = NO;
+NSString *const kSaveExt = @".sav", *const kAltSaveExt = @".qut";
+
+BOOL IsTadsFileExtension(NSString *ext) {
+    return ([ext isEqualToString: @"gam"] || [ext isEqualToString: @"t3"]);
+}
+
+BOOL IsZCodeExtension(NSString *ext) {
+    if ([ext isEqualToString: @"z1"] ||
+        [ext isEqualToString: @"z2"]||
+        [ext isEqualToString: @"z3"]||
+        [ext isEqualToString: @"z4"]||
+        [ext isEqualToString: @"z5"] ||
+        [ext isEqualToString: @"z8"] ||
+        [ext isEqualToString: @"zblorb"] ||
+        [ext isEqualToString: @"zlb"] ||
+        [ext isEqualToString: @"dat"])
+        return YES;
+    return NO;
+}
+
+BOOL IsGlulxExtension(NSString *ext) {
+    if ([ext isEqualToString: @"blb"] ||
+        [ext isEqualToString: @"ulx"] ||
+        [ext isEqualToString: @"gblorb"])
+        return YES;
+    return NO;
+}
+
+BOOL IsSupportedFileExtension(NSString *ext) {
+    if (IsZCodeExtension(ext))
+        return YES;
+    if (IsGlulxExtension(ext))
+        return YES;
+    if (IsTadsFileExtension(ext))
+        return YES;
+    return NO;
+}
+
+BOOL DoesGameFileMatchSave(NSString *path, UInt16 checkRelease, char *checkSerial) {
+    const char *filename = [path fileSystemRepresentation];
+    UInt16 release = 0;
+    char serial[32];
+    memset(serial, 0, sizeof(serial));
+    if (ReadStoryReleaseAndSerial(filename, &release, serial)) {
+        if (release == checkRelease && strcmp(checkSerial, serial) == 0)
+            return YES;
+    }
+    return NO;
+}
+
+void MoveFileToPathWithUniquenessRename(NSString *srcPath, NSString *dstPath) {
+    NSFileManager *defaultManager = [NSFileManager defaultManager];
+    NSError *error = nil;
+    if (![defaultManager fileExistsAtPath: dstPath]) {
+        [defaultManager moveItemAtPath:srcPath toPath:dstPath error:&error];
+    } else {
+        NSString *srcName = [srcPath lastPathComponent];
+        NSString *ext = [srcName pathExtension];
+
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"YYMMdd_HHmmss"];
+        NSString *timestamp = [dateFormatter stringFromDate:[NSDate date]];
+
+        NSString *renamedFile = [[srcName stringByDeletingPathExtension] stringByAppendingFormat:@"_%@.%@", timestamp, ext];
+        NSLog(@"- file already exists at %@", [[[dstPath stringByDeletingLastPathComponent] stringByDeletingLastPathComponent] stringByAppendingPathComponent: srcName]);
+
+        NSString *renamedDstPath = [[dstPath stringByDeletingLastPathComponent] stringByAppendingPathComponent:renamedFile];
+        [defaultManager moveItemAtPath:srcPath toPath:renamedDstPath error:&error];
+        NSLog(@"- renamed to %@", renamedFile);
+    }
+    if (error) {
+        NSLog(@"- failed to install file, error: %@, discarding", error);
+        [defaultManager removeItemAtPath:srcPath error:&error];
+    }
+}
+
+// Handle save files copied in via iTunes File Sharing.  File extension already matched.
+void HandleITSSaveGameFile(NSString *file)
+{
+    NSFileManager *defaultManager = [NSFileManager defaultManager];
+    NSError *error = nil;
+    NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
+
+    NSLog(@"Found save game %@", file);
+    NSString *srcFile = [docPath stringByAppendingPathComponent: file];
+    UInt16 release;
+    char serial[32];
+    if (ReadSavedGameReleaseAndSerial(srcFile, &release, serial)) {
+        BOOL found = NO;
+        NSArray *gameRootPaths = @[docPath, [[NSBundle mainBundle] resourcePath]];
+        for (NSString *gameRootDir in gameRootPaths) {
+            NSString *storyGameFolderPath = [gameRootDir stringByAppendingPathComponent: @kFrotzGameDir];
+            NSArray *gameFiles = [defaultManager contentsOfDirectoryAtPath:storyGameFolderPath error:&error];
+            for (NSString *gameFile in gameFiles) {
+                NSString *gamePath = [storyGameFolderPath stringByAppendingPathComponent: gameFile];
+                BOOL match = DoesGameFileMatchSave(gamePath, release, serial);
+                if (match) {
+                    NSLog(@"- saved game matches story %@!", gameFile);
+                    found = YES;
+                    NSString *storySaveGameFolderPath = [docPath stringByAppendingPathComponent: @kFrotzSaveDir];
+                    NSString *storySaveGamePath = [storySaveGameFolderPath stringByAppendingPathComponent: [gameFile stringByAppendingString: @kFrotzGameSaveDirExt]];
+                    storySaveGamePath = [storySaveGamePath stringByAppendingPathComponent: file];
+                    MoveFileToPathWithUniquenessRename(srcFile, storySaveGamePath);
+                    break;
+                }
+            }
+            if (found)
+                break;
+        }
+        if (!found)
+            NSLog(@"- failed to find story file for saved game");
+    } else
+        NSLog(@"- unknown save format");
+}
+
+// Handle game files copied in via iTunes File Sharing.  File extension already matched.
+void HandleITSGameFile(NSString *file)
+{
+    NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
+
+    NSString *storyGameFolderPath = [docPath stringByAppendingPathComponent: @kFrotzGameDir];
+    NSString *storyGamePath = [storyGameFolderPath stringByAppendingPathComponent: file];
+    NSLog(@"Found game %@, installing", file);
+    NSString *srcFile = [docPath stringByAppendingPathComponent: file];
+    MoveFileToPathWithUniquenessRename(srcFile, storyGamePath);
+}
+
+BOOL ReadSavedGameReleaseAndSerial(NSString *path, UInt16 *release, char *serial) {
     FILE *fp;
+    const char *filename = [path fileSystemRepresentation];
+    BOOL success = NO;
     if ((fp = os_path_open(filename, "rb")) == NULL)
         return NO;
-    unsigned char zblorbbuf[48];
+    unsigned char zblorbbuf[512];
     unsigned char *z;
     unsigned int fileSize=0, chunkSize=0, pos;
     while (1) {
         if (fread(zblorbbuf, 1, 12, fp)!=12)
             break;
         z = zblorbbuf;
+        if (strncmp((char*)z, "TADS2",5) == 0) {
+            if (fread(zblorbbuf+12, 1, 6, fp) != 6)
+                break;
+            if (strncmp((char*)z+5, " save/g\012\015\032", 10)!=0)
+                break;
+            z = zblorbbuf+16;
+            int fnlen = z[0] + z[1]*256;
+            if (fnlen > 384) // balk if filename too long
+                break;
+            z += 2;
+            if (fread(z, 1, fnlen, fp) != fnlen)
+                break;
+            z += fnlen;
+            if (fread(z, 1, 14+7+26, fp) != 47)
+                break;
+            if (strncmp((char*)z, "TADS2 save\012\015\032", 13)!=0)
+                break;
+            z += 14;
+            if (strncmp((char*)z, "v2.2.", 5) != 0 || z[5] != '0' && z[5] != '1')
+                break;
+            *release = 0; // z[5] == '1' ? 0 : 1; // somehow, version 0 is 'current', matching 2.2.1
+            strncpy(serial, (char*)z+7, 26);
+            serial[26] = '\0';
+            success = YES;
+            break;
+        }
+        if (*z++ != 'F') break;
+        if (*z++ != 'O') break;
+        if (*z++ != 'R') break;
+        if (*z++ != 'M') break;
+        fileSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+        z += 4;
+        if (*z++ != 'I') break;
+        if (*z++ != 'F') break;
+        if (*z++ != 'Z') break;
+        if (*z   != 'S') break;
+        pos = 12;
+        while (pos < fileSize) {
+            if (fread(zblorbbuf, 1, 8, fp) != 8)
+                break;
+            pos += 8;
+            z = zblorbbuf+4;
+            chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
+            z = zblorbbuf;
+            if (chunkSize >= 8 && z[0]=='I' && z[1]=='F' && z[2]=='h' && z[3]=='d') {
+                if (fread(zblorbbuf, 1, 8, fp)!=8)
+                    break;
+                *release = (z[0] << 8) | z[1];
+                strncpy(serial, (char*)z+2, 6);
+                serial[7] = '\0';
+                success = YES;
+            }
+            break;
+        }
+    }
+    fclose(fp);
+    return success;
+}
+
+BOOL ReadStoryReleaseAndSerial(const char *filename, UInt16 *release, char *serial) {
+    BOOL isGlulx = NO;
+    char header[128];
+    BOOL readHeader = ReadHeaderFromZCodeUlxOrBlorb(filename, header, &isGlulx);
+    if (readHeader) {
+        if (isGlulx) {
+            char *p = &header[36], *headerEnd = &header[sizeof(header)-16];
+            while (p < headerEnd) {
+                if (strncmp(p, "INFO", 4)==0) { // Inform compiler header
+                    p += 8;
+                    if (*p=='6' || *p=='7') { // Inform version
+                        while (p < headerEnd && (isdigit(*p) || *p=='.')) {
+                            p++;
+                        }
+                        if (p < headerEnd) {
+                            *release = (p[0]<<8) | p[1];
+                            strncpy(serial, p+1, 6);
+                            serial[6] = '\0';
+                            return YES;
+                        }
+                    }
+                }
+                p++;
+            }
+            return NO;
+        } if (strncmp(header, "TADS2 bin\012\015\032",12) == 0) {
+            *release = 0;
+            strncpy(serial, header+13+9, 26);
+            serial[26] = '\0';
+        } else {
+            *release = (header[H_RELEASE]<<8) | header[H_RELEASE+1];
+            strncpy(serial, &header[H_SERIAL], 6);
+            serial[6] = '\0';
+        }
+    }
+    return readHeader;
+}
+
+
+BOOL ReadGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
+    BOOL isGlulx = NO;
+    BOOL readHeader= ReadHeaderFromZCodeUlxOrBlorb(filename, glulHeader, &isGlulx);
+    return readHeader && isGlulx;
+}
+
+BOOL ReadHeaderFromZCodeUlxOrBlorb(const char *filename, char *header, BOOL *isGlulx) {
+    BOOL found = NO;
+    FILE *fp;
+    if (isGlulx)
+        *isGlulx = NO;
+    if ((fp = os_path_open(filename, "rb")) == NULL)
+        return NO;
+    unsigned char zblorbbuf[128];
+    unsigned char *z;
+    unsigned int fileSize=0, chunkSize=0, pos = -1;
+    while (1) {
+        if (fread(zblorbbuf, 1, 12, fp)!=12)
+            break;
+        z = zblorbbuf;
+        if (strncmp((char*)z, "TADS2 bin\012\015\032",12) == 0) {
+            if (fread(zblorbbuf+12, 1, 36, fp) != 36)
+               break;
+            found = YES;
+            if (header)
+                memcpy(header, zblorbbuf, 48);
+            break;
+        }
         if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l') {
             if (fread(zblorbbuf+12, 1, 36, fp) != 36)
                break;
             goto foundGLUL;
         }
+        pos = 0;
         if (*z++ != 'F') break;
         if (*z++ != 'O') break;
         if (*z++ != 'R') break;
@@ -363,18 +618,28 @@ BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
             pos += 8;
             z = zblorbbuf+4;
             chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
-            if (chunkSize % 1 == 1)
+            if (chunkSize % 2 == 1)
                 chunkSize++;
             z = zblorbbuf;
+
             if (chunkSize >= 48 && z[0]=='G' && z[1]=='L' && z[2]=='U' && z[3]=='L') {
-                if (fread(zblorbbuf, 1, 48, fp)!=48)
+                if (fread(zblorbbuf, 1, 128, fp)!=128)
                     break;
                 if (z[0]=='G' && z[1]=='l' && z[2]=='u' && z[3]=='l') {
                 foundGLUL:
                     found = YES;
-                    if (glulHeader)
-                        memcpy(glulHeader, z, 48);
+                    if (isGlulx)
+                        *isGlulx = YES;
+                    if (header)
+                        memcpy(header, z, 128);
                 }
+                break;
+            } else if (chunkSize >= 64 && z[0]=='Z' && z[1]=='C' && z[2]=='O' && z[3]=='D') {
+                if (fread(zblorbbuf, 1, 64, fp)!=64)
+                    break;
+                found = YES;
+                if (header)
+                    memcpy(header, z, 64);
                 break;
             } else {
                 pos += chunkSize;
@@ -383,12 +648,22 @@ BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader) {
         }
         break;
     }
+    if (!found && pos == 0) { // Not FORM, not GLUL, read 12 bytes
+        if (fread(zblorbbuf+12, 1, 52, fp) == 52) {
+            z = zblorbbuf;
+            if (z[0] > 0 && z[0] <= 8 && isdigit(z[18]) && isdigit(z[23])) {
+                found = YES;
+                if (header)
+                    memcpy(header, z, 64);
+            }
+        }
+    }
     fclose(fp);
     return found;
 }
 
 
-BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid) {
+BOOL MetaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid) {
     const char *filename = [blorbFile fileSystemRepresentation];
     BOOL found = NO;
     FILE *fp;
@@ -418,7 +693,7 @@ BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author,
             pos += 8;
             z = zblorbbuf+4;
             chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
-            if (chunkSize % 1 == 1)
+            if (chunkSize % 2 == 1)
                 chunkSize++;
             z = zblorbbuf;
             if (z[0]=='I' && z[1]=='F' && z[2]=='m' && z[3]=='d') {
@@ -529,7 +804,7 @@ NSData *imageDataFromBlorb(NSString *blorbFile) {
             pos += 8;
             z = zblorbbuf+4;
             chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
-            if (chunkSize % 1 == 1)
+            if (chunkSize % 2 == 1)
                 chunkSize++;
             z = zblorbbuf;
             if (z[0]=='R' && z[1]=='I' && z[2]=='d' && z[3]=='x') {

@@ -18,8 +18,7 @@
 
 #import "FileBrowser.h"
 #include "iosfrotz.h"
-
-static NSString *kSaveExt = @".sav", *kAltSaveExt = @".qut";
+#include "ui_utils.h"
 
 @interface FileInfo : NSObject
 {

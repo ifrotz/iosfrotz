@@ -156,6 +156,18 @@ void removeOldPngSplash(const char *filename) {
                 NSString *srcFile = [docPath stringByAppendingPathComponent: file];
                 NSString *dstFile = [appSuppPath stringByAppendingPathComponent: file];
                 [defaultManager moveItemAtPath:srcFile toPath:dstFile error:&error];
+            } else if ([file hasPrefix: @"alabstersettings"]) {
+                // delete file left behind by previous .glkdata file bug
+                [defaultManager removeItemAtPath: [docPath stringByAppendingPathComponent: file] error:&error];
+            } else if ([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]) {
+                // Handle save files copied in via iTunes File Sharing
+                HandleITSSaveGameFile(file);
+            } else {
+                // Handle game files copied in via iTunes File Sharing
+                NSString *ext = [[file pathExtension] lowercaseString];
+                if (IsSupportedFileExtension(ext)) {
+                    HandleITSGameFile(file);
+                }
             }
         }
 
@@ -1391,7 +1403,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         }
         NSString *titleBlorb = nil, *authorBlorb = nil, *descriptBlorb = nil, *tuidBlorb = nil;
         if (isBlorb)
-            metaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
+            MetaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
         m_details.storyTitle = [self fullTitleForStory: storyName];
         if (titleBlorb) {
             if (!m_details.storyTitle || [m_details.storyTitle length]==0 ||
