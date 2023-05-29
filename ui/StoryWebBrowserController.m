@@ -511,7 +511,9 @@ const NSString *kBookmarkVersionKey = @"Version";
         if (m_receivedData && m_delayedRequest) {
             NSString *storyFile = [[[m_delayedRequest mainDocumentURL] path] lastPathComponent];
             NSString *story;
-            if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
+            if (self.snarfedStoryName)
+                story = self.snarfedStoryName;
+            else if ([[[storyFile pathExtension] lowercaseString] isEqualToString: @"zip"]
                 && m_expectedArchiveFiles && [m_expectedArchiveFiles count] > 0)
                 story = [m_expectedArchiveFiles[0] stringByDeletingPathExtension];
             else
@@ -654,6 +656,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         return NO;
 
     BOOL saveMeta = NO;
+    BOOL isZipDL = [[[delayedRequest mainDocumentURL] pathExtension] isEqualToString: @"zip"];
     NSUInteger len = [pageStr length];
     NSRange range1 = [pageStr rangeOfString: @"<h1>"];
     if (range1.length > 0) {
@@ -667,21 +670,23 @@ const NSString *kBookmarkVersionKey = @"Version";
             fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
             // class="zip-contents-arrow">Contains <b>stor.z8</b>
             NSRange zipContentsRange = [pageStr rangeOfString: @"class=\"zip-contents-arrow\">Contains <b>"];
-            if (zipContentsRange.length > 0) {
+            if (isZipDL && zipContentsRange.length > 0) {
                 NSUInteger zb = zipContentsRange.location + zipContentsRange.length;
                 NSRange zipEndRange = [pageStr rangeOfString: @"</b>" options:0 range: NSMakeRange(zb, len-zb)];
                 NSString *zipContentsName = [pageStr substringWithRange: NSMakeRange(zb, zipEndRange.location-zb)];
                 NSRange slashRange = [zipContentsName rangeOfString: @"/" options:NSBackwardsSearch range:NSMakeRange(0, [zipContentsName length])];
                 if (slashRange.length)
                     zipContentsName = [zipContentsName substringFromIndex:slashRange.location+1];
-                NSUInteger extOffset = [zipContentsName rangeOfString: @"."].location;
-                if (extOffset != NSNotFound) {
-                    zipContentsName = [zipContentsName substringToIndex: extOffset];
-                    NSLog(@"ZIP contents name %@ replacing story %@", zipContentsName, story);
-                    story = zipContentsName;
+                if (IsSupportedFileExtension([[zipContentsName pathExtension] lowercaseString])) {
+                    NSUInteger extOffset = [zipContentsName rangeOfString: @"."].location;
+                    if (extOffset != NSNotFound) {
+                        zipContentsName = [zipContentsName substringToIndex: extOffset];
+                        NSLog(@"ZIP contents name %@ replacing story %@", zipContentsName, story);
+                        story = zipContentsName;
+                    }
                 }
             }
-            if (!story)
+            if (!story || isZipDL) // ZIP might be collection, override with page title
                 story = [fullName lowercaseString];
             if (story) {
                 self.snarfedStoryName = story;

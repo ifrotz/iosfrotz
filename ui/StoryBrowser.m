@@ -1533,6 +1533,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     NSString *key = [self mapInfocom83Filename: story];
     NSMutableDictionary *thumbDict = m_metaDict[kMDThumbnailsKey];
     NSData *imageData = thumbDict[key];
+    if (!imageData)
+        imageData = thumbDict[story];
     return imageData;
 }
 
