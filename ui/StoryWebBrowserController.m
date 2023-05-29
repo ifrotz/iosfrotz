@@ -137,7 +137,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.title = @"Story Browser";
 
     NSURL *myURL = [NSURL URLWithString:
-                    [NSString stringWithFormat: @"https://%@/search?searchfor=system%%3Ainform+rating%%3A3-+%%23ratings%%3A2-&browse=1"", kIFDBHost]];
+                    [NSString stringWithFormat: @"https://%@/search?searchfor=system%%3Ainform+rating%%3A3-+%%23ratings%%3A2-&browse=1", kIFDBHost]];
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: NO];
