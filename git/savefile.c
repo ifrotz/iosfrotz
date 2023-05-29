@@ -2,7 +2,7 @@
 
 #include "git.h"
 
-#if !GIT_TEST
+#if FROTZ_IOS
 #include "glkios.h"
 #endif
 
@@ -196,7 +196,7 @@ git_sint32 restoreFromFileStr (git_sint32* base, strid_t file,
                 free (heap);
             }
         }
-#if !GIT_TEST
+#if FROTZ_IOS
         else if (chunkType == readtag("iFzA")) {
             if (!restoreClassesChunk(file, chunkSize))
                 return 1;

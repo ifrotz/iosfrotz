@@ -635,7 +635,7 @@ int     os_speech_output(const zchar *);
 FILE	*os_path_open (const char *, const char *);
 void    os_frotz_init_screen(void);
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 void	os_new_line(bool);
 void	os_split_win (int);
 void	os_mark_recent_save(void);
@@ -648,7 +648,7 @@ extern int init_memory(void);
 
 #include "setup.h"
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 extern int do_autosave, autosave_done, refresh_savedir;
 extern int fileZCodeOffset;
 extern char AUTOSAVE_FILE[];

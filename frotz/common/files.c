@@ -113,7 +113,7 @@ void script_open (void)
 	}
 
 	strcpy (script_name, new_name);
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	os_start_script();
 #endif
     }
@@ -136,7 +136,7 @@ void script_close (void)
     SET_WORD (H_FLAGS, h_flags)
 
     fclose (sfp); ostream_script = FALSE;
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	os_stop_script();
 #endif
 

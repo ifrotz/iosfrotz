@@ -733,7 +733,7 @@ int iosif_prompt_file_name (char *file_name, const char *default_name, int flag)
     strcpy (file_name, buf[0]=='/' ? buf : buffer);
     
     /* Warn if overwriting a file.  */
-#if !FROTZ_IOS_PORT
+#if !FROTZ_IOS
     FILE *fp;
     if ((flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
         && ((fp = fopen(file_name, "rb")) != NULL)) {

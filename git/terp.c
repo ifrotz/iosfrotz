@@ -11,7 +11,7 @@
 #include "git.h"
 #include "opcodes.h"
 
-#if !GIT_TEST
+#if FROTZ_IOS
 #include "glkios.h"
 #include "ipw_buf.h"
 #include "iosfrotz.h"
@@ -274,7 +274,7 @@ void startProgram (size_t cacheSize)
     L1 = startPos; // Initial PC.
     L2 = 0; // No arguments.
     
-#if !GIT_TEST
+#if FROTZ_IOS
     if (do_autosave) {
 
         frefid_t fref;
@@ -307,10 +307,10 @@ void startProgram (size_t cacheSize)
         }
     }
     do_autosave = 0;
-#endif // GIT_TEST
+#endif // FROTZ_IOS
 
     goto do_enter_function_L1;
-#if !GIT_TEST
+#if FROTZ_IOS
 #define CHECK_FINISHED \
     if (finished) \
         goto finished
@@ -1438,7 +1438,7 @@ do_tailcall:
         S1 = git_perform_glk (L1, L2, (glui32*) args);
         sp = gStackPointer;
 
-#if !GIT_TEST
+#if FROTZ_IOS
         if (do_autosave) {
             for (L3 = L2-1 ; L3 >= 0 ; --L3)
                 PUSH(savedArgs[L3]);
@@ -1465,7 +1465,7 @@ do_tailcall:
             autosave_done = 1;
             (void)POP; (void)POP; (void)POP; (void)POP;
         }
-#endif // GIT_TEST
+#endif // FROTZ_IOS
 
         NEXT;
 

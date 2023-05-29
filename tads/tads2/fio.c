@@ -40,7 +40,9 @@ Modified
 #include "linf.h"
 #include "cmap.h"
 
+#if FROTZ_IOS
 #include "iosfrotz.h"
+#endif
 
 /* compare a resource string */
 /* int fioisrsc(uchar *filbuf, char *refnam); */
@@ -1189,7 +1191,7 @@ static int fiorfda(osfildef *fp, vocddef *p, uint cnt)
     }
 }
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 char *make_abs_save_path(char *fname)
 {
     static char tempfname[PATH_MAX];
@@ -1274,7 +1276,7 @@ int fiorso(voccxdef *vctx, char *fname)
     /* presume success */
     result = FIORSO_SUCCESS;
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     fname = make_abs_save_path(fname);
 #endif
     /* open the input file */
@@ -1647,7 +1649,7 @@ int fiosav(voccxdef *vctx, char *fname, char *game_fname)
     int         err = FALSE;
     struct fiosav_cb_ctx  fnctx;
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     fname = make_abs_save_path(fname);
 #endif
 

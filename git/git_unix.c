@@ -8,7 +8,7 @@
 #include "glk.h"
 #include "glkstart.h" // This comes with the Glk library.
 
-#if !GIT_TEST
+#if FROTZ_IOS
 #include "iosfrotz.h"
 #endif
 
@@ -33,7 +33,7 @@ glkunix_argumentlist_t glkunix_arguments[] =
 
 void fatalError (const char * s)
 {
-#if !GIT_TEST
+#if FROTZ_IOS
     iosif_puts("*** fatal error: ");
     iosif_puts((char*)s);
     iosif_puts(" ***\n");
@@ -117,7 +117,7 @@ void glk_main ()
 
     gitWithStream (gStream, CACHE_SIZE, UNDO_SIZE);
 
-#if !GIT_TEST
+#if FROTZ_IOS
     git_shutdown_dispatch();
 #endif
 

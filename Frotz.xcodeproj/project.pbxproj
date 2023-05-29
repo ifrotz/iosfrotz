@@ -3525,7 +3525,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -3638,7 +3638,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -4715,7 +4715,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -4770,7 +4770,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";

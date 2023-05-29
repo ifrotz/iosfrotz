@@ -260,7 +260,7 @@ void interpret (void)
     void (*zfunc)(void);
     
     do {
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	zbyte *save_pcp = pcp;
 	zword *save_sp = sp,  *save_fp = fp;
         int save_frame_count = frame_count;
@@ -309,7 +309,7 @@ void interpret (void)
 	}
 	zfunc();
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	if (do_autosave) {
 	    pcp = save_pcp;
 	    sp = save_sp;

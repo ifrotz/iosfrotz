@@ -117,7 +117,7 @@
 #include "git.h"
 #include "gi_dispa.h"
 
-#if !GIT_TEST
+#if FROTZ_IOS
 #include "glkios.h"
 #include "iosfrotz.h"
 #endif
@@ -721,7 +721,7 @@ static void parse_glk_args(dispatch_splot_t *splot, char **proto, int depth,
                             opref = classes_get(*cx-'a', thisval);
                             if (!opref) {
                                 if (*cx=='b' || *cx=='c') { /// stream; hack to make autorestore of saved game with active transcript (bug) not fatal
-#if !GIT_TEST
+#if FROTZ_IOS
                                     iosif_win_puts(0, "[Reference to nonexistent Glk stream or file.]\n");
 #endif
                                 }
@@ -1528,7 +1528,7 @@ static char *get_game_id()
     return buf;
 }
 
-#if !GIT_TEST
+#if FROTZ_IOS
 void git_shutdown_dispatch() {
     window_t *win = NULL;
     stream_t *str = NULL;
@@ -1625,4 +1625,4 @@ git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize) {
         return FALSE;
     }
 }
-#endif // GIT_TEST
+#endif // FROTZ_IOS

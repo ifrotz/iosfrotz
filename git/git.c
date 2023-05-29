@@ -63,7 +63,7 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     // Shut everything down cleanly.
     shutdownUndo();
     shutdownMemory();
-#if !GIT_TEST
+#if FROTZ_IOS
     glk_window_close(NULL, NULL);
 #endif
 }
