@@ -139,8 +139,39 @@ void removeOldPngSplash(const char *filename) {
         BOOL needMDDictUpdate = NO;
         
         NSFileManager *defaultManager = [NSFileManager defaultManager];
-        
-        NSDictionary *fattributes = [[NSFileManager defaultManager] attributesOfFileSystemForPath:NSHomeDirectory() error:nil];
+        NSError *error = nil;
+        NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
+        NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+
+        NSArray *docFiles = [defaultManager contentsOfDirectoryAtPath:docPath error:&error];
+        if (![defaultManager fileExistsAtPath: appSuppPath]) {
+            [defaultManager createDirectoryAtPath: appSuppPath attributes: @{}];
+        }
+
+        for (NSString *file in docFiles) {
+            if ([file isEqualToString: kBookmarksFN]|| [file isEqualToString: kSIFilename] || [file isEqualToString: kMDFilename]
+                || [file isEqualToString: kDBCFilename]
+                || ([file hasPrefix: @"release_"] && [file hasSuffix: @".html"])) {
+                NSLog(@"Moving %@ to app supp dir", file);
+                NSString *srcFile = [docPath stringByAppendingPathComponent: file];
+                NSString *dstFile = [appSuppPath stringByAppendingPathComponent: file];
+                [defaultManager moveItemAtPath:srcFile toPath:dstFile error:&error];
+            } else if ([file hasPrefix: @"alabstersettings"]) {
+                // delete file left behind by previous .glkdata file bug
+                [defaultManager removeItemAtPath: [docPath stringByAppendingPathComponent: file] error:&error];
+            } else if ([file hasSuffix: kSaveExt] || [file hasSuffix: kAltSaveExt]) {
+                // Handle save files copied in via iTunes File Sharing
+                HandleITSSaveGameFile(file);
+            } else {
+                // Handle game files copied in via iTunes File Sharing
+                NSString *ext = [[file pathExtension] lowercaseString];
+                if (IsSupportedFileExtension(ext)) {
+                    HandleITSGameFile(file);
+                }
+            }
+        }
+
+        NSDictionary *fattributes = [defaultManager attributesOfFileSystemForPath:NSHomeDirectory() error:nil];
         NSNumber *fsfree = fattributes[NSFileSystemFreeSize];
         int64_t freeSpace = [fsfree longLongValue]/1024/1024;
         
@@ -168,33 +199,6 @@ void removeOldPngSplash(const char *filename) {
         
         m_defaultThumb = [UIImage imageNamed: @"compass-small"];
         
-        
-#ifdef NO_SANDBOX
-        // This won't actually succeed anymore in post 2.0 because of sandboxing
-        // I don't think jailbroken apps have to obey the sandbox, so if anyone compiles
-        // from source for JB devices, add this #define to iosfrotz.h
-        NSString *topAppDir = [[[[NSBundle mainBundle] resourcePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
-        
-        NSArray *apps = [defaultManager directoryContentsAtPath: topAppDir];
-        NSString *appDir;
-        for (appDir in apps) {
-            BOOL isDir = NO;
-            NSString *magnetDir = [[[topAppDir stringByAppendingPathComponent: appDir]
-                                    stringByAppendingPathComponent: @"Documents"] stringByAppendingPathComponent: @"FileMagnetStore"];
-            if ([defaultManager fileExistsAtPath: magnetDir isDirectory:&isDir] && isDir)
-                [self addPath: magnetDir];
-            NSString *airSharingDir = [[[topAppDir stringByAppendingPathComponent: appDir]
-                                        stringByAppendingPathComponent: @"Documents"] stringByAppendingPathComponent: @"Air Sharing"];
-            if ([defaultManager fileExistsAtPath: airSharingDir isDirectory:&isDir] && isDir)
-                [self addPath: airSharingDir];
-            if ([defaultManager fileExistsAtPath: [[topAppDir stringByAppendingPathComponent: appDir] stringByAppendingPathComponent: @"MobileFinder.app"]]) {
-                NSString *mfDir = [[topAppDir stringByAppendingPathComponent: appDir]  stringByAppendingPathComponent: @"Documents"];
-                if ([defaultManager fileExistsAtPath: mfDir isDirectory:&isDir] && isDir)
-                    [self addPath: mfDir];
-            }
-        }
-#endif
-
         UIBarButtonItem *browserButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Browse IFDB" style:UIBarButtonItemStylePlain target:self action:@selector(launchBrowser)];
         self.navigationItem.leftBarButtonItem = browserButtonItem;
 
@@ -203,12 +207,10 @@ void removeOldPngSplash(const char *filename) {
         m_editButtonItem = [self editButtonItem];
         [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
 
-        NSString *docPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)[0];
         NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
-        NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
-        NSString *siPath = [docPath stringByAppendingPathComponent: kSIFilename];
+        NSString *metadataPath = [appSuppPath stringByAppendingPathComponent: kMDFilename];
+        NSString *siPath = [appSuppPath stringByAppendingPathComponent: kSIFilename];
         NSString *splashPath = [docPath stringByAppendingPathComponent:	kSplashesDir];
-        NSError *error;
         
         NSString *dfltMDPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: kMDFilename];
         if (![defaultManager fileExistsAtPath: metadataPath])
@@ -246,7 +248,12 @@ void removeOldPngSplash(const char *filename) {
         NSMutableDictionary *titleDict = m_metaDict[kMDFullTitlesKey];
         NSMutableDictionary *thumbDict = m_metaDict[kMDThumbnailsKey];
         NSMutableDictionary *oldSplashDict = m_metaDict[kMDSplashesKey];
-        
+
+        if (![defaultManager fileExistsAtPath: splashPath])
+        {
+            [defaultManager createDirectoryAtPath:splashPath withIntermediateDirectories:NO attributes:nil error:&error];
+        }
+
         if (oldSplashDict) {
             if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
                 return self;
@@ -261,22 +268,7 @@ void removeOldPngSplash(const char *filename) {
             [m_metaDict removeObjectForKey: kMDSplashesKey];
             needMDDictUpdate = YES;
         }
-        
-        //BOOL extractSplashes = NO;
-        if (![defaultManager fileExistsAtPath: splashPath])
-        {
-            [defaultManager createDirectoryAtPath:splashPath withIntermediateDirectories:NO attributes:nil error:&error];
-            //extractSplashes = YES;
-        }
-#if 0 // splashes now extracted only when game file exists, to Library/Caches to be a better iCloud backup citizen
-        else if (!vers || [vers compare: @"1.5"]==NSOrderedAscending)
-            extractSplashes = YES;
-        if (extractSplashes) {
-            if ([self checkMinimumDiskSpace: kMinimumRequiredSpaceFirstLaunch freeSpace:freeSpace])
-                return self;
-            extractAllFilesFromZIPWithCallback([[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"], splashPath, removeOldPngSplash);
-        }
-#endif
+
         NSString *cacheSplashPath = [cachesPath stringByAppendingPathComponent: kSplashesDir];
         if (![defaultManager fileExistsAtPath: cacheSplashPath])
             [defaultManager createDirectoryAtPath:cacheSplashPath withIntermediateDirectories:NO attributes:nil error:&error];
@@ -721,9 +713,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 
 - (void)saveStoryInfoDict {
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = array[0];
-    NSString *siPath = [docPath stringByAppendingPathComponent: kSIFilename];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *siPath = [appSuppPath stringByAppendingPathComponent: kSIFilename];
     NSString *error;
     
     NSData *plistData = [NSPropertyListSerialization dataFromPropertyList:m_storyInfoDict
@@ -740,9 +731,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 - (void)saveMetaData {
     if (!m_metaDict) // || m_lowMemory)
         return;
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = array[0];
-    NSString *metadataPath = [docPath stringByAppendingPathComponent: kMDFilename];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *metadataPath = [appSuppPath stringByAppendingPathComponent: kMDFilename];
     NSData *plistData;
     NSString *error;
     
@@ -976,6 +966,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         
         [m_storyMainViewController autoRestoreSession];
     }
+    m_postLaunch = YES;
 }
 
 - (void)updateSearchResultsForSearchController:(UISearchController *)searchController
@@ -1023,15 +1014,17 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     CGRect newBounds = self.tableView.bounds;
     newBounds.origin.y += searchBar.frame.size.height;
     self.tableView.bounds = newBounds;
-    if (m_postLaunch || m_launchPath)
-        ;
-    else if ([m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
-        [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.3];
-    } else
-        self.view.userInteractionEnabled = YES;
     [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 
-    m_postLaunch = YES;
+    if (m_launchPath)
+        m_postLaunch = YES;
+    else if (!m_postLaunch
+             && [m_storyMainViewController willAutoRestoreSession:/*isFirstLaunch*/ YES]) {
+        [self performSelector: @selector(autoRestoreAndShowMainStoryController) withObject:nil afterDelay:0.1];
+    } else {
+        self.view.userInteractionEnabled = YES;
+        m_postLaunch = YES;
+    }
 }
 
 - (void)setPostLaunch {
@@ -1110,7 +1103,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
             [self.splitViewController dismissViewControllerAnimated:NO completion:nil];
-        [self.splitViewController presentViewController:nc animated:YES completion:nil];
+        [self.splitViewController presentViewController:nc animated:m_postLaunch completion:nil];
     }
 }
 
@@ -1410,7 +1403,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         }
         NSString *titleBlorb = nil, *authorBlorb = nil, *descriptBlorb = nil, *tuidBlorb = nil;
         if (isBlorb)
-            metaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
+            MetaDataFromBlorb(storyPath, &titleBlorb, &authorBlorb, &descriptBlorb, &tuidBlorb);
         m_details.storyTitle = [self fullTitleForStory: storyName];
         if (titleBlorb) {
             if (!m_details.storyTitle || [m_details.storyTitle length]==0 ||

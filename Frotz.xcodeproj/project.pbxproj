@@ -192,6 +192,7 @@
 		4490621E111FA698004E3E33 /* save.png in Resources */ = {isa = PBXBuildFile; fileRef = 4490621D111FA698004E3E33 /* save.png */; };
 		44910BE51256F85800409694 /* FrotzDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 44910BE41256F85800409694 /* FrotzDB.m */; };
 		449127E312643AA10013AD7C /* GlkView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449127E212643AA10013AD7C /* GlkView.m */; };
+		4491CCC52A0F20070054E1F6 /* SelectFiles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4491CCC42A0F20070054E1F6 /* SelectFiles.swift */; };
 		449C92461122188D006CCDF9 /* StoryView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449C92451122188D006CCDF9 /* StoryView.m */; };
 		449C929611221CE9006CCDF9 /* FrotzView.m in Sources */ = {isa = PBXBuildFile; fileRef = 449C929511221CE9006CCDF9 /* FrotzView.m */; };
 		449C92B311221E21006CCDF9 /* StoryInputLine.m in Sources */ = {isa = PBXBuildFile; fileRef = 449C92B211221E21006CCDF9 /* StoryInputLine.m */; };
@@ -202,6 +203,8 @@
 		44A45D6A1D7E56A000C073D9 /* tads-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D651D7E56A000C073D9 /* tads-320.png */; };
 		44A45D6B1D7E56A000C073D9 /* tads-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D661D7E56A000C073D9 /* tads-640.png */; };
 		44A45D6C1D7E56A000C073D9 /* tads.png in Resources */ = {isa = PBXBuildFile; fileRef = 44A45D671D7E56A000C073D9 /* tads.png */; };
+		44ABAED829F4858B00304FBB /* glkios.c in Sources */ = {isa = PBXBuildFile; fileRef = 44ABAED729F4858B00304FBB /* glkios.c */; };
+		44ABAEDA29F6035700304FBB /* labels.inc in Sources */ = {isa = PBXBuildFile; fileRef = 44ABAED929F6035700304FBB /* labels.inc */; };
 		44AF586B19491BB900E3EF8A /* locale in Resources */ = {isa = PBXBuildFile; fileRef = 44AF586A19491BB900E3EF8A /* locale */; };
 		44B0ECC61B23D0B200C36380 /* accel.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D23126A402400B283FF /* accel.c */; };
 		44B0ECC71B23D0B200C36380 /* compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = 44690D24126A402400B283FF /* compiler.c */; };
@@ -239,6 +242,7 @@
 		44B0ED061B23D2A200C36380 /* libglulxe.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 44B0ECDA1B23D1D800C36380 /* libglulxe.a */; };
 		44B63FD219F0DD0D00A143FE /* vmconnom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 44B63FD119F0DD0D00A143FE /* vmconnom.cpp */; };
 		44B6DD390F7C74E500EBE1BD /* FileTransferInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */; };
+		44BC4E822A0887D500FCDCA3 /* Frotz-1280x1280F.png in Resources */ = {isa = PBXBuildFile; fileRef = 44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */; };
 		44BE71C319EB7C6F00036AA6 /* bif.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719A19EB7C6F00036AA6 /* bif.c */; };
 		44BE71C419EB7C6F00036AA6 /* bifgdum.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719B19EB7C6F00036AA6 /* bifgdum.c */; };
 		44BE71C519EB7C6F00036AA6 /* cmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE719C19EB7C6F00036AA6 /* cmap.c */; };
@@ -340,6 +344,8 @@
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
 		44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */; };
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
+		44F35FED2511B15400807420 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F35FEC2511B15400807420 /* AVFoundation.framework */; };
+		44F35FEF2511DFF100807420 /* Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44F35FEE2511DFF100807420 /* Speech.framework */; };
 		44F7B0FF1B20134A00DDD2A3 /* libtads.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4454850C1B1FBAB900E8EE7B /* libtads.a */; };
 		44F7B1021B20176A00DDD2A3 /* fio.c in Sources */ = {isa = PBXBuildFile; fileRef = 44BE71A219EB7C6F00036AA6 /* fio.c */; };
 		44F7B1231B2021BF00DDD2A3 /* FtpDataConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 44D0139B1372707D00B7F616 /* FtpDataConnection.m */; };
@@ -1015,6 +1021,8 @@
 		449127E012643AA10013AD7C /* FrotzSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzSettings.h; sourceTree = "<group>"; };
 		449127E112643AA10013AD7C /* GlkView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlkView.h; sourceTree = "<group>"; };
 		449127E212643AA10013AD7C /* GlkView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlkView.m; sourceTree = "<group>"; };
+		4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Frotz-Bridging-Header.h"; sourceTree = "<group>"; };
+		4491CCC42A0F20070054E1F6 /* SelectFiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectFiles.swift; sourceTree = "<group>"; };
 		449516A90F7DEDA90060F524 /* FTPServ.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FTPServ.h; sourceTree = "<group>"; };
 		449516AA0F7DEDA90060F524 /* FTPServ.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FTPServ.m; sourceTree = "<group>"; };
 		44951F760E32799500FEC2B0 /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
@@ -1041,6 +1049,8 @@
 		44A45D6D1D7E60E800C073D9 /* osios.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = osios.h; sourceTree = "<group>"; };
 		44A45D6E1D7E664E00C073D9 /* h_arm32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm32.h; sourceTree = "<group>"; };
 		44A45D6F1D7E664E00C073D9 /* h_arm64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = h_arm64.h; sourceTree = "<group>"; };
+		44ABAED729F4858B00304FBB /* glkios.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glkios.c; sourceTree = "<group>"; };
+		44ABAED929F6035700304FBB /* labels.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = labels.inc; sourceTree = "<group>"; };
 		44AF586A19491BB900E3EF8A /* locale */ = {isa = PBXFileReference; lastKnownFileType = folder; path = locale; sourceTree = "<group>"; };
 		44B0ECAB1B23D00100C36380 /* libgit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgit.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B0ECDA1B23D1D800C36380 /* libglulxe.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglulxe.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1048,6 +1058,7 @@
 		44B63FD119F0DD0D00A143FE /* vmconnom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vmconnom.cpp; sourceTree = "<group>"; };
 		44B6DD370F7C74E500EBE1BD /* FileTransferInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileTransferInfo.h; sourceTree = "<group>"; };
 		44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileTransferInfo.m; sourceTree = "<group>"; };
+		44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Frotz-1280x1280F.png"; sourceTree = "<group>"; };
 		44BE719A19EB7C6F00036AA6 /* bif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bif.c; sourceTree = "<group>"; };
 		44BE719B19EB7C6F00036AA6 /* bifgdum.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bifgdum.c; sourceTree = "<group>"; };
 		44BE719C19EB7C6F00036AA6 /* cmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmap.c; sourceTree = "<group>"; };
@@ -1169,6 +1180,8 @@
 		44F2F5B611447AE0001AE868 /* CompletionLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CompletionLabel.h; sourceTree = "<group>"; };
 		44F2F5B711447AE0001AE868 /* CompletionLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CompletionLabel.m; sourceTree = "<group>"; };
 		44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WordSelectionProtocol.h; sourceTree = "<group>"; };
+		44F35FEC2511B15400807420 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		44F35FEE2511DFF100807420 /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = System/Library/Frameworks/Speech.framework; sourceTree = SDKROOT; };
 		44F7B1071B20213E00DDD2A3 /* libFTPServ.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFTPServ.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B14F1B202A0800DDD2A3 /* libminizip.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libminizip.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44F7B1A01B20D4BD00DDD2A3 /* libglkios.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libglkios.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1210,6 +1223,8 @@
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 				44DA2B9D24AAB5F300B87F91 /* WebKit.framework in Frameworks */,
+				44F35FED2511B15400807420 /* AVFoundation.framework in Frameworks */,
+				44F35FEF2511DFF100807420 /* Speech.framework in Frameworks */,
 				4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1345,6 +1360,8 @@
 				44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */,
 				443C9B480E46A518003A44D4 /* ui_utils.h */,
 				443C9B490E46A518003A44D4 /* ui_utils.m */,
+				4491CCC42A0F20070054E1F6 /* SelectFiles.swift */,
+				4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */,
 			);
 			name = UI;
 			path = ui;
@@ -1451,6 +1468,8 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				44F35FEE2511DFF100807420 /* Speech.framework */,
+				44F35FEC2511B15400807420 /* AVFoundation.framework */,
 				55A50A4F1B8E7EA700E70F53 /* libz.dylib */,
 				44D013AE1372787E00B7F616 /* SystemConfiguration.framework */,
 				4474905F0E85BA4C00A5310F /* CFNetwork.framework */,
@@ -1542,6 +1561,7 @@
 				4423590A1261894100BFB245 /* cgunicod.c */,
 				4423590B1261894100BFB245 /* gi_blorb.c */,
 				442358BC1261882100BFB245 /* gi_dispa.c */,
+				44ABAED729F4858B00304FBB /* glkios.c */,
 				442358C21261882100BFB245 /* ipblorb.c */,
 				442358C31261882100BFB245 /* ipevent.c */,
 				442358C41261882100BFB245 /* ipfref.c */,
@@ -1618,6 +1638,7 @@
 		44690D22126A3FFD00B283FF /* git */ = {
 			isa = PBXGroup;
 			children = (
+				44ABAED929F6035700304FBB /* labels.inc */,
 				44690D23126A402400B283FF /* accel.c */,
 				44690D24126A402400B283FF /* compiler.c */,
 				44690D25126A402400B283FF /* compiler.h */,
@@ -1937,21 +1958,56 @@
 		44BE719819EB7C5E00036AA6 /* tads2 */ = {
 			isa = PBXGroup;
 			children = (
+				4472101619ECE69F00AAC16F /* argize.c */,
+				44BE719A19EB7C6F00036AA6 /* bif.c */,
+				44BE719B19EB7C6F00036AA6 /* bifgdum.c */,
+				44BE719C19EB7C6F00036AA6 /* cmap.c */,
+				44BE719D19EB7C6F00036AA6 /* cmd.c */,
+				44BE719E19EB7C6F00036AA6 /* dat.c */,
+				44BE719F19EB7C6F00036AA6 /* dbgtr.c */,
+				4472101F19ECE69F00AAC16F /* emt.c */,
+				44BE71A019EB7C6F00036AA6 /* errmsg.c */,
+				44BE71A119EB7C6F00036AA6 /* execmd.c */,
+				44BE71A219EB7C6F00036AA6 /* fio.c */,
+				44BE71A319EB7C6F00036AA6 /* fioxor.c */,
+				44BE71A419EB7C6F00036AA6 /* getstr.c */,
+				44BE71A819EB7C6F00036AA6 /* ler.c */,
 				446D26B619ECFA8900B58477 /* linfdum.c */,
-				446D26AA19ECF20600B58477 /* common.h */,
-				446D26AB19ECF20600B58477 /* config.h */,
-				446D26AC19ECF20600B58477 /* missing.h */,
-				446D26AD19ECF20600B58477 /* osfrobtads.h */,
+				44BE71AA19EB7C6F00036AA6 /* lst.c */,
+				44BE71AB19EB7C6F00036AA6 /* mch.c */,
+				44BE71AC19EB7C6F00036AA6 /* mcm.c */,
+				44BE71AD19EB7C6F00036AA6 /* mcs.c */,
+				44BE71AE19EB7C6F00036AA6 /* obj.c */,
+				4472103519ECE69F00AAC16F /* objcomp.c */,
+				444F7D1E19F2BF9200927703 /* oem_glk.c */,
+				44BE71B219EB7C6F00036AA6 /* oserr.c */,
+				44BE71B319EB7C6F00036AA6 /* osifc.c */,
+				44BE71B419EB7C6F00036AA6 /* osrestad.c */,
+				4472103F19ECE69F00AAC16F /* osstzprs.c */,
+				4472104119ECE69F00AAC16F /* ostzposix.c */,
+				44BE71B719EB7C6F00036AA6 /* out.c */,
+				44BE71B819EB7C6F00036AA6 /* output.c */,
+				44BE71B919EB7C6F00036AA6 /* ply.c */,
+				44BE71BA19EB7C6F00036AA6 /* qas.c */,
+				44BE71BB19EB7C6F00036AA6 /* regex.c */,
+				44BE71BC19EB7C6F00036AA6 /* run.c */,
+				44BE71BD19EB7C6F00036AA6 /* runstat.c */,
+				44BE71BE19EB7C6F00036AA6 /* suprun.c */,
+				4472105019ECE69F00AAC16F /* tcgdum.c */,
+				44BE71BF19EB7C6F00036AA6 /* trd.c */,
+				44BE71C019EB7C6F00036AA6 /* voc.c */,
+				44BE71C119EB7C6F00036AA6 /* vocab.c */,
+				4472105719ECE69F00AAC16F /* voccomp.c */,
 				446D26AE19ECF20600B58477 /* osportable.cc */,
 				4472101519ECE69F00AAC16F /* appctx.h */,
-				4472101619ECE69F00AAC16F /* argize.c */,
 				4472101719ECE69F00AAC16F /* argize.h */,
 				4472101919ECE69F00AAC16F /* bif.h */,
 				4472101A19ECE69F00AAC16F /* cmap.h */,
 				4472101B19ECE69F00AAC16F /* cmd.h */,
+				446D26AA19ECF20600B58477 /* common.h */,
+				446D26AB19ECF20600B58477 /* config.h */,
 				4472101C19ECE69F00AAC16F /* dat.h */,
 				4472101E19ECE69F00AAC16F /* dbg.h */,
-				4472101F19ECE69F00AAC16F /* emt.c */,
 				4472102019ECE69F00AAC16F /* emt.h */,
 				4472102119ECE69F00AAC16F /* err.h */,
 				4472102219ECE69F00AAC16F /* fio.h */,
@@ -1969,19 +2025,17 @@
 				4472103119ECE69F00AAC16F /* mcl.h */,
 				4472103219ECE69F00AAC16F /* mcm.h */,
 				4472103319ECE69F00AAC16F /* mcs.h */,
+				446D26AC19ECF20600B58477 /* missing.h */,
 				4472103419ECE69F00AAC16F /* obj.h */,
-				4472103519ECE69F00AAC16F /* objcomp.c */,
 				4472103619ECE69F00AAC16F /* oem.h */,
-				444F7D1E19F2BF9200927703 /* oem_glk.c */,
 				4472103719ECE69F00AAC16F /* opc.h */,
 				4472103819ECE69F00AAC16F /* os.h */,
 				4472103919ECE69F00AAC16F /* osbigmem.h */,
+				446D26AD19ECF20600B58477 /* osfrobtads.h */,
 				4472103A19ECE69F00AAC16F /* osgen.h */,
 				4472103C19ECE69F00AAC16F /* osifc.h */,
 				4472103D19ECE69F00AAC16F /* osifctyp.h */,
-				4472103F19ECE69F00AAC16F /* osstzprs.c */,
 				4472104019ECE69F00AAC16F /* osstzprs.h */,
-				4472104119ECE69F00AAC16F /* ostzposix.c */,
 				4472104219ECE69F00AAC16F /* ply.h */,
 				4472104319ECE69F00AAC16F /* prp.h */,
 				4472104519ECE69F00AAC16F /* prs.h */,
@@ -1991,43 +2045,10 @@
 				4472104A19ECE69F00AAC16F /* std.h */,
 				4472104C19ECE69F00AAC16F /* sup.h */,
 				4472104F19ECE69F00AAC16F /* tcg.h */,
-				4472105019ECE69F00AAC16F /* tcgdum.c */,
 				4472105119ECE69F00AAC16F /* tio.h */,
 				4472105319ECE69F00AAC16F /* tok.h */,
 				4472105519ECE69F00AAC16F /* trd.h */,
 				4472105619ECE69F00AAC16F /* voc.h */,
-				4472105719ECE69F00AAC16F /* voccomp.c */,
-				44BE719A19EB7C6F00036AA6 /* bif.c */,
-				44BE719B19EB7C6F00036AA6 /* bifgdum.c */,
-				44BE719C19EB7C6F00036AA6 /* cmap.c */,
-				44BE719D19EB7C6F00036AA6 /* cmd.c */,
-				44BE719E19EB7C6F00036AA6 /* dat.c */,
-				44BE719F19EB7C6F00036AA6 /* dbgtr.c */,
-				44BE71A019EB7C6F00036AA6 /* errmsg.c */,
-				44BE71A119EB7C6F00036AA6 /* execmd.c */,
-				44BE71A219EB7C6F00036AA6 /* fio.c */,
-				44BE71A319EB7C6F00036AA6 /* fioxor.c */,
-				44BE71A419EB7C6F00036AA6 /* getstr.c */,
-				44BE71A819EB7C6F00036AA6 /* ler.c */,
-				44BE71AA19EB7C6F00036AA6 /* lst.c */,
-				44BE71AB19EB7C6F00036AA6 /* mch.c */,
-				44BE71AC19EB7C6F00036AA6 /* mcm.c */,
-				44BE71AD19EB7C6F00036AA6 /* mcs.c */,
-				44BE71AE19EB7C6F00036AA6 /* obj.c */,
-				44BE71B219EB7C6F00036AA6 /* oserr.c */,
-				44BE71B319EB7C6F00036AA6 /* osifc.c */,
-				44BE71B419EB7C6F00036AA6 /* osrestad.c */,
-				44BE71B719EB7C6F00036AA6 /* out.c */,
-				44BE71B819EB7C6F00036AA6 /* output.c */,
-				44BE71B919EB7C6F00036AA6 /* ply.c */,
-				44BE71BA19EB7C6F00036AA6 /* qas.c */,
-				44BE71BB19EB7C6F00036AA6 /* regex.c */,
-				44BE71BC19EB7C6F00036AA6 /* run.c */,
-				44BE71BD19EB7C6F00036AA6 /* runstat.c */,
-				44BE71BE19EB7C6F00036AA6 /* suprun.c */,
-				44BE71BF19EB7C6F00036AA6 /* trd.c */,
-				44BE71C019EB7C6F00036AA6 /* voc.c */,
-				44BE71C119EB7C6F00036AA6 /* vocab.c */,
 			);
 			path = tads2;
 			sourceTree = "<group>";
@@ -2164,6 +2185,7 @@
 				4472003C1F67A13900DAB193 /* Frotz-2048x2048.png */,
 				44DA420C15E987A1007F61DA /* Frotz-512x512.png */,
 				44DA420D15E987A1007F61DA /* Frotz-1024x1024.png */,
+				44BC4E812A0887D500FCDCA3 /* Frotz-1280x1280F.png */,
 				44D3F4D819C147BB00BFF014 /* Frotz-2048x2048F.png */,
 				44D3F4D719C147BB00BFF014 /* Frotz-2048x2048B.png */,
 			);
@@ -2360,6 +2382,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 44F7B20F1B22CFF200DDD2A3 /* Build configuration list for PBXNativeTarget "frotzlib" */;
 			buildPhases = (
+				44BC4E7E2A0592A700FCDCA3 /* ShellScript */,
 				44F7B1FA1B22CFF100DDD2A3 /* Sources */,
 				44F7B1FB1B22CFF100DDD2A3 /* Frameworks */,
 				44F7B1FC1B22CFF100DDD2A3 /* CopyFiles */,
@@ -2383,6 +2406,7 @@
 				TargetAttributes = {
 					1D6058900D05DD3D006BFB54 = {
 						DevelopmentTeam = 6KG7666N88;
+						LastSwiftMigration = 1430;
 						ProvisioningStyle = Automatic;
 					};
 					445484CC1B1E61A900E8EE7B = {
@@ -2459,6 +2483,7 @@
 				445484C81B1D04C200E8EE7B /* Images.xcassets in Resources */,
 				44418F7E124576E800F49BC4 /* flip.png in Resources */,
 				44550A7F1277B39300CDEA97 /* TO-DO.txt in Resources */,
+				44BC4E822A0887D500FCDCA3 /* Frotz-1280x1280F.png in Resources */,
 				44550B1B1277FC2B00CDEA97 /* glulx.png in Resources */,
 				44D013B11372799D00B7F616 /* ftp_commands.plist in Resources */,
 				44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */,
@@ -2496,7 +2521,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo Build Number $CONFIGURATION\ntail -1 buildnumber.xcconfig\nif [ \"$CONFIGURATION\" = \"Distribution\" ]; then    # AdHoc_Distribution\n    /usr/bin/perl -pe 's/(BUILD_NUMBER = )(\\d+)/$1.($2+1)/eg' -i buildnumber.xcconfig\nfi";
+			shellScript = "echo Build Number $CONFIGURATION\ntail -1 buildnumber.xcconfig\nif [ \"$CONFIGURATION\" = \"Distribution\" ]; then    # AdHoc_Distribution\n    /usr/bin/perl -pe 's/(BUILD_NUMBER = )(\\d+)/$1.($2+1)/eg' -i buildnumber.xcconfig\nfi\n";
 		};
 		44A2E71F11227AA000E35CCC /* Copy bundled stories */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2510,7 +2535,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
+			shellScript = "if [ ! -e $SRCROOT/include/ifrotzdefs.h ]; then\n    /bin/cp $SRCROOT/include/ifrotzdefdefs.h $SRCROOT/include/ifrotzdefs.h\nfi\nrm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle\nif [ \"$FROTZ_BETA\" -ne \"1\" ]; then\n    /bin/cp -rv ${PROJECT_DIR}/resources/bundle ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/\n    /bin/rm -rf ${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bundle/.svn\nfi\n";
+		};
+		44BC4E7E2A0592A700FCDCA3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -e $SRCROOT/include/ifrotzdefs.h ]; then\n    /bin/cp $SRCROOT/include/ifrotzdefdefs.h $SRCROOT/include/ifrotzdefs.h\nfi\n";
 		};
 		44D42FD91F6ECE31003406FB /* Script - Make subsequent Pods scripts optional */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2566,6 +2608,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				44F7B1F91B22C6B800DDD2A3 /* main.m in Sources */,
+				44ABAEDA29F6035700304FBB /* labels.inc in Sources */,
 				447F882A1044DC0B002CA22D /* AboutFrotz.m in Sources */,
 				44FA76C20E4A5D89007DCC99 /* BookmarkListController.m in Sources */,
 				44FB39FA0E62406C00142D85 /* ColorPicker.m in Sources */,
@@ -2588,6 +2631,7 @@
 				44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */,
 				4413B1631071CA2700D39E6A /* RichTextView.m in Sources */,
 				449C92BE11221E7D006CCDF9 /* StatusLine.m in Sources */,
+				4491CCC52A0F20070054E1F6 /* SelectFiles.swift in Sources */,
 				446B9EAC0E2075D1002BDD65 /* StoryBrowser.m in Sources */,
 				447DF3BA123C136500689076 /* StoryDetailsController.m in Sources */,
 				449C92B311221E21006CCDF9 /* StoryInputLine.m in Sources */,
@@ -2904,6 +2948,7 @@
 				44F7B1F41B20DAF300DDD2A3 /* ipw_grid.c in Sources */,
 				44F7B1E71B20DAF300DDD2A3 /* gi_dispa.c in Sources */,
 				44F7B1E91B20DAF300DDD2A3 /* ipevent.c in Sources */,
+				44ABAED829F4858B00304FBB /* glkios.c in Sources */,
 				44F7B1EE1B20DAF300DDD2A3 /* ipschan.c in Sources */,
 				44F7B1EC1B20DAF300DDD2A3 /* ipinput.c in Sources */,
 				44F7B1F71B20DAF300DDD2A3 /* test-multiwin.c in Sources */,
@@ -2992,11 +3037,13 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEFINES_MODULE = NO;
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -3006,7 +3053,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3033,6 +3080,9 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Debug;
@@ -3046,11 +3096,13 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEFINES_MODULE = NO;
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3058,7 +3110,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3085,6 +3137,8 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Release;
@@ -3120,7 +3174,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3154,7 +3208,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3188,7 +3242,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3222,7 +3276,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3267,7 +3321,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3317,7 +3371,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3368,7 +3422,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3419,7 +3473,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3462,6 +3516,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = NO;
+				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -3470,7 +3525,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -3482,7 +3537,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = include;
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
@@ -3505,11 +3560,13 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEFINES_MODULE = NO;
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3517,7 +3574,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3545,6 +3602,8 @@
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = Distribution;
@@ -3570,6 +3629,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -3578,7 +3638,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -3590,7 +3650,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = include;
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -3611,11 +3671,13 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEFINES_MODULE = NO;
 				DEVELOPMENT_TEAM = 6KG7666N88;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -3623,7 +3685,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3654,6 +3716,8 @@
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRIP_INSTALLED_PRODUCT = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				WARNING_CFLAGS = "-Wno-logical-op-parentheses";
 			};
 			name = "Release armv6";
@@ -3693,7 +3757,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3731,7 +3795,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3770,7 +3834,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3809,7 +3873,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3854,7 +3918,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3892,7 +3956,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3931,7 +3995,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3970,7 +4034,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4014,7 +4078,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4051,7 +4115,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4089,7 +4153,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4127,7 +4191,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4172,7 +4236,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4210,7 +4274,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4249,7 +4313,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4288,7 +4352,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4333,7 +4397,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4371,7 +4435,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4410,7 +4474,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4449,7 +4513,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4494,7 +4558,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4532,7 +4596,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4571,7 +4635,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4610,7 +4674,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4641,6 +4705,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -4650,7 +4715,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -4662,7 +4727,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = include;
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
@@ -4696,6 +4761,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FROTZ_BETA = 0;
@@ -4704,7 +4770,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"unix=1",
 					"COLOR_SUPPORT=1",
-					"FROTZ_IOS_PORT=1",
+					"FROTZ_IOS=1",
 				);
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
@@ -4716,7 +4782,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = include;
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";

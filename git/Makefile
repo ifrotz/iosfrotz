@@ -5,35 +5,28 @@
 
 # Note: when using xglk, do NOT define USE_MMAP in step 2, below.
 
-#
-#GLK = cheapglk
-GLK = glkterm
+GLK = cheapglk
+#GLK = glkterm
 #GLK = xglk
 
 GLKINCLUDEDIR = ../$(GLK)
 GLKLIBDIR = ../$(GLK)
-GLKMAKEFILE = Make.$(GLK)w
+GLKMAKEFILE = Make.$(GLK)
 
 # -----------------------------------------------------------------
 # Step 2: pick a C compiler.
 
 # Generic C compiler
-CC = cc -O2 -m32
-OPTIONS = 
+CC = cc -O2
+OPTIONS = -DGIT_TEST=1
 
-# Best settings for GCC 2.95. This generates faster code than
-# GCC 3, so you should use this setup if possible.
+# Settings for GCC
 #CC = gcc -Wall -O3
 #OPTIONS = -DUSE_DIRECT_THREADING -DUSE_MMAP -DUSE_INLINE
 
-# Best settings for GCC 3. The optimiser in this version of GCC
-# is somewhat broken, so we can't use USE_DIRECT_THREADING.
-#CC = gcc -Wall -O3
-#OPTIONS = -DUSE_MMAP -DUSE_INLINE
-
-# Mac OS X (PowerPC) settings.
-#CC = gcc2 -Wall -O3 -no-cpp-precomp
-#OPTIONS = -DUSE_DIRECT_THREADING -DUSE_BIG_ENDIAN_UNALIGNED -DUSE_MMAP -DUSE_INLINE
+# Settings for Clang
+#CC = clang -Wall -O3
+#OPTIONS = -DUSE_DIRECT_THREADING -DUSE_MMAP -DUSE_INLINE
 
 # -----------------------------------------------------------------
 # Step 3: decide where you want to install the compiled executable.
@@ -44,14 +37,14 @@ INSTALLDIR = /usr/local/bin
 # You shouldn't have to change anything from here on down.
 
 MAJOR = 1
-MINOR = 2
-PATCH = 4
+MINOR = 3
+PATCH = 6
 
 include $(GLKINCLUDEDIR)/$(GLKMAKEFILE)
 
 CFLAGS = $(OPTIONS) -I$(GLKINCLUDEDIR)
 
-LIBS = -L$(GLKLIBDIR) $(GLKLIB) $(LINKLIBS) 
+LIBS = -L$(GLKLIBDIR) $(GLKLIB) $(LINKLIBS) -lm
 
 HEADERS = version.h git.h config.h compiler.h \
 	memory.h opcodes.h labels.inc
@@ -91,14 +84,18 @@ DISTZIP = git-$(MAJOR)$(MINOR)$(PATCH).zip
 
 DISTDIR = git-$(MAJOR).$(MINOR).$(PATCH)
 
-DISTFILES = README.txt Makefile Makefile.win win $(HEADERS) $(SOURCE)
+DISTFILES = README.txt Makefile $(HEADERS) $(SOURCE)
 
 dist: $(DISTFILES)
 	rm -rf $(DISTDIR)
 	mkdir $(DISTDIR)
 	cp -r $(DISTFILES) $(DISTDIR)
-	mkdir $(DISTDIR)/test
-	cp $(TESTS) $(DISTDIR)/test
+	mkdir $(DISTDIR)/win
+	cp win/*.rc win/*.sln win/*.vcxproj win/*.vcxproj.filters $(DISTDIR)/win
+	mkdir $(DISTDIR)/win/help
+	cp win/help/*.htm win/help/*.css win/help/*.hh* $(DISTDIR)/win/help
+	mkdir $(DISTDIR)/win/res
+	cp win/res/*.ico win/res/*.manifest $(DISTDIR)/win/res
 	find $(DISTDIR) -name "CVS" | xargs rm -rf
 	rm -f $(DISTZIP)
 	zip -r $(DISTZIP) $(DISTDIR)

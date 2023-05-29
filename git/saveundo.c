@@ -36,6 +36,14 @@ void initUndo (git_uint32 size)
     gUndo = NULL;
 }
 
+int hasUndo ()
+{
+    if (gUndo == NULL)
+        return 1;
+    else
+        return 0;
+}
+
 int saveUndo (git_sint32 * base, git_sint32 * sp)
 {
     git_uint32 undoSize = sizeof(UndoRecord);
@@ -70,14 +78,14 @@ int saveUndo (git_sint32 * base, git_sint32 * sp)
         // We're diffing against the gamefile.        
         for ( ; addr < gExtStart ; addr += 256, ++slot)
         {
-            if (memcmp (gRom + addr, gRam + addr, 256) != 0)
+            if (memcmp (gInitMem + addr, gMem + addr, 256) != 0)
             {
                 // We need to save this page.
                 git_uint8 * page = malloc(256);
                 if (page == NULL)
                     fatalError ("Couldn't allocate memory for undo");
                     
-                memcpy (page, gRam + addr, 256);
+                memcpy (page, gMem + addr, 256);
                 undo->memoryMap[slot] = page;
                 totalSize += 256;
             }
@@ -85,7 +93,7 @@ int saveUndo (git_sint32 * base, git_sint32 * sp)
             {
                 // We don't need to save this page.
                 // Just make it point into ROM.
-                undo->memoryMap[slot] = gRom + addr;
+                undo->memoryMap[slot] = gInitMem + addr;
             }
         }
 
@@ -96,7 +104,7 @@ int saveUndo (git_sint32 * base, git_sint32 * sp)
             if (page == NULL)
                 fatalError ("Couldn't allocate memory for undo");
                 
-            memcpy (page, gRam + addr, 256);
+            memcpy (page, gMem + addr, 256);
             undo->memoryMap[slot] = page;
             totalSize += 256;
         }
@@ -107,11 +115,11 @@ int saveUndo (git_sint32 * base, git_sint32 * sp)
         git_uint32 endMem = (gUndo->endMem < gEndMem) ? gUndo->endMem : gEndMem;
         for ( ; addr < endMem ; addr += 256, ++slot)
         {
-            if (memcmp (gUndo->memoryMap [slot], gRam + addr, 256) != 0)
+            if (memcmp (gUndo->memoryMap [slot], gMem + addr, 256) != 0)
             {
                 // We need to save this page.
                 git_uint8 * page = malloc(256);
-                memcpy (page, gRam + addr, 256);
+                memcpy (page, gMem + addr, 256);
                 undo->memoryMap[slot] = page;
                 totalSize += 256;
             }
@@ -130,7 +138,7 @@ int saveUndo (git_sint32 * base, git_sint32 * sp)
             if (page == NULL)
                 fatalError ("Couldn't allocate memory for undo");
                 
-            memcpy (page, gRam + addr, 256);
+            memcpy (page, gMem + addr, 256);
             undo->memoryMap[slot] = page;
             totalSize += 256;
         }
@@ -184,9 +192,9 @@ int restoreUndo (git_sint32* base, git_uint32 protectPos, git_uint32 protectSize
         if (protectSize > 0 && protectPos < gEndMem)
         {
             for ( ; addr < (protectPos & ~0xff) ; addr += 256, ++map)
-                memcpy (gRam + addr, *map, 256);
+                memcpy (gMem + addr, *map, 256);
             
-            memcpy (gRam + addr, *map, protectPos & 0xff);
+            memcpy (gMem + addr, *map, protectPos & 0xff);
             protectSize += protectPos & 0xff;
             
             while (protectSize > 256)
@@ -194,7 +202,7 @@ int restoreUndo (git_sint32* base, git_uint32 protectPos, git_uint32 protectSize
 
             if (addr < gEndMem)
             {
-                memcpy (gRam + addr + protectSize,
+                memcpy (gMem + addr + protectSize,
                         *map + protectSize,
                         256 - protectSize);
             }
@@ -202,7 +210,7 @@ int restoreUndo (git_sint32* base, git_uint32 protectPos, git_uint32 protectSize
         }
 
         for ( ; addr < gEndMem ; addr += 256, ++map)
-            memcpy (gRam + addr, *map, 256);
+            memcpy (gMem + addr, *map, 256);
 
         // Restore the heap.
         if (heap_apply_summary (undo->heapSize, undo->heap))
@@ -220,6 +228,30 @@ int restoreUndo (git_sint32* base, git_uint32 protectPos, git_uint32 protectSize
 
         // And we're done.
         return 0;
+    }
+}
+
+void discardUndo ()
+{
+    if (gUndo == NULL)
+    {
+        // Nothing to undo!
+        return;
+    }
+    else
+    {
+        UndoRecord * undo = gUndo;
+        // Delete the undo record.
+        gUndo = undo->prev;
+        deleteRecord (undo);
+
+        if (gUndo)
+            gUndo->next = NULL;
+        else
+            assert (gUndoSize == 0);
+
+        // And we're done.
+        return;
     }
 }
 
@@ -264,7 +296,7 @@ static void reserveSpace (git_uint32 n)
             if (n > 0)
             {
                 gUndo = NULL;
-                
+
                 deleteRecord (u);
                 assert (gUndoSize == 0);
             }
@@ -296,7 +328,7 @@ static void deleteRecord (UndoRecord * u)
         // We're diffing against the gamefile.
         while (addr < u->endMem && addr < gExtStart)
         {
-            if (u->memoryMap [slot] == (gRom + addr))
+            if (u->memoryMap [slot] == (gInitMem + addr))
                 u->memoryMap [slot] = NULL;
             addr += 256, ++slot;
         }

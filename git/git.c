@@ -12,7 +12,6 @@
 static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cacheSize, git_uint32 undoSize)
 {
     git_uint32 version;
-    enum IOMode ioMode = IO_NULL;
     
     init_accel ();
 
@@ -37,7 +36,7 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
         // officially obsolete. The only significant
         // difference is the lack of I/O modes. In 1.0,
         // all output goes directly to the Glk library.
-        ioMode = IO_GLK;
+        gIoMode = IO_GLK;
     }
     else if (version == 0x020000 && version <= 0x0200FF)
     {
@@ -49,7 +48,7 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     }
     else if (version >= 0x030100 && version <= 0x0301FF)
     {
-        // We support version 3.1, which adds some memory-management opcodes.
+        // We support version 3.1, which adds more opcodes.
     }
     else
     {
@@ -59,12 +58,14 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     }
     
     // Call the top-level function.
-    startProgram (cacheSize, ioMode);
+    startProgram (cacheSize);
     
     // Shut everything down cleanly.
     shutdownUndo();
     shutdownMemory();
+#if FROTZ_IOS
     glk_window_close(NULL, NULL);
+#endif
 }
 
 static giblorb_result_t handleBlorb (strid_t stream)
@@ -120,7 +121,7 @@ void gitWithStream (strid_t str, git_uint32 cacheSize, git_uint32 undoSize)
     if (4 != glk_get_buffer_stream (str, buffer, 4))
         fatalError ("can't read from game file stream");
     
-    if (read32 (buffer) == FORM)
+    if (readtag (buffer) == FORM)
     {
         giblorb_result_t result = handleBlorb (str);
         if (result.chunktype != giblorb_make_id('G', 'L', 'U', 'L'))
@@ -151,6 +152,7 @@ void gitWithStream (strid_t str, git_uint32 cacheSize, git_uint32 undoSize)
         remaining -= n;
         ptr += n;
     }
+
     gitMain ((git_uint8 *) game, gameSize, cacheSize, undoSize);
     free (game);
 }

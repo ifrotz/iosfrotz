@@ -33,6 +33,21 @@ UIImage *drawUIImageInUIImage(UIImage *image, int x, int y, size_t scaleWidth, s
 UIImage *drawRectInUIImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, UIImage *destImage);
 UIImage *createBlankUIImage(unsigned int bgColor, size_t destWidth, size_t destHeight);
 NSData *imageDataFromBlorb(NSString *blorbFile);
-BOOL metaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid);
-BOOL readGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader);
 UIColor *UIColorFromInt(unsigned int color);
+BOOL MetaDataFromBlorb(NSString *blorbFile, NSString **title, NSString **author, NSString **description, NSString **tuid);
+
+BOOL IsTadsFileExtension(NSString *ext);
+BOOL IsZCodeExtension(NSString *ext);
+BOOL IsGlulxExtension(NSString *ext);
+BOOL IsSupportedFileExtension(NSString *ext);
+extern NSString *const kSaveExt, *const kAltSaveExt;
+
+void HandleITSSaveGameFile(NSString *file);
+void HandleITSGameFile(NSString *file);
+
+BOOL ReadGLULheaderFromUlxOrBlorb(const char *filename, char *glulHeader);
+BOOL ReadHeaderFromZCodeUlxOrBlorb(const char *filename, char *header, BOOL *isGlulx);
+BOOL ReadStoryReleaseAndSerial(const char *filename, UInt16 *release, char *serial);
+
+BOOL ReadSavedGameReleaseAndSerial(NSString *path, UInt16 *release, char *serial);
+BOOL DoesGameFileMatchSave(NSString *path, UInt16 checkRelease, char *checkSerial);

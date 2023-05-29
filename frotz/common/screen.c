@@ -141,7 +141,7 @@ static void reset_cursor (zword win)
     int lines = 0;
 
     if ((h_version <= V4 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	|| do_autosave
 #endif
 	) && win == 0)
@@ -273,7 +273,7 @@ void screen_new_line (bool wrapping)
     else cwp->y_cursor += font_height;
     update_cursor ();
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     os_new_line(wrapping);
 #endif
 
@@ -669,7 +669,7 @@ void split_window (zword height)
     wp[1].y_pos = 1 + stat_height;
     wp[1].y_size = height;
     
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     os_split_win(height + stat_height);
 #endif
     
@@ -689,13 +689,13 @@ void split_window (zword height)
     /* Erase the upper window in V3 only */
     
     if (h_version == V3 && height != 0
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
         && !do_autosave
 #endif
         )
         erase_window (1);
     
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (do_autosave)
         wp[0].y_cursor = wp[0].y_size;
 #endif
@@ -788,7 +788,7 @@ void restart_screen (void)
 
     /* Use default settings */
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (!do_autosave)
 #endif
 	os_set_colour (h_default_foreground, h_default_background);
@@ -800,7 +800,7 @@ void restart_screen (void)
 
     init_screen();
     
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (do_autosave)
         wp[0].style = currTextStyle;
     else
@@ -825,7 +825,7 @@ void restart_screen (void)
 
     /* Clear the screen, unsplit it and select window 0 */
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (!do_autosave)
 #endif
       erase_screen ((zword) (-1));

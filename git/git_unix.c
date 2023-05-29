@@ -7,7 +7,10 @@
 #include "git.h"
 #include "glk.h"
 #include "glkstart.h" // This comes with the Glk library.
+
+#if FROTZ_IOS
 #include "iosfrotz.h"
+#endif
 
 #include <string.h>
 
@@ -30,10 +33,12 @@ glkunix_argumentlist_t glkunix_arguments[] =
 
 void fatalError (const char * s)
 {
+#if FROTZ_IOS
     iosif_puts("*** fatal error: ");
     iosif_puts((char*)s);
     iosif_puts(" ***\n");
     finished = 1;
+#endif
 }
 
 #ifdef USE_MMAP
@@ -55,9 +60,9 @@ int glkunix_startup_code(glkunix_startup_t *data)
 
 void glk_main ()
 {
-    int          file;
-    struct stat  info;
-    const char * ptr;
+    int         file;
+    struct stat info;
+    git_uint8 * ptr;
 
 	if (gStartupError)
 		fatalError(gStartupError);
@@ -111,29 +116,12 @@ void glk_main ()
         fatalError ("could not open game file");
 
     gitWithStream (gStream, CACHE_SIZE, UNDO_SIZE);
+
+#if FROTZ_IOS
     git_shutdown_dispatch();
+#endif
 
     gStream = NULL;
 }
 
 #endif // USE_MMAP
-
-
-int pref_printversion = FALSE;
-int pref_screenwidth = 0;
-int pref_screenheight = 0;
-int pref_messageline = TRUE;
-int pref_reverse_textgrids = FALSE;
-int pref_window_borders = FALSE;
-int pref_override_window_borders = FALSE;
-int pref_precise_timing = FALSE;
-int pref_historylen = 20;
-int pref_prompt_defaults = TRUE;
-
-strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
-    glui32 rock)
-{
-    return gli_stream_open_pathname(pathname, FALSE, (textmode != 0), rock);
-}
-
-

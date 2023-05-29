@@ -1,5 +1,3 @@
-Welcome to the Cheap Glk Implementation, library version 0.9.0.
-
 
 
 
@@ -64,7 +62,7 @@ Namely, the hart -- which now stands proudly upright, its eyes and empty chest c
 
 It has what can only be described as a wry expression on its face. "I suppose I should begin by thanking you."
 
-You can ask why he thanks you, say that he's welcome, or ask what his name is.
+You could ask why he thanks you, say that he's welcome, or ask what his name is.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -74,7 +72,7 @@ You've hunted and bested many harts through the years, but this is the first to 
 
 The decomposing hart corpse glances into the canyon that used to power its circulatory system. "You've been through a lot. Please forgive my sarcasm."
 
-The woods are eerily silent.
+You are less cold than you were earlier.
 
 The decomposing hart corpse peers at you sardonically. "Before we go any further, is there anything else you'd like to carve out of what's left of my body?"
 
@@ -86,9 +84,7 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "Very well," says the hart corpse, "then let us get down to business."
 
-No one speaks, though only the two of you experience any pause.
-
-"I will tell you exactly what just happened, and indeed provide enough information to turn the tables on your know-it-all prisoner over there, if you agree to my terms."
+The light from your lantern casts an unusually steady glow over the scene. "I will tell you exactly what just happened, and indeed provide enough information to turn the tables on your know-it-all prisoner over there, if you agree to my terms."
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -142,7 +138,9 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "Very well," says the undead hart, "Then you must burn the box with my heart inside, and scatter the ashes round this spot."
 
-The light from your lantern casts an unusually steady glow over the scene. "Only that way can I be made whole - and set free," he tells you, "So, will you do that for me?"
+The wind has dropped completely.
+
+"Only that way can I be made whole - and set free," he tells you, "So, will you do that for me?"
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -152,9 +150,11 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "Good," the hart replies, "And in return, I will aid you against your prisoner. But do not delay, the deed must be done 'ere the night is o'er."
 
-The wind has dropped completely. "I should have introduced myself. The name's Happy Blue, professional juggler and itinerant dwarf-about-town," declares the hart corpse proudly, crooking a fractured forelimb and dipping its matted shoulder in salute.
+Even the clouds seem to have stopped.
 
-You could ask where its name came from or ask whether he was a servant of Snow White.
+"I should have introduced myself. The name's Happy Blue, professional juggler and itinerant dwarf-about-town," declares the hart corpse proudly, crooking a fractured forelimb and dipping its matted shoulder in salute.
+
+You might ask where its name came from or ask whether he was a servant of Snow White.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -164,7 +164,7 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 His laughter is sharp. "You are the King."
 
-You could always request that he repeat himself.
+You might request that he repeat himself.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -174,7 +174,7 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "This is fun," he says. "I could do this all day. I said that you are the King. Not that you'll find it easy to retain that information. Try to hold onto it, or it will slip out of your head again."
 
-You could always ask what happened to you.
+You could ask what happened to you.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -184,7 +184,9 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "Probably has cousins in the village as well, considering the way his father and grandfather behaved while they were alive," says Happy dryly. "But you wouldn't remember."
 
-No one speaks, though only the two of you experience any pause. "You've been blood-sundered. It is a magic that unmakes families, destroys the connections between people, and in so doing yields great power that can be used for other purposes."
+The light from your lantern casts an unusually steady glow over the scene.
+
+"You've been blood-sundered. It is a magic that unmakes families, destroys the connections between people, and in so doing yields great power that can be used for other purposes."
 
 You could ask who performed the magic.
 
@@ -206,7 +208,7 @@ menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 
 "When you saw what you had done, you felt-- you regretted it." He tilts his head at you. "You decided to create a peace. But that is very difficult work, and it is not the usual use of magic." He smirks, if an animal's face can be said to hold such an expression. "Demons arrange magic, and as a rule they prefer to do more harm than good. So you were forced to sacrifice yourself, your family, and lose your throne, and dwindle into no one. In exchange for this, we have had this-- ragged sort of calm.
 
-Even the clouds seem to have stopped.
+You are less cold than you were earlier.
 
 "Don't mistake me," he adds. "A poor peace is better than none. I appreciate the gift -- though I doubt that anyone else does. It cannot be known what you did, you see. So the dwarrows still hate your name."
 
@@ -228,13 +230,13 @@ Snow White returns to earth. She looks around her, blinking: she seems a little 
                                                                                 Glk library error: window_move_cursor: invalid id.
 menacing:  S 2 / A 0.Glk library error: window_move_cursor: invalid id.
 0/45/77/415Glk library error: window_move_cursor: invalid id.
-"I meant to mention earlier," you say, "you're going to have to start doing your walking on your own, your royal highness, and start watching where you're going. You may be willing to risk your own neck with this deliberate clumsiness, but I assure you, I'm not risking mine."
+"I meant to mention earlier," you say, "you're going to have to start doing your walking on your own, your highness, and start watching where you're going. You may be willing to risk your own neck with this deliberate clumsiness, but I assure you, I'm not risking mine."
 
 Snow White gazes at you coldly. "I see. You think I'm being difficult on purpose.
 
 "It didn't occur to you that the Queen might have wounded me, or wearied me with her spells. Nor have you considered that a palace girl with her hands bound might have difficulty making her way through the forest at night. No; it's quite clear that I'm intentionally delaying, risking my only chance to escape, isn't it now.
 
-"Be honest now, woodsman: which of these sounds most likely to you?"
+"Be honest now, huntsman: which of these sounds most likely to you?"
 
 It seems unlikely that the Queen hurt her or that a creature like her is having real trouble (though you could ask). But you still have the feeling that she is delaying on purpose.
 
@@ -244,13 +246,13 @@ menacing:  S 2 / A 1.Glk library error: window_move_cursor: invalid id.
 0/4/80/415Glk library error: window_move_cursor: invalid id.
 "The last one," you say darkly. "I'll be damned if I know why, but you're deliberately slowing us down every step of the way."
 
-For the first time, Snow White smiles. The expression is not reassuring; in fact, the temperature seems to dive and your lantern nearly extinguishes itself. "Correct," she says. "You are learning, huntsman. I do nothing that is not deliberate, mark my words."
+For the first time, Snow White smiles. The expression is not comforting; in fact, the temperature seems to dive and your lantern nearly extinguishes itself. "Correct," she says. "You are learning, royal executioner. I do nothing that is not deliberate, mark my words."
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
 aggressive:  S 3 / A 2.Glk library error: window_move_cursor: invalid id.
 0/45/76/415Glk library error: window_move_cursor: invalid id.
-"Listen, princess, if you expect me to help you, you'd best explain why it is you're so carefully tripping over roots instead of fleeing for your life."
+"Listen, your royal highness, if you expect me to help you, you'd best explain why it is you're so carefully tripping over roots instead of fleeing for your life."
 
 She considers before speaking. Then, "I am searching for something," she says, "which is as necessary to my safety as reaching my haven. I'd hoped, though, to make my find far earlier, before you noticed." 
 
@@ -319,9 +321,9 @@ aggressive:  S 0 / A 2.Glk library error: window_move_cursor: invalid id.
 
 "Partly." She walks away from you, around a tree, out of sight, and then circles back into view. "It grows tiring. Under the proper conditions, I would change my situation."
 
-She shifts her weight, breaking a twig. "Perhaps we should begin with the Queen. Her magic is to blame for all our situations."
+You hear something very far off that sounds like a wolf. "Perhaps we should begin with the Queen. Her magic is to blame for all our situations."
 
-You could now ask whether the Queen herself made the magic mirror or ask if the Queen is a witch.
+You can ask whether the Queen herself made the magic mirror or ask if the Queen is a witch.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -331,7 +333,7 @@ furious:  S 0 / A 2.Glk library error: window_move_cursor: invalid id.
 
 "She may fancy herself as one," Snow White sneers. "In truth she dabbles with powers she does not comprehend."
 
-You might ask what powers the Queen dabbles with.
+You could now ask what powers the Queen dabbles with.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -341,7 +343,7 @@ furious:  S 0 / A 2.Glk library error: window_move_cursor: invalid id.
 
 She kicks with irritable energy at the base of the nearest aspen. "Even for a huntsman your ignorance is remarkable. All sorcery involves the manipulation of demons. I thought everyone knew that."
 
-You consider whether to ask if the Queen is possessed or ask what demons the Queen invoked.
+You could always ask if the Queen is possessed or ask what demons the Queen invoked.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -351,7 +353,7 @@ furious:  S 1 / A 3.Glk library error: window_move_cursor: invalid id.
 
 "Lilith, for one," she tells you, "She wanted great beauty, and foolishly thought Lilith could endow it."
 
-You might ask if the Queen is possessed or ask whether Lilith made the Queen beautiful.
+You can ask if the Queen is possessed or ask whether Lilith made the Queen beautiful.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -361,7 +363,7 @@ aggressive:  S 1 / A 3.Glk library error: window_move_cursor: invalid id.
 
 You brace as Snow White inflicts another smile upon you. "No, she managed to avoid that."
 
-You could now ask how the Queen avoided possession or ask whether Lilith made the Queen beautiful.
+You might ask how the Queen avoided possession or ask whether Lilith made the Queen beautiful.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -371,7 +373,7 @@ aggressive:  S 1 / A 3.Glk library error: window_move_cursor: invalid id.
 
 "By making a bargain with the demon that wishes to possess her, of course," she replies.
 
-You can ask what bargain the Queen made.
+You could ask what bargain the Queen made.
 
 >Glk library error: window_move_cursor: invalid id.
                                                                                 Glk library error: window_move_cursor: invalid id.
@@ -415,7 +417,7 @@ She looks up at you and her eyes are filled with grief beyond tears. "I want Ada
                                                                                 Glk library error: window_move_cursor: invalid id.
 aggressive:  S 13 / A 4.Glk library error: window_move_cursor: invalid id.
 0/47/77/415Glk library error: window_move_cursor: invalid id.
-You edge a little further away from her.
+It is getting colder.
 
 "You ask what I want," she says slowly. "I want what Adam should have been, if he had chosen differently. I want a man who is my match, who is clever and private and wise; one who likes the wasteland and the night-time and the open sea rather than the daylight crowd of Eve's feckless brood. With such a man, I would be mortal, live my days, and die, not cursed but reconciled."
 

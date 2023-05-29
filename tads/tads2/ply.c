@@ -30,7 +30,9 @@ Modified
 #include <ctype.h>
 
 #include "ply.h"
+#if FROTZ_IOS
 #include "iosfrotz.h"
+#endif
 
 extern int finished;
 
@@ -236,7 +238,7 @@ startover:
             /* read a command */
             vocread(voc, MCMONINV, MCMONINV, buf, (int)sizeof(buf), just_did_autosave);
 
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
             if (do_autosave) {
                 fiosav(voc, AUTOSAVE_FILE, run->runcxgamename);
                 os_mark_recent_save();

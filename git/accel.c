@@ -165,9 +165,11 @@ void accel_set_param(glui32 index, glui32 val)
 
 static void accel_error(char *msg)
 {
-    glk_put_char('\n');
-    glk_put_string(msg);
-    glk_put_char('\n');
+    if (gIoMode == IO_GLK) { /* iosys_Glk */
+        glk_put_char('\n');
+        glk_put_string(msg);
+        glk_put_char('\n');
+    }
 }
 
 static int obj_in_class(glui32 obj)
@@ -462,26 +464,26 @@ static glui32 func_7_op__pr(glui32 argc, glui32 *argv)
 }
 
 /* Here are the newer functions, which support changing NUM_ATTR_BYTES.
- These call get_prop_new() instead of get_prop(). */
+   These call get_prop_new() instead of get_prop(). */
 
 static glui32 func_8_cp__tab(glui32 argc, glui32 *argv)
 {
     glui32 obj;
     glui32 id;
     glui32 otab, max;
-    
+
     obj = ARG_IF_GIVEN(argv, argc, 0);
     id = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     if (func_1_z__region(1, &obj) != 1) {
         accel_error("[** Programming error: tried to find the \".\" of (something) **]");
         return 0;
     }
-    
+
     otab = memRead32(obj + 4*(3+(int)(num_attr_bytes/4)));
     if (!otab)
         return 0;
-    
+
     max = memRead32(otab);
     otab += 4;
     /* @binarysearch id 2 otab 10 max 0 0 res; */
@@ -493,14 +495,14 @@ static glui32 func_9_ra__pr(glui32 argc, glui32 *argv)
     glui32 obj;
     glui32 id;
     glui32 prop;
-    
+
     obj = ARG_IF_GIVEN(argv, argc, 0);
     id = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     prop = get_prop_new(obj, id);
     if (prop == 0)
         return 0;
-    
+
     return memRead32(prop + 4);
 }
 
@@ -509,14 +511,14 @@ static glui32 func_10_rl__pr(glui32 argc, glui32 *argv)
     glui32 obj;
     glui32 id;
     glui32 prop;
-    
+
     obj = ARG_IF_GIVEN(argv, argc, 0);
     id = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     prop = get_prop_new(obj, id);
     if (prop == 0)
         return 0;
-    
+
     return 4 * memRead16(prop + 2);
 }
 
@@ -525,10 +527,10 @@ static glui32 func_11_oc__cl(glui32 argc, glui32 *argv)
     glui32 obj;
     glui32 cla;
     glui32 zr, prop, inlist, inlistlen, jx;
-    
+
     obj = ARG_IF_GIVEN(argv, argc, 0);
     cla = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     zr = func_1_z__region(1, &obj);
     if (zr == 3)
         return (cla == string_metaclass) ? 1 : 0;
@@ -536,7 +538,7 @@ static glui32 func_11_oc__cl(glui32 argc, glui32 *argv)
         return (cla == routine_metaclass) ? 1 : 0;
     if (zr != 1)
         return 0;
-    
+
     if (cla == class_metaclass) {
         if (obj_in_class(obj))
             return 1;
@@ -565,20 +567,20 @@ static glui32 func_11_oc__cl(glui32 argc, glui32 *argv)
     }
     if ((cla == string_metaclass) || (cla == routine_metaclass))
         return 0;
-    
+
     if (!obj_in_class(cla)) {
         accel_error("[** Programming error: tried to apply 'ofclass' with non-class **]");
         return 0;
     }
-    
+
     prop = get_prop_new(obj, 2);
     if (prop == 0)
-        return 0;
-    
+       return 0;
+
     inlist = memRead32(prop + 4);
     if (inlist == 0)
-        return 0;
-    
+       return 0;
+
     inlistlen = memRead16(prop + 2);
     for (jx = 0; jx < inlistlen; jx++) {
         if (memRead32(inlist + (4 * jx)) == cla)
@@ -591,19 +593,19 @@ static glui32 func_12_rv__pr(glui32 argc, glui32 *argv)
 {
     glui32 id;
     glui32 addr;
-    
+
     id = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     addr = func_9_ra__pr(argc, argv);
-    
+
     if (addr == 0) {
         if ((id > 0) && (id < indiv_prop_start))
             return memRead32(cpv__start + (4 * id));
-        
+
         accel_error("[** Programming error: tried to read (something) **]");
         return 0;
     }
-    
+
     return memRead32(addr);
 }
 
@@ -612,10 +614,10 @@ static glui32 func_13_op__pr(glui32 argc, glui32 *argv)
     glui32 obj;
     glui32 id;
     glui32 zr;
-    
+
     obj = ARG_IF_GIVEN(argv, argc, 0);
     id = ARG_IF_GIVEN(argv, argc, 1);
-    
+
     zr = func_1_z__region(1, &obj);
     if (zr == 3) {
         /* print is INDIV_PROP_START+6 */
@@ -632,11 +634,11 @@ static glui32 func_13_op__pr(glui32 argc, glui32 *argv)
     }
     if (zr != 1)
         return 0;
-    
+
     if ((id >= indiv_prop_start) && (id < indiv_prop_start+8)) {
         if (obj_in_class(obj))
             return 1;
     }
-    
+
     return ((func_9_ra__pr(argc, argv)) ? 1 : 0);
 }

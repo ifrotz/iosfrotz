@@ -283,7 +283,7 @@ int init_memory (void)
 	    pos += 8;
 	    z = zblorbbuf+4;
 	    chunkSize = (z[0]<<24)|(z[1]<<16)|(z[2]<<8)|z[3];
-	    if (chunkSize % 1 == 1)
+	    if (chunkSize % 2 == 1)
             chunkSize++;
 	    z = zblorbbuf;
 	    if (z[0]=='Z' && z[1]=='C' && z[2]=='O' && z[3]=='D') {
@@ -673,7 +673,7 @@ void z_restore (void)
     zword success = 0;
 
     if (
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	!do_autosave && 
 #endif
 	zargc != 0) {
@@ -708,7 +708,7 @@ void z_restore (void)
 	int i;
 
 	/* Get the file name */
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
         if (do_autosave)
 	    strcpy(new_name, AUTOSAVE_FILE);
         else 
@@ -794,7 +794,7 @@ void z_restore (void)
 
 		/* In V3, reset the upper window. */
 		if ((
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 		    !do_autosave || 
 #endif
 		    cwin == 0) && h_version == V3)
@@ -821,7 +821,7 @@ void z_restore (void)
     }
 
 finished:
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (!do_autosave && success > 0)
 	os_mark_recent_save();
     if (do_autosave) {
@@ -994,7 +994,7 @@ void z_save (void)
     zword success = 0;
 
     if (
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	!do_autosave && 
 #endif
 	zargc != 0
@@ -1031,7 +1031,7 @@ void z_save (void)
 	int i;
 
 	/* Get the file name */
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	if (do_autosave) {
             strcpy(new_name, AUTOSAVE_FILE);
         } else
@@ -1099,7 +1099,7 @@ void z_save (void)
     }
 
 finished:
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (success > 0)
 	os_mark_recent_save();
 

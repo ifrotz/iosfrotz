@@ -156,7 +156,7 @@ void z_piracy (void)
 
 }/* z_piracy */
 
-#if !FROTZ_IOS_PORT
+#if !FROTZ_IOS
 /*
  * main
  *
@@ -197,4 +197,4 @@ int cdecl main (int argc, char *argv[])
 
 }/* main */
 
-#endif // FROTZ_IOS_PORT
+#endif // FROTZ_IOS

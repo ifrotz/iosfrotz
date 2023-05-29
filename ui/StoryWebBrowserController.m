@@ -25,12 +25,19 @@
 #import "extractzfromz.h"
 #import <QuartzCore/QuartzCore.h>
 
-NSString *kBookmarksFN = @"bookmarks.plist";
+#import "Frotz-Swift.h"
+
+NSString *const kIFDBHost = @"ifdb.org";
+NSString *const kIFDBOldHost = @"ifdb.tads.org";
+NSString *const kBookmarksFN = @"bookmarks.plist";
+
 const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
 
 @implementation StoryWebBrowserController
+
+@synthesize snarfedStoryName;
 
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb {
     if ((self = [super initWithNibName:nil bundle:nil])) {
@@ -129,7 +136,8 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     self.navigationItem.title = @"Story Browser";
 
-    NSURL *myURL = [NSURL URLWithString: @"https://ifdb.org/search?searchfor=format%3A%2Ablorb&browse=1"];
+    NSURL *myURL = [NSURL URLWithString:
+                    [NSString stringWithFormat: @"https://%@/search?searchfor=system%%3Ainform+rating%%3A3-+%%23ratings%%3A2-&browse=1"", kIFDBHost]];
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: NO];
@@ -146,6 +154,49 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
+-(void)pickFilesFromZip:(NSString*)zipFile list:(NSMutableArray *)zList{
+    NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
+    NSString *storyboardName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UIMainStoryboardFile"];
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
+    SelectFilesViewController *selectFilesVC = [storyboard instantiateViewControllerWithIdentifier:@"SelectFilesViewController"];
+    [selectFilesVC setTitle: @"Select story files to add" files: zList
+        doneHandler:^(NSArray<NSString*>* files) {
+            NSUInteger count = 0;
+            NSString *storyFile, *storyList = @"";
+            for (storyFile in files) {
+                if ([storyFile hasPrefix: @"SAVE"])
+                    continue;
+                if (extractOneFileFromZIP(zipFile, gamePath, storyFile) == 0) {
+                    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
+                    ++count;
+                }
+            }
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: zipFile error: nil];
+            if (count > 0) {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:" message: storyList delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                [alert show];
+                [self browserDidPressBackButton];
+            }
+        }
+        canceledHandler: ^{
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: zipFile error: nil];
+        }];
+    [selectFilesVC setInstructions: @"\n"
+        "The ZIP file contains more than one story file.\n"
+        "\n"
+        "(Frotz may not retain meta-data for stories other than the loaded IFDB page.)\n"];
+    if (self.snarfedStoryName)
+        [selectFilesVC checkAllMatches: self.snarfedStoryName];
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: selectFilesVC];
+
+    [self presentViewController:nc animated:YES completion: nil];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+}
+
 -(void)browserDidPressBackButton {
     m_backToStoryList = YES;
     [self.storyBrowser didPressModalStoryListButton];
@@ -153,9 +204,8 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 -(NSString*)bookmarkPath {
-    NSArray *array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true);
-    NSString *docPath = array[0];
-    NSString *bmPath = [docPath stringByAppendingPathComponent: kBookmarksFN];
+    NSString *appSuppPath = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, true)[0];
+    NSString *bmPath = [appSuppPath stringByAppendingPathComponent: kBookmarksFN];
     return bmPath;
 }
 
@@ -166,6 +216,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         NSMutableArray *urls = bmDict[kBookmarkURLsKey];
         NSMutableArray *titles = bmDict[kBookmarkTitlesKey];
         NSString *vers = bmDict[kBookmarkVersionKey];
+        BOOL changed = NO;
         if (!vers || [vers compare: @"2"] == NSOrderedAscending) {
             NSUInteger firstAddIndex = 0, firstObsoleteIndex = 0;
             NSArray *addUrls = @[
@@ -189,7 +240,6 @@ const NSString *kBookmarkVersionKey = @"Version";
                 @"www.csd.uwo.ca/Infocom/",
                 @"https://eblong.com/infocom"
             ];
-            BOOL changed = NO;
             NSUInteger i = 0;
             if (vers) { // must be "1"
                 firstAddIndex = 0; // re-add w/o https
@@ -216,9 +266,20 @@ const NSString *kBookmarkVersionKey = @"Version";
                     changed = YES;
                 }
             }
-            if (changed)
-                [self saveBookmarksWithURLs:urls andTitles:titles];
+        } else if ([vers compare: @"3"] == NSOrderedAscending) {
+            NSUInteger i = 0, n = [urls count];
+            NSString *aUrl;
+            for (; i < n; ++i) {
+                aUrl = [urls objectAtIndex: i];
+                if ([aUrl containsString: kIFDBOldHost]) {
+                    NSString *repl = [aUrl stringByReplacingOccurrencesOfString:kIFDBOldHost withString:kIFDBHost];
+                    [urls replaceObjectAtIndex:i withObject:repl];
+                    changed = YES;
+                }
+            }
         }
+        if (changed)
+            [self saveBookmarksWithURLs:urls andTitles:titles];
         if (pUrls)
             *pUrls = urls;
         if (pTitles)
@@ -227,7 +288,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
 
     if (pUrls)
-        *pUrls = @[@"ifdb.tads.org",
+        *pUrls = @[kIFDBHost,
                    @"gallery.guetech.org/greybox.html",
                    @"inform7.com",
                    @"www.ifwiki.org/index.php/Main_Page",
@@ -262,7 +323,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *bmPath = [self bookmarkPath];
     NSDictionary *bmDict = [NSDictionary dictionaryWithObjectsAndKeys:
                             urls, kBookmarkURLsKey, titles, kBookmarkTitlesKey,
-                            @"2", kBookmarkVersionKey,
+                            @"3", kBookmarkVersionKey,
                             nil, nil];
     if (bmDict)
         [bmDict writeToFile:bmPath atomically:YES];
@@ -417,7 +478,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     else {
         CGRect webFrame = [m_webView frame];
         UIView *bmView = [m_bookmarkListController view];
-        [bmView setFrame: CGRectMake(0, 40, webFrame.size.width, webFrame.size.height+44)];
+        [bmView setFrame: CGRectMake(0, 40+kSearchBarHeight, webFrame.size.width, webFrame.size.height+44-kSearchBarHeight)];
         //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];
@@ -442,7 +503,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlString = [[url path] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];
     NSError *error;
-    BOOL stay = NO, isBadLoad = NO;
+    BOOL stay = NO, isBadLoad = NO, doAddedAlert = NO;
     char tempbuf[16];
 
     NSString *gamePath = [[[self storyBrowser] storyMainViewController] storyGamePath];
@@ -486,6 +547,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     m_receivedData = nil;
     m_currentRequest = nil;
     UIAlertView *alert = nil;
+    NSString *storyFile = nil;
     if (isBadLoad) {
         alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
                                            message:@"The web server returned an error page instead of the expected file"
@@ -494,28 +556,36 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
         NSMutableArray *zList = listOfZFilesInZIP(outFile);
+        BOOL delZip = NO;
         if (!zList || [zList count] == 0) {
             alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
                                                message:@"Sorry, this archive contains no playable story files"
                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            stay = YES;
+            delZip = YES;
         } else {
-            NSString *storyFile;
-            NSString *storyList = @"";
-            for (storyFile in zList) {
-                if ([storyFile hasPrefix: @"SAVE"])
-                    continue;
-                if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0)
-                    storyList = [storyList stringByAppendingFormat: @" %@", storyFile];
+            if ([zList count] > 1) {
+                [self pickFilesFromZip: outFile list:zList];
+                stay = YES;
+            } else {
+                for (storyFile in zList) {
+                    if (extractOneFileFromZIP(outFile, gamePath, storyFile) == 0) {
+                        doAddedAlert = YES;
+                        break;
+                    }
+                }
+                delZip = YES;
             }
-            alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:"
-                                               message: storyList
-                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         }
-        NSFileManager *fileMgr = [NSFileManager defaultManager];
-        [fileMgr removeItemAtPath: outFile error: &error];
-    } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"])
-        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: urlString]
+        if (delZip) {
+            NSFileManager *fileMgr = [NSFileManager defaultManager];
+            [fileMgr removeItemAtPath: outFile error: &error];
+        }
+    } else if ([ext  hasPrefix: @"z"] || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"] || [ext isEqualToString: @"ulx"]) {
+        storyFile = urlString;
+        doAddedAlert = YES;
+    }
+    if (doAddedAlert)
+        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: storyFile]
                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     if (alert) {
         [alert show];
@@ -576,9 +646,10 @@ const NSString *kBookmarkVersionKey = @"Version";
     NSString *urlHost = [url host];
     NSString *urlPath = [url path];
     NSString *urlQuery = [url query];
+    self.snarfedStoryName = nil;
     NSLog(@"ZDL from url w/host %@, path %@, query=%@, story='%@'", urlHost, urlPath, urlQuery, story);
-
-    if (!([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]
+    if (!(([urlHost isEqualToString: kIFDBHost] || [urlHost isEqualToString: kIFDBOldHost])
+          && [urlPath isEqualToString:@"/viewgame"]
           && ![story isEqualToString: @"hhgg"])) // ifdb hitchhiker pic is low-res, don't override built-in
         return NO;
 
@@ -594,9 +665,26 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSString *fullName = [pageStr substringWithRange: range1];
             fullName = [fullName stringByReplacingOccurrencesOfString: @"Cover Art for " withString: @""];
             fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
+            // class="zip-contents-arrow">Contains <b>stor.z8</b>
+            NSRange zipContentsRange = [pageStr rangeOfString: @"class=\"zip-contents-arrow\">Contains <b>"];
+            if (zipContentsRange.length > 0) {
+                NSUInteger zb = zipContentsRange.location + zipContentsRange.length;
+                NSRange zipEndRange = [pageStr rangeOfString: @"</b>" options:0 range: NSMakeRange(zb, len-zb)];
+                NSString *zipContentsName = [pageStr substringWithRange: NSMakeRange(zb, zipEndRange.location-zb)];
+                NSRange slashRange = [zipContentsName rangeOfString: @"/" options:NSBackwardsSearch range:NSMakeRange(0, [zipContentsName length])];
+                if (slashRange.length)
+                    zipContentsName = [zipContentsName substringFromIndex:slashRange.location+1];
+                NSUInteger extOffset = [zipContentsName rangeOfString: @"."].location;
+                if (extOffset != NSNotFound) {
+                    zipContentsName = [zipContentsName substringToIndex: extOffset];
+                    NSLog(@"ZIP contents name %@ replacing story %@", zipContentsName, story);
+                    story = zipContentsName;
+                }
+            }
             if (!story)
                 story = [fullName lowercaseString];
             if (story) {
+                self.snarfedStoryName = story;
                 [m_storyBrowser addTitle: fullName forStory: story];
 
                 NSString *authorsStr = nil, *tuidStr = nil, *descriptStr = nil;
@@ -826,21 +914,7 @@ static bool bypassBundle = NO;
     //NSLog(@"ShouldStartLoad: %@", request);
     if ([urlString isEqualToString: @"http:"]) // null url
         return NO;
-    if ([ext isEqualToString: @"z1"] ||
-        [ext isEqualToString: @"z2"]||
-        [ext isEqualToString: @"z3"]||
-        [ext isEqualToString: @"z4"]||
-        [ext isEqualToString: @"z5"] ||
-        [ext isEqualToString: @"z8"] ||
-        [ext isEqualToString: @"zip"] ||
-        [ext isEqualToString: @"zlb"] ||
-        [ext isEqualToString: @"dat"] ||
-        [ext isEqualToString: @"gam"] ||
-        [ext isEqualToString: @"t3"] ||
-        [ext isEqualToString: @"blb"] ||
-        [ext isEqualToString: @"ulx"] ||
-        [ext isEqualToString: @"gblorb"] ||
-        [ext isEqualToString: @"zblorb"]) {
+    if (IsSupportedFileExtension(ext) || [ext isEqualToString: @"zip"]) {
 #if APPLE_FASCISM
         NSFileManager *defaultManager = [NSFileManager defaultManager];
         NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
@@ -866,7 +940,7 @@ static bool bypassBundle = NO;
             if (m_expectedArchiveFiles) {
                 m_expectedArchiveFiles = nil;
             }
-            if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+            if ([urlHost isEqualToString: kIFDBHost] && [urlPath isEqualToString:@"/viewgame"]) {
                 if ([urlQuery length]==19) {
                     NSString *bundledGamesListPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledFileList];
                     if (bundledGamesListPath && [defaultManager fileExistsAtPath: bundledGamesListPath]) {
@@ -951,7 +1025,8 @@ static bool bypassBundle = NO;
         NSString *urlPath = [url path];
         NSString *urlQuery = [url query];
 
-        if ([urlHost isEqualToString: @"ifdb.tads.org"] && [urlPath isEqualToString:@"/viewgame"]) {
+        if (([kIFDBHost isEqualToString: urlHost] || [kIFDBOldHost isEqualToString: urlHost])
+            && [urlPath isEqualToString:@"/viewgame"]) {
             if ([urlQuery hasPrefix: @"coverart&"])
                 [self snarfMetaData: m_currentRequest loadRequest:nil forStory: nil];
         }

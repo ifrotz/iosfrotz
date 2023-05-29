@@ -238,7 +238,7 @@ void os_init_screen (void)
     os_frotz_init_screen();
 
     //NSLog (@"uiinit f %d b %d\n", h_default_foreground, h_default_background);
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     if (!do_autosave)
 #endif
     {

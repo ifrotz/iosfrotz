@@ -7,6 +7,7 @@
 #ifndef GLKTERM_H
 #define GLKTERM_H
 
+#include "glk.h"
 #include "gi_dispa.h"
 #include <stdio.h>
 #include <sys/types.h>

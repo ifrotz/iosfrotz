@@ -146,7 +146,7 @@ zword restore_quetzal (FILE *svf, FILE *stf)
     if (tmpl != ID_FORM || currlen != ID_IFZS)
     {
 	if (
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
 	    !do_autosave ||
 #endif
 	    (tmpl >> 16)!=h_release) // old format save file; caller will try again
@@ -572,7 +572,7 @@ zword save_quetzal (FILE *svf, FILE *stf)
     if (!write_long (svf, stkslen))			return 0;
 
     /* After all that, still nothing went wrong! */
-#if FROTZ_IOS_PORT
+#if FROTZ_IOS
     refresh_savedir = 1;
 #endif
 

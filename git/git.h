@@ -6,6 +6,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "glk.h"
 
@@ -65,6 +66,8 @@ enum GestaltSelector
     GESTALT_ACCELERATION = 9,
     GESTALT_ACCELFUNC    = 10,
     GESTALT_FLOAT        = 11,
+    GESTALT_EXTUNDO      = 12,
+    GESTALT_DOUBLE       = 13,
     
     // This special selector returns 1 if the cache control
     // opcodes 'git_setcacheram' and 'git_prunecache' are available.
@@ -103,7 +106,10 @@ extern void emitCode (Label);
 
 // terp.c
 
-#ifdef USE_DIRECT_THREADING
+#if defined(USE_DIRECT_THREADING) && (UINTPTR_MAX > 0xffffffffULL)
+    extern Opcode* gOpcodeTable;
+#   define labelToOpcode(label) ((uintptr_t)gOpcodeTable[label] & 0xffffffffULL)
+#elif defined(USE_DIRECT_THREADING)
     extern Opcode* gOpcodeTable;
 #   define labelToOpcode(label) (gOpcodeTable[label])
 #else
@@ -112,7 +118,12 @@ extern void emitCode (Label);
 
 extern git_sint32* gStackPointer;
 
-extern void startProgram (size_t cacheSize, enum IOMode ioMode);
+extern enum IOMode gIoMode;
+
+extern glui32 lo_random ();
+extern void lo_seed_random (glui32 seed);
+
+extern void startProgram (size_t cacheSize);
 
 // glkop.c
 
@@ -139,11 +150,13 @@ extern glui32 git_linear_search(glui32 key, glui32 keysize,
 // savefile.c
 
 extern git_sint32 saveToFile (git_sint32* base, git_sint32 * sp, git_sint32 file);
+extern git_sint32 restoreFromFile (git_sint32* base, git_sint32 file,
+                      git_uint32 protectPos, git_uint32 protectSize);
+
 extern git_sint32 saveToFileStrWithClasses(git_sint32 * base, git_sint32 * sp, strid_t file);
 typedef void (*SaveClassesCallback)(int objectCount, void *objects);
 extern git_sint32 saveToFileStrCore(git_sint32 * base, git_sint32 * sp, strid_t file, int objectCount, void *objects, SaveClassesCallback saveClassesCallback);
 
-extern git_sint32 restoreFromFile (git_sint32* base, git_sint32 file, git_uint32 protectPos, git_uint32 protectSize);
 extern git_sint32 restoreFromFileStr (git_sint32* base, strid_t fstr, git_uint32 protectPos, git_uint32 protectSize);
 extern git_sint32 restoreClassesChunk(strid_t file, git_uint32 chunkSize);
 
@@ -153,9 +166,11 @@ extern void initUndo (git_uint32 size);
 extern void resetUndo ();
 extern void shutdownUndo ();
 
+extern int  hasUndo ();
 extern int  saveUndo (git_sint32* base, git_sint32* sp);
 extern int  restoreUndo (git_sint32* base,
                 git_uint32 protectPos, git_uint32 protectSize);
+extern void discardUndo ();
 
 // heap.c
 

@@ -8,6 +8,8 @@
 #import "StoryDetailsController.h"
 #import "iosfrotz.h"
 
+#import "StoryWebBrowserController.h"
+
 @implementation StoryDetailsControllerNC
 @end
 
@@ -382,8 +384,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_browser settings] navController:self.navigationController navItem:self.navigationItem];
     self.navigationItem.titleView = [m_frotzInfoController view];
-
-    self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -396,14 +396,14 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     if (@available(iOS 13.0, *)) {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
         [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
+        [self.navigationController.navigationBar setTintColor: [UIColor whiteColor]]; // labelColor
     } else {
         [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
         [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
         [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
     }
-
-    // animation works around issues when returnig to details from story
+    [m_frotzInfoController updateTitle];
+    // animation works around issues when returning to details from story
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
         [self.view setNeedsUpdateConstraints];
@@ -590,7 +590,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(IBAction)IFDBButtonPressed {
     if (m_tuid && [m_tuid length] >= 15)
-        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://ifdb.tads.org/viewgame?id=%@", m_tuid]];
+        [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://%@/viewgame?id=%@", kIFDBHost, m_tuid]];
 }
 
 #if UseWKWebViewForFrotzStoryDetails

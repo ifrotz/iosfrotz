@@ -25,6 +25,7 @@ extern "C" {
 #include <ctype.h>
 #include <time.h>
 #include <pthread.h>
+#include <limits.h>
 #include <CoreGraphics/CGGeometry.h>
 
 
@@ -120,7 +121,7 @@ IPGlkGridArray *iosif_glk_getGridArray(int viewNum);
 //int iosif_main(int argc, char **argv);
 #define XYZZY()
 extern int do_autosave, autosave_done, refresh_savedir;
-extern char AUTOSAVE_FILE[];
+extern char SAVE_PATH[], AUTOSAVE_FILE[];
 
 extern int iosif_textview_width, iosif_textview_height; // in characters
 extern int iosif_screenwidth, iosif_screenheight; // in pixels
@@ -138,6 +139,7 @@ extern int gLargeScreenPhone;
 
 #define kFrotzGameDir "Games"
 #define kFrotzSaveDir "Saves"
+#define kFrotzGameSaveDirExt ".d"
 
 #define kFrotzOldAutoSaveFile "FrotzSIP.sav"
 #define kFrotzAutoSaveFile "autosave.sav"

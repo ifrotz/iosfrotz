@@ -83,8 +83,10 @@ typedef UIWebView StoryWebView;
 -(void)loadZFile:(NSURLRequest*)request;
 @property (nonatomic, readonly, copy) NSString *currentURL;
 @property (nonatomic, readonly, copy) NSString *currentURLTitle;
+@property(nonatomic,strong) NSString *snarfedStoryName;
 -(void)loadBookmarksWithURLs:(NSArray<NSString*>* __autoreleasing  __nullable * __nullable)urls andTitles:( NSArray<NSString*>* __autoreleasing  __nullable * __nullable)titles;
 -(void)saveBookmarksWithURLs:(NSArray<NSString*>*)urls andTitles:(NSArray<NSString*>*)titles;
+-(void)pickFilesFromZip:(NSString*)zipFile list:(NSMutableArray *)zList;
 @property (nonatomic, readonly, copy) NSString *bookmarkPath;
 - (void)updateButtonsForIdle:(StoryWebView*)webView;
 - (BOOL)webViewShouldStartLoadWithRequest:(NSURLRequest *)request;
@@ -105,5 +107,10 @@ typedef UIWebView StoryWebView;
 #endif
 
 @end
+
+extern NSString *const kIFDBHost; // @"ifdb.org";
+extern NSString *const kIFDBOldHost; // @"ifdb.tads.org";
+
+extern NSString *const kBookmarksFN;
 
 NS_ASSUME_NONNULL_END
