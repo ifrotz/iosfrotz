@@ -4742,7 +4742,12 @@ static BOOL migateDropboxAuth() {
     DBUploadTask *dbUploadTask = [client.filesRoutes uploadUrl:dbSGPath mode:mode autorename:@NO clientModified:nil mute:@NO propertyGroups:nil strictConflict:@NO contentHash:nil inputUrl:localSavePath];
     [dbUploadTask setResponseBlock:^(DBFILESFileMetadata *result, DBFILESUploadError *routeError, DBRequestError *error) {
          if (result) {
-             [self cacheTimestamp: [result serverModified] forSaveFile:
+             NSDate *serverModified = [result serverModified];
+             NSDictionary *attributes = @{NSFileModificationDate: serverModified};
+             if (![[NSFileManager defaultManager] setAttributes:attributes ofItemAtPath:localSavePath error:nil]) {
+                 NSLog(@"error setting mod date of uploaded file");
+             }
+             [self cacheTimestamp: serverModified forSaveFile:
               [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]]];
              [self saveDBCacheDict];
          } else if (routeError || error)
