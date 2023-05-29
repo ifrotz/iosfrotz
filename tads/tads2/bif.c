@@ -976,7 +976,9 @@ void bifask(bifcxdef *ctx, int argc)
         };
         static const char *game_strs[] =
         {
+#if !FROTZ_IOS_PORT // The word 'game' should be sufficient (e.g. "File to save game in" prompt, from babel.gam)
             "restore",
+#endif
             "game",
             0
         };

@@ -40,6 +40,7 @@ Modified
 #include "linf.h"
 #include "cmap.h"
 
+#include "iosfrotz.h"
 
 /* compare a resource string */
 /* int fioisrsc(uchar *filbuf, char *refnam); */
@@ -1188,6 +1189,20 @@ static int fiorfda(osfildef *fp, vocddef *p, uint cnt)
     }
 }
 
+#if FROTZ_IOS_PORT
+char *make_abs_save_path(char *fname)
+{
+    static char tempfname[PATH_MAX];
+    if (fname[0] != '/') {
+        strncpy(tempfname, SAVE_PATH, PATH_MAX);
+        strncat(tempfname, "/", PATH_MAX);
+        strncat(tempfname, fname, PATH_MAX);
+        fname = tempfname;
+    }
+    return fname;
+}
+#endif
+
 /*
  *   Look in a saved game file to determine if it has information on which
  *   GAM file created it.  If the GAM file information is available, this
@@ -1259,6 +1274,9 @@ int fiorso(voccxdef *vctx, char *fname)
     /* presume success */
     result = FIORSO_SUCCESS;
 
+#if FROTZ_IOS_PORT
+    fname = make_abs_save_path(fname);
+#endif
     /* open the input file */
     if (!(fp = osfoprb(fname, OSFTSAVE)))
         return FIORSO_FILE_NOT_FOUND;
@@ -1628,6 +1646,10 @@ int fiosav(voccxdef *vctx, char *fname, char *game_fname)
     uchar       buf[8];
     int         err = FALSE;
     struct fiosav_cb_ctx  fnctx;
+
+#if FROTZ_IOS_PORT
+    fname = make_abs_save_path(fname);
+#endif
 
     /* open the output file */
     if ((fp = osfopwb(fname, OSFTSAVE)) == 0)
