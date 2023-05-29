@@ -3,6 +3,7 @@
 #include "git.h"
 
 #if FROTZ_IOS
+#include "iosfrotz.h"
 #include "glkios.h"
 #endif
 
@@ -336,7 +337,11 @@ git_sint32 saveToFile (git_sint32 * base, git_sint32 * sp, git_sint32 id) {
     strid_t file = git_find_stream_by_id (id);
     if (file == 0)
         return 1;
-    return saveToFileStrCore (base, sp, file, 0, NULL, NULL);
+    git_sint32 r = saveToFileStrCore (base, sp, file, 0, NULL, NULL);
+#if FROTZ_IOS
+    refresh_savedir = 1;
+#endif
+    return r;
 }
 
 
