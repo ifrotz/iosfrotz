@@ -668,6 +668,8 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSString *fullName = [pageStr substringWithRange: range1];
             fullName = [fullName stringByReplacingOccurrencesOfString: @"Cover Art for " withString: @""];
             fullName = [fullName stringByReplacingOccurrencesOfString: @" - Details" withString: @""];
+            if (isZipDL) // ZIP might be collection, override with page title
+                story = [fullName lowercaseString];
             // class="zip-contents-arrow">Contains <b>stor.z8</b>
             NSRange zipContentsRange = [pageStr rangeOfString: @"class=\"zip-contents-arrow\">Contains <b>"];
             if (isZipDL && zipContentsRange.length > 0) {
@@ -686,7 +688,7 @@ const NSString *kBookmarkVersionKey = @"Version";
                     }
                 }
             }
-            if (!story || isZipDL) // ZIP might be collection, override with page title
+            if (!story)
                 story = [fullName lowercaseString];
             if (story) {
                 self.snarfedStoryName = story;
