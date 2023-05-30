@@ -773,7 +773,6 @@ void iosif_stop_script() {
     *iosif_scriptname = '\0';
 }
 
-
 void iosif_recompute_screensize() {
     if (!theSMVC)
         return;
@@ -1641,17 +1640,28 @@ extern void gli_ios_set_focus(window_t *winNum);
     for (i=1; i < nComponents-1; ++i)
         if (components[i] > max)
             max = components[i];
+    self.navigationController.navigationBar.translucent = NO;
+    // Not using [UINavigationBar appearance] here; we only want to set the main story's status bar specially,
+    // all others will use system light/dark default
     if (max < 0.5) {
-        [self.navigationController.navigationBar  setBarTintColor:  m_defaultBGColor];
-        [self.navigationController.navigationBar  setTintColor: m_defaultFGColor];
-        // let's just leave the keyboard alone, matching system light/dark mode
-        //m_inputLine.keyboardAppearance = UIKeyboardAppearanceDark;
+        if (@available(iOS 13.0,*)) {
+            [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
+        }
+        else
+            [self.navigationController.navigationBar setBarTintColor: m_defaultBGColor];
+        [self.navigationController.navigationBar setTintColor: m_defaultFGColor];
     }
     else {
-        [self.navigationController.navigationBar  setBarTintColor:  m_defaultFGColor];
-        [self.navigationController.navigationBar  setTintColor: m_defaultBGColor];
-        //m_inputLine.keyboardAppearance = UIKeyboardAppearanceLight;
+        if (@available(iOS 13.0,*)) {
+            [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
+        }
+        else
+            [self.navigationController.navigationBar  setBarTintColor: m_defaultFGColor];
+        [self.navigationController.navigationBar setTintColor: m_defaultBGColor];
     }
+    // let's just leave the keyboard alone, matching system light/dark mode
+    //m_inputLine.keyboardAppearance = UIKeyboardAppearanceDark;
+
     [m_frotzInfoController updateTitle];
 }
 
@@ -2521,11 +2531,9 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if (!m_storyView)
         return;
     [self.view setBackgroundColor: m_defaultFGColor];
-    if (gLargeScreenDevice)
-        [self setNavBarTint];
-    //    if (makeDefault && currColor != 0 && currColor != 0x29)
-    //	return;
     [m_storyView setTextColor: color];
+
+    [self setNavBarTint];
 #if UseRichTextView
     [m_statusLine setTextColor: color];
 #else

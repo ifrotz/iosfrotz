@@ -126,8 +126,11 @@
     CGPoint pt =[touch locationInView: self];
     if (pt.y > self.bounds.origin.y + self.bounds.size.height*0.6
         && pt.x > self.bounds.origin.x + self.bounds.size.width*0.8) {
-        [m_colorPicker toggleMode];
-        m_imgView.image = [m_colorPicker isTextColorMode] ? m_flipFgImg : m_flipBgImg;
+        BOOL isTextColorMode = m_colorPicker.isTextColorMode;
+        UIColor *newTextColor = self.backgroundColor, *newBgColor = m_text.textColor;
+        [m_colorPicker setTextColor: newTextColor bgColor: newBgColor changeText: !isTextColorMode];
+        [m_colorPicker setTextColor: newTextColor bgColor: newBgColor changeText: isTextColorMode];
+        m_imgView.image = isTextColorMode ? m_flipFgImg : m_flipBgImg;
     }
 }
 
@@ -355,7 +358,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         for (y=0; y < m_height; y++)
         {
             for (x=0; x < m_leftMargin; x++)
-                c[i++] = isDark ? 0UL : 0xffffffffUL;
+                c[i++] = isDark ? 0xff000000UL : 0xffffffffUL;
             v = (CGFloat)y / (CGFloat)m_height;
             HSVtoRGB(&r, &g, &b, h, s, v);
             // iPhone is little endian, want alpha last in memoryt
@@ -363,7 +366,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
             for (j=0; j < m_barWidth; j++, x++)
                 c[i++] = wColor;
             for (; x < m_width; x++)
-                c[i++] = isDark ? 0UL : 0xffffffffUL;
+                c[i++] = isDark ? 0xff000000UL : 0xffffffffUL;
         }
 
         // Create the bitmap context. We want pre-multiplied ARGB, 8-bits
@@ -417,10 +420,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)setFrame:(CGRect)frame {
-    BOOL isDark = NO;
-    if (@available(iOS 13.0, *))
-        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
-
     if (m_hsvData) {
         if (@available(iOS 13.0, *)) {
         } else {// don't cache after iOS 13 in case light/dark mode changes while active
@@ -474,7 +473,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
                 h = theta  / (2.0f * M_PI);
                 c[i] = 0xff000000UL|(((((int)(h * 255.0f)) << 16) | (((int)(s * 255.0f)) << 8) | ((int)(v * 255.0f))));
             } else
-                c[i] = isDark ? 0UL : 0x00ffffffUL;
+                c[i] = 0;
             i++;
         }
     }
@@ -535,7 +534,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
                 wColor = 0xff000000UL | (((int)(b * 255.0f)) << 16) | (((int)(g * 255.0f)) << 8) | ((int)(r * 255.0f));
                 c[i] = wColor;
             } else
-                c[i] = isDark ? 0UL : 0xffffffffUL;
+                c[i] = isDark ? 0xff000000UL : 0xffffffffUL;
             i++;
         }
     }
@@ -765,6 +764,11 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [self updateHSVCursors];
 }
 
+
+- (void)titleTapped {
+    [self toggleMode];
+}
+
 -(void)updateUserInterfaceStyle {
     if (@available(iOS 13.0, *)) {
         [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
@@ -773,6 +777,31 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         [m_background setBackgroundColor: [UIColor whiteColor]];
         [m_tileBorder setBackgroundColor: [UIColor blackColor]];
     }
+
+    if (!self.navigationItem.titleView) {
+        UILabel *titleView = [[UILabel alloc] init];
+        titleView.userInteractionEnabled = YES;
+        titleView.text = @"Background Color \u29C9";
+        titleView.textAlignment = NSTextAlignmentCenter;
+        titleView.translatesAutoresizingMaskIntoConstraints = NO;
+
+        NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:titleView
+                                                                            attribute:NSLayoutAttributeWidth
+                                                                            relatedBy:NSLayoutRelationEqual
+                                                                               toItem:nil
+                                                                            attribute:NSLayoutAttributeNotAnAttribute
+                                                                           multiplier:1.0
+                                                                             constant:titleView.intrinsicContentSize.width];
+        [titleView addConstraint:widthConstraint];
+        widthConstraint.active = YES;
+
+        UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(titleTapped)];
+        [titleView addGestureRecognizer:tapRecognizer];
+
+        self.navigationItem.titleView = titleView;
+    }
+    UILabel *titleView = (UILabel*)self.navigationItem.titleView;
+    titleView.text = self.title;
 }
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
@@ -809,11 +838,12 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 - (void)toggleMode {
     m_changeTextColor = !m_changeTextColor;
     if (m_changeTextColor) {
-        self.title = @"Text Color";
+        self.title = @"Text Color \u29C9";
     } else {
-        self.title = @"Background Color";
+        self.title = @"Background Color \u29C9";
     }
     [self updateHSVCursors];
+    [self updateUserInterfaceStyle];
 }
 
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor {
@@ -871,7 +901,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 -(void)updateColorWithHue:(CGFloat)hue Saturation:(CGFloat)saturation Value:(CGFloat)value {
-    //  float oldValue = m_value;
     m_hue = hue == hue ? hue : 0; // NaN guard
     m_saturation = saturation;
     m_value = value;
@@ -893,8 +922,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     [m_valueCursor setFrame: cursFrame];
 
     [m_valuePicker setNeedsDisplay];
-    //    if (oldValue != m_value)
-    //	[m_hsvPicker setNeedsDisplay];
+
     if (m_delegate && [m_delegate respondsToSelector: @selector(colorPicker:selectedColor:)])
         [m_delegate colorPicker: self selectedColor: m_changeTextColor ? m_textColor : m_bgColor];
 }

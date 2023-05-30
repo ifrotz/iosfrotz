@@ -581,11 +581,11 @@ enum FrotzPrefsRows
             //	case kFrotzColorsSection:
             if (row==kFrotzPrefsTextColor) {
                 [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
-                m_colorPicker.title = NSLocalizedString(@"Text Color", @"");
+                m_colorPicker.title = NSLocalizedString(@"Text Color \u29C9", @"");
                 viewController = m_colorPicker;
             } else if (row==kFrotzPrefsBGColor) {
                 [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
-                m_colorPicker.title = NSLocalizedString(@"Background Color", @"");
+                m_colorPicker.title = NSLocalizedString(@"Background Color \u29C9", @"");
                 viewController = m_colorPicker;
             } else if (row==kFrotzPrefsStoryFont) {
                 viewController = m_storyFontPicker;
