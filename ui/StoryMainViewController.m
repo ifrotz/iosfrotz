@@ -2225,7 +2225,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(CGRect) storyViewFullFrame {
     CGRect frame = [m_storyView.window bounds];
-    frame.size.height -= self.topLayoutGuide.length;
+    UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
+    safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
+
+    frame.size.height -= safeInsets.top + safeInsets.bottom; //self.topLayoutGuide.length;
 
     CGPoint origin = m_storyView.frame.origin;
     frame.origin.x += origin.x;
