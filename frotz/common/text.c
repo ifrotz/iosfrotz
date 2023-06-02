@@ -169,7 +169,7 @@ zbyte translate_to_zscii (zchar c)
  *
  */
 
-static zchar alphabet (int set, int index)
+static int alphabet (int set, int index)
 {
     zchar z;
     
