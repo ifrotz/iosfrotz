@@ -2183,19 +2183,24 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         frame.size.height += 20;
 
     CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
-    CGFloat header = self.topLayoutGuide.length;
-    CGRect bgRect = CGRectMake(0, header, applicationFrame.size.width, frame.size.height);
+    CGRect bgRect = CGRectMake(0, 0, applicationFrame.size.width, frame.size.height);
     //NSLog(@"autosize bg frame=(%f,%f,%f,%f)", bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
+
     m_background.frame = bgRect;
 
     // iOS 8 seems to be auto-restoring the first responder and bringing the keyboard back when you return to the story from the
     // story list, which we never had to deal with before.  Worse, sometimes keyboardDidShow notification happens after viewDidAppear,
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
-    if (m_kbShown)
+    if (m_kbShown) {
         frame.size.height -= m_kbdSize.height;
-    CGRect storyFrame = [m_storyView frame];
-    storyFrame.size.width = frame.size.width;
-    [m_storyView setFrame: storyFrame];
+        [m_storyView setBottomMargin: 8];
+    } else {
+        UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
+        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
+        [m_storyView setBottomMargin: safeInsets.bottom];
+    }
+    [m_storyView setFrame: frame];
+
     CGRect statusFrame = [m_statusLine frame];
     statusFrame.size.width = frame.size.width;
     [m_statusLine setFrame: statusFrame];
@@ -2212,23 +2217,20 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_storyView)
         [self hideInputHelper];
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    
+
     [coordinator animateAlongsideTransition:^(id context){
         [self autosize];
         [m_inputLine updatePosition];
-        [self addKeyBoardLockGesture];
         [[m_storyBrowser detailsController] refresh];
     } completion:^(id context) {
         [self setNavBarTint];
+        [self addKeyBoardLockGesture];
+        [self autosize];
     } ];
 }
 
 -(CGRect) storyViewFullFrame {
-    CGRect frame = [m_storyView.window bounds];
-    UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-    safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-
-    frame.size.height -= safeInsets.top + safeInsets.bottom; //self.topLayoutGuide.length;
+    CGRect frame = self.view.bounds;
 
     CGPoint origin = m_storyView.frame.origin;
     frame.origin.x += origin.x;
@@ -2253,7 +2255,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         bounds->size.height = bounds->size.width;
         bounds->size.width = h;
     }
-
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
     if (kbFrameEndValue) {
         CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
@@ -2295,6 +2296,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     AdjustKBBounds(&bounds, userInfo, m_storyView.window);
     m_kbdSize = bounds.size;
 
+    [m_storyView setBottomMargin: 8];
     frame.size.height -= bounds.size.height;
     
     [UIView beginAnimations: @"kbd" context: 0];
@@ -2340,15 +2342,9 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
 #endif
-    CGFloat botMargin = [m_storyView bottomMargin];
-    if (botMargin > 0) {
-        bounds.size.height -= botMargin;
-        if (bounds.size.height < 0)
-            bounds.size.height = 0;
-    }
     if (m_notesController)
         [m_notesController keyboardWillShow: bounds];
-    
+
     frame.size.height -= bounds.size.height;
     
     [UIView beginAnimations: @"kbd" context: 0];
