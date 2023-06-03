@@ -48,8 +48,13 @@ extern f_setup_t f_setup;
 #define MAX_COLS 100
 
 extern int ztop_win_height;
-typedef unsigned short cell, cellcolor;
-extern cell *screen_data, *screen_colors;
+typedef unsigned int cell;
+typedef unsigned short cellcolor;
+#define CELL_STYLE_SHIFT 24
+#define CELL_STYLE_MASK 0xffffff
+
+extern cell *screen_data;
+extern cellcolor *screen_colors;
 extern int cursor_row, cursor_col;
 
 extern int finished; // set by z_quit

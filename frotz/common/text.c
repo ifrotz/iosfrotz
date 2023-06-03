@@ -77,15 +77,12 @@ unsigned int translate_from_zscii (zbyte c)
                 zword unicode;
                 
                 LOW_WORD (addr, unicode)
+
+                return unicode;
                 
-                if (unicode >= 0x100)
-                    return unicode;
-                else
-                    return unicode;
-//                return (unicode < 0x100) ? (zchar) unicode : '?';
-                
-            } else return '?';
-            
+            } else
+                return '?';
+
         } else				/* game uses standard set */
             
             if (c <= 0xdf) {

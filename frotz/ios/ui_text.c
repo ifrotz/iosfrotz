@@ -44,7 +44,7 @@ static int screen_cells;
 cell *screen_data = NULL;
 cellcolor *screen_colors = NULL;
 
-static cell make_cell(int style, char c) {return (style << 8) | (0xff & c);}
+static cell make_cell(int style, unsigned int c) {return (style << CELL_STYLE_SHIFT) | (CELL_STYLE_MASK & c);}
 //static char cell_char(cell c) {return c & 0xff;}
 //static int cell_style(cell c) {return c >> 8;}
 
@@ -218,7 +218,7 @@ static void os_set_cell(int row, int col, cell c)
     scr_row(row)[col] = c;
     scr_color(row)[col] = color;
 
-    if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << 8))) {
+    if (col == h_screen_cols-1 && (c & (REVERSE_STYLE << CELL_STYLE_MASK))) {
         while (++col < MAX_COLS) {
             scr_row(row)[col] = make_cell(REVERSE_STYLE, ' ');
             scr_color(row)[col] = color;
@@ -245,7 +245,7 @@ static void ios_display_char(unsigned int c)
         iosif_set_top_win_height(cursor_row+1);
     }
 
-    os_set_cell(cursor_row, cursor_col, make_cell(current_style, c <= 0xff ? c : '?'));
+    os_set_cell(cursor_row, cursor_col, make_cell(current_style, c <= 0xffff ? c : '?')); //
     iosif_putchar(c);
 
     if (++cursor_col == h_screen_cols) {

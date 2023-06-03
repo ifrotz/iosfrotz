@@ -952,7 +952,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     int nLines = 0, charsDone = 0;
     CGFloat fontAscender = 0;
     BOOL noWrap = (style & kFTNoWrap) != 0;
-    BOOL isFixed = (style & kFTFixedWidth);
+    // We no longer seem to need the Quartz fixed-width text drawing code; using a fixed width font works fine
+    // and isn't restricted to the MacRoman char set. TO-DO: Remove entirely.
+    BOOL isFixed = NO; //(style & kFTFixedWidth);
     if (!len)
         return NO;
 
@@ -1131,9 +1133,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     if (bgColor) {
                         [bgColor set];
                         if (pos.x <= m_leftMargin)
-                            CGContextFillRect(context, CGRectMake(minXPos, pos.y, width+m_leftMargin, curLineHeight));
+                            CGContextFillRect(context, CGRectMake(minXPos, pos.y, width+m_leftMargin, curLineHeight+1));
                         else
-                            CGContextFillRect(context, CGRectMake(minXPos+pos.x, pos.y, width-pos.x, curLineHeight));
+                            CGContextFillRect(context, CGRectMake(minXPos+pos.x, pos.y, width-pos.x, curLineHeight+1));
                         [fgColor set];
                     }
                     if (!isFixed)

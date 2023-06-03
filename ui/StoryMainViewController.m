@@ -2742,7 +2742,7 @@ static int iosif_top_win_height = 1;
 
 #if UseRichTextView
 -(void) updateStatusLine:(RichTextView*)view {
-    int slStyle = kFTFixedWidth|kFTNoWrap|kFTBold;
+    int slStyle = kFTNoWrap|kFTBold|kFTFixedWidth;
     int i, j=0, prevSlStyle=slStyle, isReverse=0, prevColor=0;
     int prevHyperlink=0, hyperlink=0;
     int off = 0;
@@ -2779,7 +2779,7 @@ static int iosif_top_win_height = 1;
             if (displayCols < h_screen_cols) {
                 needCols = h_screen_cols - displayCols;
                 for (j=0; j < numRows; ++j) {
-                    isReverse = (screen_data[j * maxPossCols] >> 8) & REVERSE_STYLE;
+                    isReverse = (screen_data[j * maxPossCols] >> CELL_STYLE_SHIFT) & REVERSE_STYLE;
                     if (!isReverse)
                         break;
                 }
@@ -2787,7 +2787,7 @@ static int iosif_top_win_height = 1;
                 if (i < firstNonReversedRow) {
                     int consecSpaces = 0, maxConsecSpaces = 0, maxConsecSpaces2 = 0, spaceIndex = -1, spaceIndex2 = -1;
                     for (j=0; j < h_screen_cols; ++j) {
-                        wchar_t c = (unsigned char)screen_data[i * maxPossCols + j];
+                        wchar_t c = (wchar_t)(screen_data[i * maxPossCols + j] & CELL_STYLE_MASK);
                         if (c == ' ') {
                             consecSpaces++;
                             if (consecSpaces > 1) {
@@ -2829,7 +2829,7 @@ static int iosif_top_win_height = 1;
                     }
                 } else {
                     for (j=h_screen_cols-1; j > 0; --j) {
-                        isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                        isReverse = (screen_data[i * maxPossCols + j] >> CELL_STYLE_SHIFT) & REVERSE_STYLE;
                         if (isReverse)
                             break;
                     }
@@ -2841,8 +2841,8 @@ static int iosif_top_win_height = 1;
                             needCols = 0;
                     }
                     for (j=0; j < maxc; ++j) {
-                        isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
-                        wchar_t c = (unsigned char)screen_data[i * maxPossCols + j];
+                        isReverse = (screen_data[i * maxPossCols + j] >> CELL_STYLE_SHIFT) & REVERSE_STYLE;
+                        wchar_t c = (wchar_t)(screen_data[i * maxPossCols + j] & CELL_STYLE_MASK);
                         if (isReverse)
                             break;
                         if (c != ' ') {
@@ -2862,7 +2862,7 @@ static int iosif_top_win_height = 1;
         }
 #endif
         
-        int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> 8) & REVERSE_STYLE;
+        int firstColStyle = (gStoryInterp == kGlxStory) ? 0 : (screen_data[i * maxPossCols] >> CELL_STYLE_SHIFT) & REVERSE_STYLE;
         tgline_t *ln = dwin && dwin->lines && i < dwin->height ? &(dwin->lines[i]) : NULL;
         for (j=0; j < maxCols; ++j) {
             wchar_t c = 0;
@@ -2893,9 +2893,9 @@ static int iosif_top_win_height = 1;
                 color = 0;
             } else {
                 if (!c)
-                    c = (unsigned char)screen_data[i * maxPossCols + j];
+                    c = (wchar_t)(screen_data[i * maxPossCols + j] & CELL_STYLE_MASK);
                 color = screen_colors[i * maxPossCols + j];
-                isReverse = (screen_data[i * maxPossCols + j] >> 8) & REVERSE_STYLE;
+                isReverse = (screen_data[i * maxPossCols + j] >> CELL_STYLE_SHIFT) & REVERSE_STYLE;
                 if (currColor==0x22 || j >= h_screen_cols-1 && iosif_top_win_height <= 4 && firstColStyle) {
                     isReverse = REVERSE_STYLE;
                     color = prevColor;
@@ -2964,21 +2964,6 @@ static int iosif_top_win_height = 1;
         [view setAccessibilityValue: view.text];
     if (cwin==1)
         [m_inputLine updatePosition];
-}
-#else
-char *tempStatusLineScreenBuf() {
-    static char buf[MAX_ROWS * MAX_COLS];
-    int i, j=0;
-    for (i=0; i < iosif_top_win_height; ++i) {
-        for (j=0; j < h_screen_cols; ++j) {
-            char c = (char)screen_data[i * MAX_COLS + j];
-            buf[i * (h_screen_cols+1) + j] = c;
-        }
-        buf[i*(h_screen_cols+1) + j] = '\n';
-    }
-    
-    buf[i*(h_screen_cols+1)] = '\0';	
-    return buf;
 }
 #endif
 
@@ -3050,7 +3035,7 @@ char *tempStatusLineScreenBuf() {
     
     BOOL frozeDisplay = NO;
     
-    if (statusLen > 1 && ztop_win_height <=1 && prevTopWinHeight>=3) { // && [storyView textStyle]==kFTFixedWidth) {
+    if (statusLen > 1 && ztop_win_height <=1 && prevTopWinHeight>=3) {
         [storyView setFreezeDisplay: YES];
         [statusLine setFreezeDisplay: YES];
         frozeDisplay = YES;
@@ -3838,10 +3823,16 @@ static void setScreenDims(char *storyNameBuf) {
                 } else 	if (color > 0x11) //  && (color != 0x29)
                     currColor = u_setup.current_color = color;
                 NSNumber *currStyle = dict[@"currTextStyle"];
+                BOOL oldStatusData = NO;
                 if (currStyle)
                     currTextStyle = u_setup.current_text_style = (int)[currStyle integerValue];
 
-                statusScreenData = dict[@"statusWinData"];
+                statusScreenData = dict[@"statusWinDataWide"];
+                if (!statusScreenData) {
+                    statusScreenData = dict[@"statusWinData"];
+                    if (statusScreenData)
+                        oldStatusData = YES;
+                }
                 statusScreenColors = dict[@"statusWinColors"];
                 setScreenDims(storyNameBuf);
                 h_screen_rows = kDefaultTextViewHeight; // iosif_textview_height;
@@ -3870,9 +3861,22 @@ static void setScreenDims(char *storyNameBuf) {
                 iosif_clear_input(NULL);
                 [self printText: nil];
                 NSUInteger len = [statusScreenData length], maxLen = h_screen_rows * MAX_COLS * sizeof(*screen_data);
-                if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
-                    len = maxLen;
-                memcpy(screen_data, (char*)[statusScreenData bytes], len);
+                if (oldStatusData) {
+                    unsigned short *oldCellPtr = (unsigned short *)[statusScreenData bytes];
+                    NSUInteger count = 0;
+                    for (NSUInteger row = 0; count < len && row < MAX_ROWS; ++row) {
+                        unsigned short *oldScrRow = oldCellPtr + row * MAX_COLS;
+                        cell *scrRow = screen_data + row * MAX_COLS;
+                        for (NSUInteger col = 0; col < MAX_COLS; ++col) {
+                            scrRow[col] = ((oldScrRow[col] & 0xff00) << 16) | (oldScrRow[col] & 0xff);
+                        }
+                        count += MAX_COLS * sizeof(unsigned short);
+                    }
+                } else {
+                    if (len > h_screen_rows * MAX_COLS * sizeof(*screen_data))
+                        len = maxLen;
+                    memcpy(screen_data, (char*)[statusScreenData bytes], len);
+                }
                 if (statusScreenColors) {
                     len = [statusScreenColors length];
                     if (len > maxLen)
@@ -4198,7 +4202,7 @@ static void setScreenDims(char *storyNameBuf) {
         
         NSData *statusData = [NSData dataWithBytes: screen_data length: h_screen_rows * MAX_COLS * sizeof(*screen_data)];
         NSData *statusColors = [NSData dataWithBytes: screen_colors length: h_screen_rows * MAX_COLS * sizeof(*screen_colors)];
-        dict[@"statusWinData"] = statusData;
+        dict[@"statusWinDataWide"] = statusData;
         dict[@"statusWinColors"] = statusColors;
         
 #if UseRichTextView
