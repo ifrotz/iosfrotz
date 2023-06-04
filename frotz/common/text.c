@@ -90,10 +90,10 @@ unsigned int translate_from_zscii (zbyte c)
         } else				/* game uses standard set */
             
             if (c <= 0xdf) {
-                
+#if !USE_UTF8
                 if (c == 0xdc || c == 0xdd)	/* Oe and oe ligatures */
                     return '?';			/* are not ISO-Latin 1 */
-                
+#endif
                 return zscii_to_latin1[c - 0x9b];
                 
             } else return '?';
