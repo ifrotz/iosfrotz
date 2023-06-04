@@ -25,6 +25,7 @@ typedef int bool;
 
 #endif /* __UNIX_PORT_FILE */
 
+#define USE_UTF8 1
 
 #include <stdio.h>
 
@@ -43,7 +44,11 @@ enum story {
     UNKNOWN
 };
 
+#if USE_UTF8
+typedef unsigned short zchar;
+#else
 typedef unsigned char zchar;
+#endif
 
 /*** Constants that may be set at compile time ***/
 
@@ -603,6 +608,7 @@ void	storew (zword, zword);
 void 	os_beep (int);
 int  	os_char_width (zchar);
 void 	os_display_char (unsigned int);
+bool    os_check_unicode (unsigned int);
 void    os_backspace(void);
 void 	os_display_string (const zchar *);
 void 	os_draw_picture (int, int, int);

@@ -81,8 +81,10 @@ void flush_buffer (void)
 void print_char (unsigned int c)
 {
     static bool flag = FALSE;
+#if !USE_UTF8 // else use output-only hack that allows unicode table output only
     if (c >= 0x100)
         flush_buffer();
+#endif
     if (message || ostream_memory || enable_buffering) {
         
         if (!flag) {
@@ -114,9 +116,12 @@ void print_char (unsigned int c)
         
         /* Insert the character into the buffer */
         
+#if !USE_UTF8
         if (c >= 0x100)
             stream_char(c);
-        else {
+        else
+#endif
+        {
             buffer[bufpos++] = c;
             
             if (bufpos == TEXT_BUFFER_SIZE)

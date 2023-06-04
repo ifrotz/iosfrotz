@@ -46,6 +46,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include <CoreText/CoreText.h>
+
 #define kDefaultTextViewWidth ((gLargeScreenDevice || gLargeScreenPhone) ? 80 : kDefaultTextViewMinWidth)
 
 #define kClearEscChar '\f'
@@ -302,6 +304,20 @@ void iosif_putchar(wchar_t c) {
     iosif_win_putchar(cwin, c);
 }
 
+bool iosif_check_unicode(wchar_t c) {
+    if ((UniChar)c != c)
+        return false;
+    FrotzView *storyView = [theSMVC storyView];
+    UIFont *font = [storyView font];
+    UniChar characters[] = { c };
+    CGGlyph glyphs[1];
+    // https://stackoverflow.com/questions/23136073/how-to-check-if-a-character-is-supported-by-a-font
+    CTFontRef ctFont = CTFontCreateWithName((__bridge CFStringRef)font.fontName, font.pointSize, NULL);
+    bool ret = CTFontGetGlyphsForCharacters(ctFont, characters, glyphs, 1);
+    CFRelease(ctFont);
+    return ret;
+}
+
 void iosif_puts(char *s) {
     while (*s != '\0')
         iosif_putchar(*s++);
@@ -397,9 +413,12 @@ int iosif_getchar(int timeout) {
     while (1) {
         pthread_mutex_lock(&inputMutex);
         if ([ipzInputBufferStr length] > 0) {
+#if !USE_UTF8
     	    UInt8 buf[4];
-            CFRange r = {0,1}; NSRange nr = {0,1};
+            CFRange r = {0,1};
             CFIndex usedBufferLength;
+#endif
+            NSRange nr = {0,1};
             UniChar uc = [ipzInputBufferStr characterAtIndex:0];
             switch (uc) {
                 // Fix so-called "smart punctuation"
@@ -412,9 +431,13 @@ int iosif_getchar(int timeout) {
                     c = '\'';
                     break;
                 default: {
+#if USE_UTF8
+                    c = uc;
+#else
                     CFIndex numChars = CFStringGetBytes((CFStringRef)ipzInputBufferStr, r, kCFStringEncodingISOLatin1,'?',FALSE,(UInt8 *)buf,2,&usedBufferLength);
                     if (numChars)
                         c = (int)*(unsigned char*)buf;
+#endif
                     break;
                 }
             }
@@ -4433,7 +4456,7 @@ extern int glulxCompleteWord(const char *word, char *result);
     int match;
     BOOL startsWithPunct = NO;
 
-    char resultbuf[32] = { 0 };
+    char resultbuf[256] = { 0, 0 };
     int status = 2;
 
     if (len > 0) {
@@ -4456,8 +4479,13 @@ extern int glulxCompleteWord(const char *word, char *result);
     if (len == 0)
         return nil;
 
-    if (gStoryInterp==kZStory)
+    if (gStoryInterp==kZStory) {
+#if USE_UTF8
+        status = completion((const zchar*)[@"examine" cStringUsingEncoding: NSUTF16StringEncoding], (zchar*)resultbuf);
+#else
         status = completion((const zchar*)"examine", (zchar*)resultbuf);
+#endif
+    }
     else
         status = glulxCompleteWord("examine", resultbuf);
     if (status != 0)
@@ -4488,13 +4516,28 @@ extern int glulxCompleteWord(const char *word, char *result);
     if (!candString) {
         *resultbuf = '\0';
         status = 2;
-        if (gStoryInterp==kZStory)
+        if (gStoryInterp==kZStory) {
+#if USE_UTF8
+            status = completion((const zchar*)[str cStringUsingEncoding: NSUTF16StringEncoding], (zchar*)resultbuf);
+#else
             status = completion((const zchar*)[str UTF8String], (zchar*)resultbuf);
+#endif
+        }
         else
             status = glulxCompleteWord((const char*)[str UTF8String], resultbuf);
         if (status != 2 && strlen(resultbuf) > 0) {
-            if (gStoryInterp==kZStory)
+            if (gStoryInterp==kZStory) {
+#if USE_UTF8
+                NSString *utf16String = [[NSString alloc] initWithBytes:resultbuf
+                                                               length:os_string_width((zchar*)resultbuf)*sizeof(zchar)
+                                                             encoding:NSUTF16LittleEndianStringEncoding];
+                const char *utf8StringBuffer = [utf16String UTF8String];
+                NSString *utf8String = [NSString stringWithUTF8String:utf8StringBuffer];
+                candString = [str stringByAppendingString: utf8String];
+#else
                 candString = [str stringByAppendingString: @(resultbuf)];
+#endif
+            }
             else
                 candString = @(resultbuf);
             if (candString && [str rangeOfString:@"-"].length==0 && [candString rangeOfString:@"-"].length!=0) {

@@ -139,67 +139,11 @@ static int unix_read_char(int extkeys)
 	    else
 		continue;
 
-	/* Screen decluttering. */
-	case MOD_CTRL ^ 'L': case MOD_CTRL ^ 'R':
-	    // clearok( curscr, 1); refresh(); clearok( curscr, 0);
-	    continue;
-	case '\n': case '\r': return ZC_RETURN;
+	case '\n': case '\r':
+            return ZC_RETURN;
 	/* I've seen KEY_BACKSPACE returned on some terminals. */
 	case '\b': return ZC_BACKSPACE;
-	/* On terminals with 8-bit character sets or 7-bit connections
-	   "Alt-Foo" may be returned as an escape followed by the ASCII
-	   value of the letter.  We have to decide here whether to
-	   return a single escape or a frotz hot key. */
-	case -30:
-	    c = iosif_getchar(timeout_to_ms());
-	    switch(c) {
-	    case -1: return ZC_ESCAPE;
-	    case 'p': return ZC_HKEY_PLAYBACK;
-	    case 'r': return ZC_HKEY_RECORD;
-	    case 's': return ZC_HKEY_SEED;
-	    case 'u': return ZC_HKEY_UNDO;
-	    case 'n': return ZC_HKEY_RESTART;
-	    case 'x': return ZC_HKEY_QUIT;
-	    case 'd': return ZC_HKEY_DEBUG;
-	    case 'h': return ZC_HKEY_HELP;
-	    default: continue;	/* Ignore unknown combinations. */
-	    }
-	/* The standard function key block. */
-//    case ZC_IP_ARROW_UP: return ZC_ARROW_UP;
-//    case ZC_IP_ARROW_DOWN: return ZC_ARROW_DOWN;
-//    case ZC_IP_ARROW_LEFT: return ZC_ARROW_LEFT;
-//    case ZC_IP_ARROW_RIGHT: return ZC_ARROW_RIGHT;
     case 0x1b: return ZC_ESCAPE;
-	//case KEY_UP: return ZC_ARROW_UP;
-	//case KEY_DOWN: return ZC_ARROW_DOWN;
-	//case KEY_LEFT: return ZC_ARROW_LEFT;
-	//case KEY_RIGHT: return ZC_ARROW_RIGHT;
-	//case KEY_F(1): return ZC_FKEY_MIN;
-	//case KEY_F(2): return ZC_FKEY_MIN + 1;
-	//case KEY_F(3): return ZC_FKEY_MIN + 2;
-	//case KEY_F(4): return ZC_FKEY_MIN + 3;
-	//case KEY_F(5): return ZC_FKEY_MIN + 4;
-	//case KEY_F(6): return ZC_FKEY_MIN + 5;
-	//case KEY_F(7): return ZC_FKEY_MIN + 6;
-	//case KEY_F(8): return ZC_FKEY_MIN + 7;
-	//case KEY_F(9): return ZC_FKEY_MIN + 8;
-	//case KEY_F(10): return ZC_FKEY_MIN + 9;
-	//case KEY_F(11): return ZC_FKEY_MIN + 10;
-	//case KEY_F(12): return ZC_FKEY_MIN + 11;
-        /* Catch the meta key on those plain old ASCII terminals where
-	   it sets the high bit.  This only works in
-	   u_setup.plain_ascii mode: otherwise these character codes
-	   would have been interpreted according to ISO-Latin-1
-	   earlier. */
-	case MOD_META | 'p': return ZC_HKEY_PLAYBACK;
-	case MOD_META | 'r': return ZC_HKEY_RECORD;
-	case MOD_META | 's': return ZC_HKEY_SEED;
-	case MOD_META | 'u': return ZC_HKEY_UNDO;
-	case MOD_META | 'n': return ZC_HKEY_RESTART;
-	case MOD_META | 'x': return ZC_HKEY_QUIT;
-	case MOD_META | 'd': return ZC_HKEY_DEBUG;
-	case MOD_META | 'h': return ZC_HKEY_HELP;
-
 /* these are the emacs-editing characters */
 	case MOD_CTRL ^ 'B': return ZC_ARROW_LEFT;
 	case MOD_CTRL ^ 'F': return ZC_ARROW_RIGHT;
@@ -207,7 +151,7 @@ static int unix_read_char(int extkeys)
 	case MOD_CTRL ^ 'N': return ZC_ARROW_DOWN;
 	//case MOD_CTRL ^ 'A': c = KEY_HOME; break;
 	//case MOD_CTRL ^ 'E': c = KEY_END; break;
-	//case MOD_CTRL ^ 'D': c = KEY_DC; break;
+	//cas   e MOD_CTRL ^ 'D': c = KEY_DC; break;
 	//case MOD_CTRL ^ 'K': c = KEY_EOL; break;
 
 	default: break; /* Who knows? */
@@ -225,7 +169,8 @@ static int unix_read_char(int extkeys)
 	/* Finally, if we're in full line mode (os_read_line), we
 	   might return codes which aren't legal Z-machine keys but
 	   are used by the editor. */
-	if (extkeys) return c;
+	//if (extkeys)
+        return c;
     }
 }
 
@@ -330,9 +275,9 @@ enum input_type {
   INPUT_LINE_CONTINUED,
 };
 
-static void translate_special_chars(char *s)
+static void translate_special_chars(zchar *s)
 { 
-  char *src = s, *dest = s;
+  zchar *src = s, *dest = s;
   while (*src)   
     switch(*src++) {
     default: *dest++ = src[-1]; break;
@@ -372,10 +317,10 @@ static void translate_special_chars(char *s)
 /* Read one line, including the newline, into s.  Safely avoids buffer
  * overruns (but that's kind of pointless because there are several
  * other places where I'm not so careful).  */
-static void zgetline(char *s)
+static void zgetline(zchar *s)
 {
     int c = 0;
-    char *p = s;
+    zchar *p = s;
     iosif_enable_input();
     while (p < s + INPUT_BUFFER_SIZE - 1)
 //	if ((c = iosif_getchar(timeout_to_ms())) != '\n')
@@ -424,7 +369,7 @@ static void zgetline(char *s)
  * (that isn't the start of a special character)), and write the
  * first non-command to s.
  * Return true if timed-out.  */
-static bool ui_read_line(char *s, char *prompt, bool show_cursor,
+static bool ui_read_line(zchar *s, char *prompt, bool show_cursor,
                            int timeout, enum input_type type,
                            zchar *continued_line_chars)
 {
@@ -454,14 +399,14 @@ static void ui_read_misc_line(char *s, char *prompt)
 /* For allowing the user to input in a single line keys to be returned
  * for several consecutive calls to read_char, with no screen update
  * in between.  Useful for traversing menus.  */
-static char read_key_buffer[INPUT_BUFFER_SIZE];
+static zchar read_key_buffer[INPUT_BUFFER_SIZE];
 
 /* Similar.  Useful for using function key abbreviations.  */
-static char read_line_buffer[INPUT_BUFFER_SIZE];
+static zchar read_line_buffer[INPUT_BUFFER_SIZE];
 
 zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
 {
-  char *p;
+  zchar *p;
   int terminator;
   static bool timed_out_last_time;
   int timed_out;
@@ -478,7 +423,7 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
                                buf[0] ? INPUT_LINE_CONTINUED : INPUT_LINE,
                                buf);
   else
-    timed_out = 0; // check_timeout(timeout); xxxxx
+    timed_out = 0;
   
   if (timed_out) {
     timed_out_last_time = TRUE;
@@ -497,12 +442,17 @@ zchar os_read_line (int max, zchar *buf, int timeout, int width, int continued)
   /* TODO: Truncate to width and max.  */
 
   /* copy to screen */
- // iosif_puts(read_line_buffer); // dumb_display_user_input
   /* copy to the buffer and save the rest for next time.  */
+#if USE_UTF8
+  size_t len = p-read_line_buffer;
+  memcpy(buf, read_line_buffer, (len+1)*sizeof(zchar));
+  p = read_line_buffer + len + 1;
+  memmove(read_line_buffer, p, (INPUT_BUFFER_SIZE-len-1)*sizeof(zchar));
+#else
   strcat((char*)buf, read_line_buffer);
   p = read_line_buffer + strlen(read_line_buffer) + 1;
   memmove(read_line_buffer, p, strlen(p) + 1);
-    
+#endif
   /* If there was just a newline after the terminating character,
    * don't save it.  */
   if ((read_line_buffer[0] == '\r') && (read_line_buffer[1] == '\0'))

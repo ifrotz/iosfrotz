@@ -76,6 +76,8 @@ void iosif_disable_input(void);
 void iosif_enable_tap(int winNum);
 void iosif_disable_tap(int winNum);
 void iosif_putchar(wchar_t c);
+void os_backspace();
+bool iosif_check_unicode(wchar_t c);
 void iosif_win_putchar(int winNum, wchar_t c);
 void iosif_disable_autocompletion(void);
 void iosif_enable_autocompletion(void);

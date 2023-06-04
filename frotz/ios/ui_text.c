@@ -258,6 +258,11 @@ static void ios_display_char(unsigned int c)
     }
 }
 
+bool os_check_unicode (unsigned int c)
+{
+    return iosif_check_unicode((wchar_t)c);
+}
+
 void os_backspace()
 {
     cursor_col--;
@@ -331,7 +336,7 @@ void os_display_string (const zchar *s)
     
     zchar c;
     
-    while ((c = (unsigned char) *s++) != 0)
+    while ((c = *s++) != 0)
         
         if (c == ZC_NEW_FONT || c == ZC_NEW_STYLE) {
             
