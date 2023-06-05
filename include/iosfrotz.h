@@ -84,6 +84,7 @@ void iosif_enable_autocompletion(void);
 void iosif_erase_screen(void);
 void iosif_erase_mainwin(void);
 void iosif_erase_win(int winnum);
+void iosif_erase_mainwin();
 void iosif_set_top_win_height(int height);
 void iosif_mark_recent_save(void);
 void iosif_more_prompt(void);

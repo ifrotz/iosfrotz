@@ -573,11 +573,11 @@ void iosif_erase_win(int winnum) {
     //NSLog(@"erase mainwin\n");
     
 #if UseRichTextView
-    // we have to wait for output to drain even though we're about to clear the screen in case
-    // the output contains font changes
-    while ([ipzBufferStr length])
+    // We have to wait for output to drain even though we're about to clear the screen in case
+    // the output contains font changes. But don't wait forever.
+    int count = 0;
+    while ([ipzBufferStr length] && !finished && count++ < 1000)
         usleep(1000);
-    
 #endif
     
     int saved_cwin = cwin;
@@ -4151,7 +4151,8 @@ static void setScreenDims(char *storyNameBuf) {
         
         if (m_storyTID) {
             while (finished == 1) {
-                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]]; 
+                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+                [self printText: nil];
             }
             //NSLog(@"joining thread %p", m_storyTID);
             pthread_join(m_storyTID, NULL);
