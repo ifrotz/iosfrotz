@@ -112,18 +112,19 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_toolBar setTintColor: [UIColor whiteColor]];
 
     m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
-    UIBarButtonItem *spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    m_spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     m_cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel)];
     m_reloadButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refresh)];
     m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavForward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
     m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"icon-url-tool"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_searchButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch target:self action:@selector(setSearchType)];
 
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     m_activButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_activityView];
 
     self.navigationItem.rightBarButtonItem = m_activButtonItem;
 
-    [m_toolBar setItems: @[m_backButtonItem, spaceButtonItem, m_reloadButtonItem, spaceButtonItem, m_cancelButtonItem, spaceButtonItem, m_URLButtonItem, spaceButtonItem, m_forwardButtonItem]];
+    [self setButtonItems: YES];
 
     [m_background addSubview: m_toolBar];
     [m_background bringSubviewToFront: m_toolBar];
@@ -136,14 +137,13 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     self.navigationItem.title = @"Story Browser";
 
-    NSURL *myURL = [NSURL URLWithString:
-                    [NSString stringWithFormat: @"https://%@/search?searchfor=system%%3Ainform+rating%%3A3-+%%23ratings%%3A2-&browse=1", kIFDBHost]];
-    [m_backButtonItem setEnabled: [m_webView canGoBack]];
-    [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
-    [m_cancelButtonItem setEnabled: NO];
+    [self setInformSearchType];
+}
 
-    m_state = kSWBIdle;
-    [m_webView loadRequest: [NSURLRequest requestWithURL: myURL]];
+-(void)setButtonItems:(BOOL)canCancel {
+    [m_toolBar setItems: @[m_backButtonItem, m_spaceButtonItem, m_forwardButtonItem, m_spaceButtonItem,
+                           canCancel ? m_cancelButtonItem : m_reloadButtonItem, m_spaceButtonItem,
+                           m_URLButtonItem, m_spaceButtonItem, m_searchButtonItem]];
 }
 
 -(void)viewDidLoad {
@@ -382,18 +382,69 @@ const NSString *kBookmarkVersionKey = @"Version";
 -(void)cancel {
     [[self webView] stopLoading];
 }
+
+-(void)loadDefaultSearchWithKey:(NSString*)key value:(NSString*)value {
+    [m_backButtonItem setEnabled: [m_webView canGoBack]];
+    [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
+    [m_cancelButtonItem setEnabled: NO];
+    [self setButtonItems: NO];
+
+    m_state = kSWBIdle;
+    NSURL *url = [NSURL URLWithString:
+                    [NSString stringWithFormat:
+                         @"https://%@/search?searchfor=%@%%3A%@+rating%%3A3-+%%23ratings%%3A2-&browse=1",
+                     kIFDBHost, key, value]];
+    [m_webView loadRequest: [NSURLRequest requestWithURL: url]];
+}
+
 -(void)refresh {
     [[self webView] reload];
 }
 
+-(void)setInformSearchType {
+    [self loadDefaultSearchWithKey: @"system" value: @"inform"];
+}
+
+-(void)setSearchType {
+    const NSString *kSearchName = @"name", *kSearchKey = @"key", *kSearchVal = @"value";
+    NSArray<NSDictionary*> *items = @[
+        @{kSearchName: @"Stories written in Inform",kSearchKey:@"system", kSearchVal: @"inform" },
+        @{kSearchName: @"Stories written in TADS 2", kSearchKey:@"format", kSearchVal: @"tads%202" },
+        @{kSearchName: @"Stories written in Dialog", kSearchKey:@"system", kSearchVal: @"dialog" },
+//        @{kSearchName: @"Stories written in ZIL (Infocom Zork Implementation Language)", kSearchKey:@"system", kSearchVal: @"zil" }
+    ];
+
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"IFDB Search by Story Format"
+                                                                            message:nil
+                                                                     preferredStyle:UIAlertControllerStyleActionSheet];
+
+    for (NSDictionary *item in items) {
+        UIAlertAction *action = [UIAlertAction actionWithTitle: item[kSearchName]
+                                          style: UIAlertActionStyleDefault
+                                        handler: ^(UIAlertAction *action) {
+                                          [self loadDefaultSearchWithKey: item[kSearchKey] value: item[kSearchVal]];
+                                        }];
+        [alertController addAction: action];
+    }
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle: @"Cancel"
+                                                          style: UIAlertActionStyleCancel
+                                                        handler: ^(UIAlertAction *action) {
+                                                        }];
+
+    [alertController addAction: cancelAction];
+
+    UIPopoverPresentationController *popPresenter = [alertController popoverPresentationController];
+    popPresenter.barButtonItem = m_searchButtonItem;
+    [self presentViewController:alertController animated:YES completion:nil];
+
+}
+
 -(void)setupFade {
-#if 1
     CATransition *animation = [CATransition animation];
     [animation setType:kCATransitionFade];
     [animation setDuration: 0.3];
     [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
     [[[self view] layer] addAnimation:animation forKey:@"fadebar"];
-#endif
 }
 
 -(void)promptURL {
@@ -611,6 +662,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_backButtonItem setEnabled: [m_webView canGoBack]];
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: [m_webView isLoading]];
+    [self setButtonItems: [m_webView isLoading]];
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
                                                    delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
     [alert show];
@@ -1012,6 +1064,8 @@ static bool bypassBundle = NO;
     [m_backButtonItem setEnabled: [webView canGoBack]];
     [m_forwardButtonItem setEnabled: [webView canGoForward]];
     [m_cancelButtonItem setEnabled: [webView isLoading]];
+    [self setButtonItems: [m_webView isLoading]];
+
     m_state = kSWBIdle;
 }
 
@@ -1093,6 +1147,7 @@ static bool bypassBundle = NO;
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [m_activityView startAnimating];
     [m_cancelButtonItem setEnabled: YES];
+    [self setButtonItems: YES];
 }
 
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error {
@@ -1127,6 +1182,7 @@ static bool bypassBundle = NO;
 - (void)webViewDidStartLoad:(UIWebView *)webView {
     [m_activityView startAnimating];
     [m_cancelButtonItem setEnabled: YES];
+    [self setButtonItmes: YES];
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)webView {

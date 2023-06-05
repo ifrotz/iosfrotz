@@ -46,7 +46,7 @@ typedef UIWebView StoryWebView;
     StoryBrowser *m_storyBrowser;
     UIToolbar *m_toolBar;
     UIActivityIndicatorView *m_activityView;
-    UIBarButtonItem *m_backButtonItem, *m_forwardButtonItem, *m_cancelButtonItem, *m_reloadButtonItem, *m_URLButtonItem, *m_activButtonItem;
+    UIBarButtonItem *m_backButtonItem, *m_forwardButtonItem, *m_cancelButtonItem, *m_reloadButtonItem, *m_URLButtonItem, *m_activButtonItem, *m_searchButtonItem, *m_spaceButtonItem;
     URLPromptController *m_urlBarController;
     BookmarkListController *m_bookmarkListController;
 
@@ -67,6 +67,8 @@ typedef UIWebView StoryWebView;
 -(void)cancel;
 -(void)refresh;
 -(void)promptURL;
+-(void)setSearchType;
+-(void)setInformSearchType;
 -(void)enterURL:(NSString*)url;
 -(void)dismissURLPrompt;
 -(void)showBookmarks;
