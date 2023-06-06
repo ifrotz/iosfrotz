@@ -390,10 +390,11 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self setButtonItems: NO];
 
     m_state = kSWBIdle;
+    const char *cullLowRatedStr = "+rating%3A3-+%23ratings%3A2-";
     NSURL *url = [NSURL URLWithString:
                     [NSString stringWithFormat:
-                         @"https://%@/search?searchfor=%@%%3A%@+rating%%3A3-+%%23ratings%%3A2-&browse=1",
-                     kIFDBHost, key, value]];
+                         @"https://%@/search?searchfor=%@%%3A%@%s&browse=1",
+                     kIFDBHost, key, value, cullLowRatedStr]];
     [m_webView loadRequest: [NSURLRequest requestWithURL: url]];
 }
 
@@ -408,13 +409,24 @@ const NSString *kBookmarkVersionKey = @"Version";
 -(void)setSearchType {
     const NSString *kSearchName = @"name", *kSearchKey = @"key", *kSearchVal = @"value";
     NSArray<NSDictionary*> *items = @[
-        @{kSearchName: @"Stories written in Inform",kSearchKey:@"system", kSearchVal: @"inform" },
+        @{kSearchName: @"Stories written in Inform (all formats)",kSearchKey:@"system", kSearchVal: @"inform" },
+        @{kSearchName: @"Stories in any Blorb container format",kSearchKey:@"format", kSearchVal: @"*blorb" },
+        @{kSearchName: @"Stories in Z-machine format",kSearchKey:@"format", kSearchVal: @"z*" },
+        // This doesn't work well enough to be useful; excludes gblorb and doesn't have many results:
+        // @{kSearchName: @"Stories in Glulx format",kSearchKey:@"format", kSearchVal: @"glulx" },
         @{kSearchName: @"Stories written in TADS 2", kSearchKey:@"format", kSearchVal: @"tads%202" },
+        // TADS 3 omitted until more stable, graphics are supported or at least show placeholders
+        // @{kSearchName: @"Stories written in TADS 3", kSearchKey:@"format", kSearchVal: @"tads%203" },
         @{kSearchName: @"Stories written in Dialog", kSearchKey:@"system", kSearchVal: @"dialog" },
-//        @{kSearchName: @"Stories written in ZIL (Infocom Zork Implementation Language)", kSearchKey:@"system", kSearchVal: @"zil" }
+        // ZIL not enabled because the story files you can navigate to on Github have stupid two-letter filenames,
+        // and some are bugged (many tailing spaces at end of filename).
+        // @{kSearchName: @"Stories written in ZIL (Infocom/Z-machine)", kSearchKey:@"system", kSearchVal: @"zil" }
+
+        // ??? Add link to Zarf's collection here, even though it's not on IFDB?
+        // The link in the default bookmarks isn't very easily discoverable.
     ];
 
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"IFDB Search by Story Format"
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"IFDB Search by Story System or Format"
                                                                             message:nil
                                                                      preferredStyle:UIAlertControllerStyleActionSheet];
 
