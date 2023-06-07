@@ -22,6 +22,14 @@ static FrotzWebView *sWebView;
     return sWebView;
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    if (@available(iOS 13.0,*)) {
+        self.navigationController.navigationBar.scrollEdgeAppearance = self.navigationController.navigationBar.standardAppearance;
+    }
+}
+
+
 +(void)releaseSharedWebView {
     sWebView = nil;
 }
