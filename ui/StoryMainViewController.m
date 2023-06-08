@@ -1695,8 +1695,8 @@ extern void gli_ios_set_focus(window_t *winNum);
         [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked"]];
     else
         [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard"]];
-    if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-        [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
+//    if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
+//        [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
 }
 
 -(void)showKeyboardLockState {
