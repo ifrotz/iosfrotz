@@ -1028,7 +1028,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                 break; //continue;
             }
             NSInteger maxChars = (width - pos.x) / m_fontMinWidth;
-            if (len < maxChars || isFixed) {
+            if (len < maxChars || (style & kFTFixedWidth)) {
                 if (isFixed) {
                     textSize.height = fontHeight;
                     textSize.width = RTDrawFixedWidthText(context, text, 0, 0, NO);
@@ -1051,7 +1051,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                     if (doDraw) {
                         if (bgColor) {
                             if (pos.x <= m_leftMargin) {
-                                if ((style & kFTReverse) && isFixed)
+                                if ((style & kFTReverse) && (style & kFTFixedWidth))
                                     [bgColor set];
                                 else
                                     [m_currBgColor set];
