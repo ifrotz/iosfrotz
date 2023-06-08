@@ -187,7 +187,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>186.${BUILD_NUMBER}</string>
+	<string>187.${BUILD_NUMBER}</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSApplicationQueriesSchemes</key>
