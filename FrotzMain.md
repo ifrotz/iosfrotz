@@ -6,7 +6,7 @@ Frotz plays games written in the Z-Machine format.  This format was invented by 
 
 In the past two decades, text adventures have experienced a renaissance thanks to a great Internet community of interactive fiction writers and fans.  Many of these games are written using the same engine that powered Infocom's titles, thanks to the Inform compiler and authoring system created by Graham Nelson.  Frotz also supports the glulx format, a newer format which is more powerful than Z-machine and supports games with images/graphics.
 
-![Frotz](../master/resources/Frotz-512x512.png)
+![Frotz](../main/resources/Frotz-512x512.png)
 
 Frotz includes several built-in games, and includes a web portal for downloading new ones from the Internet.
 
@@ -14,6 +14,11 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+**Update - Version 1.8.7 now available.**
+
+**09/08/2023**
+
+* This update improves Unicode/non-Latin alphabet support, updates the glulx spec to 3.1.3, adds new IFDB search options, updates to newer iOS and Dropbox SDKs, improves downloading of ZIP files from IFDB pages, enables iTunes File Sharing, and has other bug fixes and minor improvements.
 
 **Update - Version 1.8.6 now available.**
 
