@@ -1,9 +1,10 @@
 // $Id: git.c,v 1.21 2004/12/22 12:40:07 iain Exp $
-
 #include "git.h"
 #include "gi_blorb.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "iosfrotz.h"
 
 // The four-char code 'FORM' as a big-endian value.
 // This is the magic number at the start of Blorb files.
@@ -25,6 +26,10 @@ static void gitMain (const git_uint8 * game, git_uint32 gameSize, git_uint32 cac
     // Load the gamefile into memory
     // and initialise undo records.
     initMemory (game, gameSize);
+#if FROTZ_IOS
+    if (finished)
+        return;
+#endif
     initUndo (undoSize);
     
     // Check that we're compatible with the

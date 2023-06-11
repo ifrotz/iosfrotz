@@ -1,9 +1,10 @@
 // $Id: memory.c,v 1.11 2004/01/25 21:04:19 iain Exp $
-
 #include "git.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "iosfrotz.h"
 
 const git_uint8 * gInitMem;
 git_uint8 * gMem;
@@ -60,13 +61,19 @@ void initMemory (const git_uint8 * gamefile, git_uint32 size)
 
 	if (gEndMem & 255)
 	    fatalError ("Bad header (EndMem is not a multiple of 256)");
-
+#if FROTZ_IOS
+    if (finished)
+        return;
+#endif
 	// Allocate the RAM. We'll duplicate the last few bytes of ROM
 	// here so that reads which cross the ROM/RAM boundary don't fail.
-
 	gMem = malloc (gEndMem);
-        if (gMem == NULL)
-	    fatalError ("Failed to allocate game RAM");
+    if (gMem == NULL) {
+        fatalError ("Failed to allocate game RAM");
+#if FROTZ_IOS
+        return;
+#endif
+    }
 
 	// Copy the initial memory contents.
 	memcpy (gMem, gInitMem, gExtStart);
