@@ -134,7 +134,11 @@
         htmlString = @
         "<h2>What's New in Frotz?</h2>\n"
         "<hr/>\n"
-        "<p>New in <b>Frotz 1.8.7</b>:</p>\n"
+        "<p>New in <b>Frotz 1.8.8</b>:</p>\n"
+        "<p><ul>\n"
+        "<li>Fix issue with arrow keys not working on Bluetooth keyboard</li>\n"
+        "</ul></p>\n"
+        "<p>Version 1.8.7:</p>\n"
         "<p><ul>\n"
         "<li>Update glulx (git) interpreter spec to 1.3.7.</li>\n"
         "<li>Better support for Unicode/non-Latin alphabet games.</li>\n"
