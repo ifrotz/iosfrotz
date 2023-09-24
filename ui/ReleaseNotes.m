@@ -136,7 +136,7 @@
         "<hr/>\n"
         "<p>New in <b>Frotz 1.8.8</b>:</p>\n"
         "<p><ul>\n"
-        "<li>Fix issue with arrow keys not working on Bluetooth keyboard</li>\n"
+        "<li>Fixed issue with arrow keys on Bluetooth keyboards.</li>\n"
         "</ul></p>\n"
         "<p>Version 1.8.7:</p>\n"
         "<p><ul>\n"
