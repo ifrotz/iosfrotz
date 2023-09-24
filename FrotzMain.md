@@ -14,6 +14,13 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 
 ---
+
+**Update - Version 1.8.8 now available.**
+
+**09/23/2023**
+
+* This update fixes an issue with arrow keys on Bluetooth keyboards.
+
 **Update - Version 1.8.7 now available.**
 
 **09/08/2023**
