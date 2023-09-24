@@ -573,6 +573,7 @@ const int kCompletionViewTag = 21;
 #if __IPHONE_5_1 < __IPHONE_OS_VERSION_MAX_ALLOWED
 - (NSArray *) keyCommands
 {
+    NSArray<UIKeyCommand*> *ret = nil;
     if ((ipzAllowInput & kIPZNoEcho)) {
         UIKeyCommand *upArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputUpArrow modifierFlags: 0 action: @selector(upArrow:)];
         UIKeyCommand *downArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputDownArrow modifierFlags: 0 action: @selector(downArrow:)];
@@ -583,15 +584,19 @@ const int kCompletionViewTag = 21;
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
         UIKeyCommand *ctrlB = [UIKeyCommand keyCommandWithInput: @"b" modifierFlags: UIKeyModifierControl action: @selector(leftArrow:)];
         UIKeyCommand *ctrlF = [UIKeyCommand keyCommandWithInput: @"f" modifierFlags: UIKeyModifierControl action: @selector(rightArrow:)];
-        return @[upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF];
+        ret = @[upArrow, downArrow, leftArrow, rightArrow, escapeKey, ctrlP, ctrlN, ctrlB, ctrlF];
     } else {
         UIKeyCommand *upArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputUpArrow modifierFlags: 0 action: @selector(upArrow:)];
         UIKeyCommand *downArrow = [UIKeyCommand keyCommandWithInput: UIKeyInputDownArrow modifierFlags: 0 action: @selector(downArrow:)];
         UIKeyCommand *ctrlP = [UIKeyCommand keyCommandWithInput: @"p" modifierFlags: UIKeyModifierControl action: @selector(upArrow:)];
         UIKeyCommand *ctrlN = [UIKeyCommand keyCommandWithInput: @"n" modifierFlags: UIKeyModifierControl action: @selector(downArrow:)];
-        return @[upArrow, downArrow, ctrlP, ctrlN];
+        ret = @[upArrow, downArrow, ctrlP, ctrlN];
     }
-    return nil;
+    if (@available(iOS 15.0, *)) {
+        for (UIKeyCommand *k in ret)
+            k.wantsPriorityOverSystemBehavior = YES;
+    }
+    return ret;
 }
 
 - (void) upArrow: (UIKeyCommand *) keyCommand
