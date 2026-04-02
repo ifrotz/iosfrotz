@@ -30,6 +30,7 @@
 #import "GlkView.h"
 
 #import "FileBrowser.h"
+#import "VoiceManager.h"
 
 #import "ui_setup.h"
 #import "ui_utils.h"
@@ -1736,6 +1737,46 @@ extern void gli_ios_set_focus(window_t *winNum);
     }
 }
 
+-(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
+    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
+    NSString *imgName = (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
+        ? @"icon-keyboard-locked" : @"icon-keyboard";
+
+    // Try finding kbd button by tag in the toolbar stack (iOS 13+ layout)
+    UIView *cv = self.navigationItem.rightBarButtonItem.customView;
+    UIButton *kbdBtn = [cv viewWithTag:903];
+    if (kbdBtn) {
+        [kbdBtn setImage:[UIImage imageNamed:imgName] forState:UIControlStateNormal];
+    } else {
+        [m_kbdToggleItem setImage:[UIImage imageNamed:imgName]];
+    }
+}
+
+-(void)addKeyBoardLockGesture {
+    [self view];
+    // Find the keyboard button — either by tag in the stack, or via the bar button item
+    UIView *kbdToggleItemView = nil;
+    UIView *cv = self.navigationItem.rightBarButtonItem.customView;
+    UIButton *kbdBtn = [cv viewWithTag:903];
+    if (kbdBtn) {
+        kbdToggleItemView = kbdBtn;
+    } else {
+        kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
+    }
+    if (kbdToggleItemView) {
+        for (UIGestureRecognizer *recognizer in kbdToggleItemView.gestureRecognizers) {
+            if ([recognizer isKindOfClass:[UILongPressGestureRecognizer class]])
+                return;
+        }
+        UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
+                                                          initWithTarget:self
+                                                          action:@selector(toggleKeyboardLongPress:)];
+        [kbdToggleItemView addGestureRecognizer:longPressGesture];
+        [self showKeyboardLockStateInView: kbdToggleItemView];
+    }
+
+}
+
 -(void)viewDidDisappear:(BOOL)animated {
 }
 
@@ -1764,6 +1805,13 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (m_kbShown)
         [m_inputLine becomeFirstResponder];
 
+    // Sync voice button icons with current state (may have changed in Settings)
+    [self updateVoiceButtonIcons];
+    // Ensure tap overlay exists if STT was enabled from Settings
+    if ([VoiceManager shared].sttEnabled) {
+        [self setupVoiceTapOverlay];
+    }
+    [self autosize];
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -2054,7 +2102,44 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
-    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+
+    // All right-side toolbar buttons packed into a single compact stack
+    if (@available(iOS 13.0, *)) {
+        UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
+
+        UIButton *ttsBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [ttsBtn setImage:[[UIImage systemImageNamed:@"speaker.wave.1.fill"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        [ttsBtn addTarget:self action:@selector(toggleTTS) forControlEvents:UIControlEventTouchUpInside];
+        ttsBtn.tag = 901;
+
+        UIButton *sttBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [sttBtn setImage:[[UIImage systemImageNamed:@"mic"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        [sttBtn addTarget:self action:@selector(toggleSTT) forControlEvents:UIControlEventTouchUpInside];
+        sttBtn.tag = 902;
+
+        UIButton *kbdBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [kbdBtn setImage:[UIImage imageNamed:@"icon-keyboard"] forState:UIControlStateNormal];
+        [kbdBtn addTarget:self action:@selector(toggleKeyboard) forControlEvents:UIControlEventTouchUpInside];
+        kbdBtn.tag = 903;
+
+        UIStackView *toolStack = [[UIStackView alloc] initWithArrangedSubviews:@[ttsBtn, sttBtn, kbdBtn]];
+        toolStack.axis = UILayoutConstraintAxisHorizontal;
+        toolStack.spacing = 12;
+
+        UIBarButtonItem *toolItem = [[UIBarButtonItem alloc] initWithCustomView:toolStack];
+        m_ttsToggleItem = toolItem;
+        m_sttToggleItem = toolItem;
+        m_kbdToggleItem = toolItem;
+        self.navigationItem.rightBarButtonItem = toolItem;
+    } else {
+        self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+    }
+
+    // Set up voice manager delegate
+    m_ttsAccumulatedText = [[NSMutableString alloc] init];
+    m_ttsStartRunIndex = NSNotFound;
+    m_handsFreeAutoLoop = YES;
+    [VoiceManager shared].delegate = self;
     
     // Allocate in viewWillAppear instead
     //m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
@@ -2284,8 +2369,15 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // iOS 8 seems to be auto-restoring the first responder and bringing the keyboard back when you return to the story from the
     // story list, which we never had to deal with before.  Worse, sometimes keyboardDidShow notification happens after viewDidAppear,
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
+    BOOL voiceOverlayVisible = m_voiceTapOverlay && [VoiceManager shared].sttEnabled && !m_kbShown;
+    CGFloat overlayHeight = 0;
+
     if (m_kbShown) {
         frame.size.height -= m_kbdSize.height;
+        [m_storyView setBottomMargin: 8];
+    } else if (voiceOverlayVisible) {
+        overlayHeight = frame.size.height / 3.0;
+        frame.size.height -= overlayHeight;
         [m_storyView setBottomMargin: 8];
     } else {
         [m_storyView setBottomMargin: self.view.safeAreaInsets.bottom];
@@ -2299,6 +2391,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_notesController autosize];
     [self resizeStatusWindow];
 
+    // Position voice tap overlay below story view (like the keyboard)
+    if (voiceOverlayVisible) {
+        m_voiceTapOverlay.frame = CGRectMake(0, frame.origin.y + frame.size.height, frame.size.width, overlayHeight);
+        if (!m_voiceTapOverlay.superview) {
+            [m_background addSubview:m_voiceTapOverlay];
+        }
+        [m_background bringSubviewToFront:m_voiceTapOverlay];
+    } else if (m_voiceTapOverlay && m_voiceTapOverlay.superview) {
+        [m_voiceTapOverlay removeFromSuperview];
+    }
 }
 
 // The status line is a full-width banner across its superview (the paging background), but its
@@ -2420,6 +2522,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     }
     m_kbShown = YES;
     [self showKeyboardLockState]; // keep the toggle's title ("Hide Keyboard") in step
+    if ([VoiceManager shared].isListening) {
+        [[VoiceManager shared] stopListening];
+    }
 
     CGRect frame = [self storyViewFullFrame];
     m_kbdSize = bounds.size;
@@ -2452,6 +2557,11 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();
         screen_size_changed = 1;
+    }
+    // Re-show voice overlay now that keyboard is gone
+    if (m_voiceTapOverlay && [VoiceManager shared].sttEnabled) {
+        [self autosize];
+        [self scrollStoryViewToEnd];
     }
 }
 
@@ -3283,13 +3393,21 @@ static int iosif_top_win_height = 1;
     textLen = [inputBufferStr length];
     BOOL clearStory = ([inputBufferStr hasPrefix: @kClearEscCode]);
     BOOL setDefColors = ([inputBufferStr hasPrefix: @kSetDefColorsCode]);
+    // Voice mode: accumulate plain text for TTS
+    BOOL voiceTTSActive = [VoiceManager shared].ttsEnabled && storyView == m_storyView;
+
     if (textLen > 0) {
         if (!clearStory && !setDefColors) {
 #if UseRichTextView
             NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             while (escCodeRange.length > 0 && !discard_output_until_prompt) {
-                if (escCodeRange.location > 0)
-                    [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
+                if (escCodeRange.location > 0) {
+                    NSString *plainChunk = [inputBufferStr substringToIndex: escCodeRange.location];
+                    [storyView appendText: plainChunk];
+                    if (voiceTTSActive) {
+                        [m_ttsAccumulatedText appendString:plainChunk];
+                    }
+                }
                 NSString *subEscCode = [inputBufferStr substringFromIndex: escCodeRange.location+1];
                 if ([subEscCode hasPrefix: @kStyleEscCode]) {
                     RichTextStyle style = kFTNormal;
@@ -3308,6 +3426,7 @@ static int iosif_top_win_height = 1;
                     if (fstyle & kFTReverse)
                         style |= ((fstyle & kFTFixedWidth) ? (kFTBold|kFTNoWrap) : 0);
                     [storyView setTextStyle: style];
+                    // (Style-change TTS pause is injected at send time, not during accumulation)
                     [inputBufferStr setString: [inputBufferStr substringFromIndex: escCodeRange.location+4]];
                 } else if ([subEscCode hasPrefix: @ kArbColorEscCode]) {
                     NSString *colorStr = [inputBufferStr substringWithRange: NSMakeRange(escCodeRange.location+2,7)];
@@ -3402,20 +3521,115 @@ static int iosif_top_win_height = 1;
             NSUInteger iBufLen = [inputBufferStr length];
             if (discard_output_until_prompt)
                 ; // do nothing
-            else if (iBufLen < 256)
+            else if (iBufLen < 256) {
                 [storyView appendText: inputBufferStr];
+                if (voiceTTSActive) {
+                    [m_ttsAccumulatedText appendString:inputBufferStr];
+                }
+            }
             else {
                 NSRange nlr = [inputBufferStr rangeOfString: @"\n"];
                 NSString *substr = inputBufferStr;
                 while (nlr.length > 0) {
-                    [storyView appendText: [substr substringToIndex:nlr.location+1]];
+                    NSString *chunk = [substr substringToIndex:nlr.location+1];
+                    [storyView appendText: chunk];
+                    if (voiceTTSActive) {
+                        [m_ttsAccumulatedText appendString:chunk];
+                    }
                     substr = [substr substringFromIndex: nlr.location+1];
                     nlr = [substr rangeOfString: @"\n"];
                 }
-                if ([substr length] > 0)
+                if ([substr length] > 0) {
                     [storyView appendText: substr];
+                    if (voiceTTSActive) {
+                        [m_ttsAccumulatedText appendString:substr];
+                    }
+                }
             }
             [inputBufferStr setString: @""];
+
+            // Send accumulated text to TTS
+            NSLog(@"VoiceManager TTS check: active=%d, textLen=%lu, allowInput=0x%x, requestInput=%d",
+                  voiceTTSActive, (unsigned long)m_ttsAccumulatedText.length, ipzAllowInput, (ipzAllowInput & kIPZRequestInput) != 0);
+            if (voiceTTSActive && m_ttsAccumulatedText.length > 0 && (ipzAllowInput & kIPZRequestInput)) {
+                NSString *rawText = [m_ttsAccumulatedText copy];
+                NSString *ttsText = rawText;
+
+                // Compute highlight mapping: find where accumulated text starts
+                // in the view's text runs by walking backwards from the end.
+                {
+                    NSArray *runs = m_storyView.textRuns;
+                    NSInteger remaining = (NSInteger)rawText.length;
+                    NSUInteger ri = runs.count;
+                    m_ttsStartRunIndex = 0;
+                    m_ttsStartRunTextLen = 0;
+                    while (ri > 0 && remaining > 0) {
+                        ri--;
+                        NSUInteger runLen = [runs[ri] length];
+                        remaining -= (NSInteger)runLen;
+                    }
+                    if (remaining <= 0 && ri < runs.count) {
+                        m_ttsStartRunIndex = ri;
+                        m_ttsStartRunTextLen = (remaining < 0) ? (NSUInteger)(-remaining) : 0;
+                    }
+                    // Debug: verify the mapping by concatenating run text
+                    NSMutableString *runConcat = [NSMutableString string];
+                    for (NSUInteger di = m_ttsStartRunIndex; di < runs.count; di++) {
+                        NSString *rt = runs[di];
+                        if (di == m_ttsStartRunIndex && m_ttsStartRunTextLen > 0)
+                            rt = [rt substringFromIndex:m_ttsStartRunTextLen];
+                        [runConcat appendString:rt];
+                    }
+                    BOOL matches = [runConcat isEqualToString:rawText];
+                    NSLog(@"VoiceManager highlight map: matches=%d, runConcat len=%lu, raw len=%lu",
+                          matches, (unsigned long)runConcat.length, (unsigned long)rawText.length);
+                    if (!matches) {
+                        NSLog(@"  runConcat='%.80s...'", runConcat.UTF8String);
+                        NSLog(@"  rawText  ='%.80s...'", rawText.UTF8String);
+                    }
+                }
+
+                // Compute leading whitespace bias for highlight mapping.
+                NSCharacterSet *wsSet = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+                NSUInteger biasChars = 0;
+                for (NSUInteger i = 0; i < rawText.length; i++) {
+                    if ([wsSet characterIsMember:[rawText characterAtIndex:i]])
+                        biasChars++;
+                    else
+                        break;
+                }
+                m_ttsHighlightBias = biasChars;
+
+                ttsText = [ttsText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                // Strip the prompt line. Games print content, newline, then a short
+                // prompt (">", "? >") before requesting input. Strip the trailing
+                // fragment after the last newline if it's short (position-based,
+                // won't eat ASCII art or real content in the middle).
+                NSRange lastNewline = [ttsText rangeOfString:@"\n" options:NSBackwardsSearch];
+                if (lastNewline.length > 0) {
+                    NSString *lastLine = [[ttsText substringFromIndex:lastNewline.location + 1]
+                                          stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                    if (lastLine.length <= 5) {
+                        ttsText = [ttsText substringToIndex:lastNewline.location];
+                    }
+                }
+                // Also strip any trailing ">" that may be inline (e.g. "(y/n) >").
+                // This is the one character TTS reads annoyingly ("greater than sign").
+                while (ttsText.length > 0 && [ttsText hasSuffix:@">"]) {
+                    ttsText = [[ttsText substringToIndex:ttsText.length - 1]
+                               stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                }
+                ttsText = [ttsText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                if (ttsText.length > 0) {
+                    NSLog(@"VoiceManager TTS send: bias=%lu, startRun=%lu, startRunTextLen=%lu, totalRuns=%lu, ttsLen=%lu",
+                          m_ttsHighlightBias, m_ttsStartRunIndex, m_ttsStartRunTextLen,
+                          (unsigned long)m_storyView.textRuns.count, (unsigned long)ttsText.length);
+                    [[VoiceManager shared] speakText:ttsText inView:m_storyView];
+                } else {
+                    m_ttsStartRunIndex = NSNotFound;
+                }
+                [m_ttsAccumulatedText setString:@""];
+            }
         } else {
             [inputBufferStr setString: [inputBufferStr substringFromIndex: 1]];
         }	
@@ -5187,6 +5401,467 @@ static BOOL migateDropboxAuth() {
     [self saveDBCacheDict];
 }
 #endif // UseDropBoxSDK
+
+#pragma mark - Voice STT Correction
+
+// Check if a word exists in the game dictionary.
+// Uses the same completion() / glulxCompleteWord() that powers tab-completion.
+// Z-machine: completion() returns suffix in result (status 0=exact, 1=ambiguous, 2=none)
+// Glulx: glulxCompleteWord() returns full word in result
+-(BOOL)isWordInGameDictionary:(NSString *)word {
+    char resultbuf[256] = { 0 };
+    int status = 2;
+    NSString *lower = [word lowercaseString];
+    if (lower.length < 2) return NO;  // completion() requires >= 2 chars
+    if (gStoryInterp == kZStory) {
+#if USE_UTF8
+        status = completion((const zchar*)[lower cStringUsingEncoding:NSUTF16StringEncoding], (zchar*)resultbuf);
+        NSLog(@"VoiceManager dict check Z: word='%@' status=%d", lower, status);
+        // status 0 = unique prefix match, status 1 = ambiguous (multiple words share this prefix)
+        // Both mean the word is a valid dictionary prefix; status 1 means it's a word
+        // that also happens to be a prefix of longer words (e.g. "west" → "west", "western")
+        if (status == 1) return YES;  // ambiguous prefix = valid word
+        if (status == 0) {
+            int rlen = os_string_width((zchar*)resultbuf);
+            if (rlen == 0) return YES;  // exact match, no extra chars
+            NSString *suffix = [[NSString alloc] initWithBytes:resultbuf
+                                                        length:rlen * sizeof(zchar)
+                                                      encoding:NSUTF16LittleEndianStringEncoding];
+            NSString *fullWord = [lower stringByAppendingString:suffix];
+            return [fullWord isEqualToString:lower];
+        }
+#else
+        status = completion((const zchar*)[lower UTF8String], (zchar*)resultbuf);
+        NSLog(@"VoiceManager dict check Z: word='%@' status=%d", lower, status);
+        if (status == 1) return YES;
+        if (status == 0) {
+            if (resultbuf[0] == 0) return YES;
+            NSString *fullWord = [lower stringByAppendingString:@(resultbuf)];
+            return [fullWord isEqualToString:lower];
+        }
+#endif
+    } else {
+        status = glulxCompleteWord([lower UTF8String], resultbuf);
+        NSLog(@"VoiceManager dict check Glx: word='%@' status=%d result='%s'", lower, status, resultbuf);
+        // status 0 = unique match, status 1 = ambiguous (multiple matches)
+        if (status == 1) return YES;
+        if (status == 0) {
+            return [[@(resultbuf) lowercaseString] isEqualToString:lower];
+        }
+    }
+    return NO;
+}
+
+// Find the closest dictionary word by generating phonetic variants
+-(NSString *)correctWordForSTT:(NSString *)word {
+    if ([self isWordInGameDictionary:word])
+        return word;
+
+    NSString *lower = [word lowercaseString];
+    if (lower.length < 2) return word;
+
+    // Common English phonetic substitution pairs.
+    // For each pair (a, b): if the word contains 'a', try replacing with 'b' and vice versa.
+    static NSArray *phoneticPairs = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        phoneticPairs = @[
+            @[@"ea", @"a"],      // great/grate, meat/mat
+            @[@"ea", @"ee"],     // meat/meet, read/reed
+            @[@"ee", @"ea"],     // greet/great
+            @[@"ey", @"ay"],     // grey/gray
+            @[@"ei", @"ee"],     // receive
+            @[@"ight", @"ite"],  // night/nite, light/lite
+            @[@"tion", @"shun"], // action
+            @[@"ing", @"in"],    // grating/gratin
+            @[@"ting", @"ding"], // grating/grading
+            @[@"eet", @"eat"],   // greet/great
+            @[@"ate", @"eat"],   // grate/great
+            @[@"ait", @"ate"],   // wait/wate, bait/bate
+            @[@"air", @"are"],   // fair/fare
+            @[@"ear", @"ere"],   // hear/here
+            @[@"our", @"or"],    // pour/pore
+            @[@"ow", @"o"],      // bow/bo, row/ro
+            @[@"oo", @"ew"],     // too/tew
+            @[@"ck", @"k"],      // lock/lok
+            @[@"ph", @"f"],      // phone/fone
+            @[@"wh", @"w"],      // where/were
+            @[@"wr", @"r"],      // write/rite
+            @[@"kn", @"n"],      // know/no, knife/nife
+            @[@"ould", @"ood"],  // would/wood
+            @[@"aw", @"or"],     // saw/sore
+            @[@"ce", @"se"],     // peace/pease
+            @[@"ss", @"s"],      // pass/pas
+            @[@"ll", @"l"],      // bell/bel
+        ];
+    });
+
+    // Try each phonetic substitution
+    for (NSArray *pair in phoneticPairs) {
+        NSString *from = pair[0], *to = pair[1];
+        // Try replacing from→to
+        if ([lower rangeOfString:from].length > 0) {
+            NSString *variant = [lower stringByReplacingOccurrencesOfString:from withString:to];
+            if ([self isWordInGameDictionary:variant]) {
+                NSLog(@"VoiceManager STT correction: '%@' → '%@'", word, variant);
+                return variant;
+            }
+        }
+        // Try replacing to→from
+        if ([lower rangeOfString:to].length > 0) {
+            NSString *variant = [lower stringByReplacingOccurrencesOfString:to withString:from];
+            if ([self isWordInGameDictionary:variant]) {
+                NSLog(@"VoiceManager STT correction: '%@' → '%@'", word, variant);
+                return variant;
+            }
+        }
+    }
+
+    // Also try simple single-letter substitutions at each position
+    // against the game dictionary (handles remaining edge cases)
+    if (lower.length <= 9) {  // Z-machine dictionary words are max 9 chars
+        NSString *alphabet = @"abcdefghijklmnopqrstuvwxyz";
+        NSMutableString *variant = [lower mutableCopy];
+        for (NSUInteger i = 0; i < lower.length; i++) {
+            unichar original = [lower characterAtIndex:i];
+            for (NSUInteger j = 0; j < 26; j++) {
+                unichar c = [alphabet characterAtIndex:j];
+                if (c == original) continue;
+                [variant replaceCharactersInRange:NSMakeRange(i, 1)
+                                       withString:[NSString stringWithCharacters:&c length:1]];
+                if ([self isWordInGameDictionary:variant]) {
+                    NSLog(@"VoiceManager STT correction: '%@' → '%@'", word, variant);
+                    return [variant copy];
+                }
+                // Restore
+                [variant replaceCharactersInRange:NSMakeRange(i, 1)
+                                       withString:[NSString stringWithCharacters:&original length:1]];
+            }
+        }
+    }
+
+    return word;
+}
+
+// Levenshtein edit distance
+-(NSUInteger)editDistanceFrom:(NSString *)s to:(NSString *)t {
+    NSUInteger sLen = s.length;
+    NSUInteger tLen = t.length;
+    if (sLen == 0) return tLen;
+    if (tLen == 0) return sLen;
+
+    NSUInteger *prev = calloc(tLen + 1, sizeof(NSUInteger));
+    NSUInteger *curr = calloc(tLen + 1, sizeof(NSUInteger));
+    for (NSUInteger j = 0; j <= tLen; j++) prev[j] = j;
+
+    for (NSUInteger i = 1; i <= sLen; i++) {
+        curr[0] = i;
+        unichar sc = [s characterAtIndex:i - 1];
+        for (NSUInteger j = 1; j <= tLen; j++) {
+            unichar tc = [t characterAtIndex:j - 1];
+            NSUInteger cost = (sc == tc) ? 0 : 1;
+            NSUInteger del = prev[j] + 1;
+            NSUInteger ins = curr[j - 1] + 1;
+            NSUInteger sub = prev[j - 1] + cost;
+            curr[j] = MIN(del, MIN(ins, sub));
+        }
+        NSUInteger *tmp = prev; prev = curr; curr = tmp;
+    }
+    NSUInteger result = prev[tLen];
+    free(prev);
+    free(curr);
+    return result;
+}
+
+// Post-process STT text: correct each word against game dictionary
+-(NSString *)correctSTTText:(NSString *)text {
+    NSLog(@"VoiceManager STT correctSTTText input: '%@'", text);
+    NSArray *words = [text componentsSeparatedByString:@" "];
+    NSMutableArray *corrected = [NSMutableArray arrayWithCapacity:words.count];
+    for (NSString *word in words) {
+        if (word.length == 0) continue;
+        BOOL inDict = [self isWordInGameDictionary:word];
+        NSLog(@"VoiceManager STT word '%@' inDict=%d", word, inDict);
+        NSString *fixed = [self correctWordForSTT:word];
+        [corrected addObject:fixed];
+    }
+    NSString *result = [corrected componentsJoinedByString:@" "];
+    NSLog(@"VoiceManager STT correctSTTText output: '%@'", result);
+    return result;
+}
+
+#pragma mark - Voice Mode
+
+-(void)toggleTTS {
+    VoiceManager *vm = [VoiceManager shared];
+    if (vm.ttsEnabled) {
+        [vm stopSpeaking];
+        vm.voiceMode = vm.sttEnabled ? VoiceModeSTTOnly : VoiceModeOff;
+    } else {
+        vm.voiceMode = vm.sttEnabled ? VoiceModeBoth : VoiceModeTTSOnly;
+    }
+    [vm savePreferences];
+    [self updateVoiceButtonIcons];
+    [self autosize];
+}
+
+-(void)toggleSTT {
+    VoiceManager *vm = [VoiceManager shared];
+    if (vm.sttEnabled) {
+        [vm stopListening];
+        vm.voiceMode = vm.ttsEnabled ? VoiceModeTTSOnly : VoiceModeOff;
+        [vm savePreferences];
+        [self updateVoiceButtonIcons];
+        [self autosize];
+    } else {
+        [vm requestSTTPermissionsWithCompletion:^(BOOL granted) {
+            if (granted) {
+                vm.voiceMode = vm.ttsEnabled ? VoiceModeBoth : VoiceModeSTTOnly;
+                [self setupVoiceTapOverlay];
+            }
+            [vm savePreferences];
+            [self updateVoiceButtonIcons];
+            [self autosize];
+            [self scrollStoryViewToEnd];
+        }];
+    }
+}
+
+-(void)updateVoiceButtonIcons {
+    if (@available(iOS 13.0, *)) {
+        VoiceManager *vm = [VoiceManager shared];
+        UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
+        UIView *cv = self.navigationItem.rightBarButtonItem.customView;
+        UIButton *ttsBtn = [cv viewWithTag:901];
+        UIButton *sttBtn = [cv viewWithTag:902];
+        if (ttsBtn) {
+            // speaker.wave.1.fill = TTS on (sound), speaker.slash = TTS off (muted)
+            [ttsBtn setImage:[[UIImage systemImageNamed:vm.ttsEnabled ? @"speaker.wave.1.fill" : @"speaker.slash"]
+                              imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        }
+        if (sttBtn) {
+            [sttBtn setImage:[[UIImage systemImageNamed:vm.sttEnabled ? @"mic.fill" : @"mic.slash"]
+                              imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        }
+    }
+}
+
+#pragma mark - VoiceManagerDelegate
+
+-(void)voiceManagerDidFinishSpeaking {
+    VoiceManager *vm = [VoiceManager shared];
+    NSLog(@"VoiceManager didFinishSpeaking: allowInput=0x%x, autoLoop=%d, sttEnabled=%d",
+          ipzAllowInput, m_handsFreeAutoLoop, vm.sttEnabled);
+
+    // Auto-advance [More] prompts: if the interpreter is waiting for a key
+    // (not line input), feed a space to continue
+    if (!(ipzAllowInput & kIPZRequestInput)) {
+        // Not waiting for line input — might be a [More] or key prompt
+        // Feed a space to advance
+        iosif_feed_input(@" ");
+        return; // Don't start STT — more output is coming
+    }
+
+    if (m_handsFreeAutoLoop && vm.sttEnabled) {
+        // Haptic feedback: TTS done, about to listen
+        UIImpactFeedbackGenerator *haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium];
+        [haptic impactOccurred];
+
+        // Auto-start listening after a brief pause
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [vm startListening];
+        });
+    }
+}
+
+-(void)voiceManagerHighlightRange:(NSRange)range inView:(RichTextView *)view {
+    if (!view || range.length == 0 || m_ttsStartRunIndex == NSNotFound)
+        return;
+
+    // AVSpeechSynthesizer reports ranges relative to the trimmed TTS text.
+    // Add bias to get position in the raw accumulated text.
+    NSUInteger rawLocation = range.location + m_ttsHighlightBias;
+
+    // Walk text runs from where TTS text starts in the view, building a
+    // cumulative offset to find which run contains the target position.
+    // m_ttsStartRunTextLen = chars in the starting run that are BEFORE our text.
+    NSArray *textRuns = [view textRuns];
+    NSUInteger cumulative = 0;
+
+    for (NSUInteger i = m_ttsStartRunIndex; i < textRuns.count; i++) {
+        NSUInteger runLen = [textRuns[i] length];
+        // For the first run, skip pre-existing text
+        NSUInteger runOffset = (i == m_ttsStartRunIndex) ? m_ttsStartRunTextLen : 0;
+        NSUInteger usableLen = runLen - runOffset;
+
+        if (cumulative + usableLen > rawLocation) {
+            NSUInteger localStart = runOffset + (rawLocation - cumulative);
+            NSUInteger localLen = range.length;
+            if (localStart + localLen > runLen)
+                localLen = runLen - localStart;
+
+            CGRect highlightRect = [view rectForTextRun:i characterRange:NSMakeRange(localStart, localLen)];
+            if (!CGRectIsEmpty(highlightRect)) {
+                [view showVoiceHighlightAtRect:highlightRect];
+            }
+            return;
+        }
+        cumulative += usableLen;
+    }
+}
+
+-(void)voiceManagerDidClearHighlight {
+    [m_storyView clearVoiceHighlight];
+    m_ttsStartRunIndex = NSNotFound;
+}
+
+-(void)voiceManagerDidRecognizeText:(NSString *)text isFinal:(BOOL)isFinal {
+    if (!text || text.length == 0)
+        return;
+
+    if (isFinal) {
+        // Correct homonyms against the game dictionary before submitting
+        text = [self correctSTTText:text];
+    }
+
+    // Show recognized text in input field
+    [m_inputLine setText:text];
+
+    if (isFinal) {
+        // Haptic: command recognized
+        UINotificationFeedbackGenerator *haptic = [[UINotificationFeedbackGenerator alloc] init];
+        [haptic notificationOccurred:UINotificationFeedbackTypeSuccess];
+
+        // Check if we're in char-input mode
+        if (ipzAllowInput & kIPZNoEcho) {
+            NSString *translated = [[VoiceManager shared] translateForCharInput:text];
+            [m_inputLine setText:@""];
+            iosif_feed_input(translated);
+        } else {
+            // Line input: submit via normal path
+            [self textFieldFakeDidEndEditing:m_inputLine];
+        }
+    }
+}
+
+-(void)voiceManagerDidStartListening {
+    // Audible cue: short rising tone so user knows mic is active (works on bike/car mount)
+    AudioServicesPlaySystemSound(1113); // "begin recording" tone
+
+    // Haptic feedback
+    UIImpactFeedbackGenerator *haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
+    [haptic impactOccurred];
+
+    // Visual feedback: tint the input line and update mic overlay
+    [m_inputLine setBackgroundColor:[UIColor colorWithRed:1.0 green:0.9 blue:0.9 alpha:1.0]];
+    UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
+    if (micIcon) {
+        micIcon.tintColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.8];
+    }
+    UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
+    if (hint) {
+        hint.text = @"Listening...";
+        hint.textColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.6];
+    }
+}
+
+-(void)voiceManagerDidStopListening {
+    // Audible cue: short falling tone
+    AudioServicesPlaySystemSound(1114); // "end recording" tone
+
+    // Reset input line background and mic overlay
+    [m_inputLine setBackgroundColor:[UIColor whiteColor]];
+    UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
+    if (micIcon) {
+        micIcon.tintColor = [[UIColor systemBlueColor] colorWithAlphaComponent:0.5];
+    }
+    UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
+    if (hint) {
+        hint.text = @"Tap to speak";
+        hint.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.4];
+    }
+}
+
+-(void)voiceManagerSTTError:(NSError *)error {
+    // Haptic: error
+    UINotificationFeedbackGenerator *haptic = [[UINotificationFeedbackGenerator alloc] init];
+    [haptic notificationOccurred:UINotificationFeedbackTypeError];
+
+    [m_inputLine setBackgroundColor:[UIColor whiteColor]];
+    NSLog(@"VoiceManager STT error: %@", error);
+}
+
+#pragma mark - Voice Tap Overlay
+
+-(void)setupVoiceTapOverlay {
+    if (m_voiceTapOverlay)
+        return;
+
+    m_voiceTapOverlay = [[UIView alloc] initWithFrame:CGRectZero];
+    m_voiceTapOverlay.backgroundColor = [[UIColor systemGrayColor] colorWithAlphaComponent:0.08];
+    m_voiceTapOverlay.userInteractionEnabled = YES;
+
+    // Large mic icon — this replaces the on-screen keyboard in voice mode
+    if (@available(iOS 13.0, *)) {
+        UIImageView *micIcon = [[UIImageView alloc] initWithImage:
+            [UIImage systemImageNamed:@"mic.circle.fill"
+                    withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]]];
+        micIcon.tintColor = [[UIColor systemBlueColor] colorWithAlphaComponent:0.5];
+        micIcon.translatesAutoresizingMaskIntoConstraints = NO;
+        micIcon.tag = 999;
+        micIcon.contentMode = UIViewContentModeScaleAspectFit;
+        [m_voiceTapOverlay addSubview:micIcon];
+
+        UILabel *hint = [[UILabel alloc] init];
+        hint.text = @"Tap to speak";
+        hint.font = [UIFont systemFontOfSize:14];
+        hint.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.4];
+        hint.translatesAutoresizingMaskIntoConstraints = NO;
+        hint.tag = 998;
+        [m_voiceTapOverlay addSubview:hint];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [micIcon.centerXAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerXAnchor],
+            [micIcon.centerYAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerYAnchor constant:-12],
+            [hint.centerXAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerXAnchor],
+            [hint.topAnchor constraintEqualToAnchor:micIcon.bottomAnchor constant:8],
+        ]];
+    }
+
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(voiceTapOverlayTapped:)];
+    [m_voiceTapOverlay addGestureRecognizer:tap];
+}
+
+-(void)voiceTapOverlayTapped:(UITapGestureRecognizer *)gesture {
+    VoiceManager *vm = [VoiceManager shared];
+
+    if (vm.isSpeaking) {
+        // Tap to skip/stop TTS
+        [vm stopSpeaking];
+        return;
+    }
+
+    if (vm.sttEnabled) {
+        if (vm.isListening) {
+            [vm stopListening];
+        } else {
+            [vm startListening];
+        }
+    }
+}
+
+-(BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+-(void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    if (motion == UIEventSubtypeMotionShake) {
+        VoiceManager *vm = [VoiceManager shared];
+        if (vm.isSpeaking) {
+            [vm stopSpeaking];
+        }
+    }
+}
 
 @end // StoryMainViewController
 

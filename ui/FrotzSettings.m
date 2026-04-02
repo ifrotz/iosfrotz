@@ -1,5 +1,6 @@
 #import "FrotzSettings.h"
 #import "FileTransferInfo.h"
+#import "VoiceManager.h"
 
 #import "iosfrotz.h"
 
@@ -70,6 +71,8 @@ enum FrotzPrefsRows
     kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
+    kFrotzPrefsVoiceMode,
+    kFrotzPrefsSpeechRate,
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
 #endif
@@ -187,6 +190,11 @@ enum FrotzPrefsRows
     // in case the parent view draws with a custom color or gradient, use a transparent color
     m_switchCtl2.backgroundColor = [UIColor clearColor];
     [m_switchCtl2 setOn: [m_storyDelegate canEditStoryInfo]];
+
+    m_switchCtl3 = [[UISwitch alloc] initWithFrame:frame];
+    [m_switchCtl3 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_switchCtl3.backgroundColor = [UIColor clearColor];
+    [m_switchCtl3 setOn: [VoiceManager shared].voiceMode != VoiceModeOff];
 }
 
 - (void)switchAction:(id)sender
@@ -195,6 +203,20 @@ enum FrotzPrefsRows
         [m_storyDelegate setCompletionEnabled: [sender isOn]];
     else if (sender == m_switchCtl2)
         [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
+    else if (sender == m_switchCtl3) {
+        VoiceManager *vm = [VoiceManager shared];
+        if ([sender isOn]) {
+            [vm requestSTTPermissionsWithCompletion:^(BOOL granted) {
+                vm.voiceMode = granted ? VoiceModeBoth : VoiceModeTTSOnly;
+                [vm savePreferences];
+            }];
+        } else {
+            [vm stopSpeaking];
+            [vm stopListening];
+            vm.voiceMode = VoiceModeOff;
+            [vm savePreferences];
+        }
+    }
 }
 
 - (void)storyFontSliderAction:(UISlider*)sender
@@ -223,6 +245,16 @@ enum FrotzPrefsRows
             [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: value];
     }
     lastValue = value;
+}
+
+#define kSpeechRateStr "Speech Rate (%.1fx)"
+
+- (void)speechRateSliderAction:(UISlider*)sender
+{
+    float value = roundf([sender value] * 4.0f) / 4.0f; // snap to 0.25 increments
+    m_speechRateCell.textLabel.text = [NSString stringWithFormat: @kSpeechRateStr, value];
+    [VoiceManager shared].speechRate = value;
+    [[VoiceManager shared] savePreferences];
 }
 
 - (void)loadView
@@ -267,6 +299,13 @@ enum FrotzPrefsRows
     m_origNotesFontSize = (int)[m_notesDelegate fontSize];
     m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 
+    m_speechRateSliderCtl = [[UISlider alloc] initWithFrame:sframe];
+    [m_speechRateSliderCtl addTarget:self action:@selector(speechRateSliderAction:) forControlEvents:UIControlEventValueChanged];
+    m_speechRateSliderCtl.backgroundColor = [UIColor clearColor];
+    m_speechRateSliderCtl.minimumValue = 0.5;
+    m_speechRateSliderCtl.maximumValue = 3.0;
+    m_speechRateSliderCtl.continuous = YES;
+    m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 }
 
 -(void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color {
@@ -295,6 +334,10 @@ enum FrotzPrefsRows
 
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
+
+    // Sync voice switch with current state (may have been toggled from toolbar)
+    [m_switchCtl3 setOn:[VoiceManager shared].voiceMode != VoiceModeOff animated:NO];
+    m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 
     [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
     [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
@@ -492,6 +535,15 @@ enum FrotzPrefsRows
                 case kFrotzPrefsStoryInfoEditing:
                     cell.textLabel.text = @"Story Info Editing";
                     cell.accessoryView = m_switchCtl2;
+                    break;
+                case kFrotzPrefsVoiceMode:
+                    cell.textLabel.text = @"Voice Mode";
+                    cell.accessoryView = m_switchCtl3;
+                    break;
+                case kFrotzPrefsSpeechRate:
+                    m_speechRateCell = cell;
+                    cell.textLabel.text = [NSString stringWithFormat: @kSpeechRateStr, [m_speechRateSliderCtl value]];
+                    cell.accessoryView = m_speechRateSliderCtl;
                     break;
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
                 case kFrotzPrefsDropbox:
