@@ -6,6 +6,14 @@
 /priv
 /include/ifrotzdefs.h
 /gitmod
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.cursorrules
+HANDOFF.md
+.claude/
+.gemini/
+docs/
 
 ## Backups and Mac files
 *~

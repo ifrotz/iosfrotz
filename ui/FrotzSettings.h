@@ -50,10 +50,11 @@
 
     NSInteger m_selectedRow, m_selectedSection;
 
-    UISwitch		    *m_switchCtl, *m_switchCtl2;
-    UISlider		    *m_storyFontSliderCtl, *m_notesFontSliderCtl;
+    UISwitch		    *m_switchCtl, *m_switchCtl2, *m_switchCtl3;
+    UISlider		    *m_storyFontSliderCtl, *m_notesFontSliderCtl, *m_speechRateSliderCtl;
     UITableViewCell     *m_storyFontCell, *m_notesFontCell;
     UITableViewCell	    *m_storyFontSizeCell, *m_notesFontSizeCell;
+    UITableViewCell     *m_speechRateCell;
 
     int m_origStoryFontSize, m_newStoryFontSize;
     int m_origNotesFontSize, m_newNotesFontSize;
