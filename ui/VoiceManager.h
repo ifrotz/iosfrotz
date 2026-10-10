@@ -24,6 +24,7 @@ typedef NS_ENUM(NSInteger, VoiceMode) {
 
 @protocol VoiceManagerDelegate <NSObject>
 // TTS callbacks
+- (void)voiceManagerDidStartSpeaking;
 - (void)voiceManagerDidFinishSpeaking;
 - (void)voiceManagerHighlightRange:(NSRange)range inView:(RichTextView *)view;
 - (void)voiceManagerDidClearHighlight;
