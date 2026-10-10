@@ -152,13 +152,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     UIColor *c = m_fgColor;
     NSUInteger index = m_currentTextColorIndex;
     NSUInteger colorCount = [m_colorIndex count];
-    if ((index <= 1 || index-1 >= [m_colorArray count])
+    if ((index <= 1 || index - 1 >= [m_colorArray count])
         && colorCount > 0) {
         index = [m_colorIndex[colorCount-1] unsignedIntValue] & 0xFFFF;
-        if (index > 1 && index-1 < [m_colorArray count])
+        if (index > 1 && index - 1 < [m_colorArray count])
             m_currentTextColorIndex = index;
     }
-    if (index > 1)
+    if (index > 1 && index - 1 < [m_colorArray count])
         c = m_colorArray[index-1];
     return c;
 }
@@ -2242,7 +2242,7 @@ static NSString *kCommand = @"Command";
     
     if (!m_accessibilityElements)
         [self populateAccessibilityElements];
-    if (aeIndex < [m_accessibilityElements count]) {
+    if (aeIndex >= 0 && aeIndex < [m_accessibilityElements count]) {
         RichTextAE *e = m_accessibilityElements[aeIndex];
 #if 0
         // update frame lazily when accessed, so we don't have to recalculate them all
@@ -2287,9 +2287,13 @@ static NSString *kCommand = @"Command";
 
 - (NSInteger)indexOfAccessibilityElement:(id)element
 {
-    RichTextAE *e = element;
-    //NSLog(@"index of ae: %d %@", [e textIndex], e);
-    return [e textIndex];
+    if (!element || !hasAccessibility)
+        return NSNotFound;
+    if (!m_accessibilityElements)
+        [self populateAccessibilityElements];
+    // UIKit may ask about its own scroll indicators as well as our text elements.
+    // Return the container index, which is distinct from a text run's index.
+    return [m_accessibilityElements indexOfObjectIdenticalTo:element];
 }
 
 - (NSArray*)getTextPos {

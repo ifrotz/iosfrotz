@@ -71,7 +71,8 @@ enum FrotzPrefsRows
     kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
-    kFrotzPrefsVoiceMode,
+    kFrotzPrefsTTS,
+    kFrotzPrefsSTT,
     kFrotzPrefsSpeechRate,
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
@@ -194,7 +195,12 @@ enum FrotzPrefsRows
     m_switchCtl3 = [[UISwitch alloc] initWithFrame:frame];
     [m_switchCtl3 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_switchCtl3.backgroundColor = [UIColor clearColor];
-    [m_switchCtl3 setOn: [VoiceManager shared].voiceMode != VoiceModeOff];
+    [m_switchCtl3 setOn: [VoiceManager shared].ttsEnabled];
+
+    m_switchCtl4 = [[UISwitch alloc] initWithFrame:frame];
+    [m_switchCtl4 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_switchCtl4.backgroundColor = [UIColor clearColor];
+    [m_switchCtl4 setOn: [VoiceManager shared].sttEnabled];
 }
 
 - (void)switchAction:(id)sender
@@ -204,16 +210,33 @@ enum FrotzPrefsRows
     else if (sender == m_switchCtl2)
         [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
     else if (sender == m_switchCtl3) {
+        // TTS toggle
+        VoiceManager *vm = [VoiceManager shared];
+        if ([sender isOn]) {
+            vm.voiceMode = vm.sttEnabled ? VoiceModeBoth : VoiceModeTTSOnly;
+        } else {
+            [vm stopSpeaking];
+            vm.voiceMode = vm.sttEnabled ? VoiceModeSTTOnly : VoiceModeOff;
+        }
+        [vm savePreferences];
+    } else if (sender == m_switchCtl4) {
+        // STT toggle
+        NSUInteger generation = ++m_sttPermissionGeneration;
         VoiceManager *vm = [VoiceManager shared];
         if ([sender isOn]) {
             [vm requestSTTPermissionsWithCompletion:^(BOOL granted) {
-                vm.voiceMode = granted ? VoiceModeBoth : VoiceModeTTSOnly;
+                if (generation != self->m_sttPermissionGeneration || !self->m_switchCtl4.isOn)
+                    return;
+                if (granted) {
+                    vm.voiceMode = vm.ttsEnabled ? VoiceModeBoth : VoiceModeSTTOnly;
+                } else {
+                    [self->m_switchCtl4 setOn:NO animated:YES];
+                }
                 [vm savePreferences];
             }];
         } else {
-            [vm stopSpeaking];
             [vm stopListening];
-            vm.voiceMode = VoiceModeOff;
+            vm.voiceMode = vm.ttsEnabled ? VoiceModeTTSOnly : VoiceModeOff;
             [vm savePreferences];
         }
     }
@@ -335,8 +358,9 @@ enum FrotzPrefsRows
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
 
-    // Sync voice switch with current state (may have been toggled from toolbar)
-    [m_switchCtl3 setOn:[VoiceManager shared].voiceMode != VoiceModeOff animated:NO];
+    // Sync voice switches with current state (may have been toggled from toolbar)
+    [m_switchCtl3 setOn:[VoiceManager shared].ttsEnabled animated:NO];
+    [m_switchCtl4 setOn:[VoiceManager shared].sttEnabled animated:NO];
     m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 
     [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
@@ -536,9 +560,13 @@ enum FrotzPrefsRows
                     cell.textLabel.text = @"Story Info Editing";
                     cell.accessoryView = m_switchCtl2;
                     break;
-                case kFrotzPrefsVoiceMode:
-                    cell.textLabel.text = @"Voice Mode";
+                case kFrotzPrefsTTS:
+                    cell.textLabel.text = @"Text-to-Speech";
                     cell.accessoryView = m_switchCtl3;
+                    break;
+                case kFrotzPrefsSTT:
+                    cell.textLabel.text = @"Speech-to-Text";
+                    cell.accessoryView = m_switchCtl4;
                     break;
                 case kFrotzPrefsSpeechRate:
                     m_speechRateCell = cell;

@@ -124,11 +124,14 @@ extern StoryBrowser *theStoryBrowser;
     UIBarButtonItem *m_ttsToggleItem;
     UIBarButtonItem *m_sttToggleItem;
     NSMutableString *m_ttsAccumulatedText;
+    NSMapTable<RichTextView *, NSMutableString *> *m_voiceOutputBuffers;
     NSUInteger m_ttsStartRunIndex;       // view run count when TTS accumulation started
     NSUInteger m_ttsStartRunTextLen;     // length of text in the starting run before our append
     NSUInteger m_ttsHighlightBias;       // leading whitespace chars stripped before sending to TTS
     UIView *m_voiceTapOverlay;
     BOOL m_handsFreeAutoLoop;
+    BOOL m_voiceSessionActive, m_voiceAutoListenReady, m_voiceListenPending;
+    NSUInteger m_voiceRestartGeneration;
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;

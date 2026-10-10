@@ -12,11 +12,3 @@
 // from generating a warning without having to clone this file to have two different top-level configs for release/dist.
 
 BUILD_NUMBER = 157
-
-// Signing: uncomment ONE block below.
-// Original author (for check-in / PR):
-//FROTZ_DEVELOPMENT_TEAM = 6KG7666N88
-//FROTZ_BUNDLE_ID_PREFIX = com.flippencorp
-// Anand (local dev):
-FROTZ_DEVELOPMENT_TEAM = UX8BPNLPX5
-FROTZ_BUNDLE_ID_PREFIX = design.highgain
