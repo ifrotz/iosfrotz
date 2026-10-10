@@ -43,6 +43,15 @@ typedef NS_ENUM(NSInteger, VoiceMode) {
 // State
 @property (nonatomic) VoiceMode voiceMode;
 @property (nonatomic) float speechRate;        // multiplier, default 1.0
+@property (nonatomic, copy, nullable) NSString *speechVoiceIdentifier; // nil means Automatic
+@property (nonatomic, readonly, nullable) AVSpeechSynthesisVoice *speechVoice;
+@property (nonatomic, readonly, nullable) AVSpeechSynthesisVoice *automaticSpeechVoice;
+@property (nonatomic, readonly) NSString *speechVoiceDescription;
+@property (nonatomic, copy, nullable) NSString *speechRecognitionLanguage; // nil means Automatic
+@property (nonatomic, readonly) NSString *effectiveRecognitionLanguage;
+@property (nonatomic, copy, nullable) NSString *storyLanguage; // current story metadata, not persisted
+- (void)configureForStoryAtPath:(nullable NSString *)path;
++ (NSString *)qualityDescriptionForVoice:(AVSpeechSynthesisVoice *)voice;
 @property (nonatomic, readonly) BOOL isSpeaking;
 @property (nonatomic, readonly) BOOL isListening;
 @property (nonatomic, readonly) BOOL ttsEnabled;

@@ -2857,6 +2857,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
             [self updateAutosavePaths];
         }
     }
+    [[VoiceManager shared] configureForStoryAtPath:m_currentStory];
 }
 
 

@@ -29,11 +29,24 @@
 @end
 
 @interface VoiceManager (Testing)
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices;
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices language:(NSString *)language;
++ (NSString *)languageFromBlorbAtPath:(NSString *)path;
++ (NSString *)recognitionLanguageForLanguage:(NSString *)language;
 - (BOOL)recordingIsAuthorized;
 - (BOOL)configureAudioSessionForRecording;
 - (void)deactivateAudioSession;
 - (void)silenceTimerFired;
 - (void)recognitionTimedOut;
+@end
+
+// Synthetic voice metadata covers Premium ranking without depending on installed downloads.
+@interface TestSpeechVoice : NSObject
+@property (nonatomic, copy) NSString *identifier;
+@property (nonatomic, copy) NSString *language;
+@property AVSpeechSynthesisVoiceQuality quality;
+@end
+@implementation TestSpeechVoice
 @end
 
 @interface RichTextView (Testing)
@@ -165,6 +178,114 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @end
 
 @implementation FrotzVoiceTests
+- (void)testAutomaticVoicePrefersSystemDefaultWhenQualityAndRegionTie {
+    AVSpeechSynthesisVoice *systemVoice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+    NSMutableArray *candidates = [NSMutableArray array];
+    for (AVSpeechSynthesisVoice *voice in [AVSpeechSynthesisVoice speechVoices]) {
+        if ([voice.language isEqualToString:systemVoice.language] && voice.quality == systemVoice.quality)
+            [candidates addObject:voice];
+    }
+    XCTAssertGreaterThan(candidates.count, 0u);
+    XCTAssertEqualObjects([VoiceManager automaticVoiceFromVoices:candidates].identifier, systemVoice.identifier);
+}
+- (void)testAutomaticVoicePrefersHighestEnglishQualityThenUSRegion {
+    TestSpeechVoice *standard = [TestSpeechVoice new];
+    standard.identifier = @"standard"; standard.language = @"en-US"; standard.quality = AVSpeechSynthesisVoiceQualityDefault;
+    TestSpeechVoice *enhanced = [TestSpeechVoice new];
+    enhanced.identifier = @"enhanced"; enhanced.language = @"en-US"; enhanced.quality = AVSpeechSynthesisVoiceQualityEnhanced;
+    TestSpeechVoice *premium = [TestSpeechVoice new];
+    premium.identifier = @"premium"; premium.language = @"en-GB";
+    if (@available(iOS 16.0, *)) {
+        premium.quality = AVSpeechSynthesisVoiceQualityPremium;
+        NSArray *voices = @[standard, enhanced, premium];
+        XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices], (id)premium);
+        enhanced.quality = AVSpeechSynthesisVoiceQualityPremium;
+        XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices], (id)enhanced);
+    }
+    premium.language = @"fr-FR";
+    XCTAssertEqual(([VoiceManager automaticVoiceFromVoices:@[premium, standard, enhanced]]), (id)enhanced);
+    XCTAssertNil([VoiceManager automaticVoiceFromVoices:@[premium]]);
+}
+- (void)testSelectedVoicePersistsAndMissingVoiceFallsBack {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage"];
+    NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: [NSNull null];
+    @try {
+        AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice speechVoices].firstObject;
+        XCTAssertNotNil(voice);
+        self.manager.speechVoiceIdentifier = voice.identifier;
+        [self.manager savePreferences];
+        VoiceManager *reloaded = [[VoiceManager alloc] init];
+        XCTAssertEqualObjects(reloaded.speechVoiceIdentifier, voice.identifier);
+        XCTAssertEqualObjects(reloaded.speechVoice.identifier, voice.identifier);
+        NSLocale *locale = [SFSpeechRecognizer supportedLocales].anyObject;
+        XCTAssertNotNil(locale);
+        reloaded.speechRecognitionLanguage = locale.localeIdentifier;
+        [reloaded savePreferences];
+        VoiceManager *languageReloaded = [[VoiceManager alloc] init];
+        XCTAssertEqualObjects(languageReloaded.speechRecognitionLanguage, locale.localeIdentifier);
+        XCTAssertEqualObjects(languageReloaded.effectiveRecognitionLanguage, locale.localeIdentifier);
+        reloaded.speechVoiceIdentifier = @"unavailable-test-voice";
+        XCTAssertNotNil(reloaded.speechVoice);
+        XCTAssertEqualObjects(reloaded.speechVoiceDescription, @"Automatic (voice unavailable)");
+        reloaded.speechVoiceIdentifier = nil;
+        reloaded.speechRecognitionLanguage = nil;
+        [reloaded savePreferences];
+        XCTAssertNil([[VoiceManager alloc] init].speechVoiceIdentifier);
+        XCTAssertNil([[VoiceManager alloc] init].speechRecognitionLanguage);
+    } @finally {
+        for (NSString *key in keys) {
+            if (saved[key] == [NSNull null]) [defaults removeObjectForKey:key];
+            else [defaults setObject:saved[key] forKey:key];
+        }
+    }
+}
+- (void)testAutomaticLanguagesFollowStoryMetadataAndManualOverrides {
+    TestSpeechVoice *english = [TestSpeechVoice new];
+    english.identifier = @"english"; english.language = @"en-US"; english.quality = AVSpeechSynthesisVoiceQualityEnhanced;
+    TestSpeechVoice *french = [TestSpeechVoice new];
+    french.identifier = @"french"; french.language = @"fr-FR"; french.quality = AVSpeechSynthesisVoiceQualityDefault;
+    NSArray *voices = @[english, french];
+    XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices language:@"fr"], (id)french);
+    XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices language:@"fra"], (id)french);
+    XCTAssertNil([VoiceManager automaticVoiceFromVoices:voices language:@"de"]);
+    VoiceManager *manager = [[VoiceManager alloc] init];
+    manager.speechRecognitionLanguage = nil;
+    manager.storyLanguage = @"fr";
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"fr"]);
+    manager.speechRecognitionLanguage = @"de-DE";
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"de"]);
+    manager.storyLanguage = nil;
+    manager.speechRecognitionLanguage = nil;
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"en"]);
+    XCTAssertNil([VoiceManager recognitionLanguageForLanguage:@"zz"]);
+}
+- (void)testBlorbLanguageMetadataIsOptionalAndBounded {
+    NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingString:@".gblorb"]];
+    NSString *xml = @"<ifindex xmlns='http://babel.ifarchive.org/protocol/iFiction/'><story><bibliographic><language> fr-FR </language></bibliographic></story></ifindex>";
+    NSData *metadata = [xml dataUsingEncoding:NSUTF8StringEncoding];
+    uint32_t chunkLength = CFSwapInt32HostToBig((uint32_t)metadata.length);
+    uint32_t formLength = CFSwapInt32HostToBig((uint32_t)(12 + metadata.length + (metadata.length & 1)));
+    NSMutableData *blorb = [NSMutableData dataWithBytes:"FORM" length:4];
+    [blorb appendBytes:&formLength length:4];
+    [blorb appendBytes:"IFRSIFmd" length:8];
+    [blorb appendBytes:&chunkLength length:4];
+    [blorb appendData:metadata];
+    if (metadata.length & 1) [blorb appendBytes:"\0" length:1];
+    @try {
+        XCTAssertTrue([blorb writeToFile:path atomically:YES]);
+        XCTAssertEqualObjects([VoiceManager languageFromBlorbAtPath:path], @"fr-FR");
+        [blorb setLength:blorb.length - 2];
+        XCTAssertTrue([blorb writeToFile:path atomically:YES]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:path]);
+        XCTAssertTrue([[@"A raw story without metadata" dataUsingEncoding:NSUTF8StringEncoding] writeToFile:path atomically:YES]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:path]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:nil]);
+    } @finally {
+        [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+    }
+}
 - (void)setUp {
     [super setUp];
     self.manager = [[TestVoiceManager alloc] init];

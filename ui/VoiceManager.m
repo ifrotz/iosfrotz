@@ -11,6 +11,36 @@
 
 static NSString *const kVoiceModeKey = @"FrotzVoiceMode";
 static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
+static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
+static NSString *const kRecognitionLanguageKey = @"FrotzSpeechRecognitionLanguage";
+
+// Only bibliographic language is used; story text is never inspected or sent for detection.
+@interface FrotzStoryLanguageParser : NSObject <NSXMLParserDelegate>
+@property (nonatomic, strong) NSMutableArray<NSString *> *elements;
+@property (nonatomic, strong) NSMutableString *text;
+@property (nonatomic, copy) NSString *language;
+@end
+@implementation FrotzStoryLanguageParser
+- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)element namespaceURI:(NSString *)uri qualifiedName:(NSString *)name attributes:(NSDictionary *)attributes {
+    [self.elements addObject:element];
+    if ([self.elements isEqualToArray:@[@"ifindex", @"story", @"bibliographic", @"language"]])
+        self.text = [NSMutableString string];
+}
+- (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
+    if (self.text) [self.text appendString:string];
+}
+- (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)element namespaceURI:(NSString *)uri qualifiedName:(NSString *)name {
+    if ([element isEqualToString:@"language"] && self.text) {
+        if (!self.language) self.language = [self.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        self.text = nil;
+    }
+    [self.elements removeLastObject];
+}
+@end
+
+static uint32_t blorbWord(const unsigned char *bytes) {
+    return ((uint32_t)bytes[0] << 24) | ((uint32_t)bytes[1] << 16) | ((uint32_t)bytes[2] << 8) | bytes[3];
+}
 
 // Map AVSpeechUtterance rate: Apple's default is 0.5, range 0.0-1.0
 // We expose a multiplier (0.5x-3.0x) and convert internally
@@ -91,6 +121,79 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 #pragma mark - Properties
 
++ (NSString *)languageFromBlorbAtPath:(NSString *)path {
+    NSData *data = path.length ? [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:nil] : nil;
+    if (data.length < 12) return nil;
+    const unsigned char *bytes = data.bytes;
+    if (memcmp(bytes, "FORM", 4) || memcmp(bytes + 8, "IFRS", 4)) return nil;
+    uint64_t end = (uint64_t)blorbWord(bytes + 4) + 8;
+    if (end > data.length || end < 12) return nil;
+    for (uint64_t offset = 12; offset + 8 <= end;) {
+        uint32_t size = blorbWord(bytes + offset + 4);
+        uint64_t next = offset + 8 + size + (size & 1);
+        if (next > end) return nil;
+        if (!memcmp(bytes + offset, "IFmd", 4)) {
+            if (size > 1024 * 1024) return nil;
+            NSXMLParser *parser = [[NSXMLParser alloc] initWithData:[data subdataWithRange:NSMakeRange((NSUInteger)offset + 8, size)]];
+            FrotzStoryLanguageParser *reader = [FrotzStoryLanguageParser new];
+            reader.elements = [NSMutableArray array];
+            parser.delegate = reader;
+            parser.shouldProcessNamespaces = YES;
+            parser.shouldResolveExternalEntities = NO;
+            if (![parser parse]) return nil;
+            NSString *language = reader.language;
+            NSRange valid = [language rangeOfString:@"^[A-Za-z]{2,3}(-[A-Za-z]{2})?$" options:NSRegularExpressionSearch];
+            return language.length && valid.location != NSNotFound ? language : nil;
+        }
+        offset = next;
+    }
+    return nil;
+}
+
+- (void)configureForStoryAtPath:(NSString *)path {
+    self.storyLanguage = [[self class] languageFromBlorbAtPath:path];
+}
+
++ (NSString *)recognitionLanguageForLanguage:(NSString *)language {
+    NSString *normalized = [[[NSLocale canonicalLanguageIdentifierFromString:language] stringByReplacingOccurrencesOfString:@"_" withString:@"-"] lowercaseString];
+    NSString *base = [normalized componentsSeparatedByString:@"-"].firstObject;
+    NSArray *locales = [[[SFSpeechRecognizer supportedLocales] allObjects] sortedArrayUsingComparator:^NSComparisonResult(NSLocale *a, NSLocale *b) {
+        return [a.localeIdentifier compare:b.localeIdentifier];
+    }];
+    NSString *matching = nil;
+    NSString *deviceLanguage = [[AVSpeechSynthesisVoice currentLanguageCode] stringByReplacingOccurrencesOfString:@"_" withString:@"-"];
+    for (NSLocale *locale in locales) {
+        NSString *candidate = [locale.localeIdentifier stringByReplacingOccurrencesOfString:@"_" withString:@"-"];
+        if ([candidate.lowercaseString isEqualToString:normalized]) return locale.localeIdentifier;
+        if ([[candidate.lowercaseString componentsSeparatedByString:@"-"].firstObject isEqualToString:base]) {
+            if (!matching || [candidate isEqualToString:deviceLanguage]) matching = locale.localeIdentifier;
+        }
+    }
+    return matching;
+}
+
+- (NSString *)effectiveRecognitionLanguage {
+    return [[self class] recognitionLanguageForLanguage:self.speechRecognitionLanguage ?: self.storyLanguage ?: @"en-US"] ?: @"en-US";
+}
+
+- (void)updateSpeechRecognizer {
+    NSString *language = self.effectiveRecognitionLanguage;
+    if ([_speechRecognizer.locale.localeIdentifier isEqualToString:language]) return;
+    if (_speechRecognizer) [self stopListening];
+    _speechRecognizer = [[SFSpeechRecognizer alloc] initWithLocale:[NSLocale localeWithLocaleIdentifier:language]];
+    _speechRecognizer.queue = [NSOperationQueue mainQueue];
+}
+
+- (void)setStoryLanguage:(NSString *)language {
+    _storyLanguage = [language copy];
+    [self updateSpeechRecognizer];
+}
+
+- (void)setSpeechRecognitionLanguage:(NSString *)language {
+    _speechRecognitionLanguage = [language copy];
+    [self updateSpeechRecognizer];
+}
+
 - (BOOL)ttsEnabled {
     return _voiceMode == VoiceModeTTSOnly || _voiceMode == VoiceModeBoth;
 }
@@ -108,6 +211,63 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 #pragma mark - TTS
+
++ (NSString *)qualityDescriptionForVoice:(AVSpeechSynthesisVoice *)voice {
+    if (@available(iOS 16.0, *)) {
+        if (voice.quality == AVSpeechSynthesisVoiceQualityPremium)
+            return @"Premium";
+    }
+    return voice.quality == AVSpeechSynthesisVoiceQualityEnhanced ? @"Enhanced" : @"Standard";
+}
+
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices {
+    return [self automaticVoiceFromVoices:voices language:@"en-US"];
+}
+
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices language:(NSString *)language {
+    NSString *normalized = [[[NSLocale canonicalLanguageIdentifierFromString:language] stringByReplacingOccurrencesOfString:@"_" withString:@"-"] lowercaseString];
+    NSString *base = [normalized componentsSeparatedByString:@"-"].firstObject;
+    NSString *systemVoiceIdentifier = [AVSpeechSynthesisVoice voiceWithLanguage:language].identifier;
+    AVSpeechSynthesisVoice *best = nil;
+    for (AVSpeechSynthesisVoice *voice in voices) {
+        if (![[voice.language.lowercaseString componentsSeparatedByString:@"-"].firstObject isEqualToString:base])
+            continue;
+        BOOL sameQuality = voice.quality == best.quality;
+        BOOL preferredRegion = [voice.language.lowercaseString isEqualToString:normalized];
+        BOOL bestRegion = [best.language.lowercaseString isEqualToString:normalized];
+        BOOL systemVoice = [voice.identifier isEqualToString:systemVoiceIdentifier];
+        BOOL bestSystemVoice = [best.identifier isEqualToString:systemVoiceIdentifier];
+        if (!best || voice.quality > best.quality
+            || (sameQuality && preferredRegion && !bestRegion)
+            || (sameQuality && preferredRegion == bestRegion
+                && systemVoice && !bestSystemVoice)
+            || (sameQuality && preferredRegion == bestRegion && systemVoice == bestSystemVoice
+                && [voice.identifier compare:best.identifier] == NSOrderedAscending))
+            best = voice;
+    }
+    return best;
+}
+
+- (AVSpeechSynthesisVoice *)speechVoice {
+    AVSpeechSynthesisVoice *selected = self.speechVoiceIdentifier.length
+        ? [AVSpeechSynthesisVoice voiceWithIdentifier:self.speechVoiceIdentifier] : nil;
+    return selected ?: self.automaticSpeechVoice;
+}
+
+- (AVSpeechSynthesisVoice *)automaticSpeechVoice {
+    NSString *language = self.storyLanguage ?: @"en-US";
+    return [[self class] automaticVoiceFromVoices:[AVSpeechSynthesisVoice speechVoices] language:language]
+        ?: [AVSpeechSynthesisVoice voiceWithLanguage:language]
+        ?: [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+}
+
+- (NSString *)speechVoiceDescription {
+    AVSpeechSynthesisVoice *selected = self.speechVoiceIdentifier.length
+        ? [AVSpeechSynthesisVoice voiceWithIdentifier:self.speechVoiceIdentifier] : nil;
+    if (selected)
+        return [NSString stringWithFormat:@"%@ (%@)", selected.name, [[self class] qualityDescriptionForVoice:selected]];
+    return self.speechVoiceIdentifier.length ? @"Automatic (voice unavailable)" : @"Automatic";
+}
 
 - (void)speakText:(NSString *)text inView:(RichTextView *)view {
     if (!self.ttsEnabled || text.length == 0)
@@ -127,16 +287,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     utterance.preUtteranceDelay = 0.0f;
     utterance.postUtteranceDelay = 0.05f;
 
-    // Prefer premium/enhanced voice when available
-    AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
-    NSArray<AVSpeechSynthesisVoice *> *voices = [AVSpeechSynthesisVoice speechVoices];
-    for (AVSpeechSynthesisVoice *v in voices) {
-        if ([v.language hasPrefix:@"en"] && v.quality == AVSpeechSynthesisVoiceQualityEnhanced) {
-            voice = v;
-            break;
-        }
-    }
-    utterance.voice = voice;
+    utterance.voice = self.speechVoice;
 
     [self stopListening];
     if (![self configureAudioSessionForPlayback])
@@ -238,6 +389,11 @@ static float rateMultiplierToAVRate(float multiplier) {
     // Delayed auto-starts must never toggle an existing recording off.
     if (!self.sttEnabled || self.isListening)
         return;
+    if (![[self class] recognitionLanguageForLanguage:self.speechRecognitionLanguage ?: self.storyLanguage ?: @"en-US"]) {
+        [self reportRecordingError:[NSError errorWithDomain:@"FrotzVoice" code:3
+                                                  userInfo:@{NSLocalizedDescriptionKey: @"The story language is not supported for speech recognition. Choose a Speech Input Language in Settings."}]];
+        return;
+    }
     if (![self recordingIsAuthorized] || !_speechRecognizer.isAvailable) {
         [self reportRecordingError:[NSError errorWithDomain:@"FrotzVoice" code:1
                                                   userInfo:@{NSLocalizedDescriptionKey: @"Speech recognition is unavailable. Check microphone and speech permissions in Settings."}]];
@@ -428,11 +584,15 @@ static float rateMultiplierToAVRate(float multiplier) {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
     [defaults setFloat:_speechRate forKey:kSpeechRateKey];
+    [defaults setObject:self.speechVoiceIdentifier forKey:kSpeechVoiceKey];
+    [defaults setObject:self.speechRecognitionLanguage forKey:kRecognitionLanguageKey];
     [defaults synchronize];
 }
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    self.speechVoiceIdentifier = [defaults stringForKey:kSpeechVoiceKey];
+    self.speechRecognitionLanguage = [defaults stringForKey:kRecognitionLanguageKey];
     if ([defaults objectForKey:kVoiceModeKey]) {
         NSInteger storedMode = [defaults integerForKey:kVoiceModeKey];
         _voiceMode = storedMode >= VoiceModeOff && storedMode <= VoiceModeBoth ? (VoiceMode)storedMode : VoiceModeOff;
