@@ -309,7 +309,15 @@
         // 1.3: sep 4, 2009
     }
     NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
-    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, htmlString];
+    // Always show bundled feature notes, even when older notes are cached or downloaded.
+    NSString *voiceNotes = @"<h2>New: Voice Mode</h2>"
+        "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Enable either or both in Settings.</li>"
+        "<li>Choose a Speech Voice, preview installed voices, and adjust the Speech Rate. Automatic prefers Premium or Enhanced voices when available.</li>"
+        "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Speech Input Language for other stories or to override metadata.</li>"
+        "<li>Download more voices in iOS Settings &gt; Accessibility &gt; Read &amp; Speak &gt; Voices (Spoken Content on older iOS versions).</li>"
+        "<li>Follow the highlighted narration and listening animation. Tap the voice controls to stop speaking or listening.</li>"
+        "<li>Voice activity pauses when you open Settings or leave a story.</li></ul><hr/>";
+    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, voiceNotes, htmlString];
     [webView loadHTMLString: contentString baseURL: nil];
 #if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);

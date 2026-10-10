@@ -3063,6 +3063,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
             [self updateAutosavePaths];
         }
     }
+    [[VoiceManager shared] configureForStoryAtPath:m_currentStory];
 }
 
 
