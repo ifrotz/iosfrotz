@@ -2403,6 +2403,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         }
     }
     m_kbShown = YES;
+    if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
+        [self resetTapOverlayToMicIdle];
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
     m_voiceAutoListenReady = NO;
@@ -4523,6 +4525,8 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     if (textField == m_inputLine) {
+        if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
+            [self resetTapOverlayToMicIdle];
         ++m_voiceRestartGeneration;
         m_voiceListenPending = NO;
         m_voiceAutoListenReady = NO;
@@ -5324,9 +5328,11 @@ static BOOL migateDropboxAuth() {
         || ![self canAcceptVoiceInput] || vm.isSpeaking || vm.isListening || [self hasPendingVoiceOutput])
         return;
     m_voiceListenPending = YES;
+    [self showVoiceListeningPreparation];
     NSUInteger generation = m_voiceRestartGeneration;
     __weak StoryMainViewController *weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    // Yield once for pending story/UI work; no artificial pause before microphone capture.
+    dispatch_async(dispatch_get_main_queue(), ^{
         StoryMainViewController *self = weakSelf;
         if (!self || generation != self->m_voiceRestartGeneration)
             return;
@@ -5334,6 +5340,8 @@ static BOOL migateDropboxAuth() {
         if (self->m_voiceAutoListenReady && [self canAcceptVoiceInput] && !vm.isSpeaking && !vm.isListening && ![self hasPendingVoiceOutput]) {
             self->m_voiceAutoListenReady = NO;
             [vm startListening];
+        } else if (!vm.isSpeaking && !vm.isListening) {
+            [self resetTapOverlayToMicIdle];
         }
     });
 }
@@ -5479,6 +5487,22 @@ static BOOL migateDropboxAuth() {
             hint.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.4];
         }
     }
+}
+
+-(void)showVoiceListeningPreparation {
+    [self stopVoiceListeningAnimation];
+    m_voiceTapOverlay.accessibilityLabel = @"Preparing microphone";
+    UIColor *color = [UIColor grayColor];
+    if (@available(iOS 13.0, *)) {
+        color = [UIColor secondaryLabelColor];
+        UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
+        micIcon.image = [UIImage systemImageNamed:@"mic.circle.fill"
+                                withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]];
+        micIcon.tintColor = color;
+    }
+    UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
+    hint.text = @"Preparing microphone…";
+    hint.textColor = color;
 }
 
 -(void)voiceManagerDidFinishSpeaking {

@@ -386,6 +386,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)startListening {
+    NSTimeInterval startupTime = NSProcessInfo.processInfo.systemUptime;
     // Delayed auto-starts must never toggle an existing recording off.
     if (!self.sttEnabled || self.isListening)
         return;
@@ -463,7 +464,8 @@ static float rateMultiplierToAVRate(float multiplier) {
         [self reportRecordingError:error];
         return;
     }
-    NSLog(@"Voice recording started");
+    NSLog(@"Voice recording started (startup %.0f ms)",
+          (NSProcessInfo.processInfo.systemUptime - startupTime) * 1000.0);
     [self.delegate voiceManagerDidStartListening];
 }
 
