@@ -2,11 +2,14 @@
 #import "VoiceManager.h"
 #import "RichTextView.h"
 #import "StoryMainViewController.h"
+#import <objc/runtime.h>
 
 @interface StoryMainViewController (VoiceTesting)
 - (BOOL)canAcceptVoiceInput;
 - (void)setupVoiceTapOverlay;
 - (void)startVoiceListeningAnimation;
+- (void)scheduleVoiceListening;
+- (void)stopVoiceActivity;
 - (void)finishStoryNarration:(BOOL)unreadableStory inView:(RichTextView *)view voiceManager:(VoiceManager *)manager;
 @end
 
@@ -14,6 +17,7 @@
 @end
 @implementation TestStoryController
 - (BOOL)canAcceptVoiceInput { return YES; }
+- (void)autosize {} // Keep keyboard-layout work outside these voice-state tests.
 @end
 
 @interface TestEndingController : StoryMainViewController
@@ -178,6 +182,94 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @end
 
 @implementation FrotzVoiceTests
+- (void)withAutomaticListeningController:(void (^)(TestStoryController *controller))test {
+    // Replace only the singleton lookup; recording, scheduling and UI state stay real.
+    Method sharedMethod = class_getClassMethod(VoiceManager.class, @selector(shared));
+    IMP original = method_getImplementation(sharedMethod);
+    TestVoiceManager *manager = self.manager;
+    IMP replacement = imp_implementationWithBlock(^id(id classObject) { return manager; });
+    TestStoryController *controller = [[TestStoryController alloc] init];
+    method_setImplementation(sharedMethod, replacement);
+    @try {
+        [controller setupVoiceTapOverlay];
+        [controller setValue:@YES forKey:@"m_handsFreeAutoLoop"];
+        [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+        [controller setValue:@YES forKey:@"m_voiceAutoListenReady"];
+        manager.delegate = controller;
+        test(controller);
+    } @finally {
+        [controller stopVoiceActivity];
+        method_setImplementation(sharedMethod, original);
+        imp_removeBlock(replacement);
+    }
+}
+- (void)testAutomaticListeningStartsOnNextMainQueueTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        // A ready silent turn must capture speech on the next queue turn, without a timer pause.
+        XCTestExpectation *checked = [self expectationWithDescription:@"next-turn recording"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertTrue(self.manager.isListening);
+            UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+            XCTAssertEqualObjects(overlay.accessibilityLabel, @"Stop listening");
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testAutomaticListeningPreparesInsteadOfDisplayingIdleMic {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller voiceManagerDidFinishSpeaking];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualObjects(overlay.accessibilityLabel, @"Preparing microphone");
+        UIImageView *icon = [overlay viewWithTag:999];
+        if (@available(iOS 13.0, *)) XCTAssertEqualObjects(icon.tintColor, UIColor.secondaryLabelColor);
+        XCTAssertFalse(self.manager.isListening); // Don't signal recording before the engine starts.
+    }];
+}
+- (void)testBeginningTextEditingCancelsMicrophonePreparation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [controller textFieldDidBeginEditing:controller.inputLine];
+        XCTestExpectation *checked = [self expectationWithDescription:@"editing cancels preparation"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+            XCTAssertEqualObjects(overlay.accessibilityLabel, @"Start listening");
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testQueuedAutomaticListeningIsCanceledWhenVoiceActivityStops {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [controller stopVoiceActivity];
+        XCTestExpectation *checked = [self expectationWithDescription:@"canceled restart"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testQueuedAutomaticListeningWaitsForNewNarration {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeBoth;
+        [controller scheduleVoiceListening];
+        RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        NSMapTable *buffers = [NSMapTable weakToStrongObjectsMapTable];
+        [buffers setObject:[NSMutableString stringWithString:@"Next story output"] forKey:view];
+        [controller setValue:buffers forKey:@"m_voiceOutputBuffers"];
+        XCTestExpectation *checked = [self expectationWithDescription:@"narration prevents recording"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            XCTAssertTrue([[controller valueForKey:@"m_voiceAutoListenReady"] boolValue]);
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
 - (void)testAutomaticVoicePrefersSystemDefaultWhenQualityAndRegionTie {
     AVSpeechSynthesisVoice *systemVoice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
     NSMutableArray *candidates = [NSMutableArray array];
