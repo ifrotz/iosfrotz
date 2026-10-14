@@ -314,6 +314,7 @@ enum FrotzPrefsRows
     kFrotzPrefsStoryInfoEditing,
     kFrotzPrefsTTS,
     kFrotzPrefsSTT,
+    kFrotzPrefsCommandConfirmation,
     kFrotzPrefsSpeechVoice,
     kFrotzPrefsSpeechLanguage,
     kFrotzPrefsSpeechRate,
@@ -465,6 +466,11 @@ enum FrotzPrefsRows
     [m_switchCtl4 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_switchCtl4.backgroundColor = [UIColor clearColor];
     [m_switchCtl4 setOn: [VoiceManager shared].sttEnabled];
+    m_commandConfirmationSwitch = [[UISwitch alloc] initWithFrame:frame];
+    [m_commandConfirmationSwitch setOn:[VoiceManager shared].commandConfirmationEnabled];
+    m_commandConfirmationSwitch.accessibilityLabel = @"Confirm Voice Commands";
+    m_commandConfirmationSwitch.accessibilityHint = @"Review uncertain commands before submitting. Off submits the best guess immediately.";
+    [m_commandConfirmationSwitch addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
 }
 
 - (void)switchAction:(id)sender
@@ -473,6 +479,10 @@ enum FrotzPrefsRows
         [m_storyDelegate setCompletionEnabled: [sender isOn]];
     else if (sender == m_switchCtl2)
         [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
+    else if (sender == m_commandConfirmationSwitch) {
+        [VoiceManager shared].commandConfirmationEnabled = [sender isOn];
+        [[VoiceManager shared] savePreferences];
+    }
     else if (sender == m_switchCtl3) {
         // TTS toggle
         VoiceManager *vm = [VoiceManager shared];
@@ -625,6 +635,7 @@ enum FrotzPrefsRows
     // Sync voice switches with current state (may have been toggled from toolbar)
     [m_switchCtl3 setOn:[VoiceManager shared].ttsEnabled animated:NO];
     [m_switchCtl4 setOn:[VoiceManager shared].sttEnabled animated:NO];
+    [m_commandConfirmationSwitch setOn:[VoiceManager shared].commandConfirmationEnabled animated:NO];
     m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 
     if (@available(iOS 13.0, *)) {
@@ -840,6 +851,10 @@ enum FrotzPrefsRows
                 case kFrotzPrefsSTT:
                     cell.textLabel.text = @"Speech-to-Text";
                     cell.accessoryView = m_switchCtl4;
+                    break;
+                case kFrotzPrefsCommandConfirmation:
+                    cell.textLabel.text = @"Confirm Voice Commands";
+                    cell.accessoryView = m_commandConfirmationSwitch;
                     break;
                 case kFrotzPrefsSpeechRate:
                     m_speechRateCell = cell;

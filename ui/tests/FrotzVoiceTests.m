@@ -3,7 +3,12 @@
 #import "RichTextView.h"
 #import "StoryMainViewController.h"
 #import "StoryInputLine.h"
+#import "FrotzSettings.h"
 #import <objc/runtime.h>
+
+@interface FrotzSettingsController (ConfirmationTesting)
+- (void)create_UISwitches;
+@end
 
 @interface StoryMainViewController (VoiceTesting)
 - (BOOL)canAcceptVoiceInput;
@@ -323,7 +328,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 }
 - (void)testSelectedVoicePersistsAndMissingVoiceFallsBack {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage"];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled"];
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
     for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: [NSNull null];
     @try {
@@ -406,6 +411,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     self.manager = [[TestVoiceManager alloc] init];
     self.manager.speechRecognitionLanguage = @"en-US";
     self.manager.storyLanguage = @"en-US";
+    self.manager.commandConfirmationEnabled = YES; // Existing review-flow fixtures explicitly opt in.
     self.manager.recordingAllowed = YES;
     self.manager.voiceMode = VoiceModeSTTOnly;
     self.engine = [[TestAudioEngine alloc] init];
@@ -458,6 +464,84 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     result.bestTranscription = alternatives.firstObject;
     self.recognizer.handlers.lastObject((id)result, nil);
     [self drainCallbacks];
+}
+- (void)withSavedVoiceDefaults:(void (^)(NSUserDefaults *defaults))test {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled"];
+    NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: NSNull.null;
+    @try { test(defaults); }
+    @finally {
+        for (NSString *key in keys) {
+            if (saved[key] == NSNull.null) [defaults removeObjectForKey:key];
+            else [defaults setObject:saved[key] forKey:key];
+        }
+    }
+}
+- (void)reloadVoicePreferencesForRecognitionTest {
+    [self.manager loadPreferences];
+    self.manager.speechRecognitionLanguage = @"en-US";
+    self.manager.storyLanguage = @"en-US";
+    self.manager.voiceMode = VoiceModeSTTOnly;
+    [self.manager setValue:self.recognizer forKey:@"speechRecognizer"];
+}
+- (void)testDefaultModeImmediatelySubmitsMatchedCommandWithoutReadback {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"]; // Includes upgrades from build3.
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+            XCTAssertTrue(((UIView *)[controller valueForKey:@"m_voiceConfirmationButtons"]).hidden);
+        }];
+    }];
+}
+- (void)testExplicitlyDisabledConfirmationSubmitsOriginalWhenNoAlternativeExists {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:NO forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"bake down"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+- (void)testSettingsConfirmationSwitchPersistsBothChoices {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            FrotzSettingsController *settings = [[FrotzSettingsController alloc] init];
+            [settings create_UISwitches];
+            UISwitch *control = nil;
+            for (NSInteger row = 0; row < [settings tableView:nil numberOfRowsInSection:1]; ++row) {
+                UITableViewCell *cell = [settings tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:1]];
+                if ([cell.textLabel.text isEqualToString:@"Confirm Voice Commands"]) control = (UISwitch *)cell.accessoryView;
+            }
+            XCTAssertNotNil(control);
+            if (!control) return;
+            XCTAssertFalse(control.isOn);
+            [control setOn:YES];
+            [control sendActionsForControlEvents:UIControlEventValueChanged];
+            XCTAssertTrue([defaults boolForKey:@"FrotzVoiceCommandConfirmationEnabled"]);
+            [self.manager loadPreferences];
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0.4];
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            XCTAssertNotNil(self.manager.confirmationPrompt);
+            [controller pauseVoiceForSettings];
+            [control setOn:NO];
+            [control sendActionsForControlEvents:UIControlEventValueChanged];
+            XCTAssertFalse([defaults boolForKey:@"FrotzVoiceCommandConfirmationEnabled"]);
+        }];
+    }];
 }
 - (void)testNoisyWholeCommandWaitsForConfirmationWithoutConsumingTurn {
     [self withAutomaticListeningController:^(TestStoryController *controller) {
