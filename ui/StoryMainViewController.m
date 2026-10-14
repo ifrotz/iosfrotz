@@ -2293,6 +2293,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_storyView setBottomMargin: 8];
     } else if (voiceOverlayVisible) {
         overlayHeight = frame.size.height / 3.0;
+        if (m_pendingVoiceCommand)
+            overlayHeight = MIN(frame.size.height * 0.6, MAX(overlayHeight, 160));
         frame.size.height -= overlayHeight;
         [m_storyView setBottomMargin: 8];
     } else {
@@ -2403,6 +2405,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         }
     }
     m_kbShown = YES;
+    [self clearPendingVoiceCommand];
     if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
         [self resetTapOverlayToMicIdle];
     ++m_voiceRestartGeneration;
@@ -4489,6 +4492,7 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldFakeDidEndEditing:(UITextField *)textField {
     NSString *inputText = [textField text];
+    [[VoiceManager shared] rememberPlayerCommand:inputText];
     //    NSLog(@"input str:'%@' len:%d", inputText, [inputText length]);
     BOOL autoplay = [inputText isEqualToString: @"$autoplay"];
     static BOOL doAutoplay = NO;
@@ -4525,6 +4529,7 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     if (textField == m_inputLine) {
+        [self clearPendingVoiceCommand];
         if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
             [self resetTapOverlayToMicIdle];
         ++m_voiceRestartGeneration;
@@ -5171,6 +5176,7 @@ static BOOL migateDropboxAuth() {
 -(void)toggleSTT {
     VoiceManager *vm = [VoiceManager shared];
     if (vm.sttEnabled) {
+        [self clearPendingVoiceCommand];
         [vm stopListening];
         vm.voiceMode = vm.ttsEnabled ? VoiceModeTTSOnly : VoiceModeOff;
         [vm savePreferences];
@@ -5324,7 +5330,11 @@ static BOOL migateDropboxAuth() {
 
 -(void)scheduleVoiceListening {
     VoiceManager *vm = [VoiceManager shared];
-    if (!m_handsFreeAutoLoop || !m_voiceAutoListenReady || m_voiceListenPending
+    if (m_pendingVoiceCommand && [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage].count == 0) {
+        m_voiceAutoListenReady = NO;
+        return; // Unsupported confirmation language: explicit on-screen actions only.
+    }
+    if ((!m_handsFreeAutoLoop && !m_pendingVoiceCommand) || !m_voiceAutoListenReady || m_voiceListenPending
         || ![self canAcceptVoiceInput] || vm.isSpeaking || vm.isListening || [self hasPendingVoiceOutput])
         return;
     m_voiceListenPending = YES;
@@ -5339,6 +5349,7 @@ static BOOL migateDropboxAuth() {
         self->m_voiceListenPending = NO;
         if (self->m_voiceAutoListenReady && [self canAcceptVoiceInput] && !vm.isSpeaking && !vm.isListening && ![self hasPendingVoiceOutput]) {
             self->m_voiceAutoListenReady = NO;
+            [self prepareVoiceCommandRecognition];
             [vm startListening];
         } else if (!vm.isSpeaking && !vm.isListening) {
             [self resetTapOverlayToMicIdle];
@@ -5352,6 +5363,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)stopVoiceActivity {
+    [self clearPendingVoiceCommand];
     m_voiceSessionActive = NO;
     m_voiceAutoListenReady = NO;
     ++m_voiceRestartGeneration;
@@ -5487,6 +5499,7 @@ static BOOL migateDropboxAuth() {
             hint.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.4];
         }
     }
+    [self updateVoiceConfirmationDisplay];
 }
 
 -(void)showVoiceListeningPreparation {
@@ -5555,12 +5568,142 @@ static BOOL migateDropboxAuth() {
     m_ttsStartRunIndex = NSNotFound;
 }
 
+-(NSString *)recentVisibleVoiceTextInView:(RichTextView *)view {
+    NSMutableArray *pieces = [NSMutableArray array];
+    NSUInteger remaining = 32768;
+    for (NSString *run in view.textRuns.reverseObjectEnumerator) {
+        NSUInteger length = MIN(run.length, remaining);
+        if (length) [pieces addObject:[run substringFromIndex:run.length - length]];
+        remaining -= length;
+        if (!remaining) break;
+    }
+    return [pieces.reverseObjectEnumerator.allObjects componentsJoinedByString:@""];
+}
+
+-(void)prepareVoiceCommandRecognition {
+    VoiceManager *vm = [VoiceManager shared];
+    vm.recognizingCharacterInput = (ipzAllowInput & kIPZNoEcho) != 0;
+    vm.recognizingConfirmation = m_pendingVoiceCommand != nil;
+    if (vm.recognizingConfirmation) return;
+    NSMutableString *visible = [NSMutableString string];
+    [visible appendString:[self recentVisibleVoiceTextInView:m_storyView]];
+    for (id view in m_glkViews) {
+        if ([view isKindOfClass:RichTextView.class] && [view superview] && ![view isHidden] && view != m_storyView) {
+            [visible appendString:@"\n"];
+            [visible appendString:[self recentVisibleVoiceTextInView:view]];
+            if (visible.length > 32768) [visible deleteCharactersInRange:NSMakeRange(0, visible.length - 32768)];
+        }
+    }
+    [vm updateCommandContextWithVisibleText:visible];
+}
+
+-(void)clearPendingVoiceCommand {
+    BOOL hadPendingCommand = m_pendingVoiceCommand != nil;
+    VoiceManager *vm = [VoiceManager shared];
+    if (m_pendingVoiceCommand && vm.delegate == self) {
+        ++m_voiceRestartGeneration;
+        m_voiceListenPending = NO;
+        [vm stopSpeaking];
+        [vm stopListening];
+    }
+    m_pendingVoiceCommand = nil;
+    if (vm.delegate == self) vm.recognizingConfirmation = NO;
+    m_voiceConfirmationButtons.hidden = YES;
+    [m_voiceTapOverlay viewWithTag:999].hidden = NO;
+    m_voiceHintPosition.constant = 36;
+    m_voiceTapOverlay.isAccessibilityElement = YES;
+    if (hadPendingCommand) [self autosize];
+}
+
+-(void)updateVoiceConfirmationDisplay {
+    if (!m_pendingVoiceCommand) return;
+    m_voiceConfirmationButtons.hidden = NO;
+    [m_voiceTapOverlay viewWithTag:999].hidden = YES;
+    m_voiceHintPosition.constant = -28;
+    m_voiceTapOverlay.isAccessibilityElement = NO; // Expose the action buttons to VoiceOver.
+    UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
+    VoiceManager *vm = [VoiceManager shared];
+    NSArray *controls = [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage];
+    NSString *state = vm.isSpeaking ? @"Reading back…"
+        : (controls.count == 0 ? @"Use the buttons below"
+            : (vm.isListening ? [NSString stringWithFormat:@"Say %@, %@ or %@", controls[0], controls[1], controls[2]] : @"Tap to answer, or use the buttons"));
+    hint.text = [NSString stringWithFormat:@"Heard: %@\n%@", m_pendingVoiceCommand, state];
+    hint.accessibilityLabel = hint.text;
+    hint.textColor = m_defaultFGColor;
+}
+
+-(void)speakPendingVoiceConfirmation {
+    if (!m_pendingVoiceCommand || ![self canAcceptVoiceInput]) return;
+    [self updateVoiceConfirmationDisplay];
+    VoiceManager *vm = [VoiceManager shared];
+    NSArray *controls = [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage];
+    NSString *instructions = controls.count == 3
+        ? [NSString stringWithFormat:@"Say %@ to submit, %@ to repeat, or %@ to stop.", controls[0], controls[1], controls[2]]
+        : @"Use Confirm, Retry or Cancel on screen.";
+    [self autosize];
+    vm.recognizingConfirmation = YES;
+    m_voiceAutoListenReady = NO;
+    [vm speakConfirmationPrompt:[NSString stringWithFormat:@"I heard: %@. %@", m_pendingVoiceCommand, instructions]];
+    // Playback setup can fail. Keep the visible controls usable in that case.
+    if (!vm.isSpeaking) {
+        m_voiceAutoListenReady = YES;
+        [self scheduleVoiceListening];
+    }
+    [self updateVoiceConfirmationDisplay];
+}
+
+-(void)performVoiceConfirmationAction:(NSString *)action {
+    if (!m_pendingVoiceCommand) return;
+    if (![self canAcceptVoiceInput] || (ipzAllowInput & kIPZNoEcho)) {
+        [self clearPendingVoiceCommand];
+        return;
+    }
+    NSString *command = m_pendingVoiceCommand;
+    [self clearPendingVoiceCommand];
+    [m_inputLine setText:@""];
+    [self resetTapOverlayToMicIdle];
+    if ([action isEqualToString:@"confirm"]) {
+        m_voiceAutoListenReady = YES;
+        [[VoiceManager shared] rememberPlayerCommand:command];
+        [m_inputLine setText:command];
+        [self textFieldFakeDidEndEditing:m_inputLine];
+    } else if ([action isEqualToString:@"retry"]) {
+        m_voiceAutoListenReady = YES;
+        [self scheduleVoiceListening];
+    } else {
+        m_voiceAutoListenReady = NO;
+    }
+}
+
+-(void)voiceConfirmationButtonTapped:(UIButton *)button {
+    [self performVoiceConfirmationAction:@[@"confirm", @"retry", @"cancel"][button.tag - 910]];
+}
+
 -(void)voiceManagerDidRecognizeText:(NSString *)text isFinal:(BOOL)isFinal {
     if (![self canAcceptVoiceInput] || text.length == 0)
         return;
 
+    // Clarification replies belong to voice UI, never to the story's parser.
+    if (m_pendingVoiceCommand) {
+        if (isFinal) {
+            VoiceManager *vm = [VoiceManager shared];
+            NSString *action = vm.recognizedCommandNeedsConfirmation ? nil
+                : [VoiceManager confirmationActionForText:text language:vm.effectiveRecognitionLanguage];
+            if (action) [self performVoiceConfirmationAction:action];
+            else [self speakPendingVoiceConfirmation];
+        }
+        return;
+    }
     // Show recognized text in input field
     [m_inputLine setText:text];
+    if (isFinal && !(ipzAllowInput & kIPZNoEcho) && [VoiceManager shared].recognizedCommandNeedsConfirmation) {
+        m_pendingVoiceCommand = [text copy];
+        m_voiceAutoListenReady = NO;
+        ++m_voiceRestartGeneration;
+        m_voiceListenPending = NO;
+        [self speakPendingVoiceConfirmation];
+        return;
+    }
 
     if (isFinal) {
         m_voiceAutoListenReady = YES;
@@ -5605,6 +5748,7 @@ static BOOL migateDropboxAuth() {
         hint.text = @"Listening...";
         hint.textColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.6];
     }
+    [self updateVoiceConfirmationDisplay];
 }
 
 -(void)voiceManagerDidStopListening {
@@ -5617,6 +5761,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerSTTError:(NSError *)error {
+    [self clearPendingVoiceCommand];
     m_voiceAutoListenReady = NO;
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
@@ -5665,20 +5810,53 @@ static BOOL migateDropboxAuth() {
     hint.text = @"Tap to speak";
     hint.font = [UIFont systemFontOfSize:14];
     hint.textColor = m_defaultFGColor;
+    hint.numberOfLines = 2;
+    hint.adjustsFontSizeToFitWidth = YES;
+    hint.minimumScaleFactor = 0.8;
     hint.translatesAutoresizingMaskIntoConstraints = NO;
     hint.tag = 998;
     [m_voiceTapOverlay addSubview:hint];
+    m_voiceHintPosition = [hint.centerYAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerYAnchor constant:36];
     [NSLayoutConstraint activateConstraints:@[
         [hint.centerXAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerXAnchor],
-        [hint.centerYAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerYAnchor constant:48],
+        m_voiceHintPosition,
+        [hint.leadingAnchor constraintEqualToAnchor:m_voiceTapOverlay.leadingAnchor constant:16],
+        [hint.trailingAnchor constraintEqualToAnchor:m_voiceTapOverlay.trailingAnchor constant:-16],
     ]];
 
+    NSMutableArray *buttons = [NSMutableArray array];
+    NSArray *titles = @[@"Confirm", @"Retry", @"Cancel"];
+    for (NSUInteger i = 0; i < titles.count; ++i) {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+        [button setTitle:titles[i] forState:UIControlStateNormal];
+        button.tag = 910 + i;
+        button.accessibilityIdentifier = [NSString stringWithFormat:@"voice%@", titles[i]];
+        [button addTarget:self action:@selector(voiceConfirmationButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [buttons addObject:button];
+    }
+    m_voiceConfirmationButtons = [[UIStackView alloc] initWithArrangedSubviews:buttons];
+    m_voiceConfirmationButtons.axis = UILayoutConstraintAxisHorizontal;
+    m_voiceConfirmationButtons.distribution = UIStackViewDistributionFillEqually;
+    m_voiceConfirmationButtons.translatesAutoresizingMaskIntoConstraints = NO;
+    m_voiceConfirmationButtons.hidden = YES;
+    [m_voiceTapOverlay addSubview:m_voiceConfirmationButtons];
+    [NSLayoutConstraint activateConstraints:@[
+        [m_voiceConfirmationButtons.leadingAnchor constraintEqualToAnchor:m_voiceTapOverlay.leadingAnchor constant:12],
+        [m_voiceConfirmationButtons.trailingAnchor constraintEqualToAnchor:m_voiceTapOverlay.trailingAnchor constant:-12],
+        [m_voiceConfirmationButtons.bottomAnchor constraintEqualToAnchor:m_voiceTapOverlay.safeAreaLayoutGuide.bottomAnchor constant:-4],
+        [m_voiceConfirmationButtons.heightAnchor constraintEqualToConstant:44]
+    ]];
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(voiceTapOverlayTapped:)];
+    tap.cancelsTouchesInView = NO;
     [m_voiceTapOverlay addGestureRecognizer:tap];
 }
 
 -(void)voiceTapOverlayTapped:(UITapGestureRecognizer *)gesture {
     VoiceManager *vm = [VoiceManager shared];
+    for (UIView *hit = [gesture.view hitTest:[gesture locationInView:gesture.view] withEvent:nil]; hit && hit != gesture.view; hit = hit.superview)
+        if ([hit isKindOfClass:UIControl.class]) return; // Explicit buttons own their touches.
+    if (m_pendingVoiceCommand && [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage].count == 0)
+        return;
 
     if (vm.isSpeaking) {
         [self stopCurrentVoiceSpeech];
@@ -5692,6 +5870,7 @@ static BOOL migateDropboxAuth() {
         if (vm.isListening) {
             [vm stopListening];
         } else {
+            [self prepareVoiceCommandRecognition];
             [vm startListening];
         }
     }
