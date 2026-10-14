@@ -2,6 +2,7 @@
 #import "VoiceManager.h"
 #import "RichTextView.h"
 #import "StoryMainViewController.h"
+#import "StoryInputLine.h"
 #import <objc/runtime.h>
 
 @interface StoryMainViewController (VoiceTesting)
@@ -14,10 +15,15 @@
 @end
 
 @interface TestStoryController : StoryMainViewController
+@property NSMutableArray<NSString *> *submittedCommands;
 @end
 @implementation TestStoryController
 - (BOOL)canAcceptVoiceInput { return YES; }
 - (void)autosize {} // Keep keyboard-layout work outside these voice-state tests.
+- (void)textFieldFakeDidEndEditing:(UITextField *)field {
+    if (!self.submittedCommands) self.submittedCommands = [NSMutableArray array];
+    [self.submittedCommands addObject:field.text ?: @""];
+}
 @end
 
 @interface TestEndingController : StoryMainViewController
@@ -60,11 +66,13 @@
 // Keep the tests independent of microphone permission, hardware and Apple's speech service.
 @interface TestVoiceManager : VoiceManager
 @property BOOL recordingAllowed;
+@property NSString *confirmationPrompt;
 @end
 @implementation TestVoiceManager
 - (BOOL)recordingIsAuthorized { return self.recordingAllowed; }
 - (BOOL)configureAudioSessionForRecording { return YES; }
 - (void)deactivateAudioSession {}
+- (void)speakConfirmationPrompt:(NSString *)text { self.confirmationPrompt = text; }
 @end
 
 @interface TestNarrationManager : TestVoiceManager
@@ -124,24 +132,35 @@
 typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @interface TestSpeechRecognizer : NSObject
 @property NSMutableArray<RecognitionHandler> *handlers;
+@property SFSpeechRecognitionRequest *lastRequest;
 @end
 @implementation TestSpeechRecognizer
+- (NSLocale *)locale { return [NSLocale localeWithLocaleIdentifier:@"en-US"]; }
 - (BOOL)isAvailable { return YES; }
 - (BOOL)supportsOnDeviceRecognition { return NO; }
 - (id)recognitionTaskWithRequest:(SFSpeechRecognitionRequest *)request resultHandler:(RecognitionHandler)handler {
+    self.lastRequest = request;
     [self.handlers addObject:[handler copy]];
     return [[TestRecognitionTask alloc] init];
 }
 @end
 
+@interface TestSpeechSegment : NSObject
+@property float confidence;
+@end
+@implementation TestSpeechSegment
+@end
+
 @interface TestTranscription : NSObject
 @property NSString *formattedString;
+@property NSArray *segments;
 @end
 @implementation TestTranscription
 @end
 @interface TestRecognitionResult : NSObject
 @property (getter=isFinal) BOOL final;
 @property TestTranscription *bestTranscription;
+@property NSArray *transcriptions;
 @end
 @implementation TestRecognitionResult
 @end
@@ -191,6 +210,10 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     TestStoryController *controller = [[TestStoryController alloc] init];
     method_setImplementation(sharedMethod, replacement);
     @try {
+        [controller setValue:[[StoryInputLine alloc] initWithFrame:CGRectMake(0, 0, 320, 44)] forKey:@"m_inputLine"];
+        RichTextView *story = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        [story appendText:@"You see a gown here."];
+        [controller setValue:story forKey:@"m_storyView"];
         [controller setupVoiceTapOverlay];
         [controller setValue:@YES forKey:@"m_handsFreeAutoLoop"];
         [controller setValue:@YES forKey:@"m_voiceSessionActive"];
@@ -381,6 +404,8 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 - (void)setUp {
     [super setUp];
     self.manager = [[TestVoiceManager alloc] init];
+    self.manager.speechRecognitionLanguage = @"en-US";
+    self.manager.storyLanguage = @"en-US";
     self.manager.recordingAllowed = YES;
     self.manager.voiceMode = VoiceModeSTTOnly;
     self.engine = [[TestAudioEngine alloc] init];
@@ -408,8 +433,218 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     result.final = final;
     result.bestTranscription = [[TestTranscription alloc] init];
     result.bestTranscription.formattedString = text;
+    TestSpeechSegment *segment = [[TestSpeechSegment alloc] init];
+    segment.confidence = 0.95;
+    result.bestTranscription.segments = @[segment];
+    result.transcriptions = @[result.bestTranscription];
     handler((id)result, nil);
     [self drainCallbacks];
+}
+// These exercise real recognition/controller decisions; only speech hardware and the
+// interpreter submission boundary are replaced, so an accidental turn is observable.
+- (void)sendAlternatives:(NSArray<NSString *> *)texts confidence:(float)confidence {
+    TestRecognitionResult *result = [[TestRecognitionResult alloc] init];
+    result.final = YES;
+    NSMutableArray *alternatives = [NSMutableArray array];
+    for (NSString *text in texts) {
+        TestTranscription *transcription = [[TestTranscription alloc] init];
+        transcription.formattedString = text;
+        TestSpeechSegment *segment = [[TestSpeechSegment alloc] init];
+        segment.confidence = confidence;
+        transcription.segments = @[segment];
+        [alternatives addObject:transcription];
+    }
+    result.transcriptions = alternatives;
+    result.bestTranscription = alternatives.firstObject;
+    self.recognizer.handlers.lastObject((id)result, nil);
+    [self drainCallbacks];
+}
+- (void)testNoisyWholeCommandWaitsForConfirmationWithoutConsumingTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.45];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"take gown");
+        XCTAssertTrue([self.manager.confirmationPrompt containsString:@"take gown"]);
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"confirm"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+    }];
+}
+- (void)testHiddenAlternativeCannotBecomeASpokenSuggestion {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"take gown", @"take crown"] confidence:0.45];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"take gown");
+        XCTAssertFalse([self.manager.confirmationPrompt containsString:@"crown"]);
+    }];
+}
+- (void)testConfidentUnusualCommandIsPreservedAndSubmittedImmediately {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"frobnicate Zaphod"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"frobnicate Zaphod"]));
+        XCTAssertNil(self.manager.confirmationPrompt);
+    }];
+}
+- (void)testRetryAndCancelDoNotSubmitConfirmationWordsToStory {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"retry"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"");
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"cancel"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertFalse(self.manager.isListening);
+    }];
+}
+- (void)testStoppingVoiceInvalidatesAnUnconfirmedCommand {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [controller stopVoiceActivity];
+        [self.manager startListening];
+        [self sendAlternatives:@[@"confirm"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testConfirmationControlsDoNotOverlapReadbackInCompactOverlay {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        overlay.backgroundColor = UIColor.whiteColor;
+        for (NSValue *size in @[[NSValue valueWithCGSize:CGSizeMake(320, 120)], [NSValue valueWithCGSize:CGSizeMake(768, 300)]]) {
+            overlay.frame = (CGRect){CGPointZero, size.CGSizeValue};
+            [overlay layoutIfNeeded];
+            UIView *hint = [overlay viewWithTag:998];
+            UIView *buttons = [controller valueForKey:@"m_voiceConfirmationButtons"];
+            XCTAssertFalse(CGRectIntersectsRect(hint.frame, buttons.frame));
+            XCTAssertGreaterThanOrEqual(CGRectGetMinY(hint.frame), 0);
+            XCTAssertLessThanOrEqual(CGRectGetMaxY(buttons.frame), size.CGSizeValue.height);
+            XCTAssertFalse(overlay.isAccessibilityElement); // VoiceOver must reach the buttons.
+            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size.CGSizeValue];
+            UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) { [overlay.layer renderInContext:context.CGContext]; }];
+            XCTAttachment *snapshot = [XCTAttachment attachmentWithImage:image];
+            snapshot.name = [NSString stringWithFormat:@"confirmation-%.0f", size.CGSizeValue.width];
+            snapshot.lifetime = XCTAttachmentLifetimeKeepAlways;
+            [self addAttachment:snapshot];
+        }
+    }];
+}
+- (void)testRecognitionHintsContainOnlyVisibleOrOrdinaryWords {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        NSArray *hints = self.recognizer.lastRequest.contextualStrings;
+        XCTAssertTrue([hints containsObject:@"gown"]);
+        XCTAssertTrue([hints containsObject:@"take"]);
+        XCTAssertFalse([hints containsObject:@"crown"]);
+        XCTAssertLessThanOrEqual(hints.count, 100u);
+    }];
+}
+- (void)testAmbiguousSafeAlternativesPreserveOriginalForConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down", @"take gown", @"take down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"bake down");
+    }];
+}
+- (void)testLowConfidenceConfirmCannotApproveAnUncertainCommand {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"confirm"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"bake down");
+    }];
+}
+- (void)testFrenchConfirmationUsesFrenchControlsWithoutEnglishGuessing {
+    XCTAssertEqualObjects([VoiceManager confirmationActionForText:@"confirmer" language:@"fr-FR"], @"confirm");
+    XCTAssertNil([VoiceManager confirmationActionForText:@"confirm" language:@"fr-FR"]);
+    XCTAssertNil([VoiceManager confirmationActionForText:@"confirm" language:@"ja-JP"]);
+    XCTAssertNil([VoiceManager confirmationActionForText:@"yes, take gown" language:@"en-US"]);
+}
+- (void)testOldControllerCannotCancelAnotherControllersConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.delegate = self.voiceDelegate;
+        self.manager.recognizingConfirmation = YES;
+        [controller stopVoiceActivity];
+        XCTAssertTrue(self.manager.recognizingConfirmation);
+    }];
+}
+- (void)testCharacterRecognitionBypassesWholeCommandRanking {
+    int originalMode = ipzAllowInput;
+    @try {
+        ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            self.manager.delegate = self.voiceDelegate; // Observe the real recognizer output without feeding a live VM.
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(self.voiceDelegate.lastText, @"bake down");
+        }];
+    } @finally { ipzAllowInput = originalMode; }
+}
+- (void)testUnsupportedConfirmationLanguageKeepsReadbackAfterPromptFinishes {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        self.manager.speechRecognitionLanguage = @"ja-JP";
+        [controller voiceManagerDidFinishSpeaking];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([((UILabel *)[overlay viewWithTag:998]).text containsString:@"bake down"]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertFalse(((UIView *)[controller valueForKey:@"m_voiceConfirmationButtons"]).hidden);
+    }];
+}
+- (void)testStoppingConfirmationListeningKeepsReadback {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [self drainCallbacks];
+        [self.manager stopListening];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([((UILabel *)[overlay viewWithTag:998]).text containsString:@"bake down"]);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testQuotedSpeechIsNotRewritten {
+    for (NSArray *quotes in @[@[@"'", @"'"], @[@"\"", @"\""], @[@"“", @"”"], @[@"‘", @"’"], @[@"«", @"»"]]) {
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            NSString *original = [NSString stringWithFormat:@"say %@bake down%@", quotes[0], quotes[1]];
+            NSString *alternative = [NSString stringWithFormat:@"say %@take gown%@", quotes[0], quotes[1]];
+            [self sendAlternatives:@[original, alternative] confidence:0.4];
+            XCTAssertEqualObjects(controller.inputLine.text, original);
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+        }];
+    }
 }
 - (void)testCharacterCommandsPreserveSpaceAndHandleEmptyInput {
     XCTAssertEqualObjects([self.manager translateForCharInput:@"space"], @" ");
@@ -585,6 +820,26 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     XCTAssertFalse(manager.isSpeaking);
     [manager stopSpeaking];
     manager.delegate = nil;
+}
+- (void)testLiveConfirmationWithNarrationDisabled {
+    XCTSkipIf(![[NSProcessInfo.processInfo.environment objectForKey:@"FROTZ_TEST_LIVE_SPEECH"] isEqualToString:@"1"],
+              @"Set FROTZ_TEST_LIVE_SPEECH=1 for the optional live confirmation smoke test.");
+    VoiceManager *manager = [[VoiceManager alloc] init];
+    manager.voiceMode = VoiceModeSTTOnly;
+    LiveSpeechDelegate *delegate = [[LiveSpeechDelegate alloc] init];
+    delegate.finished = [self expectationWithDescription:@"live confirmation finished without narration"];
+    manager.delegate = delegate;
+    @try {
+        [manager speakConfirmationPrompt:@"I heard take gown. Say confirm, retry or cancel."];
+        XCTAssertTrue(manager.isSpeaking);
+        XCTAssertNil(manager.activeView); // UI readback must not highlight story text.
+        [self waitForExpectations:@[delegate.finished] timeout:20];
+        XCTAssertFalse(manager.isSpeaking);
+        XCTAssertFalse(manager.ttsEnabled);
+    } @finally {
+        [manager stopSpeaking];
+        manager.delegate = nil;
+    }
 }
 - (void)testSettingsPresentationStopsRecordingAndPendingRestarts {
     StoryMainViewController *controller = [[StoryMainViewController alloc] init];

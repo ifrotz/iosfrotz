@@ -129,6 +129,9 @@ extern StoryBrowser *theStoryBrowser;
     NSUInteger m_ttsStartRunTextLen;     // length of text in the starting run before our append
     NSUInteger m_ttsHighlightBias;       // leading whitespace chars stripped before sending to TTS
     UIView *m_voiceTapOverlay;
+    NSString *m_pendingVoiceCommand;
+    UIStackView *m_voiceConfirmationButtons;
+    NSLayoutConstraint *m_voiceHintPosition;
     BOOL m_handsFreeAutoLoop;
     BOOL m_voiceSessionActive, m_voiceAutoListenReady, m_voiceListenPending;
     NSUInteger m_voiceRestartGeneration;
