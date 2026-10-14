@@ -312,7 +312,7 @@
     // Always show bundled feature notes, even when older notes are cached or downloaded.
     NSString *voiceNotes = @"<h2>New: Voice Mode</h2>"
         "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Enable either or both in Settings.</li>"
-        "<li>Uncertain voice commands are read back before submission. Say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons. Confident commands still submit immediately.</li>"
+        "<li>Voice commands submit the best guess immediately for uninterrupted play. Optional Confirm Voice Commands in Settings reviews uncertain commands before submission; it is off by default. When enabled, say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons.</li>"
         "<li>English recognition can compare similar alternatives using words already shown or entered. Hidden story vocabulary is never used to suggest commands.</li>"
         "<li>Choose a Speech Voice, preview installed voices, and adjust the Speech Rate. Automatic prefers Premium or Enhanced voices when available.</li>"
         "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Speech Input Language for other stories or to override metadata.</li>"

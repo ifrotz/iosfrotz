@@ -14,6 +14,7 @@ static NSString *const kVoiceModeKey = @"FrotzVoiceMode";
 static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
 static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
 static NSString *const kRecognitionLanguageKey = @"FrotzSpeechRecognitionLanguage";
+static NSString *const kCommandConfirmationKey = @"FrotzVoiceCommandConfirmationEnabled";
 
 // Only bibliographic language is used; story text is never inspected or sent for detection.
 @interface FrotzStoryLanguageParser : NSObject <NSXMLParserDelegate>
@@ -748,6 +749,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)savePreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:self.commandConfirmationEnabled forKey:kCommandConfirmationKey];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
     [defaults setFloat:_speechRate forKey:kSpeechRateKey];
     [defaults setObject:self.speechVoiceIdentifier forKey:kSpeechVoiceKey];
@@ -757,6 +759,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    self.commandConfirmationEnabled = [defaults boolForKey:kCommandConfirmationKey];
     self.speechVoiceIdentifier = [defaults stringForKey:kSpeechVoiceKey];
     self.speechRecognitionLanguage = [defaults stringForKey:kRecognitionLanguageKey];
     if ([defaults objectForKey:kVoiceModeKey]) {

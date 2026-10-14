@@ -5932,7 +5932,8 @@ static BOOL migateDropboxAuth() {
     }
     // Show recognized text in input field
     [m_inputLine setText:text];
-    if (isFinal && !(ipzAllowInput & kIPZNoEcho) && [VoiceManager shared].recognizedCommandNeedsConfirmation) {
+    if (isFinal && !(ipzAllowInput & kIPZNoEcho) && [VoiceManager shared].commandConfirmationEnabled
+        && [VoiceManager shared].recognizedCommandNeedsConfirmation) {
         m_pendingVoiceCommand = [text copy];
         m_voiceAutoListenReady = NO;
         ++m_voiceRestartGeneration;
