@@ -8,11 +8,14 @@
 
 #import "VoiceManager.h"
 #import "RichTextView.h"
+#include <math.h>
 
 static NSString *const kVoiceModeKey = @"FrotzVoiceMode";
 static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
 static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
 static NSString *const kRecognitionLanguageKey = @"FrotzSpeechRecognitionLanguage";
+static NSString *const kLegacyCommandConfirmationKey = @"FrotzVoiceCommandConfirmationEnabled";
+static NSString *const kCommandConfirmationModeKey = @"FrotzVoiceCommandConfirmationMode";
 
 // Only bibliographic language is used; story text is never inspected or sent for detection.
 @interface FrotzStoryLanguageParser : NSObject <NSXMLParserDelegate>
@@ -64,6 +67,9 @@ static float rateMultiplierToAVRate(float multiplier) {
     SFSpeechRecognitionTask *_recognitionTask;
     AVAudioEngine *_audioEngine;
     NSTimer *_silenceTimer;
+    NSSet<NSString *> *_commandWords;
+    NSArray<NSString *> *_commandHints;
+    NSMutableOrderedSet<NSString *> *_playerWords;
     BOOL _hasReceivedSpeech;  // whether any speech detected this listen session
     BOOL _inputTapInstalled;
     BOOL _finishingRecognition;
@@ -98,6 +104,7 @@ static float rateMultiplierToAVRate(float multiplier) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionInterrupted:)
                                                     name:AVAudioSessionInterruptionNotification object:nil];
 
+        _playerWords = [NSMutableOrderedSet orderedSet];
         _speechRate = 1.0f;
         _voiceMode = VoiceModeOff;
         _isPaused = NO;
@@ -151,6 +158,12 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)configureForStoryAtPath:(NSString *)path {
+    [_playerWords removeAllObjects];
+    _commandWords = nil;
+    _commandHints = nil;
+    _recognizingConfirmation = NO;
+    _recognizingCharacterInput = NO;
+    _recognizedCommandNeedsConfirmation = NO;
     self.storyLanguage = [[self class] languageFromBlorbAtPath:path];
 }
 
@@ -208,6 +221,142 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (BOOL)isListening {
     return _audioEngine.isRunning || _finishingRecognition;
+}
+
+#pragma mark - Spoiler-safe command recognition
+
++ (NSArray<NSString *> *)commandTokens:(NSString *)text {
+    static NSRegularExpression *words;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ words = [NSRegularExpression regularExpressionWithPattern:@"[\\p{L}\\p{N}]+(?:['’][\\p{L}]+)*" options:0 error:nil]; });
+    NSMutableArray *tokens = [NSMutableArray array];
+    // Bound work for malformed or unexpectedly large transcripts/context.
+    NSString *bounded = text.length > 32768 ? [text substringFromIndex:text.length - 32768] : text;
+    for (NSTextCheckingResult *match in [words matchesInString:bounded ?: @"" options:0 range:NSMakeRange(0, bounded.length)])
+        [tokens addObject:[[bounded substringWithRange:match.range] lowercaseString]];
+    return tokens;
+}
+
++ (NSArray<NSString *> *)ordinaryEnglishCommands {
+    return @[@"take", @"get", @"drop", @"put", @"look", @"examine", @"open", @"close", @"read", @"wear", @"remove", @"go", @"give", @"ask", @"tell", @"wait", @"inventory", @"save", @"restore", @"quit", @"north", @"south", @"east", @"west", @"up", @"down", @"in", @"out", @"at", @"to", @"with", @"from", @"the", @"a", @"an", @"on", @"off", @"all", @"it", @"me"];
+}
+
+- (void)rememberPlayerCommand:(NSString *)text {
+    for (NSString *word in [[self class] commandTokens:text]) {
+        [_playerWords removeObject:word];
+        [_playerWords addObject:word];
+    }
+    while (_playerWords.count > 256) [_playerWords removeObjectAtIndex:0];
+}
+
+- (void)updateCommandContextWithVisibleText:(NSString *)text {
+    NSMutableOrderedSet *words = [NSMutableOrderedSet orderedSet];
+    if ([self.effectiveRecognitionLanguage.lowercaseString hasPrefix:@"en"])
+        [words addObjectsFromArray:[[self class] ordinaryEnglishCommands]];
+    NSArray *visible = [[self class] commandTokens:text];
+    if (visible.count > 2000) visible = [visible subarrayWithRange:NSMakeRange(visible.count - 2000, 2000)];
+    [words addObjectsFromArray:visible];
+    [words addObjectsFromArray:_playerWords.array];
+    _commandWords = [NSSet setWithArray:words.array];
+    NSMutableOrderedSet *recent = [NSMutableOrderedSet orderedSet];
+    for (NSString *word in [visible arrayByAddingObjectsFromArray:_playerWords.array]) {
+        [recent removeObject:word];
+        [recent addObject:word];
+    }
+    NSMutableOrderedSet *hints = [NSMutableOrderedSet orderedSet];
+    if ([self.effectiveRecognitionLanguage.lowercaseString hasPrefix:@"en"])
+        [hints addObjectsFromArray:[[self class] ordinaryEnglishCommands]];
+    for (NSString *word in recent.reverseObjectEnumerator) {
+        if (hints.count >= 100) break;
+        [hints addObject:word];
+    }
+    _commandHints = hints.array;
+}
+
++ (NSArray<NSString *> *)confirmationWordsForLanguage:(NSString *)language {
+    NSString *base = [[language.lowercaseString stringByReplacingOccurrencesOfString:@"_" withString:@"-"] componentsSeparatedByString:@"-"].firstObject;
+    // First three are the UI's confirm/retry/cancel labels; no English guesses in
+    // other locales. Unsupported control languages still have on-screen buttons.
+    NSDictionary *controls = @{@"en": @[@"confirm", @"retry", @"cancel"],
+        @"fr": @[@"confirmer", @"réessayer", @"annuler"],
+        @"es": @[@"confirmar", @"reintentar", @"cancelar"],
+        @"de": @[@"bestätigen", @"wiederholen", @"abbrechen"],
+        @"it": @[@"conferma", @"riprova", @"annulla"],
+        @"pt": @[@"confirmar", @"repetir", @"cancelar"]};
+    return controls[base] ?: @[];
+}
+
++ (NSString *)confirmationActionForText:(NSString *)text language:(NSString *)language {
+    NSString *normalized = [[text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
+    normalized = [normalized stringByTrimmingCharactersInSet:NSCharacterSet.punctuationCharacterSet];
+    NSArray *words = [self confirmationWordsForLanguage:language];
+    NSUInteger index = [words indexOfObject:normalized];
+    return index < 3 ? @[@"confirm", @"retry", @"cancel"][index] : nil;
+}
+
+// A bounded edit distance of at most one; used only to rank actual recognizer
+// alternatives, never to manufacture a new command from a story dictionary.
++ (BOOL)word:(NSString *)a isNearWord:(NSString *)b {
+    if (a.length > 32 || b.length > 32 || labs((long)a.length - (long)b.length) > 1) return NO;
+    NSUInteger i = 0, j = 0, edits = 0;
+    while (i < a.length && j < b.length) {
+        if ([a characterAtIndex:i] == [b characterAtIndex:j]) { ++i; ++j; continue; }
+        if (++edits > 1) return NO;
+        if (a.length >= b.length) ++i;
+        if (b.length >= a.length) ++j;
+    }
+    return edits + (i < a.length || j < b.length) <= 1;
+}
+
++ (float)minimumConfidence:(SFTranscription *)transcription {
+    float confidence = 1;
+    if (transcription.segments.count == 0) return 0;
+    for (SFTranscriptionSegment *segment in transcription.segments) {
+        if (!isfinite(segment.confidence) || segment.confidence <= 0) return 0;
+        confidence = MIN(confidence, segment.confidence);
+    }
+    return confidence;
+}
+
+- (NSString *)commandFromResult:(SFSpeechRecognitionResult *)result {
+    NSString *original = result.bestTranscription.formattedString;
+    // Confidence is a heuristic, not a guarantee of intent. Zero/absent scores
+    // are unknown. A confidently spoken unusual command must survive unchanged.
+    _recognizedCommandNeedsConfirmation = [[self class] minimumConfidence:result.bestTranscription] < 0.8;
+    if (!_recognizedCommandNeedsConfirmation || self.recognizingConfirmation || self.recognizingCharacterInput
+        || ![self.effectiveRecognitionLanguage.lowercaseString hasPrefix:@"en"]
+        || [original rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’«»‹›„‟「」『』＂＇;\n."]].location != NSNotFound)
+        return original;
+    NSArray *source = [[self class] commandTokens:original];
+    if (source.count == 0 || source.count > 12) return original;
+    NSInteger bestScore = 0;
+    for (NSString *word in source) if ([_commandWords containsObject:word]) ++bestScore;
+    NSInteger originalScore = bestScore;
+    NSString *best = original;
+    BOOL tied = NO;
+    NSUInteger count = 0;
+    for (SFTranscription *alternative in result.transcriptions) {
+        if (++count > 8) break;
+        NSArray *tokens = [[self class] commandTokens:alternative.formattedString];
+        if (tokens.count != source.count || [tokens isEqualToArray:source]) continue;
+        if ([alternative.formattedString rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’«»‹›„‟「」『』＂＇;\n."]].location != NSNotFound) continue;
+        NSInteger score = 0;
+        NSUInteger changes = 0;
+        BOOL safe = YES;
+        for (NSUInteger i = 0; i < tokens.count; ++i) {
+            NSString *word = tokens[i];
+            if ([_commandWords containsObject:word]) ++score;
+            if (![word isEqualToString:source[i]]) {
+                ++changes;
+                // Changed words must already be player-visible or ordinary.
+                if (![_commandWords containsObject:word] || ![[self class] word:word isNearWord:source[i]]) safe = NO;
+            }
+        }
+        if (!safe || changes > 2 || score <= originalScore) continue;
+        if (score > bestScore) { bestScore = score; best = alternative.formattedString; tied = NO; }
+        else if (score == bestScore && ![best.lowercaseString isEqualToString:alternative.formattedString.lowercaseString]) tied = YES;
+    }
+    return tied ? original : best;
 }
 
 #pragma mark - TTS
@@ -270,8 +419,17 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)speakText:(NSString *)text inView:(RichTextView *)view {
-    if (!self.ttsEnabled || text.length == 0)
-        return;
+    if (!self.ttsEnabled) return;
+    [self speakVoiceText:text inView:view];
+}
+
+- (void)speakConfirmationPrompt:(NSString *)text {
+    [self stopSpeaking];
+    [self speakVoiceText:text inView:nil];
+}
+
+- (void)speakVoiceText:(NSString *)text inView:(RichTextView *)view {
+    if (text.length == 0) return;
 
     // Strip leading/trailing whitespace but preserve internal structure
     NSString *trimmed = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -409,6 +567,14 @@ static float rateMultiplierToAVRate(float multiplier) {
     _hasReceivedSpeech = NO;
     _recognitionRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     _recognitionRequest.shouldReportPartialResults = YES;
+    NSArray *controls = [[self class] confirmationWordsForLanguage:self.effectiveRecognitionLanguage];
+    if (self.recognizingCharacterInput) {
+        _recognitionRequest.contextualStrings = @[];
+    } else if (self.recognizingConfirmation) {
+        _recognitionRequest.contextualStrings = controls;
+    } else {
+        _recognitionRequest.contextualStrings = _commandHints ?: @[];
+    }
     if (@available(iOS 13.0, *)) {
         if (_speechRecognizer.supportsOnDeviceRecognition)
             _recognitionRequest.requiresOnDeviceRecognition = YES;
@@ -432,7 +598,7 @@ static float rateMultiplierToAVRate(float multiplier) {
             if (!self || generation != self->_recognitionGeneration)
                 return;
             if (result) {
-                NSString *text = result.bestTranscription.formattedString;
+                NSString *text = result.isFinal ? [self commandFromResult:result] : result.bestTranscription.formattedString;
                 if (result.isFinal) {
                     [self stopListening];
                     [self.delegate voiceManagerDidRecognizeText:text isFinal:YES];
@@ -580,10 +746,19 @@ static float rateMultiplierToAVRate(float multiplier) {
     return [lower substringWithRange:[lower rangeOfComposedCharacterSequenceAtIndex:0]];
 }
 
+- (NSString *)commandConfirmationDescription {
+    switch (self.commandConfirmationMode) {
+        case VoiceCommandConfirmationAsNeeded: return @"As Needed";
+        case VoiceCommandConfirmationAlways: return @"Always";
+        default: return @"Off";
+    }
+}
+
 #pragma mark - Persistence
 
 - (void)savePreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setInteger:self.commandConfirmationMode forKey:kCommandConfirmationModeKey];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
     [defaults setFloat:_speechRate forKey:kSpeechRateKey];
     [defaults setObject:self.speechVoiceIdentifier forKey:kSpeechVoiceKey];
@@ -593,6 +768,15 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:kCommandConfirmationModeKey]) {
+        NSInteger storedMode = [defaults integerForKey:kCommandConfirmationModeKey];
+        self.commandConfirmationMode = storedMode >= VoiceCommandConfirmationOff && storedMode <= VoiceCommandConfirmationAlways
+            ? (VoiceCommandConfirmationMode)storedMode : VoiceCommandConfirmationOff;
+    } else {
+        // Preserve the old switch choice; absent preferences default to Off.
+        self.commandConfirmationMode = [defaults boolForKey:kLegacyCommandConfirmationKey]
+            ? VoiceCommandConfirmationAsNeeded : VoiceCommandConfirmationOff;
+    }
     self.speechVoiceIdentifier = [defaults stringForKey:kSpeechVoiceKey];
     self.speechRecognitionLanguage = [defaults stringForKey:kRecognitionLanguageKey];
     if ([defaults objectForKey:kVoiceModeKey]) {

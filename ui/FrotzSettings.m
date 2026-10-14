@@ -280,6 +280,81 @@
 }
 @end
 
+// Explicit constraints let both choice labels wrap at accessibility text sizes.
+@interface FrotzCommandConfirmationCell : UITableViewCell
+@property (nonatomic, strong) UILabel *choiceLabel;
+@property (nonatomic, strong) UILabel *explanationLabel;
+@end
+@implementation FrotzCommandConfirmationCell
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)identifier {
+    if ((self = [super initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier])) {
+        _choiceLabel = [[UILabel alloc] init];
+        _choiceLabel.tag = 1;
+        _choiceLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        _explanationLabel = [[UILabel alloc] init];
+        _explanationLabel.tag = 2;
+        _explanationLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+        _explanationLabel.textColor = [UIColor grayColor];
+        if (@available(iOS 13.0, *)) _explanationLabel.textColor = [UIColor secondaryLabelColor];
+        for (UILabel *label in @[_choiceLabel, _explanationLabel]) {
+            label.numberOfLines = 0;
+            label.adjustsFontForContentSizeCategory = YES;
+        }
+        UIStackView *stack = [[UIStackView alloc] initWithArrangedSubviews:@[_choiceLabel, _explanationLabel]];
+        stack.axis = UILayoutConstraintAxisVertical;
+        stack.spacing = 4;
+        stack.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.contentView addSubview:stack];
+        [NSLayoutConstraint activateConstraints:@[
+            [stack.leadingAnchor constraintEqualToAnchor:self.contentView.layoutMarginsGuide.leadingAnchor],
+            [stack.trailingAnchor constraintEqualToAnchor:self.contentView.layoutMarginsGuide.trailingAnchor],
+            [stack.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:12],
+            [stack.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-12]
+        ]];
+        self.isAccessibilityElement = YES;
+    }
+    return self;
+}
+@end
+
+// A separate choice screen keeps the mode names and explanations readable on iPhone.
+@interface FrotzCommandConfirmationController : FrotzSpeechSettingsController
+@end
+@implementation FrotzCommandConfirmationController
+- (instancetype)init {
+    if ((self = [super initWithStyle:UITableViewStyleGrouped])) self.title = @"Voice Command Confirmation";
+    return self;
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 80;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section { return 3; }
+- (NSString *)helpTextForSection:(NSInteger)section {
+    return @"Confirmation applies to command lines. Confirmation replies and single-key game prompts keep their usual behavior. Matching stays active in every mode; recognition confidence does not guarantee your intent.";
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
+    FrotzCommandConfirmationCell *cell = [tableView dequeueReusableCellWithIdentifier:@"commandConfirmation"];
+    if (!cell) cell = [[FrotzCommandConfirmationCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"commandConfirmation"];
+    cell.choiceLabel.text = @[@"Off", @"As Needed", @"Always"][path.row];
+    cell.explanationLabel.text = @[@"Submit the best guess immediately. Default.",
+        @"Review uncertain recognition or corrected commands before submitting.",
+        @"Review every command before submitting, even when recognition is confident."][path.row];
+    cell.accessibilityLabel = [NSString stringWithFormat:@"%@. %@", cell.choiceLabel.text, cell.explanationLabel.text];
+    BOOL selected = path.row == [VoiceManager shared].commandConfirmationMode;
+    cell.accessoryType = selected ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+    cell.accessibilityTraits = UIAccessibilityTraitButton | (selected ? UIAccessibilityTraitSelected : 0);
+    return cell;
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
+    [tableView deselectRowAtIndexPath:path animated:YES];
+    [VoiceManager shared].commandConfirmationMode = (VoiceCommandConfirmationMode)path.row;
+    [[VoiceManager shared] savePreferences];
+    [tableView reloadData];
+}
+@end
+
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
 @synthesize infoDelegate = m_infoDelegate;
@@ -314,6 +389,7 @@ enum FrotzPrefsRows
     kFrotzPrefsStoryInfoEditing,
     kFrotzPrefsTTS,
     kFrotzPrefsSTT,
+    kFrotzPrefsCommandConfirmation,
     kFrotzPrefsSpeechVoice,
     kFrotzPrefsSpeechLanguage,
     kFrotzPrefsSpeechRate,
@@ -465,6 +541,7 @@ enum FrotzPrefsRows
     [m_switchCtl4 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_switchCtl4.backgroundColor = [UIColor clearColor];
     [m_switchCtl4 setOn: [VoiceManager shared].sttEnabled];
+
 }
 
 - (void)switchAction:(id)sender
@@ -767,6 +844,7 @@ enum FrotzPrefsRows
         && indexPath.row != kFrotzPrefsNotesFont
         && indexPath.row != kFrotzPrefsSpeechVoice
         && indexPath.row != kFrotzPrefsSpeechLanguage
+        && indexPath.row != kFrotzPrefsCommandConfirmation
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
         && indexPath.row != kFrotzPrefsDropbox
 #endif
@@ -840,6 +918,12 @@ enum FrotzPrefsRows
                 case kFrotzPrefsSTT:
                     cell.textLabel.text = @"Speech-to-Text";
                     cell.accessoryView = m_switchCtl4;
+                    break;
+                case kFrotzPrefsCommandConfirmation:
+                    cell.textLabel.text = @"Voice Command Confirmation";
+                    cell.textLabel.numberOfLines = 0;
+                    cell.detailTextLabel.text = [VoiceManager shared].commandConfirmationDescription;
+                    cell.selectionStyle = UITableViewCellSelectionStyleDefault;
                     break;
                 case kFrotzPrefsSpeechRate:
                     m_speechRateCell = cell;
@@ -932,6 +1016,8 @@ enum FrotzPrefsRows
                 viewController = m_storyFontPicker;
             } else if (row==kFrotzPrefsNotesFont)
                 viewController = m_notesFontPicker;
+            else if (row==kFrotzPrefsCommandConfirmation)
+                viewController = [[FrotzCommandConfirmationController alloc] init];
             else if (row==kFrotzPrefsSpeechVoice)
                 viewController = [[FrotzSpeechVoiceController alloc] init];
             else if (row==kFrotzPrefsSpeechLanguage)
