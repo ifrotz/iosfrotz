@@ -22,6 +22,12 @@ typedef NS_ENUM(NSInteger, VoiceMode) {
     VoiceModeBoth
 };
 
+typedef NS_ENUM(NSInteger, VoiceCommandConfirmationMode) {
+    VoiceCommandConfirmationOff = 0,
+    VoiceCommandConfirmationAsNeeded,
+    VoiceCommandConfirmationAlways
+};
+
 @protocol VoiceManagerDelegate <NSObject>
 // TTS callbacks
 - (void)voiceManagerDidStartSpeaking;
@@ -69,7 +75,8 @@ typedef NS_ENUM(NSInteger, VoiceMode) {
 - (void)resumeSpeaking;
 
 // Spoiler-safe command context comes only from displayed text and player input.
-@property (nonatomic) BOOL commandConfirmationEnabled; // persisted, default NO
+@property (nonatomic) VoiceCommandConfirmationMode commandConfirmationMode; // persisted, default Off
+@property (nonatomic, readonly) NSString *commandConfirmationDescription;
 @property (nonatomic, readonly) BOOL recognizedCommandNeedsConfirmation; // uncertainty, independent of the preference
 @property (nonatomic) BOOL recognizingConfirmation;
 @property (nonatomic) BOOL recognizingCharacterInput;

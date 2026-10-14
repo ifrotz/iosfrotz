@@ -14,7 +14,8 @@ static NSString *const kVoiceModeKey = @"FrotzVoiceMode";
 static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
 static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
 static NSString *const kRecognitionLanguageKey = @"FrotzSpeechRecognitionLanguage";
-static NSString *const kCommandConfirmationKey = @"FrotzVoiceCommandConfirmationEnabled";
+static NSString *const kLegacyCommandConfirmationKey = @"FrotzVoiceCommandConfirmationEnabled";
+static NSString *const kCommandConfirmationModeKey = @"FrotzVoiceCommandConfirmationMode";
 
 // Only bibliographic language is used; story text is never inspected or sent for detection.
 @interface FrotzStoryLanguageParser : NSObject <NSXMLParserDelegate>
@@ -745,11 +746,19 @@ static float rateMultiplierToAVRate(float multiplier) {
     return [lower substringWithRange:[lower rangeOfComposedCharacterSequenceAtIndex:0]];
 }
 
+- (NSString *)commandConfirmationDescription {
+    switch (self.commandConfirmationMode) {
+        case VoiceCommandConfirmationAsNeeded: return @"As Needed";
+        case VoiceCommandConfirmationAlways: return @"Always";
+        default: return @"Off";
+    }
+}
+
 #pragma mark - Persistence
 
 - (void)savePreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:self.commandConfirmationEnabled forKey:kCommandConfirmationKey];
+    [defaults setInteger:self.commandConfirmationMode forKey:kCommandConfirmationModeKey];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
     [defaults setFloat:_speechRate forKey:kSpeechRateKey];
     [defaults setObject:self.speechVoiceIdentifier forKey:kSpeechVoiceKey];
@@ -759,7 +768,15 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    self.commandConfirmationEnabled = [defaults boolForKey:kCommandConfirmationKey];
+    if ([defaults objectForKey:kCommandConfirmationModeKey]) {
+        NSInteger storedMode = [defaults integerForKey:kCommandConfirmationModeKey];
+        self.commandConfirmationMode = storedMode >= VoiceCommandConfirmationOff && storedMode <= VoiceCommandConfirmationAlways
+            ? (VoiceCommandConfirmationMode)storedMode : VoiceCommandConfirmationOff;
+    } else {
+        // Preserve the old switch choice; absent preferences default to Off.
+        self.commandConfirmationMode = [defaults boolForKey:kLegacyCommandConfirmationKey]
+            ? VoiceCommandConfirmationAsNeeded : VoiceCommandConfirmationOff;
+    }
     self.speechVoiceIdentifier = [defaults stringForKey:kSpeechVoiceKey];
     self.speechRecognitionLanguage = [defaults stringForKey:kRecognitionLanguageKey];
     if ([defaults objectForKey:kVoiceModeKey]) {
