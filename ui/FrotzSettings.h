@@ -56,7 +56,6 @@
     UITableViewCell     *m_storyFontCell, *m_notesFontCell;
     UITableViewCell	    *m_storyFontSizeCell, *m_notesFontSizeCell;
     UITableViewCell     *m_speechRateCell;
-    UISwitch *m_commandConfirmationSwitch;
 
     int m_origStoryFontSize, m_newStoryFontSize;
     int m_origNotesFontSize, m_newNotesFontSize;

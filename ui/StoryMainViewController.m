@@ -5932,8 +5932,10 @@ static BOOL migateDropboxAuth() {
     }
     // Show recognized text in input field
     [m_inputLine setText:text];
-    if (isFinal && !(ipzAllowInput & kIPZNoEcho) && [VoiceManager shared].commandConfirmationEnabled
-        && [VoiceManager shared].recognizedCommandNeedsConfirmation) {
+    VoiceManager *vm = [VoiceManager shared];
+    BOOL reviewCommand = vm.commandConfirmationMode == VoiceCommandConfirmationAlways
+        || (vm.commandConfirmationMode == VoiceCommandConfirmationAsNeeded && vm.recognizedCommandNeedsConfirmation);
+    if (isFinal && !(ipzAllowInput & kIPZNoEcho) && reviewCommand) {
         m_pendingVoiceCommand = [text copy];
         m_voiceAutoListenReady = NO;
         ++m_voiceRestartGeneration;

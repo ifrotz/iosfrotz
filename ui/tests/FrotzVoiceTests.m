@@ -328,7 +328,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 }
 - (void)testSelectedVoicePersistsAndMissingVoiceFallsBack {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled"];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
     for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: [NSNull null];
     @try {
@@ -411,7 +411,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     self.manager = [[TestVoiceManager alloc] init];
     self.manager.speechRecognitionLanguage = @"en-US";
     self.manager.storyLanguage = @"en-US";
-    self.manager.commandConfirmationEnabled = YES; // Existing review-flow fixtures explicitly opt in.
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAsNeeded; // Existing review-flow fixtures explicitly opt in.
     self.manager.recordingAllowed = YES;
     self.manager.voiceMode = VoiceModeSTTOnly;
     self.engine = [[TestAudioEngine alloc] init];
@@ -467,7 +467,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 }
 - (void)withSavedVoiceDefaults:(void (^)(NSUserDefaults *defaults))test {
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled"];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
     for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: NSNull.null;
     @try { test(defaults); }
@@ -488,6 +488,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 - (void)testDefaultModeImmediatelySubmitsMatchedCommandWithoutReadback {
     [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
         [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"]; // Includes upgrades from build3.
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
         [self reloadVoicePreferencesForRecognitionTest];
         [self withAutomaticListeningController:^(TestStoryController *controller) {
             [controller scheduleVoiceListening];
@@ -502,6 +503,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 - (void)testExplicitlyDisabledConfirmationSubmitsOriginalWhenNoAlternativeExists {
     [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
         [defaults setBool:NO forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
         [self reloadVoicePreferencesForRecognitionTest];
         [self withAutomaticListeningController:^(TestStoryController *controller) {
             [controller scheduleVoiceListening];
@@ -512,36 +514,179 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         }];
     }];
 }
-- (void)testSettingsConfirmationSwitchPersistsBothChoices {
+// Removing the Always gate would submit a confidently wrong command before approval.
+- (void)testAlwaysReviewsConfidentCommandAndConfirmSubmitsOnlyOnce {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:NO forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:2 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"frobnicate Zaphod"] confidence:0.95];
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            XCTAssertTrue([self.manager.confirmationPrompt containsString:@"frobnicate Zaphod"]);
+            [controller voiceManagerDidFinishSpeaking];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"confirm"] confidence:0.95];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"frobnicate Zaphod"]));
+            XCTAssertNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+        }];
+    }];
+}
+// Ignoring the new Off preference would revive an obsolete enabled switch.
+- (void)testExplicitOffOverridesLegacyEnabledPreference {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:0 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+- (void)testLegacyEnabledMigratesToAsNeededAndSurvivesRelaunch {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self.manager savePreferences];
+        XCTAssertEqualObjects([defaults objectForKey:@"FrotzVoiceCommandConfirmationMode"], @1);
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0.4];
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            XCTAssertNotNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+- (void)testInvalidStoredConfirmationModeFallsBackToOff {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:99 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"bake down"]));
+        }];
+    }];
+}
+- (void)testSettingsConfirmationPickerPersistsAllChoices {
     [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
         [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
         [self reloadVoicePreferencesForRecognitionTest];
         [self withAutomaticListeningController:^(TestStoryController *controller) {
             FrotzSettingsController *settings = [[FrotzSettingsController alloc] init];
             [settings create_UISwitches];
-            UISwitch *control = nil;
+            UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:settings];
+            NSIndexPath *choicePath = nil;
             for (NSInteger row = 0; row < [settings tableView:nil numberOfRowsInSection:1]; ++row) {
-                UITableViewCell *cell = [settings tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:1]];
-                if ([cell.textLabel.text isEqualToString:@"Confirm Voice Commands"]) control = (UISwitch *)cell.accessoryView;
+                NSIndexPath *path = [NSIndexPath indexPathForRow:row inSection:1];
+                UITableViewCell *cell = [settings tableView:nil cellForRowAtIndexPath:path];
+                if ([cell.textLabel.text isEqualToString:@"Voice Command Confirmation"]) {
+                    choicePath = path;
+                    XCTAssertEqualObjects(cell.detailTextLabel.text, @"Off");
+                    XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryDisclosureIndicator);
+                }
             }
-            XCTAssertNotNil(control);
-            if (!control) return;
-            XCTAssertFalse(control.isOn);
-            [control setOn:YES];
-            [control sendActionsForControlEvents:UIControlEventValueChanged];
-            XCTAssertTrue([defaults boolForKey:@"FrotzVoiceCommandConfirmationEnabled"]);
-            [self.manager loadPreferences];
-            [controller scheduleVoiceListening];
-            [self drainCallbacks];
-            [self sendAlternatives:@[@"bake down"] confidence:0.4];
-            XCTAssertEqual(controller.submittedCommands.count, 0u);
-            XCTAssertNotNil(self.manager.confirmationPrompt);
-            [controller pauseVoiceForSettings];
-            [control setOn:NO];
-            [control sendActionsForControlEvents:UIControlEventValueChanged];
-            XCTAssertFalse([defaults boolForKey:@"FrotzVoiceCommandConfirmationEnabled"]);
+            XCTAssertNotNil(choicePath); if (!choicePath) return;
+            BOOL animationsEnabled = UIView.areAnimationsEnabled;
+            [UIView setAnimationsEnabled:NO];
+            [settings tableView:nil didSelectRowAtIndexPath:choicePath];
+            [UIView setAnimationsEnabled:animationsEnabled];
+            UITableViewController *picker = (id)navigation.topViewController;
+            XCTAssertNotEqual(picker, settings);
+            XCTAssertEqual([picker tableView:picker.tableView numberOfRowsInSection:0], 3);
+            NSArray *names = @[@"Off", @"As Needed", @"Always"];
+            for (NSNumber *value in @[@2, @1, @0]) {
+                NSIndexPath *path = [NSIndexPath indexPathForRow:value.integerValue inSection:0];
+                UITableViewCell *cell = [picker tableView:picker.tableView cellForRowAtIndexPath:path];
+                XCTAssertEqualObjects(((UILabel *)[cell.contentView viewWithTag:1]).text, names[value.integerValue]);
+                [picker tableView:picker.tableView didSelectRowAtIndexPath:path];
+                XCTAssertEqualObjects([defaults objectForKey:@"FrotzVoiceCommandConfirmationMode"], value);
+                [self.manager loadPreferences];
+                cell = [picker tableView:picker.tableView cellForRowAtIndexPath:path];
+                XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryCheckmark);
+                XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+                XCTAssertEqualObjects([settings tableView:nil cellForRowAtIndexPath:choicePath].detailTextLabel.text, names[value.integerValue]);
+            }
+            picker.view.frame = CGRectMake(0, 0, UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? 768 : 320, 640);
+            [picker.tableView reloadData]; [picker.view layoutIfNeeded];
+            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:picker.view.bounds.size];
+            UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+                [[UIColor whiteColor] setFill]; UIRectFill(picker.view.bounds);
+                if (![picker.view drawViewHierarchyInRect:picker.view.bounds afterScreenUpdates:YES])
+                    [picker.view.layer renderInContext:context.CGContext];
+            }];
+            XCTAttachment *attachment = [XCTAttachment attachmentWithImage:image];
+            attachment.name = @"Voice Command Confirmation picker";
+            attachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+            [self addAttachment:attachment];
         }];
     }];
+}
+- (void)testAlwaysDoesNotReviewPartialRecognition {
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAlways;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendText:@"take" final:NO handler:self.recognizer.handlers.lastObject];
+        XCTAssertEqualObjects(controller.inputLine.text, @"take");
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertNil(self.manager.confirmationPrompt);
+    }];
+}
+- (void)testAlwaysBypassesReviewForSingleKeyPrompt {
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAlways;
+    int previous = ipzAllowInput;
+    @try {
+        ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            // Set the input request at the synchronous controller boundary: the host
+            // interpreter can change its global request while async callbacks drain.
+            ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+            [controller voiceManagerDidRecognizeText:@"space" isFinal:YES];
+            XCTAssertNil(self.manager.confirmationPrompt);
+            XCTAssertNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+            XCTAssertEqualObjects(controller.inputLine.text, @"");
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+        }];
+    } @finally { ipzAllowInput = previous; }
+}
+- (void)testConfirmationPickerWrapsLargeTextOnCompactScreen {
+    UITableViewController *picker = [[NSClassFromString(@"FrotzCommandConfirmationController") alloc] init];
+    XCTAssertNotNil(picker); if (!picker) return;
+    UITableViewCell *cell = [picker tableView:picker.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
+    UILabel *title = [cell.contentView viewWithTag:1];
+    // Stress the same title with the font UIKit supplies at the largest accessibility size.
+    UITraitCollection *traits = [UITraitCollection traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+    title.adjustsFontForContentSizeCategory = NO; // Hold the simulated accessibility font during layout.
+    title.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:traits];
+    cell.frame = CGRectMake(0, 0, 240, 300); // Stress a narrow choice area at the largest text size.
+    [cell setNeedsLayout]; [cell layoutIfNeeded];
+    CGRect required = [title.text boundingRectWithSize:CGSizeMake(title.bounds.size.width, CGFLOAT_MAX)
+        options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:title.font} context:nil];
+    XCTAssertGreaterThanOrEqual(title.bounds.size.height + 1, ceil(required.size.height), @"content=%@ title=%@ font=%g textWidth=%g", NSStringFromCGRect(cell.contentView.bounds), NSStringFromCGRect(title.frame), title.font.pointSize, [title.text sizeWithAttributes:@{NSFontAttributeName:title.font}].width);
+    CGFloat fittedHeight = [cell.contentView systemLayoutSizeFittingSize:CGSizeMake(cell.contentView.bounds.size.width, 0)
+        withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    cell.frame = CGRectMake(0, 0, 240, fittedHeight + 1);
+    [cell setNeedsLayout]; [cell layoutIfNeeded];
+    XCTAssertGreaterThanOrEqual(title.bounds.size.height + 1, ceil(required.size.height), @"content=%@ title=%@ font=%g textWidth=%g", NSStringFromCGRect(cell.contentView.bounds), NSStringFromCGRect(title.frame), title.font.pointSize, [title.text sizeWithAttributes:@{NSFontAttributeName:title.font}].width);
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:cell.bounds.size];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [[UIColor whiteColor] setFill]; UIRectFill(cell.bounds);
+        [cell.layer renderInContext:context.CGContext];
+    }];
+    XCTAttachment *attachment = [XCTAttachment attachmentWithImage:image];
+    attachment.name = @"Confirmation choice at largest accessibility title size";
+    attachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+    [self addAttachment:attachment];
 }
 - (void)testNoisyWholeCommandWaitsForConfirmationWithoutConsumingTurn {
     [self withAutomaticListeningController:^(TestStoryController *controller) {
