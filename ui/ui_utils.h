@@ -8,6 +8,9 @@
  */
 #include <UIKit/UIKit.h>
 
+// applicationFrame returns invalid geometry on iOS 27; use the scene bounds there.
+CGRect FrotzApplicationFrame(void);
+
 
 CF_IMPLICIT_BRIDGING_ENABLED
 

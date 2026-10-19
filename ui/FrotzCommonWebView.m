@@ -1,3 +1,4 @@
+#import "ui_utils.h"
 /*
  *  FrotzCommonWebView.m
  *  Frotz
@@ -15,7 +16,7 @@ static FrotzWebView *sWebView;
 
 +(FrotzWebView*)sharedWebView {
     if (!sWebView) {
-        sWebView = [[FrotzWebView alloc] initWithFrame: [[UIScreen mainScreen] applicationFrame]];
+        sWebView = [[FrotzWebView alloc] initWithFrame: FrotzApplicationFrame()];
         [sWebView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
         sWebView.backgroundColor = [UIColor darkGrayColor];
     }

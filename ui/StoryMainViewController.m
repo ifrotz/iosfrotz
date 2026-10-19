@@ -1901,7 +1901,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         return;
     }
     
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
+    CGRect frame = FrotzApplicationFrame();
     frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
 
     self.automaticallyAdjustsScrollViewInsets = NO;
@@ -2070,7 +2070,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         CGFloat inputLineWidth = frame.size.width;
         frame.size = origViewFrame.size;
         frame = [m_inputLine.superview convertRect:frame toView:view.superview];
-        CGFloat maxDist = [[UIScreen mainScreen] applicationFrame].size.height;
+        CGFloat maxDist = FrotzApplicationFrame().size.height;
         if (frame.origin.y - origViewFrame.origin.y > maxDist)
             frame.origin.y = origViewFrame.origin.y + maxDist;
         CGFloat duration = animDuration;
@@ -2205,7 +2205,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_landscape && m_autoRestoreDict!=nil)
         frame.size.height += 20;
 
-    CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
+    CGRect applicationFrame = FrotzApplicationFrame();
     CGRect bgRect = CGRectMake(0, 0, applicationFrame.size.width, frame.size.height);
     //NSLog(@"autosize bg frame=(%f,%f,%f,%f)", bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
 
