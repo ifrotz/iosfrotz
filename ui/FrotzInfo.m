@@ -11,6 +11,26 @@
 #import <QuartzCore/QuartzCore.h>
 #import "TextViewExt.h"
 
+// UIKit may compress a custom navigation title beside the voice toolbar.
+// Keep Settings inside its hit-test bounds; the decorative title yields first.
+@interface FrotzInfoTitleView : UIView
+@property UILabel *titleLabel;
+@property UIButton *infoButton;
+@end
+@implementation FrotzInfoTitleView
+- (CGSize)intrinsicContentSize { return CGSizeMake(106, 44); }
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    CGFloat width = self.bounds.size.width;
+    CGFloat buttonWidth = MIN(44, width);
+    self.infoButton.frame = CGRectMake(width - buttonWidth, 0, buttonWidth, self.bounds.size.height);
+    CGFloat labelWidth = width - buttonWidth;
+    self.titleLabel.hidden = labelWidth < 54;
+    self.titleLabel.frame = CGRectMake(0, 0, labelWidth, self.bounds.size.height);
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+}
+@end
+
 @implementation FrotzInfo
 @synthesize keyboardOwner = m_kbdOwner;
 
@@ -27,7 +47,7 @@
 }
 
 -(void)loadView {
-    [super loadView];
+    self.view = [[FrotzInfoTitleView alloc] initWithFrame:CGRectMake(0, 0, 106, 44)];
     
     CGRect frame = CGRectMake(0,0, 106, 44);
     
@@ -43,7 +63,10 @@
     view.backgroundColor = [UIColor clearColor];
     [view addSubview: m_titleTextView];
     m_infoButton = [UIButton buttonWithType: UIButtonTypeInfoLight];
-    [m_infoButton setFrame: CGRectMake(74, 0, 32, 44)];
+    [m_infoButton setFrame: CGRectMake(62, 0, 44, 44)];
+    ((FrotzInfoTitleView *)view).titleLabel = m_titleTextView;
+    ((FrotzInfoTitleView *)view).infoButton = m_infoButton;
+    m_infoButton.accessibilityIdentifier = @"frotzSettings";
     [self updateAccessibility];
     [view addSubview: m_infoButton];
     [m_infoButton addTarget:self action:@selector(frotzInfo) forControlEvents: UIControlEventTouchUpInside];

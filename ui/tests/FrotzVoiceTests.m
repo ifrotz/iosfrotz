@@ -5,6 +5,7 @@
 #import "StoryInputLine.h"
 #import "FrotzSettings.h"
 #import "FrotzAppDelegate.h"
+#import "FrotzInfo.h"
 #import <objc/runtime.h>
 
 @interface FrotzSettingsController (ConfirmationTesting)
@@ -16,6 +17,7 @@
 @end
 
 @interface StoryMainViewController (VoiceTesting)
+- (void)setupVoiceToolbar;
 - (BOOL)canAcceptVoiceInput;
 - (void)setupVoiceTapOverlay;
 - (BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action;
@@ -357,6 +359,44 @@ API_AVAILABLE(ios(13.0))
     [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityElementFocusedNotification object:nil
         userInfo:@{UIAccessibilityAssistiveTechnologyKey:UIAccessibilityNotificationVoiceOverIdentifier,
                    UIAccessibilityFocusedElementKey:[UIButton buttonWithType:UIButtonTypeSystem]}];
+}
+- (void)testSettingsButtonRemainsHittableWhenNavigationTitleIsCompressed {
+    FrotzInfo *info = [[FrotzInfo alloc] initWithSettingsController:nil navController:nil navItem:nil];
+    UIView *title = info.view;
+    UIButton *settings = nil;
+    for (UIView *view in title.subviews)
+        if ([view isKindOfClass:UIButton.class] && [view.accessibilityLabel isEqual:@"Settings"])
+            settings = (UIButton *)view;
+    XCTAssertNotNil(settings);
+    for (NSNumber *width in @[@106, @64, @44]) {
+        title.frame = CGRectMake(0, 0, width.doubleValue, 44);
+        [title setNeedsLayout];
+        [title layoutIfNeeded];
+        XCTAssertTrue(CGRectContainsRect(title.bounds, settings.frame), @"Settings must fit the actual title width %@", width);
+        XCTAssertGreaterThanOrEqual(settings.bounds.size.width, 44);
+        XCTAssertGreaterThanOrEqual(settings.bounds.size.height, 44);
+        CGPoint center = CGPointMake(CGRectGetMidX(settings.frame), CGRectGetMidY(settings.frame));
+        XCTAssertEqual([title hitTest:center withEvent:nil], settings);
+    }
+}
+- (void)testVoiceToolbarUsesCompactNonoverlappingAccessibleHitTargets {
+    TestStoryController *controller = [TestStoryController new];
+    XCTAssertTrue([controller respondsToSelector:@selector(setupVoiceToolbar)]);
+    if (![controller respondsToSelector:@selector(setupVoiceToolbar)]) return;
+    [controller setupVoiceToolbar];
+    UIStackView *toolbar = (id)controller.navigationItem.rightBarButtonItem.customView;
+    CGSize size = [toolbar systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    XCTAssertLessThanOrEqual(size.width, 132);
+    toolbar.frame = CGRectMake(0, 0, size.width, size.height);
+    [toolbar layoutIfNeeded];
+    XCTAssertEqual(toolbar.arrangedSubviews.count, 3u);
+    CGFloat previousEnd = 0;
+    for (UIView *button in toolbar.arrangedSubviews) {
+        XCTAssertGreaterThanOrEqual(button.bounds.size.width, 44);
+        XCTAssertGreaterThanOrEqual(button.bounds.size.height, 44);
+        XCTAssertGreaterThanOrEqual(CGRectGetMinX(button.frame), previousEnd);
+        previousEnd = CGRectGetMaxX(button.frame);
+    }
 }
 - (void)testRecordingSessionAllowsReadySoundsAndHapticsBeforeActivation {
     TestRecordingSessionManager *manager = [[TestRecordingSessionManager alloc] init];
