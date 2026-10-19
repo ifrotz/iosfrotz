@@ -2008,6 +2008,56 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     return image;
 }
 
+- (void)setupVoiceToolbar {
+    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
+    [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
+
+    // All right-side toolbar buttons packed into a single compact stack
+    if (@available(iOS 13.0, *)) {
+        UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
+
+        UIButton *ttsBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [ttsBtn setImage:[[UIImage systemImageNamed:@"speaker.wave.1.fill"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        [ttsBtn addTarget:self action:@selector(toggleTTS) forControlEvents:UIControlEventTouchUpInside];
+        ttsBtn.tag = 901;
+        ttsBtn.accessibilityIdentifier = @"voiceNarration";
+        ttsBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
+
+        UIButton *sttBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [sttBtn setImage:[[UIImage systemImageNamed:@"mic"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
+        [sttBtn addTarget:self action:@selector(toggleSTT) forControlEvents:UIControlEventTouchUpInside];
+        sttBtn.tag = 902;
+        sttBtn.accessibilityIdentifier = @"voiceDictation";
+        sttBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
+
+        UIButton *kbdBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [kbdBtn setImage:[UIImage imageNamed:@"icon-keyboard"] forState:UIControlStateNormal];
+        [kbdBtn addTarget:self action:@selector(toggleKeyboard) forControlEvents:UIControlEventTouchUpInside];
+        kbdBtn.tag = 903;
+        kbdBtn.accessibilityIdentifier = @"voiceKeyboard";
+        kbdBtn.accessibilityLabel = @"Show keyboard";
+        for (UIButton *button in @[ttsBtn, sttBtn, kbdBtn]) {
+            [NSLayoutConstraint activateConstraints:@[
+                [button.widthAnchor constraintGreaterThanOrEqualToConstant:44],
+                [button.heightAnchor constraintGreaterThanOrEqualToConstant:44]
+            ]];
+        }
+
+        UIStackView *toolStack = [[UIStackView alloc] initWithArrangedSubviews:@[ttsBtn, sttBtn, kbdBtn]];
+        toolStack.axis = UILayoutConstraintAxisHorizontal;
+        toolStack.spacing = 0; // Three distinct 44-point targets; leave room for Settings.
+
+        UIBarButtonItem *toolItem = [[UIBarButtonItem alloc] initWithCustomView:toolStack];
+        m_ttsToggleItem = toolItem;
+        m_sttToggleItem = toolItem;
+        m_kbdToggleItem = toolItem;
+        self.navigationItem.rightBarButtonItem = toolItem;
+    } else {
+        self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+    }
+
+}
+
 - (void)loadView {
     
     if (m_background) {
@@ -2127,54 +2177,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_inputLine setDelegate: self];
     [m_storyView setDelegate: self];
     
-//    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
-    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
-    m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
-    [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
-
-    // All right-side toolbar buttons packed into a single compact stack
-    if (@available(iOS 13.0, *)) {
-        UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
-
-        UIButton *ttsBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        [ttsBtn setImage:[[UIImage systemImageNamed:@"speaker.wave.1.fill"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
-        [ttsBtn addTarget:self action:@selector(toggleTTS) forControlEvents:UIControlEventTouchUpInside];
-        ttsBtn.tag = 901;
-        ttsBtn.accessibilityIdentifier = @"voiceNarration";
-        ttsBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
-
-        UIButton *sttBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        [sttBtn setImage:[[UIImage systemImageNamed:@"mic"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
-        [sttBtn addTarget:self action:@selector(toggleSTT) forControlEvents:UIControlEventTouchUpInside];
-        sttBtn.tag = 902;
-        sttBtn.accessibilityIdentifier = @"voiceDictation";
-        sttBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
-
-        UIButton *kbdBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        [kbdBtn setImage:[UIImage imageNamed:@"icon-keyboard"] forState:UIControlStateNormal];
-        [kbdBtn addTarget:self action:@selector(toggleKeyboard) forControlEvents:UIControlEventTouchUpInside];
-        kbdBtn.tag = 903;
-        kbdBtn.accessibilityIdentifier = @"voiceKeyboard";
-        kbdBtn.accessibilityLabel = @"Show keyboard";
-        for (UIButton *button in @[ttsBtn, sttBtn, kbdBtn]) {
-            [NSLayoutConstraint activateConstraints:@[
-                [button.widthAnchor constraintGreaterThanOrEqualToConstant:44],
-                [button.heightAnchor constraintGreaterThanOrEqualToConstant:44]
-            ]];
-        }
-
-        UIStackView *toolStack = [[UIStackView alloc] initWithArrangedSubviews:@[ttsBtn, sttBtn, kbdBtn]];
-        toolStack.axis = UILayoutConstraintAxisHorizontal;
-        toolStack.spacing = 12;
-
-        UIBarButtonItem *toolItem = [[UIBarButtonItem alloc] initWithCustomView:toolStack];
-        m_ttsToggleItem = toolItem;
-        m_sttToggleItem = toolItem;
-        m_kbdToggleItem = toolItem;
-        self.navigationItem.rightBarButtonItem = toolItem;
-    } else {
-        self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
-    }
+    [self setupVoiceToolbar];
 
     // Set up voice manager delegate
     m_ttsAccumulatedText = [[NSMutableString alloc] init];
