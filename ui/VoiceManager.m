@@ -79,6 +79,11 @@ static float rateMultiplierToAVRate(float multiplier) {
     NSString *_currentUtteranceText;  // full text of current utterance for range mapping
     BOOL _isPaused;
     AVSpeechUtterance *_activeUtterance;
+    NSString *_accessibilityAnnouncement;
+    BOOL _voiceOverNavigationPaused;
+    NSString *_lastStoryResponse;
+    BOOL _beginsStoryResponse;
+    SystemSoundID _feedbackSounds[4];
 
     // Char input translation dictionary
     NSDictionary<NSString *, NSString *> *_charInputMap;
@@ -103,11 +108,19 @@ static float rateMultiplierToAVRate(float multiplier) {
         _speechRecognizer.queue = [NSOperationQueue mainQueue];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionInterrupted:)
                                                     name:AVAudioSessionInterruptionNotification object:nil];
+        NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+        [center addObserver:self selector:@selector(accessibilityAnnouncementFinished:)
+                       name:UIAccessibilityAnnouncementDidFinishNotification object:nil];
+        [center addObserver:self selector:@selector(accessibilityFocusChanged:)
+                       name:UIAccessibilityElementFocusedNotification object:nil];
+        [center addObserver:self selector:@selector(voiceOverStatusChanged:)
+                       name:UIAccessibilityVoiceOverStatusDidChangeNotification object:nil];
 
         _playerWords = [NSMutableOrderedSet orderedSet];
         _speechRate = 1.0f;
         _voiceMode = VoiceModeOff;
         _isPaused = NO;
+        _beginsStoryResponse = YES;
 
         _charInputMap = @{
             @"yes": @"y",
@@ -158,6 +171,8 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)configureForStoryAtPath:(NSString *)path {
+    _lastStoryResponse = nil;
+    _beginsStoryResponse = YES;
     [_playerWords removeAllObjects];
     _commandWords = nil;
     _commandHints = nil;
@@ -216,7 +231,58 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (BOOL)isSpeaking {
-    return _activeUtterance != nil && !_isPaused;
+    return (_activeUtterance != nil || _accessibilityAnnouncement != nil) && !_isPaused;
+}
+
+- (BOOL)isVoiceOverEnabled { return UIAccessibilityIsVoiceOverRunning(); }
+- (BOOL)voiceOverNavigationPaused { return _voiceOverNavigationPaused; }
+
+- (void)resumeAfterVoiceOverNavigation { _voiceOverNavigationPaused = NO; }
+
+- (void)pauseForVoiceOverNavigation {
+    BOOL discardInput = self.isListening;
+    _voiceOverNavigationPaused = self.isVoiceOverEnabled && self.sttEnabled;
+    [self stopListening];
+    [self stopSpeaking];
+    if ([self.delegate respondsToSelector:@selector(voiceManagerDidPauseForVoiceOverDiscardingInput:)])
+        [self.delegate voiceManagerDidPauseForVoiceOverDiscardingInput:discardInput];
+}
+
+- (void)accessibilityFocusChanged:(NSNotification *)notification {
+    NSString *technology = notification.userInfo[UIAccessibilityAssistiveTechnologyKey];
+    if (self.isVoiceOverEnabled && self.delegate && self.voiceMode != VoiceModeOff
+        && (!technology || [technology isEqualToString:UIAccessibilityNotificationVoiceOverIdentifier]))
+        [self pauseForVoiceOverNavigation];
+}
+
+- (void)voiceOverStatusChanged:(NSNotification *)notification {
+    // Discard callbacks and partial commands from the previous audio arrangement.
+    [self pauseForVoiceOverNavigation];
+}
+
+- (void)postAccessibilityAnnouncement:(NSString *)text {
+    UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+}
+
+- (void)speakAccessibilityText:(NSString *)text {
+    NSString *trimmed = [text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    if (!self.isVoiceOverEnabled || trimmed.length == 0) return;
+    [self stopListening];
+    [self stopSpeaking];
+    _accessibilityAnnouncement = [trimmed copy];
+    [self.delegate voiceManagerDidStartSpeaking];
+    [self postAccessibilityAnnouncement:_accessibilityAnnouncement];
+}
+
+- (void)accessibilityAnnouncementFinished:(NSNotification *)notification {
+    if (!_accessibilityAnnouncement || ![notification.userInfo[UIAccessibilityAnnouncementKeyStringValue] isEqual:_accessibilityAnnouncement])
+        return;
+    _accessibilityAnnouncement = nil;
+    if ([notification.userInfo[UIAccessibilityAnnouncementKeyWasSuccessful] boolValue]) {
+        [self.delegate voiceManagerDidFinishSpeaking];
+    } else {
+        [self pauseForVoiceOverNavigation];
+    }
 }
 
 - (BOOL)isListening {
@@ -242,6 +308,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)rememberPlayerCommand:(NSString *)text {
+    _beginsStoryResponse = YES;
     for (NSString *word in [[self class] commandTokens:text]) {
         [_playerWords removeObject:word];
         [_playerWords addObject:word];
@@ -420,7 +487,73 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)speakText:(NSString *)text inView:(RichTextView *)view {
     if (!self.ttsEnabled) return;
+    [self rememberStoryResponse:text];
     [self speakVoiceText:text inView:view];
+}
+
+- (NSString *)lastStoryResponse { return _lastStoryResponse; }
+
+- (void)rememberStoryResponse:(NSString *)text {
+    NSString *trimmed = [text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    if (!trimmed.length) return;
+    NSString *response = _beginsStoryResponse || !_lastStoryResponse.length
+        ? trimmed : [_lastStoryResponse stringByAppendingFormat:@"\n%@", trimmed];
+    // Bound retained output, including stories that print indefinitely without input.
+    if (response.length > 65536) {
+        NSRange tail = [response rangeOfComposedCharacterSequencesForRange:NSMakeRange(response.length - 65536, 65536)];
+        response = [response substringWithRange:tail];
+    }
+    _lastStoryResponse = [response copy];
+    _beginsStoryResponse = NO;
+}
+
+- (BOOL)replayLastStoryResponse {
+    if (!_lastStoryResponse.length || self.voiceMode == VoiceModeOff) return NO;
+    [self stopListening];
+    [self stopSpeaking];
+    [self speakVoiceText:_lastStoryResponse inView:nil];
+    return self.isSpeaking;
+}
+
+- (void)playVoiceFeedback:(VoiceFeedback)feedback {
+    if (feedback < VoiceFeedbackReady || feedback > VoiceFeedbackError) return;
+    if (!_feedbackSounds[feedback]) {
+        // Short, nonverbal PCM cues use system-sound mixing without reconfiguring
+        // the recording session or interrupting VoiceOver to speak a status.
+        const double notes[4][3] = {{550, 880, 0}, {330, 0, 0}, {440, 260, 0}, {220, 220, 220}};
+        NSUInteger count = feedback == VoiceFeedbackError ? 3 : (feedback == VoiceFeedbackStopped ? 1 : 2);
+        const double rate = 22050;
+        AVAudioFrameCount noteFrames = (AVAudioFrameCount)(rate * 0.06);
+        AVAudioFrameCount gapFrames = (AVAudioFrameCount)(rate * 0.025);
+        AVAudioFrameCount frames = (noteFrames + gapFrames) * (AVAudioFrameCount)count;
+        AVAudioFormat *format = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:rate channels:1 interleaved:YES];
+        AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:frames];
+        buffer.frameLength = frames;
+        int16_t *samples = buffer.int16ChannelData[0];
+        memset(samples, 0, frames * sizeof(int16_t));
+        for (NSUInteger note = 0; note < count; ++note) {
+            for (AVAudioFrameCount i = 0; i < noteFrames; ++i) {
+                double envelope = sin(M_PI * i / noteFrames);
+                samples[note * (noteFrames + gapFrames) + i] = (int16_t)(8000 * envelope * sin(2 * M_PI * notes[feedback][note] * i / rate));
+            }
+        }
+        NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"frotz-voice-cue-%ld.wav", (long)feedback]]];
+        AVAudioFile *file = [[AVAudioFile alloc] initForWriting:url settings:format.settings commonFormat:AVAudioPCMFormatInt16 interleaved:YES error:nil];
+        BOOL written = [file writeFromBuffer:buffer error:nil];
+        file = nil; // Close the WAV before the system sound service opens it.
+        if (written) AudioServicesCreateSystemSoundID((__bridge CFURLRef)url, &_feedbackSounds[feedback]);
+    }
+    if (_feedbackSounds[feedback]) AudioServicesPlaySystemSound(_feedbackSounds[feedback]);
+    if (feedback == VoiceFeedbackReady) {
+        [[[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight] impactOccurred];
+    } else if (feedback == VoiceFeedbackNavigationPaused || feedback == VoiceFeedbackError) {
+        [[[UINotificationFeedbackGenerator alloc] init] notificationOccurred:feedback == VoiceFeedbackError ? UINotificationFeedbackTypeError : UINotificationFeedbackTypeWarning];
+    }
+}
+
+- (void)dealloc {
+    for (NSUInteger i = 0; i < 4; ++i) if (_feedbackSounds[i]) AudioServicesDisposeSystemSoundID(_feedbackSounds[i]);
+    [NSNotificationCenter.defaultCenter removeObserver:self];
 }
 
 - (void)speakConfirmationPrompt:(NSString *)text {
@@ -430,6 +563,10 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)speakVoiceText:(NSString *)text inView:(RichTextView *)view {
     if (text.length == 0) return;
+    if (self.isVoiceOverEnabled) {
+        [self speakAccessibilityText:text];
+        return;
+    }
 
     // Strip leading/trailing whitespace but preserve internal structure
     NSString *trimmed = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -457,6 +594,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)stopSpeaking {
+    _accessibilityAnnouncement = nil;
     _activeUtterance = nil;
     if (_synthesizer.isSpeaking) {
         [_synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
@@ -546,7 +684,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 - (void)startListening {
     NSTimeInterval startupTime = NSProcessInfo.processInfo.systemUptime;
     // Delayed auto-starts must never toggle an existing recording off.
-    if (!self.sttEnabled || self.isListening)
+    if (!self.sttEnabled || self.isListening || (self.isVoiceOverEnabled && (self.isSpeaking || _voiceOverNavigationPaused)))
         return;
     if (![[self class] recognitionLanguageForLanguage:self.speechRecognitionLanguage ?: self.storyLanguage ?: @"en-US"]) {
         [self reportRecordingError:[NSError errorWithDomain:@"FrotzVoice" code:3
@@ -564,6 +702,30 @@ static float rateMultiplierToAVRate(float multiplier) {
     if (![self configureAudioSessionForRecording])
         return;
 
+    // VoiceOver can speak without moving focus (for example, rereading a
+    // focused button). Cancel speaker echo before feeding microphone audio to STT.
+    AVAudioInputNode *inputNode = _audioEngine.inputNode;
+    BOOL needsVoiceProcessing = self.isVoiceOverEnabled;
+    BOOL processingReady = !needsVoiceProcessing;
+    if (@available(iOS 13.0, *)) {
+        NSError *processingError = nil;
+        processingReady = inputNode.isVoiceProcessingEnabled == needsVoiceProcessing
+            || [inputNode setVoiceProcessingEnabled:needsVoiceProcessing error:&processingError];
+        processingReady = processingReady && inputNode.isVoiceProcessingEnabled == needsVoiceProcessing;
+        if (processingReady && needsVoiceProcessing) {
+            if (@available(iOS 17.0, *)) {
+                AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { NO, AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
+                inputNode.voiceProcessingOtherAudioDuckingConfiguration = ducking;
+            }
+        }
+    }
+    if (!processingReady) {
+        [self stopListening];
+        [self reportRecordingError:[NSError errorWithDomain:@"FrotzVoice" code:5
+            userInfo:@{NSLocalizedDescriptionKey: @"Voice input with VoiceOver is unavailable. Retry or use the keyboard."}]];
+        return;
+    }
+
     _hasReceivedSpeech = NO;
     _recognitionRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     _recognitionRequest.shouldReportPartialResults = YES;
@@ -580,7 +742,6 @@ static float rateMultiplierToAVRate(float multiplier) {
             _recognitionRequest.requiresOnDeviceRecognition = YES;
     }
 
-    AVAudioInputNode *inputNode = _audioEngine.inputNode;
     AVAudioFormat *recordingFormat = [inputNode outputFormatForBus:0];
     if (recordingFormat.sampleRate <= 0 || recordingFormat.channelCount == 0) {
         [self stopListening];
@@ -701,12 +862,21 @@ static float rateMultiplierToAVRate(float multiplier) {
         && [session setActive:YES error:&error];
 }
 
+- (AVAudioSession *)recordingAudioSession { return AVAudioSession.sharedInstance; }
+
 - (BOOL)configureAudioSessionForRecording {
     NSError *error = nil;
-    AVAudioSession *session = [AVAudioSession sharedInstance];
+    AVAudioSession *session = [self recordingAudioSession];
     BOOL configured = [session setCategory:AVAudioSessionCategoryPlayAndRecord
-                              withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth error:&error]
-        && [session setActive:YES error:&error];
+                                     mode:self.isVoiceOverEnabled ? AVAudioSessionModeVoiceChat : AVAudioSessionModeDefault
+                                  options:AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth error:&error];
+    if (configured) {
+        if (@available(iOS 13.0, *)) {
+            // Otherwise iOS suppresses the readiness cue once recording begins.
+            [session setAllowHapticsAndSystemSoundsDuringRecording:YES error:nil];
+        }
+        configured = [session setActive:YES error:&error];
+    }
     if (!configured)
         [self reportRecordingError:error];
     return configured;
