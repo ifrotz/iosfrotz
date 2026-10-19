@@ -10,6 +10,7 @@
 #import "StoryInputLine.h"
 #import "StoryView.h"
 #import "StatusLine.h"
+#import "VoiceManager.h"
 
 #include "iosfrotz.h"
 
@@ -432,6 +433,7 @@ const int kCompletionViewTag = 21;
 }
 
 -(void)delayedInput:(NSString*)text {
+    [[VoiceManager shared] rememberPlayerCommand:text];
     iosif_feed_input(text);
 }
 

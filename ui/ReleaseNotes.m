@@ -303,7 +303,18 @@
         // 1.3: sep 4, 2009
     }
     NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
-    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, htmlString];
+    // Always show bundled feature notes, even when older notes are cached or downloaded.
+    NSString *voiceNotes = @"<h2>New: Voice Mode</h2>"
+        "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Enable either or both in Settings.</li>"
+        "<li>Voice commands submit the best guess immediately for uninterrupted play. Voice Command Confirmation in Settings offers Off (the default), As Needed for uncertain or corrected commands, and Always for every command line. When reviewing a command, say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons.</li>"
+        "<li>English recognition can compare similar alternatives using words already shown or entered. Hidden story vocabulary is never used to suggest commands.</li>"
+        "<li>Choose a Speech Voice, preview installed voices, and adjust the Speech Rate. Automatic prefers Premium or Enhanced voices when available.</li>"
+        "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Speech Input Language for other stories or to override metadata.</li>"
+        "<li>Download more voices in iOS Settings &gt; Accessibility &gt; Read &amp; Speak &gt; Voices (Spoken Content on older iOS versions).</li>"
+        "<li>Follow the highlighted narration and listening animation. Tap the voice controls to stop speaking or listening.</li>"
+        "<li>With VoiceOver enabled, game narration uses VoiceOver’s voice and rate. Dictation waits for narration to finish, and moving VoiceOver focus pauses it. Activate Start listening or use a two-finger double-tap to resume hands-free turns. The speech controls offer Replay last response in VoiceOver’s Actions menu, without taking a turn. Distinct sounds and haptics signal readiness, navigation pauses and errors.</li>"
+        "<li>Voice activity pauses when you open Settings or leave a story.</li></ul><hr/>";
+    NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, voiceNotes, htmlString];
     [webView loadHTMLString: contentString baseURL: nil];
 #if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);

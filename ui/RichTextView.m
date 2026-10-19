@@ -13,6 +13,7 @@
 #import <QuartzCore/CALayer.h>
 
 #include "RichTextView.h"
+#import "VoiceManager.h"
 
 #define NoAccessibility 0 // Set to turn off UIAccessibility support completely
 
@@ -151,13 +152,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     UIColor *c = m_fgColor;
     NSUInteger index = m_currentTextColorIndex;
     NSUInteger colorCount = [m_colorIndex count];
-    if ((index <= 1 || index-1 >= m_currentTextColorIndex < [m_colorArray count])
+    if ((index <= 1 || index - 1 >= [m_colorArray count])
         && colorCount > 0) {
         index = [m_colorIndex[colorCount-1] unsignedIntValue] & 0xFFFF;
-        if (index > 1)
+        if (index > 1 && index - 1 < [m_colorArray count])
             m_currentTextColorIndex = index;
     }
-    if (index > 1)
+    if (index > 1 && index - 1 < [m_colorArray count])
         c = m_colorArray[index-1];
     return c;
 }
@@ -546,6 +547,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(void)dealloc {
+    if (m_voiceHighlightView) {
+        [m_voiceHighlightView removeFromSuperview];
+        m_voiceHighlightView = nil;
+    }
     if (m_selectionView) {
         [m_selectionView removeFromSuperview];
         m_selectionView = nil;
@@ -578,6 +583,127 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         [m_selectionView setText: @""];
         [m_selectionView removeFromSuperview];
     }
+}
+
+#pragma mark - Voice Highlighting
+
+-(void)showVoiceHighlightAtRect:(CGRect)rect {
+    if (!m_voiceHighlightView) {
+        m_voiceHighlightView = [[UIView alloc] initWithFrame:CGRectZero];
+        m_voiceHighlightView.backgroundColor = [UIColor colorWithRed:0.3 green:0.6 blue:1.0 alpha:0.3];
+        m_voiceHighlightView.layer.cornerRadius = 2.0;
+        m_voiceHighlightView.userInteractionEnabled = NO;
+    }
+    m_voiceHighlightView.frame = rect;
+    if (!m_voiceHighlightView.superview) {
+        [self addSubview:m_voiceHighlightView];
+    }
+}
+
+-(void)clearVoiceHighlight {
+    if (m_voiceHighlightView) {
+        [m_voiceHighlightView removeFromSuperview];
+    }
+}
+
+-(CGRect)rectForTextRun:(NSUInteger)runIndex characterRange:(NSRange)charRange {
+    if (runIndex >= [m_textRuns count])
+        return CGRectZero;
+
+    NSString *text = m_textRuns[runIndex];
+    if (charRange.location + charRange.length > text.length)
+        return CGRectZero;
+
+    RichTextStyle style = [m_textStyles[runIndex] unsignedIntValue];
+    UIFont *font = [self fontForStyle:style];
+    CGFloat fontHeight = [font lineHeight];
+    CGFloat lineHeight = fontHeight + m_extraLineSpacing;
+    CGFloat rightEdge = self.frame.size.width - m_rightMargin;
+    CGFloat fullLineWidth = rightEdge - m_leftMargin;
+
+    CGPoint runStart = [m_textPos[runIndex] CGPointValue];
+    NSInteger startLineNum = [m_textLineNum[runIndex] intValue];
+
+    // Line-based highlighting: find which visual line contains the target character,
+    // then highlight the full line width. This is reliable because we use the view's
+    // stored m_lineYPos for Y and only need the correct line NUMBER, not exact X.
+    NSString *textBefore = [text substringToIndex:charRange.location];
+    NSArray *segments = [textBefore componentsSeparatedByString:@"\n"];
+    NSInteger targetLine = startLineNum;
+
+    for (NSUInteger si = 0; si < segments.count; si++) {
+        NSString *seg = segments[si];
+        if (si > 0)
+            targetLine++; // explicit newline
+
+        if (seg.length > 0) {
+            // Check for word-wrap lines within this segment.
+            // The first segment starts at runStart.x; subsequent segments start at m_leftMargin.
+            CGFloat startX = (si == 0) ? runStart.x : m_leftMargin;
+            CGFloat firstLineAvail = rightEdge - startX;
+
+            // Measure the segment as a single line to see total width
+            CGFloat totalWidth = [seg sizeWithFont:font].width;
+            if (totalWidth > firstLineAvail) {
+                // Text wraps. Use constrained-height measurement to count visual lines.
+                // First line has less available width, so measure it separately.
+                // Find how much fits on the first line by measuring with firstLineAvail.
+                CGSize firstFit = [seg sizeWithFont:font
+                                   constrainedToSize:CGSizeMake(firstLineAvail, fontHeight + 0.0001)
+                                       lineBreakMode:NSLineBreakByWordWrapping];
+                // If the first-fit height > fontHeight, nothing fits on the first line
+                // with word wrapping (long word). In that case just use full width for all.
+                if (firstFit.height <= fontHeight + 1.0 && firstFit.width > 0) {
+                    // First line took some text. Measure remaining with full line width.
+                    // We don't know exactly how many chars fit, but we can measure the whole
+                    // segment with full width and subtract 1 for the first line.
+                    CGSize fullSz = [seg sizeWithFont:font
+                                     constrainedToSize:CGSizeMake(fullLineWidth, fontHeight * 200)
+                                         lineBreakMode:NSLineBreakByWordWrapping];
+                    NSInteger totalVisualLines = (NSInteger)round(fullSz.height / fontHeight);
+                    // The first line is narrower, so it may cause one extra wrap vs full width.
+                    // Add 1 if the segment wouldn't wrap with full width for its first line.
+                    CGSize fullFirstSz = [seg sizeWithFont:font
+                                          constrainedToSize:CGSizeMake(fullLineWidth, fontHeight + 0.0001)
+                                              lineBreakMode:NSLineBreakByWordWrapping];
+                    if (fullFirstSz.height <= fontHeight + 1.0 && firstFit.height > fontHeight + 1.0) {
+                        totalVisualLines++; // narrow first line caused an extra wrap
+                    }
+                    targetLine += MAX(0, totalVisualLines - 1);
+                } else {
+                    // Nothing fits on the first partial line, or long unbreakable word.
+                    // Measure everything with full line width.
+                    CGSize fullSz = [seg sizeWithFont:font
+                                     constrainedToSize:CGSizeMake(fullLineWidth, fontHeight * 200)
+                                         lineBreakMode:NSLineBreakByWordWrapping];
+                    NSInteger wrapLines = (NSInteger)round(fullSz.height / fontHeight) - 1;
+                    targetLine += MAX(0, wrapLines);
+                    if (startX > m_leftMargin)
+                        targetLine++; // the first partial line counts as extra
+                }
+            }
+        }
+    }
+
+    // Get Y from the stored line positions
+    CGFloat yPos;
+    if (targetLine >= 0 && targetLine < (NSInteger)m_lineYPos.count) {
+        yPos = [m_lineYPos[targetLine] floatValue] + m_topMargin;
+    } else {
+        yPos = runStart.y + m_topMargin + (targetLine - startLineNum) * lineHeight;
+    }
+
+    // Line height from stored positions if available
+    CGFloat lineH = lineHeight;
+    if (targetLine >= 0 && targetLine + 1 < (NSInteger)m_lineYPos.count) {
+        CGFloat nextY = [m_lineYPos[targetLine + 1] floatValue];
+        CGFloat thisY = [m_lineYPos[targetLine] floatValue];
+        if (nextY > thisY)
+            lineH = nextY - thisY;
+    }
+
+    // Return full-line-width highlight rect
+    return CGRectMake(m_leftMargin, yPos, fullLineWidth, lineH);
 }
 
 -(void)reset {
@@ -2156,7 +2282,10 @@ static NSString *kCommand = @"Command";
 - (void)markWaitForInput {
 #if !NoAccessibility
     if (hasAccessibility && m_numLines > 1 && m_lastAEIndexAnnounced >= 0) {
-        UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+        VoiceManager *voice = [VoiceManager shared];
+        BOOL coordinated = voice.isVoiceOverEnabled && (voice.ttsEnabled || voice.sttEnabled);
+        if (!coordinated)
+            UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
         NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
         NSUInteger count = [m_accessibilityElements count];
         if (m_lastAEIndexAnnounced < count) {
@@ -2164,7 +2293,14 @@ static NSString *kCommand = @"Command";
                 [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
             m_lastAEIndexAnnounced = count;
-            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            if (!coordinated)
+                UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            else if (!voice.ttsEnabled) {
+                [voice rememberStoryResponse:text];
+                [voice speakAccessibilityText:text];
+            }
+            // With app narration enabled, the gameplay output buffer owns this
+            // announcement. Posting it here as well would read the turn twice.
             m_prevLineNotTerminated = NO;
         }
     }
@@ -2200,7 +2336,7 @@ static NSString *kCommand = @"Command";
     
     if (!m_accessibilityElements)
         [self populateAccessibilityElements];
-    if (aeIndex < [m_accessibilityElements count]) {
+    if (aeIndex >= 0 && aeIndex < [m_accessibilityElements count]) {
         RichTextAE *e = m_accessibilityElements[aeIndex];
 #if 0
         // update frame lazily when accessed, so we don't have to recalculate them all
@@ -2245,9 +2381,13 @@ static NSString *kCommand = @"Command";
 
 - (NSInteger)indexOfAccessibilityElement:(id)element
 {
-    RichTextAE *e = element;
-    //NSLog(@"index of ae: %d %@", [e textIndex], e);
-    return [e textIndex];
+    if (!element || !hasAccessibility)
+        return NSNotFound;
+    if (!m_accessibilityElements)
+        [self populateAccessibilityElements];
+    // UIKit may ask about its own scroll indicators as well as our text elements.
+    // Return the container index, which is distinct from a text run's index.
+    return [m_accessibilityElements indexOfObjectIdenticalTo:element];
 }
 
 - (NSArray*)getTextPos {

@@ -63,6 +63,17 @@
 
 @implementation FrotzAppDelegate
 
+- (StoryMainViewController *)voiceGestureStoryController {
+    StoryMainViewController *story = [m_browser storyMainViewController];
+    return story.viewIfLoaded.window == m_window ? story : nil;
+}
+
+- (BOOL)accessibilityPerformMagicTap {
+    // Navigation-bar controls bypass the child controller's responder chain.
+    // Keep the gesture in the visible gameplay context instead of Now Playing.
+    return [[self voiceGestureStoryController] accessibilityPerformMagicTap];
+}
+
 @synthesize window = m_window;
 
 -(void)setWindow:(UIWindow*)window {
@@ -110,7 +121,7 @@ int gLargeScreenPhone = 0;
 
     if (launchOption) {
         NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
-        if (url) 
+        if (url)
             launchURL = url;
         if (launchOption[UIApplicationLaunchOptionsShortcutItemKey]) {
             [m_browser setPostLaunch];

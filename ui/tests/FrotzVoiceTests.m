@@ -1,0 +1,1541 @@
+#import <XCTest/XCTest.h>
+#import "VoiceManager.h"
+#import "RichTextView.h"
+#import "StoryMainViewController.h"
+#import "StoryInputLine.h"
+#import "FrotzSettings.h"
+#import "FrotzAppDelegate.h"
+#import "FrotzInfo.h"
+#import <objc/runtime.h>
+
+@interface FrotzSettingsController (ConfirmationTesting)
+- (void)create_UISwitches;
+@end
+
+@interface StoryInputLine (ReplayTesting)
+- (void)delayedInput:(NSString *)text;
+@end
+
+@interface StoryMainViewController (VoiceTesting)
+- (void)setupVoiceToolbar;
+- (BOOL)canAcceptVoiceInput;
+- (void)setupVoiceTapOverlay;
+- (BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action;
+- (void)startVoiceListeningAnimation;
+- (void)scheduleVoiceListening;
+- (void)stopVoiceActivity;
+- (void)finishStoryNarration:(BOOL)unreadableStory inView:(RichTextView *)view voiceManager:(VoiceManager *)manager;
+@end
+
+@interface TestStoryController : StoryMainViewController
+@property NSMutableArray<NSString *> *submittedCommands;
+@end
+@implementation TestStoryController
+- (BOOL)canAcceptVoiceInput { return YES; }
+- (void)autosize {} // Keep keyboard-layout work outside these voice-state tests.
+- (void)textFieldFakeDidEndEditing:(UITextField *)field {
+    if (!self.submittedCommands) self.submittedCommands = [NSMutableArray array];
+    [self.submittedCommands addObject:field.text ?: @""];
+}
+@end
+
+@interface TestEndingController : StoryMainViewController
+@property BOOL abandoned;
+@end
+@implementation TestEndingController
+- (void)abandonStory:(BOOL)deleteAutoSave {
+    self.abandoned = YES;
+    [m_voiceOutputBuffers removeAllObjects];
+    m_voiceSessionActive = NO;
+    m_storyTID = 0;
+}
+@end
+
+@interface VoiceManager (Testing)
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices;
++ (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices language:(NSString *)language;
++ (NSString *)languageFromBlorbAtPath:(NSString *)path;
++ (NSString *)recognitionLanguageForLanguage:(NSString *)language;
+- (BOOL)recordingIsAuthorized;
+- (BOOL)configureAudioSessionForRecording;
+- (AVAudioSession *)recordingAudioSession;
+- (void)deactivateAudioSession;
+- (void)silenceTimerFired;
+- (void)recognitionTimedOut;
+- (BOOL)isVoiceOverEnabled;
+- (BOOL)voiceOverNavigationPaused;
+- (void)resumeAfterVoiceOverNavigation;
+- (void)postAccessibilityAnnouncement:(NSString *)text;
+@property (nonatomic, readonly) NSString *lastStoryResponse;
+- (void)rememberStoryResponse:(NSString *)text;
+- (BOOL)replayLastStoryResponse;
+- (void)playVoiceFeedback:(VoiceFeedback)feedback;
+@end
+
+// Synthetic voice metadata covers Premium ranking without depending on installed downloads.
+@interface TestSpeechVoice : NSObject
+@property (nonatomic, copy) NSString *identifier;
+@property (nonatomic, copy) NSString *language;
+@property AVSpeechSynthesisVoiceQuality quality;
+@end
+@implementation TestSpeechVoice
+@end
+
+@interface RichTextView (Testing)
+- (UIColor *)getCurrentTextColor;
+@end
+
+// Keep the tests independent of microphone permission, hardware and Apple's speech service.
+@interface TestVoiceManager : VoiceManager
+@property BOOL recordingAllowed;
+@property NSString *confirmationPrompt;
+@property BOOL voiceOverRunning;
+@property NSMutableArray<NSNumber *> *feedback;
+@property NSMutableArray<NSString *> *announcements;
+@end
+@implementation TestVoiceManager
+- (BOOL)isVoiceOverEnabled { return self.voiceOverRunning; }
+- (void)playVoiceFeedback:(VoiceFeedback)feedback {
+    if (!self.feedback) self.feedback = [NSMutableArray array];
+    [self.feedback addObject:@(feedback)];
+}
+- (void)postAccessibilityAnnouncement:(NSString *)text {
+    if (!self.announcements) self.announcements = [NSMutableArray array];
+    [self.announcements addObject:text];
+}
+- (BOOL)recordingIsAuthorized { return self.recordingAllowed; }
+- (BOOL)configureAudioSessionForRecording { return YES; }
+- (void)deactivateAudioSession {}
+- (void)speakConfirmationPrompt:(NSString *)text {
+    self.confirmationPrompt = text;
+    if (self.voiceOverRunning) [super speakConfirmationPrompt:text];
+}
+@end
+
+@interface TestSynthesizer : NSObject
+@property (getter=isSpeaking) BOOL speaking;
+@property NSUInteger utterances;
+@end
+@implementation TestSynthesizer
+- (void)speakUtterance:(AVSpeechUtterance *)utterance { self.speaking = YES; ++self.utterances; }
+- (BOOL)stopSpeakingAtBoundary:(AVSpeechBoundary)boundary { self.speaking = NO; return YES; }
+@end
+
+@interface TestNarrationManager : TestVoiceManager
+@property (nonatomic, copy) NSString *spokenText;
+@end
+@implementation TestNarrationManager
+- (void)speakText:(NSString *)text inView:(RichTextView *)view { self.spokenText = text; }
+@end
+
+@interface TestAudioInput : NSObject
+@property BOOL tapInstalled;
+@property NSUInteger installs;
+@property NSUInteger removals;
+@property BOOL invalidFormat;
+@property BOOL voiceProcessingEnabled;
+@property BOOL failVoiceProcessing;
+@property BOOL processingWasEnabledWhenTapped;
+@property AVAudioVoiceProcessingOtherAudioDuckingConfiguration voiceProcessingOtherAudioDuckingConfiguration;
+@end
+@implementation TestAudioInput
+- (BOOL)isVoiceProcessingEnabled { return self.voiceProcessingEnabled; }
+- (BOOL)setVoiceProcessingEnabled:(BOOL)enabled error:(NSError **)error {
+    if (self.failVoiceProcessing) return NO;
+    self.voiceProcessingEnabled = enabled;
+    return YES;
+}
+- (AVAudioFormat *)outputFormatForBus:(AVAudioNodeBus)bus {
+    return [[AVAudioFormat alloc] initStandardFormatWithSampleRate:self.invalidFormat ? 0 : 16000 channels:1];
+}
+- (void)installTapOnBus:(AVAudioNodeBus)bus bufferSize:(AVAudioFrameCount)size format:(AVAudioFormat *)format block:(AVAudioNodeTapBlock)block {
+    NSAssert(!self.tapInstalled, @"A previous recording tap was not cleaned up");
+    self.processingWasEnabledWhenTapped = self.voiceProcessingEnabled;
+    self.tapInstalled = YES;
+    ++self.installs;
+}
+- (void)removeTapOnBus:(AVAudioNodeBus)bus {
+    self.tapInstalled = NO;
+    ++self.removals;
+}
+@end
+
+@interface TestAudioEngine : NSObject
+@property (getter=isRunning) BOOL running;
+@property BOOL failStart;
+@property NSUInteger starts;
+@property TestAudioInput *inputNode;
+@end
+@implementation TestAudioEngine
+- (void)prepare {}
+- (BOOL)startAndReturnError:(NSError **)error {
+    ++self.starts;
+    if (self.failStart) {
+        if (error) *error = [NSError errorWithDomain:@"TestAudio" code:1 userInfo:nil];
+        return NO;
+    }
+    self.running = YES;
+    return YES;
+}
+- (void)stop { self.running = NO; }
+@end
+
+@interface TestRecognitionTask : NSObject
+@end
+@implementation TestRecognitionTask
+- (void)cancel {}
+@end
+
+typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
+@interface TestSpeechRecognizer : NSObject
+@property NSMutableArray<RecognitionHandler> *handlers;
+@property SFSpeechRecognitionRequest *lastRequest;
+@end
+@implementation TestSpeechRecognizer
+- (NSLocale *)locale { return [NSLocale localeWithLocaleIdentifier:@"en-US"]; }
+- (BOOL)isAvailable { return YES; }
+- (BOOL)supportsOnDeviceRecognition { return NO; }
+- (id)recognitionTaskWithRequest:(SFSpeechRecognitionRequest *)request resultHandler:(RecognitionHandler)handler {
+    self.lastRequest = request;
+    [self.handlers addObject:[handler copy]];
+    return [[TestRecognitionTask alloc] init];
+}
+@end
+
+@interface TestSpeechSegment : NSObject
+@property float confidence;
+@end
+@implementation TestSpeechSegment
+@end
+
+@interface TestTranscription : NSObject
+@property NSString *formattedString;
+@property NSArray *segments;
+@end
+@implementation TestTranscription
+@end
+@interface TestRecognitionResult : NSObject
+@property (getter=isFinal) BOOL final;
+@property TestTranscription *bestTranscription;
+@property NSArray *transcriptions;
+@end
+@implementation TestRecognitionResult
+@end
+
+@interface TestVoiceDelegate : NSObject <VoiceManagerDelegate>
+@property NSUInteger starts;
+@property NSUInteger stops;
+@property NSUInteger errors;
+@property NSUInteger results;
+@property NSString *lastText;
+@property NSUInteger speakingStarts;
+@property NSUInteger speakingFinishes;
+@end
+@implementation TestVoiceDelegate
+- (void)voiceManagerDidStartSpeaking { ++self.speakingStarts; }
+- (void)voiceManagerDidFinishSpeaking { ++self.speakingFinishes; }
+- (void)voiceManagerHighlightRange:(NSRange)range inView:(RichTextView *)view {}
+- (void)voiceManagerDidClearHighlight {}
+- (void)voiceManagerDidRecognizeText:(NSString *)text isFinal:(BOOL)isFinal {
+    ++self.results;
+    self.lastText = text;
+}
+- (void)voiceManagerDidStartListening { ++self.starts; }
+- (void)voiceManagerDidStopListening { ++self.stops; }
+- (void)voiceManagerSTTError:(NSError *)error { ++self.errors; }
+@end
+
+@interface LiveSpeechDelegate : TestVoiceDelegate
+@property (nonatomic, strong) XCTestExpectation *finished;
+@end
+@implementation LiveSpeechDelegate
+- (void)voiceManagerDidFinishSpeaking { [self.finished fulfill]; }
+@end
+
+@interface FrotzAppDelegate (VoiceGestureTesting)
+- (StoryMainViewController *)voiceGestureStoryController;
+@end
+@interface TestVoiceGestureAppDelegate : FrotzAppDelegate
+@property StoryMainViewController *voiceController;
+@end
+@implementation TestVoiceGestureAppDelegate
+- (StoryMainViewController *)voiceGestureStoryController { return self.voiceController; }
+@end
+
+@interface TestRecordingSession : NSObject
+@property BOOL cuesAllowed;
+@property BOOL active;
+@property BOOL cuesEnabledBeforeActivation;
+@property NSString *category;
+@end
+@implementation TestRecordingSession
+- (BOOL)setCategory:(NSString *)category mode:(NSString *)mode options:(AVAudioSessionCategoryOptions)options error:(NSError **)error { self.category = category; return YES; }
+- (BOOL)setAllowHapticsAndSystemSoundsDuringRecording:(BOOL)allowed error:(NSError **)error {
+    self.cuesAllowed = allowed;
+    self.cuesEnabledBeforeActivation = allowed && !self.active;
+    return YES;
+}
+- (BOOL)setActive:(BOOL)active error:(NSError **)error { self.active = active; return YES; }
+@end
+@interface TestRecordingSessionManager : VoiceManager
+@property TestRecordingSession *session;
+@end
+@implementation TestRecordingSessionManager
+- (AVAudioSession *)recordingAudioSession { return (id)self.session; }
+@end
+
+@interface FrotzVoiceTests : XCTestCase
+@property TestVoiceManager *manager;
+@property TestAudioEngine *engine;
+@property TestSpeechRecognizer *recognizer;
+@property TestVoiceDelegate *voiceDelegate;
+@end
+
+@implementation FrotzVoiceTests
+- (void)finishAccessibilityAnnouncement:(NSString *)text success:(BOOL)success {
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityAnnouncementDidFinishNotification object:nil
+        userInfo:@{UIAccessibilityAnnouncementKeyStringValue:text, UIAccessibilityAnnouncementKeyWasSuccessful:@(success)}];
+}
+- (void)focusVoiceOverElement {
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityElementFocusedNotification object:nil
+        userInfo:@{UIAccessibilityAssistiveTechnologyKey:UIAccessibilityNotificationVoiceOverIdentifier,
+                   UIAccessibilityFocusedElementKey:[UIButton buttonWithType:UIButtonTypeSystem]}];
+}
+- (void)testSettingsButtonRemainsHittableWhenNavigationTitleIsCompressed {
+    FrotzInfo *info = [[FrotzInfo alloc] initWithSettingsController:nil navController:nil navItem:nil];
+    UIView *title = info.view;
+    UIButton *settings = nil;
+    for (UIView *view in title.subviews)
+        if ([view isKindOfClass:UIButton.class] && [view.accessibilityLabel isEqual:@"Settings"])
+            settings = (UIButton *)view;
+    XCTAssertNotNil(settings);
+    for (NSNumber *width in @[@106, @64, @44]) {
+        title.frame = CGRectMake(0, 0, width.doubleValue, 44);
+        [title setNeedsLayout];
+        [title layoutIfNeeded];
+        XCTAssertTrue(CGRectContainsRect(title.bounds, settings.frame), @"Settings must fit the actual title width %@", width);
+        XCTAssertGreaterThanOrEqual(settings.bounds.size.width, 44);
+        XCTAssertGreaterThanOrEqual(settings.bounds.size.height, 44);
+        CGPoint center = CGPointMake(CGRectGetMidX(settings.frame), CGRectGetMidY(settings.frame));
+        XCTAssertEqual([title hitTest:center withEvent:nil], settings);
+    }
+}
+- (void)testVoiceToolbarUsesCompactNonoverlappingAccessibleHitTargets {
+    TestStoryController *controller = [TestStoryController new];
+    XCTAssertTrue([controller respondsToSelector:@selector(setupVoiceToolbar)]);
+    if (![controller respondsToSelector:@selector(setupVoiceToolbar)]) return;
+    [controller setupVoiceToolbar];
+    UIStackView *toolbar = (id)controller.navigationItem.rightBarButtonItem.customView;
+    CGSize size = [toolbar systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    XCTAssertLessThanOrEqual(size.width, 132);
+    toolbar.frame = CGRectMake(0, 0, size.width, size.height);
+    [toolbar layoutIfNeeded];
+    XCTAssertEqual(toolbar.arrangedSubviews.count, 3u);
+    CGFloat previousEnd = 0;
+    for (UIView *button in toolbar.arrangedSubviews) {
+        XCTAssertGreaterThanOrEqual(button.bounds.size.width, 44);
+        XCTAssertGreaterThanOrEqual(button.bounds.size.height, 44);
+        XCTAssertGreaterThanOrEqual(CGRectGetMinX(button.frame), previousEnd);
+        previousEnd = CGRectGetMaxX(button.frame);
+    }
+}
+- (void)testRecordingSessionAllowsReadySoundsAndHapticsBeforeActivation {
+    TestRecordingSessionManager *manager = [[TestRecordingSessionManager alloc] init];
+    manager.session = [TestRecordingSession new];
+    [manager configureAudioSessionForRecording];
+    XCTAssertEqualObjects(manager.session.category, AVAudioSessionCategoryPlayAndRecord);
+    XCTAssertTrue(manager.session.cuesAllowed);
+    XCTAssertTrue(manager.session.cuesEnabledBeforeActivation);
+    XCTAssertTrue(manager.session.active);
+}
+- (void)testMagicTapStartsStopsAndResumesDictationWithoutSubmittingCommands {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceOverRunning = YES;
+        XCTAssertTrue([controller accessibilityPerformMagicTap]);
+        XCTAssertTrue(self.manager.isListening);
+        if (!self.manager.isListening) return;
+        [self sendText:@"unsubmitted partial" final:NO handler:self.recognizer.handlers.lastObject];
+        [self drainCallbacks];
+        XCTAssertTrue([controller accessibilityPerformMagicTap]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [self focusVoiceOverElement];
+        XCTAssertTrue([controller accessibilityPerformMagicTap]);
+        XCTAssertTrue(self.manager.isListening);
+        XCTAssertFalse(self.manager.voiceOverNavigationPaused);
+    }];
+}
+- (void)testAppDelegateHandlesMagicTapWhenNavigationBarBypassesStoryResponder {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        TestVoiceGestureAppDelegate *delegate = [TestVoiceGestureAppDelegate new];
+        delegate.voiceController = controller;
+        XCTAssertTrue([delegate accessibilityPerformMagicTap]);
+        XCTAssertTrue(self.manager.isListening);
+        XCTAssertTrue([delegate accessibilityPerformMagicTap]);
+        XCTAssertFalse(self.manager.isListening);
+    }];
+}
+- (void)testMagicTapDoesNotEnableVoiceOrBypassUnsupportedConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeOff;
+        XCTAssertFalse([controller accessibilityPerformMagicTap]);
+        XCTAssertFalse(self.manager.isListening);
+        self.manager.voiceMode = VoiceModeSTTOnly;
+        self.manager.speechRecognitionLanguage = @"ja-JP";
+        [controller setValue:@"take gown" forKey:@"m_pendingVoiceCommand"];
+        XCTAssertTrue([controller accessibilityPerformMagicTap]); // Consume unavailable game action; never toggle background media.
+        XCTAssertFalse(self.manager.isListening);
+    }];
+}
+- (void)testReplayRetainsWholeTurnExcludesPromptsAndResetsForNewStory {
+    XCTAssertTrue([self.manager respondsToSelector:@selector(rememberStoryResponse:)]);
+    if (![self.manager respondsToSelector:@selector(rememberStoryResponse:)]) return;
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeBoth;
+    [self.manager speakText:@"A brass lamp is here." inView:nil];
+    [self finishAccessibilityAnnouncement:@"A brass lamp is here." success:YES];
+    [self.manager speakText:@"It is dark outside." inView:nil];
+    [self finishAccessibilityAnnouncement:@"It is dark outside." success:YES];
+    NSString *response = self.manager.lastStoryResponse;
+    XCTAssertTrue([response containsString:@"A brass lamp is here."]);
+    XCTAssertTrue([response containsString:@"It is dark outside."]);
+    [self.manager speakConfirmationPrompt:@"I heard take lamp. Confirm, retry or cancel."];
+    XCTAssertEqualObjects(self.manager.lastStoryResponse, response);
+    [self.manager rememberPlayerCommand:@"look"];
+    [self.manager speakText:@"You see a doorway." inView:nil];
+    XCTAssertEqualObjects(self.manager.lastStoryResponse, @"You see a doorway.");
+    XCTAssertTrue([self.manager replayLastStoryResponse]);
+    XCTAssertEqualObjects(self.manager.announcements.lastObject, @"You see a doorway.");
+    [self.manager configureForStoryAtPath:nil];
+    XCTAssertNil(self.manager.lastStoryResponse);
+    XCTAssertFalse([self.manager replayLastStoryResponse]);
+}
+- (void)testReplayIsAccessibleCancelsCaptureAndDoesNotConsumeATurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceOverRunning = YES;
+        XCTAssertTrue([self.manager respondsToSelector:@selector(rememberStoryResponse:)]);
+        if (![self.manager respondsToSelector:@selector(rememberStoryResponse:)]) return;
+        [self.manager rememberStoryResponse:@"A brass lamp is here."];
+        [self.manager startListening];
+        RecognitionHandler old = self.recognizer.handlers.lastObject;
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualObjects(overlay.accessibilityCustomActions.firstObject.name, @"Replay last response");
+        XCTAssertTrue([controller replayLastVoiceResponse:nil]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertTrue(self.manager.isSpeaking);
+        XCTAssertEqualObjects(overlay.accessibilityValue, @"Reading response");
+        XCTAssertEqualObjects(self.manager.announcements.lastObject, @"A brass lamp is here.");
+        [self sendText:@"stale game command" final:YES handler:old];
+        [self drainCallbacks];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [controller voiceManagerSTTError:[NSError errorWithDomain:@"test" code:1 userInfo:nil]];
+        XCTAssertTrue([overlay.accessibilityValue containsString:@"failed"]);
+        XCTAssertTrue([controller replayLastVoiceResponse:nil]);
+        XCTAssertEqualObjects(overlay.accessibilityValue, @"Reading response");
+        XCTAssertFalse([overlay.accessibilityHint containsString:@"retry"]);
+        [controller setValue:@"take gown" forKey:@"m_pendingVoiceCommand"];
+        XCTAssertFalse([controller replayLastVoiceResponse:nil]);
+        XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"take gown");
+    }];
+}
+- (void)testKeyboardCharacterAnswerBeginsANewReplayResponse {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [self.manager rememberStoryResponse:@"Would you like to continue?"];
+        [controller.inputLine delayedInput:@"y"];
+        [self.manager rememberStoryResponse:@"You enter the hallway."];
+        XCTAssertEqualObjects(self.manager.lastStoryResponse, @"You enter the hallway.");
+    }];
+}
+- (void)testReplayAndMagicTapCannotRestartVoiceAfterLeavingGameplay {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceOverRunning = YES;
+        [self.manager rememberStoryResponse:@"A brass lamp is here."];
+        [controller stopVoiceActivity];
+        XCTAssertFalse([controller accessibilityPerformMagicTap]);
+        XCTAssertFalse([controller replayLastVoiceResponse:nil]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertFalse(self.manager.isSpeaking);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testNavigationPauseAndFailureExposeDistinctRecoveryStateAndCues {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceOverRunning = YES;
+        [self.manager startListening];
+        XCTAssertTrue([self.manager.feedback containsObject:@0]); // Ready only after actual recording starts.
+        [self focusVoiceOverElement];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([overlay.accessibilityValue containsString:@"Paused"]);
+        XCTAssertTrue([overlay.accessibilityHint containsString:@"two-finger double-tap"]);
+        XCTAssertTrue([self.manager.feedback containsObject:@2]);
+        NSUInteger feedbackCount = self.manager.feedback.count;
+        [self focusVoiceOverElement];
+        XCTAssertEqual(self.manager.feedback.count, feedbackCount); // No repeated pause cue for every swipe.
+        [controller voiceManagerSTTError:[NSError errorWithDomain:@"test" code:1 userInfo:nil]];
+        XCTAssertTrue([overlay.accessibilityValue containsString:@"failed"]);
+        XCTAssertTrue([overlay.accessibilityHint containsString:@"retry"]);
+        XCTAssertEqualObjects(self.manager.feedback.lastObject, @3);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertTrue([controller accessibilityPerformMagicTap]);
+        XCTAssertTrue(self.manager.isListening);
+        XCTAssertEqualObjects(overlay.accessibilityValue, @"Listening");
+    }];
+}
+- (void)testVoiceOverOwnsNarrationAndRecordingWaitsForItsCompletion {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeBoth;
+    TestSynthesizer *synth = [TestSynthesizer new];
+    [self.manager setValue:synth forKey:@"synthesizer"];
+    [self.manager speakText:@"A brass lamp is here." inView:nil];
+    XCTAssertEqualObjects(self.manager.announcements, (@[@"A brass lamp is here."]));
+    XCTAssertEqual(synth.utterances, 0u); // One narrator: VoiceOver, not an additional synthesizer.
+    XCTAssertTrue(self.manager.isSpeaking);
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertEqual(self.engine.starts, 0u);
+    [self finishAccessibilityAnnouncement:@"Unrelated system message" success:YES];
+    XCTAssertTrue(self.manager.isSpeaking);
+    [self finishAccessibilityAnnouncement:@"A brass lamp is here." success:YES];
+    XCTAssertFalse(self.manager.isSpeaking);
+    XCTAssertEqual(self.voiceDelegate.speakingFinishes, 1u);
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+}
+- (void)testInterruptedVoiceOverAnnouncementDoesNotRestartDictation {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeBoth;
+    [self.manager speakText:@"You are in a hallway." inView:nil];
+    [self finishAccessibilityAnnouncement:@"You are in a hallway." success:NO];
+    XCTAssertFalse(self.manager.isSpeaking);
+    XCTAssertEqual(self.voiceDelegate.speakingFinishes, 0u);
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+}
+- (void)testVoiceOverNavigationCancelsCapturedSpeechAndRejectsLateResults {
+    self.manager.voiceOverRunning = YES;
+    [self.manager startListening];
+    RecognitionHandler callback = self.recognizer.handlers.lastObject;
+    [self focusVoiceOverElement];
+    XCTAssertFalse(self.manager.isListening);
+    [self sendText:@"Settings button" final:YES handler:callback];
+    XCTAssertEqual(self.voiceDelegate.results, 0u);
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening); // A stale automatic restart cannot capture navigation speech.
+}
+- (void)testVoiceOverFocusCancelsQueuedAutomaticMicrophoneStart {
+    self.manager.voiceOverRunning = YES;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self focusVoiceOverElement];
+        [self drainCallbacks];
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testVoiceOverCanActivateTheMicrophoneAfterNavigation {
+    self.manager.voiceOverRunning = YES;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [self focusVoiceOverElement];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([overlay accessibilityActivate]);
+        XCTAssertTrue(self.manager.isListening);
+        XCTAssertTrue(overlay.accessibilityTraits & UIAccessibilityTraitStartsMediaSession);
+        XCTAssertTrue([overlay accessibilityActivate]);
+        XCTAssertFalse(self.manager.isListening);
+    }];
+}
+- (void)testEnablingVoiceOverCancelsExistingAppSpeechAndMicrophone {
+    [self.manager startListening];
+    self.manager.voiceOverRunning = YES;
+    [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityVoiceOverStatusDidChangeNotification object:nil];
+    XCTAssertFalse(self.manager.isListening);
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+}
+- (void)testVoiceOverNavigationAllowsNextTurnNarrationButKeepsDictationPaused {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeBoth;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        controller.inputLine.text = @"look";
+        [self focusVoiceOverElement];
+        XCTAssertEqualObjects(controller.inputLine.text, @"look");
+        [self.manager speakText:@"The door opens." inView:nil];
+        XCTAssertEqualObjects(self.manager.announcements.lastObject, @"The door opens.");
+        XCTAssertTrue(self.manager.isSpeaking);
+        [self finishAccessibilityAnnouncement:@"The door opens." success:YES];
+        [self drainCallbacks];
+        XCTAssertFalse(self.manager.isListening);
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([overlay accessibilityActivate]);
+        XCTAssertTrue(self.manager.isListening);
+    }];
+}
+- (void)testVoiceOverAccessibilityActivationKeepsUnsupportedConfirmationOnScreen {
+    self.manager.voiceOverRunning = YES;
+    self.manager.speechRecognitionLanguage = @"ja-JP";
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller setValue:@"take gown" forKey:@"m_pendingVoiceCommand"];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertFalse([overlay accessibilityActivate]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"take gown");
+    }];
+}
+- (void)testVoiceOverConfirmationWaitsForItsAnnouncementAndIgnoresCancelledCompletion {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeSTTOnly;
+    [self.manager speakConfirmationPrompt:@"Did you say take gown?"];
+    XCTAssertTrue(self.manager.isSpeaking);
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+    [self focusVoiceOverElement];
+    [self finishAccessibilityAnnouncement:@"Did you say take gown?" success:YES];
+    XCTAssertEqual(self.voiceDelegate.speakingFinishes, 0u);
+    XCTAssertFalse(self.manager.isListening);
+}
+- (void)testVoiceOverNavigationPreservesTypedKeyboardCommands {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeTTSOnly;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        controller.inputLine.text = @"take brass";
+        [self focusVoiceOverElement];
+        XCTAssertEqualObjects(controller.inputLine.text, @"take brass");
+    }];
+}
+- (void)testVoiceOverNarrationOnlyRecoversOnTheNextTurnAfterNavigation {
+    self.manager.voiceOverRunning = YES;
+    self.manager.voiceMode = VoiceModeTTSOnly;
+    [self focusVoiceOverElement];
+    [self.manager speakText:@"The door opens." inView:nil];
+    XCTAssertTrue(self.manager.isSpeaking);
+    XCTAssertEqualObjects(self.manager.announcements.lastObject, @"The door opens.");
+}
+- (void)testVoiceOverRecordingCancelsSpeakerEchoBeforeCapturingAudio {
+    self.manager.voiceOverRunning = YES;
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertTrue(self.engine.inputNode.voiceProcessingEnabled);
+    XCTAssertTrue(self.engine.inputNode.processingWasEnabledWhenTapped);
+}
+- (void)testVoiceOverRecordingFailsSafelyWhenEchoCancellationCannotStartAndCanRetry {
+    self.manager.voiceOverRunning = YES;
+    self.engine.inputNode.failVoiceProcessing = YES;
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertEqual(self.engine.starts, 0u);
+    XCTAssertEqual(self.engine.inputNode.installs, 0u);
+    XCTAssertEqual(self.recognizer.handlers.count, 0u);
+    XCTAssertEqual(self.voiceDelegate.errors, 1u);
+    self.engine.inputNode.failVoiceProcessing = NO;
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+}
+- (void)testNonVoiceOverRecordingRestoresItsOriginalAudioProcessing {
+    self.manager.voiceOverRunning = YES;
+    [self.manager startListening];
+    XCTAssertTrue(self.engine.inputNode.voiceProcessingEnabled);
+    [self.manager stopListening];
+    self.manager.voiceOverRunning = NO;
+    [self.manager startListening];
+    XCTAssertFalse(self.engine.inputNode.voiceProcessingEnabled);
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertEqual(self.engine.inputNode.installs, 2u);
+}
+- (void)withAutomaticListeningController:(void (^)(TestStoryController *controller))test {
+    // Replace only the singleton lookup; recording, scheduling and UI state stay real.
+    Method sharedMethod = class_getClassMethod(VoiceManager.class, @selector(shared));
+    IMP original = method_getImplementation(sharedMethod);
+    TestVoiceManager *manager = self.manager;
+    IMP replacement = imp_implementationWithBlock(^id(id classObject) { return manager; });
+    TestStoryController *controller = [[TestStoryController alloc] init];
+    method_setImplementation(sharedMethod, replacement);
+    @try {
+        [controller setValue:[[StoryInputLine alloc] initWithFrame:CGRectMake(0, 0, 320, 44)] forKey:@"m_inputLine"];
+        RichTextView *story = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        [story appendText:@"You see a gown here."];
+        [controller setValue:story forKey:@"m_storyView"];
+        [controller setupVoiceTapOverlay];
+        [controller setValue:@YES forKey:@"m_handsFreeAutoLoop"];
+        [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+        [controller setValue:@YES forKey:@"m_voiceAutoListenReady"];
+        manager.delegate = controller;
+        test(controller);
+    } @finally {
+        [controller stopVoiceActivity];
+        method_setImplementation(sharedMethod, original);
+        imp_removeBlock(replacement);
+    }
+}
+- (void)testAutomaticListeningStartsOnNextMainQueueTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        // A ready silent turn must capture speech on the next queue turn, without a timer pause.
+        XCTestExpectation *checked = [self expectationWithDescription:@"next-turn recording"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertTrue(self.manager.isListening);
+            UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+            XCTAssertEqualObjects(overlay.accessibilityLabel, @"Stop listening");
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testAutomaticListeningPreparesInsteadOfDisplayingIdleMic {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller voiceManagerDidFinishSpeaking];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualObjects(overlay.accessibilityLabel, @"Preparing microphone");
+        UIImageView *icon = [overlay viewWithTag:999];
+        if (@available(iOS 13.0, *)) XCTAssertEqualObjects(icon.tintColor, UIColor.secondaryLabelColor);
+        XCTAssertFalse(self.manager.isListening); // Don't signal recording before the engine starts.
+    }];
+}
+- (void)testBeginningTextEditingCancelsMicrophonePreparation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [controller textFieldDidBeginEditing:controller.inputLine];
+        XCTestExpectation *checked = [self expectationWithDescription:@"editing cancels preparation"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+            XCTAssertEqualObjects(overlay.accessibilityLabel, @"Start listening");
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testQueuedAutomaticListeningIsCanceledWhenVoiceActivityStops {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [controller stopVoiceActivity];
+        XCTestExpectation *checked = [self expectationWithDescription:@"canceled restart"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testQueuedAutomaticListeningWaitsForNewNarration {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeBoth;
+        [controller scheduleVoiceListening];
+        RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        NSMapTable *buffers = [NSMapTable weakToStrongObjectsMapTable];
+        [buffers setObject:[NSMutableString stringWithString:@"Next story output"] forKey:view];
+        [controller setValue:buffers forKey:@"m_voiceOutputBuffers"];
+        XCTestExpectation *checked = [self expectationWithDescription:@"narration prevents recording"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            XCTAssertFalse(self.manager.isListening);
+            XCTAssertTrue([[controller valueForKey:@"m_voiceAutoListenReady"] boolValue]);
+            [checked fulfill];
+        });
+        [self waitForExpectations:@[checked] timeout:2];
+    }];
+}
+- (void)testAutomaticVoicePrefersSystemDefaultWhenQualityAndRegionTie {
+    AVSpeechSynthesisVoice *systemVoice = [AVSpeechSynthesisVoice voiceWithLanguage:@"en-US"];
+    NSMutableArray *candidates = [NSMutableArray array];
+    for (AVSpeechSynthesisVoice *voice in [AVSpeechSynthesisVoice speechVoices]) {
+        if ([voice.language isEqualToString:systemVoice.language] && voice.quality == systemVoice.quality)
+            [candidates addObject:voice];
+    }
+    XCTAssertGreaterThan(candidates.count, 0u);
+    XCTAssertEqualObjects([VoiceManager automaticVoiceFromVoices:candidates].identifier, systemVoice.identifier);
+}
+- (void)testAutomaticVoicePrefersHighestEnglishQualityThenUSRegion {
+    TestSpeechVoice *standard = [TestSpeechVoice new];
+    standard.identifier = @"standard"; standard.language = @"en-US"; standard.quality = AVSpeechSynthesisVoiceQualityDefault;
+    TestSpeechVoice *enhanced = [TestSpeechVoice new];
+    enhanced.identifier = @"enhanced"; enhanced.language = @"en-US"; enhanced.quality = AVSpeechSynthesisVoiceQualityEnhanced;
+    TestSpeechVoice *premium = [TestSpeechVoice new];
+    premium.identifier = @"premium"; premium.language = @"en-GB";
+    if (@available(iOS 16.0, *)) {
+        premium.quality = AVSpeechSynthesisVoiceQualityPremium;
+        NSArray *voices = @[standard, enhanced, premium];
+        XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices], (id)premium);
+        enhanced.quality = AVSpeechSynthesisVoiceQualityPremium;
+        XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices], (id)enhanced);
+    }
+    premium.language = @"fr-FR";
+    XCTAssertEqual(([VoiceManager automaticVoiceFromVoices:@[premium, standard, enhanced]]), (id)enhanced);
+    XCTAssertNil([VoiceManager automaticVoiceFromVoices:@[premium]]);
+}
+- (void)testSelectedVoicePersistsAndMissingVoiceFallsBack {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
+    NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: [NSNull null];
+    @try {
+        AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice speechVoices].firstObject;
+        XCTAssertNotNil(voice);
+        self.manager.speechVoiceIdentifier = voice.identifier;
+        [self.manager savePreferences];
+        VoiceManager *reloaded = [[VoiceManager alloc] init];
+        XCTAssertEqualObjects(reloaded.speechVoiceIdentifier, voice.identifier);
+        XCTAssertEqualObjects(reloaded.speechVoice.identifier, voice.identifier);
+        NSLocale *locale = [SFSpeechRecognizer supportedLocales].anyObject;
+        XCTAssertNotNil(locale);
+        reloaded.speechRecognitionLanguage = locale.localeIdentifier;
+        [reloaded savePreferences];
+        VoiceManager *languageReloaded = [[VoiceManager alloc] init];
+        XCTAssertEqualObjects(languageReloaded.speechRecognitionLanguage, locale.localeIdentifier);
+        XCTAssertEqualObjects(languageReloaded.effectiveRecognitionLanguage, locale.localeIdentifier);
+        reloaded.speechVoiceIdentifier = @"unavailable-test-voice";
+        XCTAssertNotNil(reloaded.speechVoice);
+        XCTAssertEqualObjects(reloaded.speechVoiceDescription, @"Automatic (voice unavailable)");
+        reloaded.speechVoiceIdentifier = nil;
+        reloaded.speechRecognitionLanguage = nil;
+        [reloaded savePreferences];
+        XCTAssertNil([[VoiceManager alloc] init].speechVoiceIdentifier);
+        XCTAssertNil([[VoiceManager alloc] init].speechRecognitionLanguage);
+    } @finally {
+        for (NSString *key in keys) {
+            if (saved[key] == [NSNull null]) [defaults removeObjectForKey:key];
+            else [defaults setObject:saved[key] forKey:key];
+        }
+    }
+}
+- (void)testAutomaticLanguagesFollowStoryMetadataAndManualOverrides {
+    TestSpeechVoice *english = [TestSpeechVoice new];
+    english.identifier = @"english"; english.language = @"en-US"; english.quality = AVSpeechSynthesisVoiceQualityEnhanced;
+    TestSpeechVoice *french = [TestSpeechVoice new];
+    french.identifier = @"french"; french.language = @"fr-FR"; french.quality = AVSpeechSynthesisVoiceQualityDefault;
+    NSArray *voices = @[english, french];
+    XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices language:@"fr"], (id)french);
+    XCTAssertEqual([VoiceManager automaticVoiceFromVoices:voices language:@"fra"], (id)french);
+    XCTAssertNil([VoiceManager automaticVoiceFromVoices:voices language:@"de"]);
+    VoiceManager *manager = [[VoiceManager alloc] init];
+    manager.speechRecognitionLanguage = nil;
+    manager.storyLanguage = @"fr";
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"fr"]);
+    manager.speechRecognitionLanguage = @"de-DE";
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"de"]);
+    manager.storyLanguage = nil;
+    manager.speechRecognitionLanguage = nil;
+    XCTAssertTrue([manager.effectiveRecognitionLanguage hasPrefix:@"en"]);
+    XCTAssertNil([VoiceManager recognitionLanguageForLanguage:@"zz"]);
+}
+- (void)testBlorbLanguageMetadataIsOptionalAndBounded {
+    NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingString:@".gblorb"]];
+    NSString *xml = @"<ifindex xmlns='http://babel.ifarchive.org/protocol/iFiction/'><story><bibliographic><language> fr-FR </language></bibliographic></story></ifindex>";
+    NSData *metadata = [xml dataUsingEncoding:NSUTF8StringEncoding];
+    uint32_t chunkLength = CFSwapInt32HostToBig((uint32_t)metadata.length);
+    uint32_t formLength = CFSwapInt32HostToBig((uint32_t)(12 + metadata.length + (metadata.length & 1)));
+    NSMutableData *blorb = [NSMutableData dataWithBytes:"FORM" length:4];
+    [blorb appendBytes:&formLength length:4];
+    [blorb appendBytes:"IFRSIFmd" length:8];
+    [blorb appendBytes:&chunkLength length:4];
+    [blorb appendData:metadata];
+    if (metadata.length & 1) [blorb appendBytes:"\0" length:1];
+    @try {
+        XCTAssertTrue([blorb writeToFile:path atomically:YES]);
+        XCTAssertEqualObjects([VoiceManager languageFromBlorbAtPath:path], @"fr-FR");
+        [blorb setLength:blorb.length - 2];
+        XCTAssertTrue([blorb writeToFile:path atomically:YES]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:path]);
+        XCTAssertTrue([[@"A raw story without metadata" dataUsingEncoding:NSUTF8StringEncoding] writeToFile:path atomically:YES]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:path]);
+        XCTAssertNil([VoiceManager languageFromBlorbAtPath:nil]);
+    } @finally {
+        [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+    }
+}
+- (void)setUp {
+    [super setUp];
+    self.manager = [[TestVoiceManager alloc] init];
+    self.manager.speechRecognitionLanguage = @"en-US";
+    self.manager.storyLanguage = @"en-US";
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAsNeeded; // Existing review-flow fixtures explicitly opt in.
+    self.manager.recordingAllowed = YES;
+    self.manager.voiceMode = VoiceModeSTTOnly;
+    self.engine = [[TestAudioEngine alloc] init];
+    self.engine.inputNode = [[TestAudioInput alloc] init];
+    self.recognizer = [[TestSpeechRecognizer alloc] init];
+    self.recognizer.handlers = [NSMutableArray array];
+    self.voiceDelegate = [[TestVoiceDelegate alloc] init];
+    self.manager.delegate = self.voiceDelegate;
+    [self.manager setValue:self.engine forKey:@"audioEngine"];
+    [self.manager setValue:self.recognizer forKey:@"speechRecognizer"];
+}
+- (void)tearDown {
+    [self.manager stopListening];
+    self.manager.delegate = nil;
+    self.manager = nil;
+    [super tearDown];
+}
+- (void)drainCallbacks {
+    XCTestExpectation *drained = [self expectationWithDescription:@"recognition callbacks drained"];
+    dispatch_async(dispatch_get_main_queue(), ^{ [drained fulfill]; });
+    [self waitForExpectations:@[drained] timeout:2];
+}
+- (void)sendText:(NSString *)text final:(BOOL)final handler:(RecognitionHandler)handler {
+    TestRecognitionResult *result = [[TestRecognitionResult alloc] init];
+    result.final = final;
+    result.bestTranscription = [[TestTranscription alloc] init];
+    result.bestTranscription.formattedString = text;
+    TestSpeechSegment *segment = [[TestSpeechSegment alloc] init];
+    segment.confidence = 0.95;
+    result.bestTranscription.segments = @[segment];
+    result.transcriptions = @[result.bestTranscription];
+    handler((id)result, nil);
+    [self drainCallbacks];
+}
+// These exercise real recognition/controller decisions; only speech hardware and the
+// interpreter submission boundary are replaced, so an accidental turn is observable.
+- (void)sendAlternatives:(NSArray<NSString *> *)texts confidence:(float)confidence {
+    TestRecognitionResult *result = [[TestRecognitionResult alloc] init];
+    result.final = YES;
+    NSMutableArray *alternatives = [NSMutableArray array];
+    for (NSString *text in texts) {
+        TestTranscription *transcription = [[TestTranscription alloc] init];
+        transcription.formattedString = text;
+        TestSpeechSegment *segment = [[TestSpeechSegment alloc] init];
+        segment.confidence = confidence;
+        transcription.segments = @[segment];
+        [alternatives addObject:transcription];
+    }
+    result.transcriptions = alternatives;
+    result.bestTranscription = alternatives.firstObject;
+    self.recognizer.handlers.lastObject((id)result, nil);
+    [self drainCallbacks];
+}
+- (void)withSavedVoiceDefaults:(void (^)(NSUserDefaults *defaults))test {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
+    NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: NSNull.null;
+    @try { test(defaults); }
+    @finally {
+        for (NSString *key in keys) {
+            if (saved[key] == NSNull.null) [defaults removeObjectForKey:key];
+            else [defaults setObject:saved[key] forKey:key];
+        }
+    }
+}
+- (void)reloadVoicePreferencesForRecognitionTest {
+    [self.manager loadPreferences];
+    self.manager.speechRecognitionLanguage = @"en-US";
+    self.manager.storyLanguage = @"en-US";
+    self.manager.voiceMode = VoiceModeSTTOnly;
+    [self.manager setValue:self.recognizer forKey:@"speechRecognizer"];
+}
+- (void)testDefaultModeImmediatelySubmitsMatchedCommandWithoutReadback {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"]; // Includes upgrades from build3.
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+            XCTAssertTrue(((UIView *)[controller valueForKey:@"m_voiceConfirmationButtons"]).hidden);
+        }];
+    }];
+}
+- (void)testExplicitlyDisabledConfirmationSubmitsOriginalWhenNoAlternativeExists {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:NO forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"bake down"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+// Removing the Always gate would submit a confidently wrong command before approval.
+- (void)testAlwaysReviewsConfidentCommandAndConfirmSubmitsOnlyOnce {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:NO forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:2 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"frobnicate Zaphod"] confidence:0.95];
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            XCTAssertTrue([self.manager.confirmationPrompt containsString:@"frobnicate Zaphod"]);
+            [controller voiceManagerDidFinishSpeaking];
+            [self drainCallbacks];
+            [self sendAlternatives:@[@"confirm"] confidence:0.95];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"frobnicate Zaphod"]));
+            XCTAssertNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+        }];
+    }];
+}
+// Ignoring the new Off preference would revive an obsolete enabled switch.
+- (void)testExplicitOffOverridesLegacyEnabledPreference {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:0 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+            XCTAssertNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+- (void)testLegacyEnabledMigratesToAsNeededAndSurvivesRelaunch {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self.manager savePreferences];
+        XCTAssertEqualObjects([defaults objectForKey:@"FrotzVoiceCommandConfirmationMode"], @1);
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0.4];
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            XCTAssertNotNil(self.manager.confirmationPrompt);
+        }];
+    }];
+}
+- (void)testInvalidStoredConfirmationModeFallsBackToOff {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults setBool:YES forKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults setInteger:99 forKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening]; [self drainCallbacks];
+            [self sendAlternatives:@[@"bake down"] confidence:0.4];
+            XCTAssertEqualObjects(controller.submittedCommands, (@[@"bake down"]));
+        }];
+    }];
+}
+- (void)testSettingsConfirmationPickerPersistsAllChoices {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationEnabled"];
+        [defaults removeObjectForKey:@"FrotzVoiceCommandConfirmationMode"];
+        [self reloadVoicePreferencesForRecognitionTest];
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            FrotzSettingsController *settings = [[FrotzSettingsController alloc] init];
+            [settings create_UISwitches];
+            UINavigationController *navigation = [[UINavigationController alloc] initWithRootViewController:settings];
+            NSIndexPath *choicePath = nil;
+            for (NSInteger row = 0; row < [settings tableView:nil numberOfRowsInSection:1]; ++row) {
+                NSIndexPath *path = [NSIndexPath indexPathForRow:row inSection:1];
+                UITableViewCell *cell = [settings tableView:nil cellForRowAtIndexPath:path];
+                if ([cell.textLabel.text isEqualToString:@"Voice Command Confirmation"]) {
+                    choicePath = path;
+                    XCTAssertEqualObjects(cell.detailTextLabel.text, @"Off");
+                    XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryDisclosureIndicator);
+                }
+            }
+            XCTAssertNotNil(choicePath); if (!choicePath) return;
+            BOOL animationsEnabled = UIView.areAnimationsEnabled;
+            [UIView setAnimationsEnabled:NO];
+            [settings tableView:nil didSelectRowAtIndexPath:choicePath];
+            [UIView setAnimationsEnabled:animationsEnabled];
+            UITableViewController *picker = (id)navigation.topViewController;
+            XCTAssertNotEqual(picker, settings);
+            XCTAssertEqual([picker tableView:picker.tableView numberOfRowsInSection:0], 3);
+            NSArray *names = @[@"Off", @"As Needed", @"Always"];
+            for (NSNumber *value in @[@2, @1, @0]) {
+                NSIndexPath *path = [NSIndexPath indexPathForRow:value.integerValue inSection:0];
+                UITableViewCell *cell = [picker tableView:picker.tableView cellForRowAtIndexPath:path];
+                XCTAssertEqualObjects(((UILabel *)[cell.contentView viewWithTag:1]).text, names[value.integerValue]);
+                [picker tableView:picker.tableView didSelectRowAtIndexPath:path];
+                XCTAssertEqualObjects([defaults objectForKey:@"FrotzVoiceCommandConfirmationMode"], value);
+                [self.manager loadPreferences];
+                cell = [picker tableView:picker.tableView cellForRowAtIndexPath:path];
+                XCTAssertEqual(cell.accessoryType, UITableViewCellAccessoryCheckmark);
+                XCTAssertTrue(cell.accessibilityTraits & UIAccessibilityTraitSelected);
+                XCTAssertEqualObjects([settings tableView:nil cellForRowAtIndexPath:choicePath].detailTextLabel.text, names[value.integerValue]);
+            }
+            picker.view.frame = CGRectMake(0, 0, UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad ? 768 : 320, 640);
+            [picker.tableView reloadData]; [picker.view layoutIfNeeded];
+            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:picker.view.bounds.size];
+            UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+                [[UIColor whiteColor] setFill]; UIRectFill(picker.view.bounds);
+                if (![picker.view drawViewHierarchyInRect:picker.view.bounds afterScreenUpdates:YES])
+                    [picker.view.layer renderInContext:context.CGContext];
+            }];
+            XCTAttachment *attachment = [XCTAttachment attachmentWithImage:image];
+            attachment.name = @"Voice Command Confirmation picker";
+            attachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+            [self addAttachment:attachment];
+        }];
+    }];
+}
+- (void)testAlwaysDoesNotReviewPartialRecognition {
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAlways;
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendText:@"take" final:NO handler:self.recognizer.handlers.lastObject];
+        XCTAssertEqualObjects(controller.inputLine.text, @"take");
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertNil(self.manager.confirmationPrompt);
+    }];
+}
+- (void)testAlwaysBypassesReviewForSingleKeyPrompt {
+    self.manager.commandConfirmationMode = VoiceCommandConfirmationAlways;
+    int previous = ipzAllowInput;
+    @try {
+        ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            // Set the input request at the synchronous controller boundary: the host
+            // interpreter can change its global request while async callbacks drain.
+            ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+            [self.manager rememberStoryResponse:@"Press a key to continue."];
+            [controller voiceManagerDidRecognizeText:@"space" isFinal:YES];
+            [self.manager rememberStoryResponse:@"The menu is open."];
+            XCTAssertEqualObjects(self.manager.lastStoryResponse, @"The menu is open.");
+            XCTAssertNil(self.manager.confirmationPrompt);
+            XCTAssertNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+            XCTAssertEqualObjects(controller.inputLine.text, @"");
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+        }];
+    } @finally { ipzAllowInput = previous; }
+}
+- (void)testConfirmationPickerWrapsLargeTextOnCompactScreen {
+    UITableViewController *picker = [[NSClassFromString(@"FrotzCommandConfirmationController") alloc] init];
+    XCTAssertNotNil(picker); if (!picker) return;
+    UITableViewCell *cell = [picker tableView:picker.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
+    UILabel *title = [cell.contentView viewWithTag:1];
+    // Stress the same title with the font UIKit supplies at the largest accessibility size.
+    UITraitCollection *traits = [UITraitCollection traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+    title.adjustsFontForContentSizeCategory = NO; // Hold the simulated accessibility font during layout.
+    title.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody compatibleWithTraitCollection:traits];
+    cell.frame = CGRectMake(0, 0, 240, 300); // Stress a narrow choice area at the largest text size.
+    [cell setNeedsLayout]; [cell layoutIfNeeded];
+    CGRect required = [title.text boundingRectWithSize:CGSizeMake(title.bounds.size.width, CGFLOAT_MAX)
+        options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName:title.font} context:nil];
+    XCTAssertGreaterThanOrEqual(title.bounds.size.height + 1, ceil(required.size.height), @"content=%@ title=%@ font=%g textWidth=%g", NSStringFromCGRect(cell.contentView.bounds), NSStringFromCGRect(title.frame), title.font.pointSize, [title.text sizeWithAttributes:@{NSFontAttributeName:title.font}].width);
+    CGFloat fittedHeight = [cell.contentView systemLayoutSizeFittingSize:CGSizeMake(cell.contentView.bounds.size.width, 0)
+        withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    cell.frame = CGRectMake(0, 0, 240, fittedHeight + 1);
+    [cell setNeedsLayout]; [cell layoutIfNeeded];
+    XCTAssertGreaterThanOrEqual(title.bounds.size.height + 1, ceil(required.size.height), @"content=%@ title=%@ font=%g textWidth=%g", NSStringFromCGRect(cell.contentView.bounds), NSStringFromCGRect(title.frame), title.font.pointSize, [title.text sizeWithAttributes:@{NSFontAttributeName:title.font}].width);
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:cell.bounds.size];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        [[UIColor whiteColor] setFill]; UIRectFill(cell.bounds);
+        [cell.layer renderInContext:context.CGContext];
+    }];
+    XCTAttachment *attachment = [XCTAttachment attachmentWithImage:image];
+    attachment.name = @"Confirmation choice at largest accessibility title size";
+    attachment.lifetime = XCTAttachmentLifetimeKeepAlways;
+    [self addAttachment:attachment];
+}
+- (void)testNoisyWholeCommandWaitsForConfirmationWithoutConsumingTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.45];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"take gown");
+        XCTAssertTrue([self.manager.confirmationPrompt containsString:@"take gown"]);
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"confirm"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+    }];
+}
+- (void)testHiddenAlternativeCannotBecomeASpokenSuggestion {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"take gown", @"take crown"] confidence:0.45];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"take gown");
+        XCTAssertFalse([self.manager.confirmationPrompt containsString:@"crown"]);
+    }];
+}
+- (void)testConfidentUnusualCommandIsPreservedAndSubmittedImmediately {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"frobnicate Zaphod"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"frobnicate Zaphod"]));
+        XCTAssertNil(self.manager.confirmationPrompt);
+    }];
+}
+- (void)testRetryAndCancelDoNotSubmitConfirmationWordsToStory {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"retry"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"");
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"cancel"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertFalse(self.manager.isListening);
+    }];
+}
+- (void)testStoppingVoiceInvalidatesAnUnconfirmedCommand {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        [controller stopVoiceActivity];
+        [self.manager startListening];
+        [self sendAlternatives:@[@"confirm"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testConfirmationControlsDoNotOverlapReadbackInCompactOverlay {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        overlay.backgroundColor = UIColor.whiteColor;
+        for (NSValue *size in @[[NSValue valueWithCGSize:CGSizeMake(320, 120)], [NSValue valueWithCGSize:CGSizeMake(768, 300)]]) {
+            overlay.frame = (CGRect){CGPointZero, size.CGSizeValue};
+            [overlay layoutIfNeeded];
+            UIView *hint = [overlay viewWithTag:998];
+            UIView *buttons = [controller valueForKey:@"m_voiceConfirmationButtons"];
+            XCTAssertFalse(CGRectIntersectsRect(hint.frame, buttons.frame));
+            XCTAssertGreaterThanOrEqual(CGRectGetMinY(hint.frame), 0);
+            XCTAssertLessThanOrEqual(CGRectGetMaxY(buttons.frame), size.CGSizeValue.height);
+            XCTAssertFalse(overlay.isAccessibilityElement); // VoiceOver must reach the buttons.
+            UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size.CGSizeValue];
+            UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) { [overlay.layer renderInContext:context.CGContext]; }];
+            XCTAttachment *snapshot = [XCTAttachment attachmentWithImage:image];
+            snapshot.name = [NSString stringWithFormat:@"confirmation-%.0f", size.CGSizeValue.width];
+            snapshot.lifetime = XCTAttachmentLifetimeKeepAlways;
+            [self addAttachment:snapshot];
+        }
+    }];
+}
+- (void)testRecognitionHintsContainOnlyVisibleOrOrdinaryWords {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        NSArray *hints = self.recognizer.lastRequest.contextualStrings;
+        XCTAssertTrue([hints containsObject:@"gown"]);
+        XCTAssertTrue([hints containsObject:@"take"]);
+        XCTAssertFalse([hints containsObject:@"crown"]);
+        XCTAssertLessThanOrEqual(hints.count, 100u);
+    }];
+}
+- (void)testAmbiguousSafeAlternativesPreserveOriginalForConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down", @"take gown", @"take down"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"bake down");
+    }];
+}
+- (void)testLowConfidenceConfirmCannotApproveAnUncertainCommand {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [controller voiceManagerDidFinishSpeaking];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"confirm"] confidence:0.4];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(controller.inputLine.text, @"bake down");
+    }];
+}
+- (void)testFrenchConfirmationUsesFrenchControlsWithoutEnglishGuessing {
+    XCTAssertEqualObjects([VoiceManager confirmationActionForText:@"confirmer" language:@"fr-FR"], @"confirm");
+    XCTAssertNil([VoiceManager confirmationActionForText:@"confirm" language:@"fr-FR"]);
+    XCTAssertNil([VoiceManager confirmationActionForText:@"confirm" language:@"ja-JP"]);
+    XCTAssertNil([VoiceManager confirmationActionForText:@"yes, take gown" language:@"en-US"]);
+}
+- (void)testOldControllerCannotCancelAnotherControllersConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.delegate = self.voiceDelegate;
+        self.manager.recognizingConfirmation = YES;
+        [controller stopVoiceActivity];
+        XCTAssertTrue(self.manager.recognizingConfirmation);
+    }];
+}
+- (void)testCharacterRecognitionBypassesWholeCommandRanking {
+    int originalMode = ipzAllowInput;
+    @try {
+        ipzAllowInput = kIPZRequestInput | kIPZNoEcho;
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            self.manager.delegate = self.voiceDelegate; // Observe the real recognizer output without feeding a live VM.
+            [self sendAlternatives:@[@"bake down", @"take gown"] confidence:0.4];
+            XCTAssertEqualObjects(self.voiceDelegate.lastText, @"bake down");
+        }];
+    } @finally { ipzAllowInput = originalMode; }
+}
+- (void)testUnsupportedConfirmationLanguageKeepsReadbackAfterPromptFinishes {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        self.manager.speechRecognitionLanguage = @"ja-JP";
+        [controller voiceManagerDidFinishSpeaking];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([((UILabel *)[overlay viewWithTag:998]).text containsString:@"bake down"]);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertFalse(((UIView *)[controller valueForKey:@"m_voiceConfirmationButtons"]).hidden);
+    }];
+}
+- (void)testStoppingConfirmationListeningKeepsReadback {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [self drainCallbacks];
+        [self.manager stopListening];
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertTrue([((UILabel *)[overlay viewWithTag:998]).text containsString:@"bake down"]);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testQuotedSpeechIsNotRewritten {
+    for (NSArray *quotes in @[@[@"'", @"'"], @[@"\"", @"\""], @[@"“", @"”"], @[@"‘", @"’"], @[@"«", @"»"]]) {
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            [controller scheduleVoiceListening];
+            [self drainCallbacks];
+            NSString *original = [NSString stringWithFormat:@"say %@bake down%@", quotes[0], quotes[1]];
+            NSString *alternative = [NSString stringWithFormat:@"say %@take gown%@", quotes[0], quotes[1]];
+            [self sendAlternatives:@[original, alternative] confidence:0.4];
+            XCTAssertEqualObjects(controller.inputLine.text, original);
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+        }];
+    }
+}
+- (void)testCharacterCommandsPreserveSpaceAndHandleEmptyInput {
+    XCTAssertEqualObjects([self.manager translateForCharInput:@"space"], @" ");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@" Yes \n"], @"y");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@"no"], @"n");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@"enter"], @"\n");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@"escape"], @"\x1b");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@""], @"");
+    XCTAssertEqualObjects([self.manager translateForCharInput:@" \n"], @"");
+}
+- (void)testDuplicateStartLeavesExistingRecordingRunning {
+    [self.manager startListening];
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertEqual(self.engine.starts, 1u);
+    XCTAssertEqual(self.engine.inputNode.installs, 1u);
+    XCTAssertEqual(self.voiceDelegate.starts, 1u);
+}
+- (void)testFailedStartupRemovesTapAndAllowsRetry {
+    self.engine.failStart = YES;
+    [self.manager startListening];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertFalse(self.engine.inputNode.tapInstalled);
+    XCTAssertEqual(self.voiceDelegate.errors, 1u);
+    self.engine.failStart = NO;
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertEqual(self.engine.inputNode.installs, 2u);
+    XCTAssertEqual(self.engine.inputNode.removals, 1u);
+}
+- (void)testCanceledRecognitionCannotSubmitIntoNewSession {
+    [self.manager startListening];
+    RecognitionHandler old = self.recognizer.handlers.lastObject;
+    [self.manager stopListening];
+    [self.manager startListening];
+    [self sendText:@"quit" final:YES handler:old];
+    XCTAssertEqual(self.voiceDelegate.results, 0u);
+    XCTAssertTrue(self.manager.isListening);
+}
+- (void)testCanceledRecognitionErrorCannotStopNewSession {
+    [self.manager startListening];
+    RecognitionHandler old = self.recognizer.handlers.lastObject;
+    [self.manager stopListening];
+    [self.manager startListening];
+    old(nil, [NSError errorWithDomain:@"TestSpeech" code:300 userInfo:nil]);
+    [self drainCallbacks];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertEqual(self.voiceDelegate.errors, 0u);
+}
+- (void)testFinalRecognitionStopsRecordingAndDeliversOriginalCommand {
+    [self.manager startListening];
+    [self sendText:@"open mailbox" final:YES handler:self.recognizer.handlers.lastObject];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertFalse(self.engine.inputNode.tapInstalled);
+    XCTAssertEqual(self.voiceDelegate.stops, 1u);
+    XCTAssertEqual(self.voiceDelegate.results, 1u);
+    XCTAssertEqualObjects(self.voiceDelegate.lastText, @"open mailbox");
+}
+- (void)testSilenceFinalizationAcceptsFinalResultWithoutStartingAnotherRecording {
+    [self.manager startListening];
+    RecognitionHandler handler = self.recognizer.handlers.lastObject;
+    [self sendText:@"look" final:NO handler:handler];
+    [self.manager silenceTimerFired];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertFalse(self.engine.isRunning);
+    XCTAssertFalse(self.engine.inputNode.tapInstalled);
+    [self.manager startListening];
+    XCTAssertEqual(self.engine.starts, 1u);
+    [self sendText:@"look" final:YES handler:handler];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertEqualObjects(self.voiceDelegate.lastText, @"look");
+}
+- (void)testFinalizationTimeoutStopsAndReportsAnError {
+    [self.manager startListening];
+    [self.manager silenceTimerFired];
+    [self.manager recognitionTimedOut];
+    XCTAssertFalse(self.manager.isListening);
+    XCTAssertFalse(self.engine.inputNode.tapInstalled);
+    XCTAssertEqual(self.voiceDelegate.errors, 1u);
+    XCTAssertEqual(self.voiceDelegate.stops, 1u);
+}
+- (void)testDeniedPermissionDoesNotStartMicrophone {
+    self.manager.recordingAllowed = NO;
+    [self.manager startListening];
+    XCTAssertEqual(self.engine.starts, 0u);
+    XCTAssertEqual(self.engine.inputNode.installs, 0u);
+    XCTAssertEqual(self.voiceDelegate.errors, 1u);
+}
+- (void)testInvalidInputFormatDoesNotInstallTap {
+    self.engine.inputNode.invalidFormat = YES;
+    [self.manager startListening];
+    XCTAssertEqual(self.engine.starts, 0u);
+    XCTAssertEqual(self.engine.inputNode.installs, 0u);
+    XCTAssertEqual(self.voiceDelegate.errors, 1u);
+}
+- (void)testAccessibilityContainerRejectsForeignElementsAndUsesContainerIndex {
+    RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    UIAccessibilityElement *first = [[UIAccessibilityElement alloc] initWithAccessibilityContainer:view];
+    UIAccessibilityElement *second = [[UIAccessibilityElement alloc] initWithAccessibilityContainer:view];
+    [view setValue:[NSMutableArray arrayWithObjects:first, second, nil] forKey:@"m_accessibilityElements"];
+    XCTAssertEqual([view indexOfAccessibilityElement:first], 0);
+    XCTAssertEqual([view indexOfAccessibilityElement:second], 1);
+    XCTAssertEqual([view indexOfAccessibilityElement:[[NSObject alloc] init]], NSNotFound);
+    XCTAssertNil([view accessibilityElementAtIndex:-1]);
+}
+- (void)testCurrentColorKeepsValidPaletteIndexAndBoundsInvalidFallback {
+    RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    view.textColor = [UIColor blackColor];
+    [view setValue:[NSMutableArray arrayWithObjects:[UIColor redColor], [UIColor blueColor], nil] forKey:@"m_colorArray"];
+    [view setValue:[NSMutableArray arrayWithObject:@1] forKey:@"m_colorIndex"];
+    view.textColorIndex = 2;
+    XCTAssertEqualObjects([view getCurrentTextColor], [UIColor blueColor]);
+    [view setValue:@999 forKey:@"m_currentTextColorIndex"];
+    [view setValue:[NSMutableArray arrayWithObject:@999] forKey:@"m_colorIndex"];
+    XCTAssertEqualObjects([view getCurrentTextColor], [UIColor blackColor]);
+}
+- (void)testListeningFeedbackProvidesAccessibleStateAndStopsAnimations {
+    TestStoryController *controller = [[TestStoryController alloc] init];
+    [controller setupVoiceTapOverlay];
+    UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+    UIView *icon = [overlay viewWithTag:999];
+    [controller voiceManagerDidStartListening];
+    XCTAssertEqualObjects(overlay.accessibilityLabel, @"Stop listening");
+    if (UIAccessibilityIsReduceMotionEnabled()) {
+        XCTAssertNil([icon.layer animationForKey:@"voiceListeningPulse"]);
+        XCTAssertNil([icon.layer animationForKey:@"voiceListeningGlow"]);
+    } else {
+        XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningPulse"]);
+        XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningGlow"]);
+    }
+    [controller voiceManagerDidStopListening];
+    XCTAssertEqualObjects(overlay.accessibilityLabel, @"Start listening");
+    XCTAssertNil([icon.layer animationForKey:@"voiceListeningPulse"]);
+    XCTAssertNil([icon.layer animationForKey:@"voiceListeningGlow"]);
+    XCTAssertEqual(icon.layer.shadowOpacity, 0);
+}
+- (void)testNormalEndingPreservesPendingNarrationAcrossTeardown {
+    TestEndingController *controller = [[TestEndingController alloc] init];
+    RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    NSMapTable *buffers = [NSMapTable weakToStrongObjectsMapTable];
+    [buffers setObject:[NSMutableString stringWithString:@"You have won.\n"] forKey:view];
+    [controller setValue:buffers forKey:@"m_voiceOutputBuffers"];
+    [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+    TestNarrationManager *manager = [[TestNarrationManager alloc] init];
+    manager.voiceMode = VoiceModeTTSOnly;
+    [controller finishStoryNarration:NO inView:view voiceManager:manager];
+    XCTAssertTrue(controller.abandoned);
+    XCTAssertEqual(buffers.count, 0u);
+    XCTAssertTrue([manager.spokenText containsString:@"You have won."]);
+    XCTAssertTrue([manager.spokenText hasSuffix:@"End of story."]);
+    XCTAssertFalse([controller canAcceptVoiceInput]);
+}
+- (void)testUnreadableStoryDoesNotNarrateAnEnding {
+    TestEndingController *controller = [[TestEndingController alloc] init];
+    [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+    TestNarrationManager *manager = [[TestNarrationManager alloc] init];
+    manager.voiceMode = VoiceModeTTSOnly;
+    [controller finishStoryNarration:YES inView:nil voiceManager:manager];
+    XCTAssertTrue(controller.abandoned);
+    XCTAssertNil(manager.spokenText);
+}
+- (void)testLiveSpeechSynthesis {
+    XCTSkipIf(![[NSProcessInfo.processInfo.environment objectForKey:@"FROTZ_TEST_LIVE_SPEECH"] isEqualToString:@"1"],
+              @"Set FROTZ_TEST_LIVE_SPEECH=1 for the optional live speech-service smoke test.");
+    VoiceManager *manager = [[VoiceManager alloc] init];
+    manager.voiceMode = VoiceModeTTSOnly;
+    LiveSpeechDelegate *delegate = [[LiveSpeechDelegate alloc] init];
+    delegate.finished = [self expectationWithDescription:@"live narration finished"];
+    manager.delegate = delegate;
+    RichTextView *view = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    [manager speakText:@"This is a voice mode simulator test." inView:view];
+    [self waitForExpectations:@[delegate.finished] timeout:20];
+    XCTAssertFalse(manager.isSpeaking);
+    [manager stopSpeaking];
+    manager.delegate = nil;
+}
+- (void)testLiveConfirmationWithNarrationDisabled {
+    XCTSkipIf(![[NSProcessInfo.processInfo.environment objectForKey:@"FROTZ_TEST_LIVE_SPEECH"] isEqualToString:@"1"],
+              @"Set FROTZ_TEST_LIVE_SPEECH=1 for the optional live confirmation smoke test.");
+    VoiceManager *manager = [[VoiceManager alloc] init];
+    manager.voiceMode = VoiceModeSTTOnly;
+    LiveSpeechDelegate *delegate = [[LiveSpeechDelegate alloc] init];
+    delegate.finished = [self expectationWithDescription:@"live confirmation finished without narration"];
+    manager.delegate = delegate;
+    @try {
+        [manager speakConfirmationPrompt:@"I heard take gown. Say confirm, retry or cancel."];
+        XCTAssertTrue(manager.isSpeaking);
+        XCTAssertNil(manager.activeView); // UI readback must not highlight story text.
+        [self waitForExpectations:@[delegate.finished] timeout:20];
+        XCTAssertFalse(manager.isSpeaking);
+        XCTAssertFalse(manager.ttsEnabled);
+    } @finally {
+        [manager stopSpeaking];
+        manager.delegate = nil;
+    }
+}
+- (void)testSettingsPresentationStopsRecordingAndPendingRestarts {
+    StoryMainViewController *controller = [[StoryMainViewController alloc] init];
+    [controller setupVoiceTapOverlay];
+    [controller startVoiceListeningAnimation];
+    [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+    [controller setValue:@YES forKey:@"m_voiceAutoListenReady"];
+    [controller setValue:@YES forKey:@"m_voiceListenPending"];
+    VoiceManager *shared = [VoiceManager shared];
+    id originalEngine = [shared valueForKey:@"audioEngine"];
+    id originalDelegate = shared.delegate;
+    self.engine.running = YES;
+    self.engine.inputNode.tapInstalled = YES;
+    [shared setValue:self.engine forKey:@"audioEngine"];
+    [shared setValue:@YES forKey:@"inputTapInstalled"];
+    shared.delegate = controller;
+    @try {
+        [controller pauseVoiceForSettings];
+        XCTAssertFalse(shared.isListening);
+        XCTAssertFalse(self.engine.inputNode.tapInstalled);
+        XCTAssertNil(shared.delegate);
+        XCTAssertFalse([[controller valueForKey:@"m_voiceSessionActive"] boolValue]);
+        XCTAssertFalse([[controller valueForKey:@"m_voiceListenPending"] boolValue]);
+        XCTAssertFalse([[controller valueForKey:@"m_voiceAutoListenReady"] boolValue]);
+        UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertNil([[overlay viewWithTag:999].layer animationForKey:@"voiceListeningPulse"]);
+    } @finally {
+        [shared setValue:originalEngine forKey:@"audioEngine"];
+        shared.delegate = originalDelegate;
+    }
+}
+@end

@@ -22,6 +22,7 @@
 #import "FrotzWordPicker.h"
 #import "FileBrowser.h"
 #import "NotesViewController.h"
+#import "VoiceManager.h"
 
 @class StoryBrowser;
 @class FrotzView;
@@ -57,7 +58,7 @@ extern StoryBrowser *theStoryBrowser;
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
     UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
-    LockableKeyboard>
+    LockableKeyboard, VoiceManagerDelegate>
 {
     StoryView *m_storyView;
     StatusLine *m_statusLine;
@@ -114,6 +115,22 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableDictionary *m_dbCachedMetadata;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
+
+    // Voice mode
+    UIBarButtonItem *m_ttsToggleItem;
+    UIBarButtonItem *m_sttToggleItem;
+    NSMutableString *m_ttsAccumulatedText;
+    NSMapTable<RichTextView *, NSMutableString *> *m_voiceOutputBuffers;
+    NSUInteger m_ttsStartRunIndex;       // view run count when TTS accumulation started
+    NSUInteger m_ttsStartRunTextLen;     // length of text in the starting run before our append
+    NSUInteger m_ttsHighlightBias;       // leading whitespace chars stripped before sending to TTS
+    UIView *m_voiceTapOverlay;
+    NSString *m_pendingVoiceCommand;
+    UIStackView *m_voiceConfirmationButtons;
+    NSLayoutConstraint *m_voiceHintPosition;
+    BOOL m_handsFreeAutoLoop;
+    BOOL m_voiceSessionActive, m_voiceAutoListenReady, m_voiceListenPending;
+    NSUInteger m_voiceRestartGeneration;
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;
@@ -200,6 +217,11 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic, readonly, copy) NSString *currentStorySavePath;
 @property (nonatomic, readonly, copy) NSString *textFileBrowserPath;
 -(void)checkAccessibility;
+
+// Voice mode
+-(void)toggleTTS;
+-(void)toggleSTT;
+-(void)updateVoiceButtonIcons;
 -(void) keyboardDidShow:(NSNotification*)notif;
 -(void) keyboardDidHide:(NSNotification*)notif;
 @property (nonatomic, readonly) CGSize keyboardSize;
