@@ -157,7 +157,7 @@
 }
 - (NSString *)helpTextForSection:(NSInteger)section {
     if (section != 0) return nil;
-    return @"Tap to select a voice and hear a preview. Automatic follows the story language, defaulting to English, and prefers Premium or Enhanced voices. Download more in iOS Settings → Accessibility → Read & Speak → Voices (Spoken Content on older iOS).";
+    return @"VoiceOver uses its own voice and rate for game narration. These settings apply when VoiceOver is off. Tap to select a voice and hear a preview. Automatic follows the story language, defaulting to English, and prefers Premium or Enhanced voices. Download more in iOS Settings → Accessibility → Read & Speak → Voices (Spoken Content on older iOS).";
 }
 - (AVSpeechSynthesisVoice *)voiceAtIndexPath:(NSIndexPath *)path {
     return path.section == 0 ? nil : self.voicesByLanguage[self.languages[path.section - 1]][path.row];
@@ -513,11 +513,13 @@ enum FrotzPrefsRows
     [m_switchCtl2 setOn: [m_storyDelegate canEditStoryInfo]];
 
     m_switchCtl3 = [[UISwitch alloc] initWithFrame:frame];
+    m_switchCtl3.accessibilityLabel = @"Text-to-Speech";
     [m_switchCtl3 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_switchCtl3.backgroundColor = [UIColor clearColor];
     [m_switchCtl3 setOn: [VoiceManager shared].ttsEnabled];
 
     m_switchCtl4 = [[UISwitch alloc] initWithFrame:frame];
+    m_switchCtl4.accessibilityLabel = @"Speech-to-Text";
     [m_switchCtl4 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_switchCtl4.backgroundColor = [UIColor clearColor];
     [m_switchCtl4 setOn: [VoiceManager shared].sttEnabled];
@@ -761,6 +763,12 @@ enum FrotzPrefsRows
         }
     }
     return title;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    if (section == kFrotzPrefsSection)
+        return @"With VoiceOver, narration uses VoiceOver’s voice and rate. Moving focus pauses dictation. Use a two-finger double-tap to start or stop listening. The speech controls’ Actions menu offers Replay last response without taking a turn. A rising tone means the microphone is ready; a falling pair means navigation paused it; three low tones indicate an error.";
+    return nil;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section

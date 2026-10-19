@@ -12,6 +12,16 @@
 
 @implementation FrotzAppDelegate
 
+- (StoryMainViewController *)voiceGestureStoryController {
+    StoryMainViewController *story = [theStoryBrowser storyMainViewController];
+    return story.viewIfLoaded.window ? story : nil;
+}
+
+- (BOOL)accessibilityPerformMagicTap {
+    // Navigation-bar controls can bypass the story controller's responder chain.
+    return [[self voiceGestureStoryController] accessibilityPerformMagicTap];
+}
+
 - (instancetype)init {
 	if ((self = [super init])) {
 		// 

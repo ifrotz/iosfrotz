@@ -28,6 +28,13 @@ typedef NS_ENUM(NSInteger, VoiceCommandConfirmationMode) {
     VoiceCommandConfirmationAlways
 };
 
+typedef NS_ENUM(NSInteger, VoiceFeedback) {
+    VoiceFeedbackReady = 0,
+    VoiceFeedbackStopped,
+    VoiceFeedbackNavigationPaused,
+    VoiceFeedbackError
+};
+
 @protocol VoiceManagerDelegate <NSObject>
 // TTS callbacks
 - (void)voiceManagerDidStartSpeaking;
@@ -40,6 +47,8 @@ typedef NS_ENUM(NSInteger, VoiceCommandConfirmationMode) {
 - (void)voiceManagerDidStartListening;
 - (void)voiceManagerDidStopListening;
 - (void)voiceManagerSTTError:(NSError *)error;
+@optional
+- (void)voiceManagerDidPauseForVoiceOverDiscardingInput:(BOOL)discardInput;
 @end
 
 @interface VoiceManager : NSObject <AVSpeechSynthesizerDelegate>
@@ -62,6 +71,17 @@ typedef NS_ENUM(NSInteger, VoiceCommandConfirmationMode) {
 @property (nonatomic, readonly) BOOL isListening;
 @property (nonatomic, readonly) BOOL ttsEnabled;
 @property (nonatomic, readonly) BOOL sttEnabled;
+@property (nonatomic, readonly, getter=isVoiceOverEnabled) BOOL voiceOverEnabled;
+@property (nonatomic, readonly) BOOL voiceOverNavigationPaused;
+- (void)resumeAfterVoiceOverNavigation;
+- (void)pauseForVoiceOverNavigation;
+// Coordinates the existing screen-reader narration when app narration is off.
+- (void)speakAccessibilityText:(NSString *)text;
+// Replay contains only output already narrated for this story, never UI prompts.
+@property (nonatomic, readonly, copy, nullable) NSString *lastStoryResponse;
+- (void)rememberStoryResponse:(NSString *)text;
+- (BOOL)replayLastStoryResponse;
+- (void)playVoiceFeedback:(VoiceFeedback)feedback;
 
 @property (nonatomic, weak, nullable) id<VoiceManagerDelegate> delegate;
 

@@ -13,6 +13,7 @@
 #import <QuartzCore/CALayer.h>
 
 #include "RichTextView.h"
+#import "VoiceManager.h"
 
 #define NoAccessibility 0 // Set to turn off UIAccessibility support completely
 
@@ -2198,7 +2199,10 @@ static NSString *kCommand = @"Command";
 - (void)markWaitForInput {
 #if !NoAccessibility
     if (hasAccessibility && m_numLines > 1 && m_lastAEIndexAnnounced >= 0) {
-        UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
+        VoiceManager *voice = [VoiceManager shared];
+        BOOL coordinated = voice.isVoiceOverEnabled && (voice.ttsEnabled || voice.sttEnabled);
+        if (!coordinated)
+            UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
         NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
         NSUInteger count = [m_accessibilityElements count];
         if (m_lastAEIndexAnnounced < count) {
@@ -2206,7 +2210,14 @@ static NSString *kCommand = @"Command";
                 [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
             m_lastAEIndexAnnounced = count;
-            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            if (!coordinated)
+                UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            else if (!voice.ttsEnabled) {
+                [voice rememberStoryResponse:text];
+                [voice speakAccessibilityText:text];
+            }
+            // With app narration enabled, the gameplay output buffer owns this
+            // announcement. Posting it here as well would read the turn twice.
             m_prevLineNotTerminated = NO;
         }
     }

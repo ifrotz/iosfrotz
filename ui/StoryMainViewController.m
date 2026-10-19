@@ -32,6 +32,15 @@
 #import "FileBrowser.h"
 #import "VoiceManager.h"
 
+// VoiceOver activation must invoke the same action as a physical tap. A button
+// trait alone does not implement accessibilityActivate for a gesture-only view.
+@interface FrotzVoiceInputView : UIView
+@property (nonatomic, copy) BOOL (^activation)(void);
+@end
+@implementation FrotzVoiceInputView
+- (BOOL)accessibilityActivate { return self.activation ? self.activation() : NO; }
+@end
+
 #import "ui_setup.h"
 #import "ui_utils.h"
 
@@ -1197,6 +1206,12 @@ static void setColorTable(RichTextView *v) {
                        name:UIApplicationWillResignActiveNotification object:nil];
         [center addObserver:self selector:@selector(voiceApplicationDidBecomeActive:)
                        name:UIApplicationDidBecomeActiveNotification object:nil];
+        if (@available(iOS 13.0, *)) {
+            [center addObserver:self selector:@selector(voiceApplicationWillResignActive:)
+                           name:UISceneWillDeactivateNotification object:nil];
+            [center addObserver:self selector:@selector(voiceApplicationDidBecomeActive:)
+                           name:UISceneDidActivateNotification object:nil];
+        }
         [center addObserver:self selector:@selector(voiceReduceMotionChanged:)
                        name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
         
@@ -2125,16 +2140,28 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [ttsBtn setImage:[[UIImage systemImageNamed:@"speaker.wave.1.fill"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         [ttsBtn addTarget:self action:@selector(toggleTTS) forControlEvents:UIControlEventTouchUpInside];
         ttsBtn.tag = 901;
+        ttsBtn.accessibilityIdentifier = @"voiceNarration";
+        ttsBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
 
         UIButton *sttBtn = [UIButton buttonWithType:UIButtonTypeSystem];
         [sttBtn setImage:[[UIImage systemImageNamed:@"mic"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         [sttBtn addTarget:self action:@selector(toggleSTT) forControlEvents:UIControlEventTouchUpInside];
         sttBtn.tag = 902;
+        sttBtn.accessibilityIdentifier = @"voiceDictation";
+        sttBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
 
         UIButton *kbdBtn = [UIButton buttonWithType:UIButtonTypeSystem];
         [kbdBtn setImage:[UIImage imageNamed:@"icon-keyboard"] forState:UIControlStateNormal];
         [kbdBtn addTarget:self action:@selector(toggleKeyboard) forControlEvents:UIControlEventTouchUpInside];
         kbdBtn.tag = 903;
+        kbdBtn.accessibilityIdentifier = @"voiceKeyboard";
+        kbdBtn.accessibilityLabel = @"Show keyboard";
+        for (UIButton *button in @[ttsBtn, sttBtn, kbdBtn]) {
+            [NSLayoutConstraint activateConstraints:@[
+                [button.widthAnchor constraintGreaterThanOrEqualToConstant:44],
+                [button.heightAnchor constraintGreaterThanOrEqualToConstant:44]
+            ]];
+        }
 
         UIStackView *toolStack = [[UIStackView alloc] initWithArrangedSubviews:@[ttsBtn, sttBtn, kbdBtn]];
         toolStack.axis = UILayoutConstraintAxisHorizontal;
@@ -5434,12 +5461,15 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)updateVoiceButtonIcons {
+    [self updateVoiceReplayActions];
     if (@available(iOS 13.0, *)) {
         VoiceManager *vm = [VoiceManager shared];
         UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
         UIView *cv = self.navigationItem.rightBarButtonItem.customView;
         UIButton *ttsBtn = [cv viewWithTag:901];
         UIButton *sttBtn = [cv viewWithTag:902];
+        UIButton *kbdBtn = [cv viewWithTag:903];
+        kbdBtn.accessibilityLabel = m_kbShown ? @"Hide keyboard" : @"Show keyboard";
         if (ttsBtn) {
             ttsBtn.accessibilityLabel = vm.isSpeaking ? @"Stop reading" : (vm.ttsEnabled ? @"Disable text to speech" : @"Enable text to speech");
             [ttsBtn setImage:[[UIImage systemImageNamed:vm.isSpeaking ? @"stop.fill" : (vm.ttsEnabled ? @"speaker.wave.1.fill" : @"speaker.slash")]
@@ -5451,6 +5481,41 @@ static BOOL migateDropboxAuth() {
                               imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         }
     }
+}
+
+-(void)updateVoiceReplayActions {
+    VoiceManager *vm = [VoiceManager shared];
+    NSArray *actions = vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff && !m_pendingVoiceCommand
+        ? @[[[UIAccessibilityCustomAction alloc] initWithName:@"Replay last response" target:self selector:@selector(replayLastVoiceResponse:)]] : nil;
+    m_voiceTapOverlay.accessibilityCustomActions = actions;
+    [self.navigationItem.rightBarButtonItem.customView viewWithTag:901].accessibilityCustomActions = actions;
+}
+
+-(BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action {
+    VoiceManager *vm = [VoiceManager shared];
+    if (!m_voiceSessionActive || vm.delegate != self || vm.voiceMode == VoiceModeOff || !vm.lastStoryResponse.length
+        || m_pendingVoiceCommand || [self hasPendingVoiceOutput]
+        || self.presentedViewController || self.navigationController.presentedViewController
+        || (self.navigationController && self.navigationController.topViewController != self)
+        || UIApplication.sharedApplication.applicationState != UIApplicationStateActive) return NO;
+    m_voiceAutoListenReady = NO;
+    ++m_voiceRestartGeneration;
+    m_voiceListenPending = NO;
+    if (vm.isListening && !m_inputLine.isFirstResponder) m_inputLine.text = @"";
+    // No interpreter input, command history, confirmation or turn submission.
+    return [vm replayLastStoryResponse];
+}
+
+-(BOOL)accessibilityPerformMagicTap {
+    VoiceManager *vm = [VoiceManager shared];
+    if (!m_voiceSessionActive || vm.delegate != self || !vm.sttEnabled
+        || self.presentedViewController || self.navigationController.presentedViewController
+        || (self.navigationController && self.navigationController.topViewController != self)
+        || UIApplication.sharedApplication.applicationState != UIApplicationStateActive) return NO;
+    [self activateVoiceInput];
+    // This is the game's gesture even when input is temporarily unavailable
+    // (keyboard or on-screen confirmation). Never fall through to media playback.
+    return YES;
 }
 
 -(void)finishStoryNarration:(BOOL)unreadableStory inView:(RichTextView *)storyView voiceManager:(VoiceManager *)vm {
@@ -5566,6 +5631,7 @@ static BOOL migateDropboxAuth() {
 
 -(void)scheduleVoiceListening {
     VoiceManager *vm = [VoiceManager shared];
+    if (vm.voiceOverNavigationPaused) return;
     if (m_pendingVoiceCommand && [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage].count == 0) {
         m_voiceAutoListenReady = NO;
         return; // Unsupported confirmation language: explicit on-screen actions only.
@@ -5583,7 +5649,7 @@ static BOOL migateDropboxAuth() {
         if (!self || generation != self->m_voiceRestartGeneration)
             return;
         self->m_voiceListenPending = NO;
-        if (self->m_voiceAutoListenReady && [self canAcceptVoiceInput] && !vm.isSpeaking && !vm.isListening && ![self hasPendingVoiceOutput]) {
+        if (self->m_voiceAutoListenReady && !vm.voiceOverNavigationPaused && [self canAcceptVoiceInput] && !vm.isSpeaking && !vm.isListening && ![self hasPendingVoiceOutput]) {
             self->m_voiceAutoListenReady = NO;
             [self prepareVoiceCommandRecognition];
             [vm startListening];
@@ -5594,6 +5660,10 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)stopCurrentVoiceSpeech {
+    if ([VoiceManager shared].isVoiceOverEnabled) {
+        [[VoiceManager shared] pauseForVoiceOverNavigation];
+        return;
+    }
     [[VoiceManager shared] stopSpeaking];
     [self voiceManagerDidFinishSpeaking];
 }
@@ -5686,10 +5756,24 @@ static BOOL migateDropboxAuth() {
 
 #pragma mark - VoiceManagerDelegate
 
+-(void)voiceManagerDidPauseForVoiceOverDiscardingInput:(BOOL)discardInput {
+    BOOL givePauseCue = discardInput || m_voiceListenPending;
+    m_voiceAutoListenReady = NO;
+    ++m_voiceRestartGeneration;
+    m_voiceListenPending = NO;
+    if (discardInput && !m_inputLine.isFirstResponder)
+        [m_inputLine setText:@""];
+    [self updateVoiceButtonIcons];
+    [self resetTapOverlayToMicIdle];
+    if (givePauseCue) [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackNavigationPaused];
+}
+
 -(void)voiceManagerDidStartSpeaking {
     [self updateVoiceButtonIcons];
     [self stopVoiceListeningAnimation];
     m_voiceTapOverlay.accessibilityLabel = @"Stop reading";
+    m_voiceTapOverlay.accessibilityValue = m_pendingVoiceCommand ? @"Reading command confirmation" : @"Reading response";
+    m_voiceTapOverlay.accessibilityHint = @"Double-tap to pause voice interaction, or use a two-finger double-tap.";
     if (@available(iOS 13.0, *)) {
         UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
 
@@ -5719,6 +5803,9 @@ static BOOL migateDropboxAuth() {
 -(void)resetTapOverlayToMicIdle {
     [self stopVoiceListeningAnimation];
     m_voiceTapOverlay.accessibilityLabel = @"Start listening";
+    BOOL paused = [VoiceManager shared].voiceOverNavigationPaused;
+    m_voiceTapOverlay.accessibilityValue = paused ? @"Paused for VoiceOver navigation" : @"Not listening";
+    m_voiceTapOverlay.accessibilityHint = @"Double-tap to start dictation, or use a two-finger double-tap. Navigating with VoiceOver pauses dictation.";
     UILabel *idleHint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
     idleHint.text = @"Tap to speak";
     idleHint.textColor = m_defaultFGColor;
@@ -5736,11 +5823,13 @@ static BOOL migateDropboxAuth() {
         }
     }
     [self updateVoiceConfirmationDisplay];
+    [self updateVoiceReplayActions];
 }
 
 -(void)showVoiceListeningPreparation {
     [self stopVoiceListeningAnimation];
     m_voiceTapOverlay.accessibilityLabel = @"Preparing microphone";
+    m_voiceTapOverlay.accessibilityValue = @"Not listening yet";
     UIColor *color = [UIColor grayColor];
     if (@available(iOS 13.0, *)) {
         color = [UIColor secondaryLabelColor];
@@ -5848,10 +5937,12 @@ static BOOL migateDropboxAuth() {
     [m_voiceTapOverlay viewWithTag:999].hidden = NO;
     m_voiceHintPosition.constant = 36;
     m_voiceTapOverlay.isAccessibilityElement = YES;
+    [self updateVoiceReplayActions];
     if (hadPendingCommand) [self autosize];
 }
 
 -(void)updateVoiceConfirmationDisplay {
+    [self updateVoiceReplayActions];
     if (!m_pendingVoiceCommand) return;
     m_voiceConfirmationButtons.hidden = NO;
     [m_voiceTapOverlay viewWithTag:999].hidden = YES;
@@ -5953,6 +6044,7 @@ static BOOL migateDropboxAuth() {
         // Check if we're in char-input mode
         if (ipzAllowInput & kIPZNoEcho) {
             NSString *translated = [[VoiceManager shared] translateForCharInput:text];
+            [[VoiceManager shared] rememberPlayerCommand:translated];
             [m_inputLine setText:@""];
             iosif_feed_input(translated);
         } else {
@@ -5968,13 +6060,11 @@ static BOOL migateDropboxAuth() {
         return;
     }
     m_voiceTapOverlay.accessibilityLabel = @"Stop listening";
+    m_voiceTapOverlay.accessibilityValue = @"Listening";
+    m_voiceTapOverlay.accessibilityHint = @"Double-tap to stop dictation, or use a two-finger double-tap.";
     [self startVoiceListeningAnimation];
-    // Audible cue: short rising tone so user knows mic is active (works on bike/car mount)
-    AudioServicesPlaySystemSound(1113); // "begin recording" tone
-
-    // Haptic feedback
-    UIImpactFeedbackGenerator *haptic = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleLight];
-    [haptic impactOccurred];
+    [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackReady];
+    [self updateVoiceReplayActions];
 
     // Visual feedback: tint the input line and update mic overlay
     [m_inputLine setBackgroundColor:[UIColor colorWithRed:1.0 green:0.9 blue:0.9 alpha:1.0]];
@@ -5991,8 +6081,9 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerDidStopListening {
-    // Audible cue: short falling tone
-    AudioServicesPlaySystemSound(1114); // "end recording" tone
+    // Navigation supplies its own distinct pause cue once, after cancellation.
+    if (![VoiceManager shared].voiceOverNavigationPaused)
+        [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackStopped];
 
     // Reset input line background and mic overlay
     [m_inputLine setBackgroundColor:m_defaultBGColor];
@@ -6008,8 +6099,13 @@ static BOOL migateDropboxAuth() {
     [self updateVoiceButtonIcons];
     [self resetTapOverlayToMicIdle];
     UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-    hint.text = @"Speech unavailable. Tap to retry";
+    hint.text = [error.domain isEqualToString:@"FrotzVoice"] && error.code == 5
+        ? @"Voice input with VoiceOver unavailable. Tap to retry or use keyboard."
+        : @"Speech unavailable. Tap to retry";
     m_voiceTapOverlay.accessibilityLabel = hint.text;
+    m_voiceTapOverlay.accessibilityValue = @"Recognition failed. Not listening";
+    m_voiceTapOverlay.accessibilityHint = @"Double-tap to retry, or use a two-finger double-tap. You can also use the keyboard.";
+    [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackError];
     NSLog(@"Voice recognition error: domain=%@ code=%ld", error.domain, (long)error.code);
 }
 
@@ -6019,13 +6115,17 @@ static BOOL migateDropboxAuth() {
     if (m_voiceTapOverlay)
         return;
 
-    m_voiceTapOverlay = [[UIView alloc] initWithFrame:CGRectZero];
+    FrotzVoiceInputView *inputView = [[FrotzVoiceInputView alloc] initWithFrame:CGRectZero];
+    __weak StoryMainViewController *weakSelf = self;
+    inputView.activation = ^BOOL { return [weakSelf activateVoiceInput]; };
+    m_voiceTapOverlay = inputView;
     m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
     m_voiceTapOverlay.layer.borderColor = [[UIColor grayColor] colorWithAlphaComponent:0.2].CGColor;
     m_voiceTapOverlay.layer.borderWidth = 0.5;
     m_voiceTapOverlay.userInteractionEnabled = YES;
     m_voiceTapOverlay.isAccessibilityElement = YES;
-    m_voiceTapOverlay.accessibilityTraits = UIAccessibilityTraitButton;
+    m_voiceTapOverlay.accessibilityTraits = UIAccessibilityTraitButton | UIAccessibilityTraitStartsMediaSession;
+    m_voiceTapOverlay.accessibilityHint = @"Starts or stops dictation. Navigating with VoiceOver pauses dictation.";
     m_voiceTapOverlay.accessibilityIdentifier = @"voiceInput";
     m_voiceTapOverlay.accessibilityLabel = @"Start listening";
 
@@ -6097,9 +6197,17 @@ static BOOL migateDropboxAuth() {
     if (m_pendingVoiceCommand && [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage].count == 0)
         return;
 
+    [self activateVoiceInput];
+}
+
+-(BOOL)activateVoiceInput {
+    VoiceManager *vm = [VoiceManager shared];
+    if (m_pendingVoiceCommand && [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage].count == 0)
+        return NO;
+
     if (vm.isSpeaking) {
         [self stopCurrentVoiceSpeech];
-        return;
+        return YES;
     }
 
     if ([self canAcceptVoiceInput]) {
@@ -6109,10 +6217,13 @@ static BOOL migateDropboxAuth() {
         if (vm.isListening) {
             [vm stopListening];
         } else {
+            [vm resumeAfterVoiceOverNavigation];
             [self prepareVoiceCommandRecognition];
             [vm startListening];
         }
+        return YES;
     }
+    return NO;
 }
 
 -(BOOL)canBecomeFirstResponder {

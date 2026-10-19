@@ -318,6 +318,7 @@
         "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Speech Input Language for other stories or to override metadata.</li>"
         "<li>Download more voices in iOS Settings &gt; Accessibility &gt; Read &amp; Speak &gt; Voices (Spoken Content on older iOS versions).</li>"
         "<li>Follow the highlighted narration and listening animation. Tap the voice controls to stop speaking or listening.</li>"
+        "<li>With VoiceOver enabled, game narration uses VoiceOver’s voice and rate. Dictation waits for narration to finish, and moving VoiceOver focus pauses it. Activate Start listening or use a two-finger double-tap to resume hands-free turns. The speech controls offer Replay last response in VoiceOver’s Actions menu, without taking a turn. Distinct sounds and haptics signal readiness, navigation pauses and errors.</li>"
         "<li>Voice activity pauses when you open Settings or leave a story.</li></ul><hr/>";
     NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, voiceNotes, htmlString];
     [webView loadHTMLString: contentString baseURL: nil];
