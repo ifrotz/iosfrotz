@@ -10,14 +10,6 @@
 #include "iosfrotz.h"
 #include "ui_utils.h"
 
-CGRect FrotzApplicationFrame(void) {
-    if (@available(iOS 27.0, *)) {
-        UIWindow *window = UIApplication.sharedApplication.delegate.window;
-        return window.windowScene ? window.windowScene.coordinateSpace.bounds : UIScreen.mainScreen.bounds;
-    }
-    return UIScreen.mainScreen.applicationFrame;
-}
-
 static CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHigh);
 
 UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
@@ -28,7 +20,7 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     if (!inImage)
         return nil;
 	
-    CGSize screenSize = FrotzApplicationFrame().size;
+    CGSize screenSize = [[UIScreen mainScreen] applicationFrame].size;
     
     size_t origWidth = CGImageGetWidth(inImage);
     size_t origHeight = CGImageGetHeight(inImage);

@@ -1,4 +1,3 @@
-#import "ui_utils.h"
 //
 //  URLPromptController.m
 //  Frotz
@@ -36,7 +35,7 @@
 - (void)loadView
 {
     // add the top-most parent view
-    CGRect appFrame = FrotzApplicationFrame();
+    CGRect appFrame = [[UIScreen mainScreen] applicationFrame];
     CGRect frame = CGRectMake(0, 0, appFrame.size.width, kSearchBarHeight);
     UIView *contentView = [[UIView alloc] initWithFrame: frame];
 

@@ -61,53 +61,6 @@
 }
 @end
 
-@interface FrotzAppDelegate ()
-- (void)configureWindowSkippingAutoRestore:(BOOL)skipAutoRestore;
-@end
-
-// A single scene retains the existing custom window, story controllers and saves.
-API_AVAILABLE(ios(13.0))
-@interface FrotzSceneDelegate : NSObject <UIWindowSceneDelegate>
-@property (nonatomic, strong) UIWindow *window;
-@end
-
-@implementation FrotzSceneDelegate
-- (FrotzAppDelegate *)applicationDelegate {
-    return (FrotzAppDelegate *)UIApplication.sharedApplication.delegate;
-}
-- (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)options {
-    if (![scene isKindOfClass:UIWindowScene.class]) return;
-    FrotzAppDelegate *delegate = [self applicationDelegate];
-    self.window = delegate.window;
-    self.window.windowScene = (UIWindowScene *)scene;
-    if (!self.window.rootViewController)
-        self.window.rootViewController = [[UIStoryboard storyboardWithName:@"StoryStoryboard" bundle:nil] instantiateInitialViewController];
-    [delegate configureWindowSkippingAutoRestore:options.shortcutItem != nil || options.URLContexts.count > 0];
-    [self.window makeKeyAndVisible];
-    [self scene:scene openURLContexts:options.URLContexts];
-    if (options.shortcutItem)
-        [self windowScene:(UIWindowScene *)scene performActionForShortcutItem:options.shortcutItem completionHandler:^(BOOL handled) {}];
-}
-- (void)sceneDidEnterBackground:(UIScene *)scene {
-    [[self applicationDelegate] applicationDidEnterBackground:UIApplication.sharedApplication];
-}
-- (void)sceneWillEnterForeground:(UIScene *)scene {
-    [[self applicationDelegate] applicationWillEnterForeground:UIApplication.sharedApplication];
-}
-- (void)scene:(UIScene *)scene openURLContexts:(NSSet<UIOpenURLContext *> *)contexts {
-    FrotzAppDelegate *delegate = [self applicationDelegate];
-    for (UIOpenURLContext *context in contexts) {
-        NSMutableDictionary *options = [@{UIApplicationOpenURLOptionsOpenInPlaceKey:@(context.options.openInPlace)} mutableCopy];
-        if (context.options.sourceApplication) options[UIApplicationOpenURLOptionsSourceApplicationKey] = context.options.sourceApplication;
-        if (context.options.annotation) options[UIApplicationOpenURLOptionsAnnotationKey] = context.options.annotation;
-        [delegate application:UIApplication.sharedApplication openURL:context.URL options:options];
-    }
-}
-- (void)windowScene:(UIWindowScene *)scene performActionForShortcutItem:(UIApplicationShortcutItem *)item completionHandler:(void (^)(BOOL))completion {
-    [[self applicationDelegate] application:UIApplication.sharedApplication performActionForShortcutItem:item completionHandler:completion];
-}
-@end
-
 @implementation FrotzAppDelegate
 
 - (StoryMainViewController *)voiceGestureStoryController {
@@ -120,6 +73,7 @@ API_AVAILABLE(ios(13.0))
     // Keep the gesture in the visible gameplay context instead of Now Playing.
     return [[self voiceGestureStoryController] accessibilityPerformMagicTap];
 }
+
 
 @synthesize window = m_window;
 
@@ -152,30 +106,29 @@ int gLargeScreenPhone = 0;
         [m_browser setPostLaunch];
         [[m_browser navigationController] popToViewController:m_browser animated:YES];
         completionHandler(YES);
-    } else {
-        completionHandler(NO);
     }
 }
 
 //- (void)applicationDidFinishLaunching:(UIApplication *)application
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOption {
-    if (@available(iOS 13.0, *)) return YES; // Scene connection configures the window.
-    [self configureWindowSkippingAutoRestore:launchOption[UIApplicationLaunchOptionsURLKey] != nil
-        || launchOption[UIApplicationLaunchOptionsShortcutItemKey] != nil];
-    NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
-    if (url) [self application:application openURL:url options:@{}];
-    return YES;
-}
-
-- (void)configureWindowSkippingAutoRestore:(BOOL)skipAutoRestore {
-    if (m_browser) return; // Reconnecting the single scene must not restart the interpreter.
+    // Configure and show the window
     CGRect rect = [[UIScreen mainScreen] bounds];
     gLargeScreenDevice = (UI_USER_INTERFACE_IDIOM()==UIUserInterfaceIdiomPad);
-    gLargeScreenPhone = (rect.size.height >= 375 && rect.size.width >= 375) + (rect.size.height >= 414 && rect.size.width >= 414);
-    m_browser = [m_window.rootViewController.childViewControllers[0] childViewControllers][0];
-    // Set this before loading the browser: viewDidLoad schedules saved-game restoration.
-    if (skipAutoRestore) [m_browser setPostLaunch];
+	gLargeScreenPhone = (rect.size.height >= 375 && rect.size.width >= 375) + (rect.size.height >= 414 && rect.size.width >= 414);
 
+    NSURL *launchURL = nil;
+    BOOL handledShortcut = YES;
+    m_browser = [m_window.rootViewController.childViewControllers[0] childViewControllers][0];
+
+    if (launchOption) {
+        NSURL *url = launchOption[UIApplicationLaunchOptionsURLKey];
+        if (url) 
+            launchURL = url;
+        if (launchOption[UIApplicationLaunchOptionsShortcutItemKey]) {
+            [m_browser setPostLaunch];
+            handledShortcut = YES;
+        }
+    }
     UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
     [m_browser storyMainViewController].storyNavController = navigationController;
     //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
@@ -202,6 +155,10 @@ int gLargeScreenPhone = 0;
 
     [m_browser view];
     m_browser.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
+    if (launchURL)
+        [self application:application handleOpenURL: launchURL];
+
+    return !handledShortcut;
 }
 
 - (void)transitionViewDidFinish:(TransitionView *)view {

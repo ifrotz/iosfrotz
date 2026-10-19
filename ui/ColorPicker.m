@@ -1,4 +1,3 @@
-#import "ui_utils.h"
 #import <CoreFoundation/CoreFoundation.h>
 #import <Foundation/Foundation.h>
 #import "ColorPicker.h"
@@ -650,7 +649,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)loadView {
-    CGRect frame = FrotzApplicationFrame();
+    CGRect frame = [[UIScreen mainScreen] applicationFrame];
     BOOL fullScreenLarge = (frame.size.width > 760);
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
