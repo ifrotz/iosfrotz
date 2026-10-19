@@ -16,8 +16,18 @@
 - (void)delayedInput:(NSString *)text;
 @end
 
+@interface TestEditingInputLine : StoryInputLine
+@end
+@implementation TestEditingInputLine
+- (BOOL)isFirstResponder { return YES; }
+@end
+
 @interface StoryMainViewController (VoiceTesting)
 - (void)setupVoiceToolbar;
+- (void)updateVoiceButtonIcons;
+- (void)toggleTTS;
+- (void)keyboardDidShow:(NSNotification *)notification;
+- (CGFloat)voiceControlBarHeightForWidth:(CGFloat)width;
 - (BOOL)canAcceptVoiceInput;
 - (void)setupVoiceTapOverlay;
 - (BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action;
@@ -58,6 +68,7 @@
 + (NSString *)recognitionLanguageForLanguage:(NSString *)language;
 - (BOOL)recordingIsAuthorized;
 - (BOOL)configureAudioSessionForRecording;
+- (BOOL)configureAudioSessionForPlayback;
 - (AVAudioSession *)recordingAudioSession;
 - (void)deactivateAudioSession;
 - (void)silenceTimerFired;
@@ -92,6 +103,7 @@
 @property BOOL voiceOverRunning;
 @property NSMutableArray<NSNumber *> *feedback;
 @property NSMutableArray<NSString *> *announcements;
+@property NSUInteger audioDeactivations;
 @end
 @implementation TestVoiceManager
 - (BOOL)isVoiceOverEnabled { return self.voiceOverRunning; }
@@ -105,7 +117,7 @@
 }
 - (BOOL)recordingIsAuthorized { return self.recordingAllowed; }
 - (BOOL)configureAudioSessionForRecording { return YES; }
-- (void)deactivateAudioSession {}
+- (void)deactivateAudioSession { ++self.audioDeactivations; }
 - (void)speakConfirmationPrompt:(NSString *)text {
     self.confirmationPrompt = text;
     if (self.voiceOverRunning) [super speakConfirmationPrompt:text];
@@ -115,10 +127,16 @@
 @interface TestSynthesizer : NSObject
 @property (getter=isSpeaking) BOOL speaking;
 @property NSUInteger utterances;
+@property NSUInteger stops;
+@property NSMutableArray<AVSpeechUtterance *> *queuedUtterances;
 @end
 @implementation TestSynthesizer
-- (void)speakUtterance:(AVSpeechUtterance *)utterance { self.speaking = YES; ++self.utterances; }
-- (BOOL)stopSpeakingAtBoundary:(AVSpeechBoundary)boundary { self.speaking = NO; return YES; }
+- (void)speakUtterance:(AVSpeechUtterance *)utterance {
+    self.speaking = YES; ++self.utterances;
+    if (!self.queuedUtterances) self.queuedUtterances = [NSMutableArray array];
+    [self.queuedUtterances addObject:utterance];
+}
+- (BOOL)stopSpeakingAtBoundary:(AVSpeechBoundary)boundary { ++self.stops; self.speaking = NO; return YES; }
 @end
 
 @interface TestNarrationManager : TestVoiceManager
@@ -190,10 +208,11 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @interface TestSpeechRecognizer : NSObject
 @property NSMutableArray<RecognitionHandler> *handlers;
 @property SFSpeechRecognitionRequest *lastRequest;
+@property BOOL unavailable;
 @end
 @implementation TestSpeechRecognizer
 - (NSLocale *)locale { return [NSLocale localeWithLocaleIdentifier:@"en-US"]; }
-- (BOOL)isAvailable { return YES; }
+- (BOOL)isAvailable { return !self.unavailable; }
 - (BOOL)supportsOnDeviceRecognition { return NO; }
 - (id)recognitionTaskWithRequest:(SFSpeechRecognitionRequest *)request resultHandler:(RecognitionHandler)handler {
     self.lastRequest = request;
@@ -230,10 +249,12 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @property NSString *lastText;
 @property NSUInteger speakingStarts;
 @property NSUInteger speakingFinishes;
+@property BOOL keepAudioForListening;
 @end
 @implementation TestVoiceDelegate
 - (void)voiceManagerDidStartSpeaking { ++self.speakingStarts; }
 - (void)voiceManagerDidFinishSpeaking { ++self.speakingFinishes; }
+- (BOOL)voiceManagerWillResumeListening { return self.keepAudioForListening; }
 - (void)voiceManagerHighlightRange:(NSRange)range inView:(RichTextView *)view {}
 - (void)voiceManagerDidClearHighlight {}
 - (void)voiceManagerDidRecognizeText:(NSString *)text isFinal:(BOOL)isFinal {
@@ -267,9 +288,14 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @property BOOL active;
 @property BOOL cuesEnabledBeforeActivation;
 @property NSString *category;
+@property NSString *mode;
+@property AVAudioSessionCategoryOptions categoryOptions;
+@property NSUInteger categoryChanges;
 @end
 @implementation TestRecordingSession
-- (BOOL)setCategory:(NSString *)category mode:(NSString *)mode options:(AVAudioSessionCategoryOptions)options error:(NSError **)error { self.category = category; return YES; }
+- (BOOL)setCategory:(NSString *)category mode:(NSString *)mode options:(AVAudioSessionCategoryOptions)options error:(NSError **)error {
+    self.category = category; self.mode = mode; self.categoryOptions = options; ++self.categoryChanges; return YES;
+}
 - (BOOL)setAllowHapticsAndSystemSoundsDuringRecording:(BOOL)allowed error:(NSError **)error {
     self.cuesAllowed = allowed;
     self.cuesEnabledBeforeActivation = allowed && !self.active;
@@ -292,6 +318,237 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @end
 
 @implementation FrotzVoiceTests
+- (void)testFailedRecordingPreflightReleasesAudioRetainedForHandoff {
+    self.manager.voiceMode = VoiceModeBoth;
+    self.voiceDelegate.keepAudioForListening = YES;
+    for (NSUInteger failure = 0; failure < 3; ++failure) {
+        self.manager.recordingAllowed = failure != 0;
+        self.recognizer.unavailable = failure == 1;
+        self.manager.speechRecognitionLanguage = failure == 2 ? @"zz-ZZ" : @"en-US";
+        TestSynthesizer *synthesizer = [TestSynthesizer new];
+        [self.manager setValue:synthesizer forKey:@"synthesizer"];
+        AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@"Post Office Hill."];
+        [self.manager setValue:utterance forKey:@"activeUtterance"];
+        [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:utterance];
+        NSUInteger before = self.manager.audioDeactivations;
+        [self.manager startListening];
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertGreaterThan(self.manager.audioDeactivations, before, @"Preflight failure %lu must release retained audio", (unsigned long)failure);
+    }
+}
+- (void)testFinishedSpeechReleasesAudioWhenTheControllerWillNotRecord {
+    self.manager.voiceMode = VoiceModeBoth;
+    TestSynthesizer *synthesizer = [TestSynthesizer new];
+    [self.manager setValue:synthesizer forKey:@"synthesizer"];
+    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@"You stand by an iron gate."];
+    [self.manager setValue:utterance forKey:@"activeUtterance"];
+    NSUInteger before = self.manager.audioDeactivations;
+    [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:utterance];
+    XCTAssertGreaterThan(self.manager.audioDeactivations, before, @"Typing or an inactive view must not hold a recording session indefinitely");
+}
+- (void)testConfirmationNarrationHasAStopControlWhenAutomaticNarrationIsOff {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeSTTOnly;
+        self.manager.voiceOverRunning = YES;
+        [self.manager speakConfirmationPrompt:@"Say confirm, retry or cancel."];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        UIButton *speech = [bar viewWithTag:905];
+        XCTAssertFalse(speech.hidden);
+        XCTAssertTrue(speech.enabled);
+        XCTAssertEqualObjects(speech.accessibilityLabel, @"Stop reading");
+    }];
+}
+- (void)testTypedCommandStaysAboveTheVoiceBarInsteadOfCoveringTheMicrophone {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+        [controller setValue:background forKey:@"m_background"];
+        UIColor *paper = [UIColor colorWithWhite:0.95 alpha:1];
+        [controller setValue:paper forKey:@"m_defaultBGColor"];
+        [background addSubview:bar];
+        bar.frame = CGRectMake(0, 500, 320, 60);
+        TestEditingInputLine *input = [[TestEditingInputLine alloc] initWithFrame:CGRectMake(0, 0, 320, 44)];
+        [input setStoryView:(id)controller.storyView];
+        input.delegate = controller;
+        [background addSubview:input];
+        [controller setValue:input forKey:@"m_inputLine"];
+        [input updatePosition];
+        XCTAssertEqualWithAccuracy(CGRectGetMaxY(input.frame), 500, 0.1);
+        XCTAssertGreaterThanOrEqual(input.bounds.size.height, 44);
+        XCTAssertFalse(CGRectIntersectsRect(input.frame, bar.frame));
+        XCTAssertEqualObjects(input.backgroundColor, paper, @"The typing row must cover story text underneath it");
+    }];
+}
+- (void)testFloatingAndPhysicalKeyboardsDoNotReserveAFullKeyboardHeight {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        controller.view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+        NSArray *frames = @[[NSValue valueWithCGRect:CGRectMake(0, 440, 320, 200)],
+                            [NSValue valueWithCGRect:CGRectMake(70, 250, 220, 200)],
+                            [NSValue valueWithCGRect:CGRectMake(0, 640, 320, 200)]];
+        NSArray *expectedHeights = @[@200, @0, @0];
+        for (NSUInteger i = 0; i < frames.count; ++i) {
+            NSNotification *notification = [NSNotification notificationWithName:UIKeyboardDidShowNotification object:nil
+                userInfo:@{UIKeyboardFrameEndUserInfoKey:frames[i], UIKeyboardBoundsUserInfoKey:[NSValue valueWithCGRect:CGRectMake(0, 0, 320, 200)]}];
+            [controller keyboardDidShow:notification];
+            CGSize keyboard = [[controller valueForKey:@"m_kbdSize"] CGSizeValue];
+            XCTAssertEqualWithAccuracy(keyboard.height, [expectedHeights[i] doubleValue], 0.1);
+        }
+    }];
+}
+- (void)testNarrationHasAnIndependentReplayButtonWithTheMicrophoneDisabled {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [self.manager setValue:[TestSynthesizer new] forKey:@"synthesizer"];
+        self.manager.voiceMode = VoiceModeTTSOnly;
+        [self.manager rememberStoryResponse:@"You stand by an iron gate."];
+        [controller updateVoiceButtonIcons];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        UIButton *microphone = [bar viewWithTag:904];
+        UIButton *speech = [bar viewWithTag:905];
+        XCTAssertNotNil(microphone); XCTAssertNotNil(speech);
+        XCTAssertFalse(bar.isAccessibilityElement, @"The two controls must be independently accessible");
+        XCTAssertTrue(microphone.hidden);
+        XCTAssertFalse(speech.hidden);
+        XCTAssertEqualObjects(speech.accessibilityLabel, @"Replay last response");
+        XCTAssertTrue(speech.enabled);
+        [speech sendActionsForControlEvents:UIControlEventTouchUpInside];
+        XCTAssertTrue(self.manager.isSpeaking);
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects(speech.accessibilityLabel, @"Stop reading");
+    }];
+}
+- (void)testTopSpeakerConfiguresNarrationInsteadOfBecomingAStopButton {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [self withAutomaticListeningController:^(TestStoryController *controller) {
+            self.manager.voiceMode = VoiceModeBoth;
+            TestSynthesizer *synthesizer = [TestSynthesizer new];
+            synthesizer.speaking = YES;
+            [self.manager setValue:synthesizer forKey:@"synthesizer"];
+            [self.manager setValue:[AVSpeechUtterance speechUtteranceWithString:@"Reading"] forKey:@"activeUtterance"];
+            [controller setupVoiceToolbar];
+            [controller updateVoiceButtonIcons];
+            UIButton *config = [controller.navigationItem.rightBarButtonItem.customView viewWithTag:901];
+            XCTAssertEqualObjects(config.accessibilityLabel, @"Disable text to speech");
+            [controller toggleTTS];
+            XCTAssertFalse(self.manager.ttsEnabled);
+            XCTAssertTrue(self.manager.sttEnabled);
+            XCTAssertFalse(self.manager.isSpeaking, @"Disabling narration must stop the current automatic reading");
+        }];
+    }];
+}
+- (void)testVoiceBarFitsCompactAndWideScreensWithoutOverlappingControls {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeBoth;
+        [controller updateVoiceButtonIcons];
+        XCTAssertTrue([controller respondsToSelector:@selector(voiceControlBarHeightForWidth:)]);
+        if (![controller respondsToSelector:@selector(voiceControlBarHeightForWidth:)]) return;
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        for (NSNumber *width in @[@240, @320, @834]) {
+            CGFloat height = [controller voiceControlBarHeightForWidth:width.doubleValue];
+            XCTAssertLessThanOrEqual(height, 80);
+            bar.frame = CGRectMake(0, 0, width.doubleValue, height);
+            [bar layoutIfNeeded];
+            UIButton *mic = [bar viewWithTag:904], *speech = [bar viewWithTag:905];
+            CGRect micRect = [mic convertRect:mic.bounds toView:bar];
+            CGRect speechRect = [speech convertRect:speech.bounds toView:bar];
+            XCTAssertFalse(CGRectIntersectsRect(micRect, speechRect));
+            XCTAssertGreaterThanOrEqual(micRect.size.height, 44);
+            XCTAssertGreaterThanOrEqual(speechRect.size.height, 44);
+            XCTAssertTrue(CGRectContainsRect(bar.bounds, micRect));
+            XCTAssertTrue(CGRectContainsRect(bar.bounds, speechRect));
+        }
+    }];
+}
+- (void)testRoomHeadingAndParagraphsHaveSpeechBreaksWithoutEndingTheTurnEarly {
+    self.manager.voiceMode = VoiceModeBoth;
+    TestSynthesizer *synthesizer = [TestSynthesizer new];
+    [self.manager setValue:synthesizer forKey:@"synthesizer"];
+    [self.manager speakText:@"Outside cemetery\nYou stand by an iron gate.\n\nA road runs east." inView:nil];
+    XCTAssertEqual(synthesizer.queuedUtterances.count, 3u);
+    if (synthesizer.queuedUtterances.count != 3) return;
+    XCTAssertEqualObjects(synthesizer.queuedUtterances[0].speechString, @"Outside cemetery");
+    XCTAssertGreaterThanOrEqual(synthesizer.queuedUtterances[0].postUtteranceDelay, 0.15);
+    [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:synthesizer.queuedUtterances[0]];
+    XCTAssertTrue(self.manager.isSpeaking);
+    XCTAssertEqual(self.voiceDelegate.speakingFinishes, 0u);
+    [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:synthesizer.queuedUtterances[1]];
+    XCTAssertTrue(self.manager.isSpeaking);
+    [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:synthesizer.queuedUtterances[2]];
+    XCTAssertFalse(self.manager.isSpeaking);
+    XCTAssertEqual(self.voiceDelegate.speakingFinishes, 1u);
+    XCTAssertEqualObjects(self.manager.lastStoryResponse, @"Outside cemetery\nYou stand by an iron gate.\n\nA road runs east.");
+}
+- (void)testVoiceOverGetsHeadingPunctuationAndParagraphBoundaries {
+    self.manager.voiceMode = VoiceModeBoth;
+    self.manager.voiceOverRunning = YES;
+    [self.manager speakText:@"Outside cemetery\nYou stand by an iron gate." inView:nil];
+    XCTAssertEqualObjects(self.manager.announcements.lastObject, @"Outside cemetery.\n\nYou stand by an iron gate.");
+    XCTAssertEqualObjects(self.manager.lastStoryResponse, @"Outside cemetery\nYou stand by an iron gate.");
+}
+- (void)testMicrophoneHandoffDoesNotStopOrDeactivateTheJustFinishedSpeech {
+    self.manager.voiceMode = VoiceModeBoth;
+    self.voiceDelegate.keepAudioForListening = YES;
+    TestSynthesizer *synthesizer = [TestSynthesizer new];
+    synthesizer.speaking = YES; // The audio object may still drain after its finish callback.
+    AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:@"A road runs east to the top of Post Office Hill."];
+    [self.manager setValue:synthesizer forKey:@"synthesizer"];
+    [self.manager setValue:utterance forKey:@"activeUtterance"];
+    NSUInteger before = self.manager.audioDeactivations;
+    [self.manager speechSynthesizer:(id)synthesizer didFinishSpeechUtterance:utterance];
+    [self.manager startListening];
+    XCTAssertTrue(self.manager.isListening);
+    XCTAssertEqual(synthesizer.stops, 0u, @"Normal handoff must not issue stop-at-immediate to draining speech");
+    XCTAssertEqual(self.manager.audioDeactivations, before, @"Keep the audio session intact through the handoff");
+    [self.manager stopListening];
+    [self.manager stopSpeaking];
+    XCTAssertGreaterThan(self.manager.audioDeactivations, before, @"Explicit cancellation still releases audio");
+}
+- (void)testCombinedModeUsesTheSameAudioConfigurationForSpeechAndRecording {
+    TestRecordingSessionManager *manager = [TestRecordingSessionManager new];
+    manager.session = [TestRecordingSession new];
+    manager.voiceMode = VoiceModeBoth;
+    XCTAssertTrue([manager configureAudioSessionForPlayback]);
+    XCTAssertEqualObjects(manager.session.category, AVAudioSessionCategoryPlayAndRecord);
+    XCTAssertTrue([manager configureAudioSessionForRecording]);
+    XCTAssertEqual(manager.session.categoryChanges, 1u, @"Do not switch audio routing between narration and capture");
+}
+- (void)testConfirmationUsesShortReplyRecognitionAndAcceptsExactUnknownConfidence {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"take gown"] confidence:0.4];
+        [self drainCallbacks];
+        XCTAssertTrue(self.manager.recognizingConfirmation);
+        XCTAssertEqual(self.recognizer.lastRequest.taskHint, SFSpeechRecognitionTaskHintConfirmation);
+        XCTAssertEqualObjects(self.recognizer.lastRequest.contextualStrings, (@[@"confirm", @"retry", @"cancel"]));
+        [self sendAlternatives:@[@"confirm"] confidence:0];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+    }];
+}
+- (void)testConflictingConfirmationAlternativesCannotApproveACommand {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"take gown"] confidence:0.4];
+        [self drainCallbacks];
+        [self sendAlternatives:@[@"confirm", @"cancel"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertNotNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+        XCTAssertFalse([self.manager.confirmationPrompt containsString:@"take gown"], @"Retry only the short choice reminder");
+    }];
+}
+- (void)testNoisyDirectionCanOutrankAnOrdinaryVisibleWordButIsNeverInvented {
+    [self.manager updateCommandContextWithVisibleText:@"The grass is wet."];
+    [self.manager startListening];
+    [self sendAlternatives:@[@"wet", @"west"] confidence:0.4];
+    XCTAssertEqualObjects(self.voiceDelegate.lastText, @"west");
+    [self.manager startListening];
+    XCTAssertTrue([self.recognizer.lastRequest.contextualStrings containsObject:@"go west"]);
+    XCTAssertTrue([self.recognizer.lastRequest.contextualStrings containsObject:@"northeast"]);
+    [self sendAlternatives:@[@"wet"] confidence:0.4];
+    XCTAssertEqualObjects(self.voiceDelegate.lastText, @"wet");
+    [self.manager startListening];
+    [self sendAlternatives:@[@"wet", @"west"] confidence:0.95];
+    XCTAssertEqualObjects(self.voiceDelegate.lastText, @"wet");
+}
 - (void)finishAccessibilityAnnouncement:(NSString *)text success:(BOOL)success {
     [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityAnnouncementDidFinishNotification object:nil
         userInfo:@{UIAccessibilityAnnouncementKeyStringValue:text, UIAccessibilityAnnouncementKeyWasSuccessful:@(success)}];
@@ -1429,24 +1686,24 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     XCTAssertEqualObjects([view getCurrentTextColor], [UIColor blackColor]);
 }
 - (void)testListeningFeedbackProvidesAccessibleStateAndStopsAnimations {
-    TestStoryController *controller = [[TestStoryController alloc] init];
-    [controller setupVoiceTapOverlay];
-    UIView *overlay = [controller valueForKey:@"m_voiceTapOverlay"];
-    UIView *icon = [overlay viewWithTag:999];
-    [controller voiceManagerDidStartListening];
-    XCTAssertEqualObjects(overlay.accessibilityLabel, @"Stop listening");
-    if (UIAccessibilityIsReduceMotionEnabled()) {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        UIButton *microphone = [bar viewWithTag:904];
+        UIView *icon = [bar viewWithTag:999];
+        [self.manager startListening];
+        XCTAssertEqualObjects(microphone.accessibilityLabel, @"Stop listening");
+        if (UIAccessibilityIsReduceMotionEnabled()) {
+            XCTAssertNil([icon.layer animationForKey:@"voiceListeningPulse"]);
+        } else {
+            XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningPulse"]);
+            XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningGlow"]);
+        }
+        [self.manager stopListening];
+        XCTAssertEqualObjects(microphone.accessibilityLabel, @"Start listening");
         XCTAssertNil([icon.layer animationForKey:@"voiceListeningPulse"]);
         XCTAssertNil([icon.layer animationForKey:@"voiceListeningGlow"]);
-    } else {
-        XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningPulse"]);
-        XCTAssertNotNil([icon.layer animationForKey:@"voiceListeningGlow"]);
-    }
-    [controller voiceManagerDidStopListening];
-    XCTAssertEqualObjects(overlay.accessibilityLabel, @"Start listening");
-    XCTAssertNil([icon.layer animationForKey:@"voiceListeningPulse"]);
-    XCTAssertNil([icon.layer animationForKey:@"voiceListeningGlow"]);
-    XCTAssertEqual(icon.layer.shadowOpacity, 0);
+        XCTAssertEqual(icon.layer.shadowOpacity, 0);
+    }];
 }
 - (void)testNormalEndingPreservesPendingNarrationAcrossTeardown {
     TestEndingController *controller = [[TestEndingController alloc] init];

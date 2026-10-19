@@ -353,6 +353,16 @@ BOOL cursorVisible = YES;
     int pad = 2;
     myFrame.size.height = [[self font] lineHeight]+pad;
 
+    CGRect typingRow = [controller voiceKeyboardInputFrame];
+    if (!CGRectIsNull(typingRow)) {
+        myFrame = typingRow;
+        cursorVisible = YES;
+        self.backgroundColor = controller.backgroundColor;
+        self.placeholder = NSLocalizedString(@"Type a command", nil);
+    } else {
+        self.placeholder = nil;
+    }
+
     [self setFrame: myFrame];
     if (m_completionLabel) {
         CGRect labelFrame = [m_completionLabel frame];

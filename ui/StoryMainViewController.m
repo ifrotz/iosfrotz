@@ -1214,9 +1214,11 @@ static void setColorTable(RichTextView *v) {
         }
         [center addObserver:self selector:@selector(voiceReduceMotionChanged:)
                        name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
+        [center addObserver:self selector:@selector(voiceContentSizeChanged:)
+                       name:UIContentSizeCategoryDidChangeNotification object:nil];
         
 //       [center addObserver:self selector:@selector(allNotif:) name:nil object:nil];
-//       [center addObserver:self selector:@selector(keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
+        [center addObserver:self selector:@selector(keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
 
         [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
         [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
@@ -1832,7 +1834,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     // Sync voice button icons with current state (may have changed in Settings)
     [self updateVoiceButtonIcons];
     // Ensure tap overlay exists if STT was enabled from Settings
-    if ([VoiceManager shared].sttEnabled) {
+    if ([VoiceManager shared].voiceMode != VoiceModeOff) {
         [self setupVoiceTapOverlay];
     }
     [self autosize];
@@ -2414,18 +2416,19 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // iOS 8 seems to be auto-restoring the first responder and bringing the keyboard back when you return to the story from the
     // story list, which we never had to deal with before.  Worse, sometimes keyboardDidShow notification happens after viewDidAppear,
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
-    BOOL voiceOverlayVisible = m_voiceTapOverlay && [VoiceManager shared].sttEnabled
-        && !m_kbShown && !m_inputLine.isFirstResponder;
+    BOOL voiceOverlayVisible = m_voiceTapOverlay && [VoiceManager shared].voiceMode != VoiceModeOff;
     CGFloat overlayHeight = 0;
+    CGFloat typingHeight = voiceOverlayVisible && m_inputLine.isFirstResponder ? MAX(44, ceil(m_inputLine.font.lineHeight) + 8) : 0;
 
     if (m_kbShown) {
         frame.size.height -= m_kbdSize.height;
         [m_storyView setBottomMargin: 8];
-    } else if (voiceOverlayVisible) {
-        overlayHeight = frame.size.height / 3.0;
-        if (m_pendingVoiceCommand)
-            overlayHeight = MIN(frame.size.height * 0.6, MAX(overlayHeight, 160));
+    }
+    if (voiceOverlayVisible) {
+        overlayHeight = [self voiceControlBarHeightForWidth:frame.size.width];
+        if (!m_kbShown) overlayHeight += self.view.safeAreaInsets.bottom;
         frame.size.height -= overlayHeight;
+        frame.size.height -= typingHeight;
         [m_storyView setBottomMargin: 8];
     } else {
         [m_storyView setBottomMargin: self.view.safeAreaInsets.bottom];
@@ -2442,7 +2445,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // Position voice tap overlay below story view (like the keyboard)
     if (voiceOverlayVisible) {
         m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
-        m_voiceTapOverlay.frame = CGRectMake(0, frame.origin.y + frame.size.height, frame.size.width, overlayHeight);
+        m_voiceTapOverlay.frame = CGRectMake(0, CGRectGetMaxY(frame) + typingHeight, frame.size.width, overlayHeight);
         if (!m_voiceTapOverlay.superview) {
             [m_background addSubview:m_voiceTapOverlay];
         }
@@ -2469,6 +2472,14 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 - (void)layoutStatusLine {
     [self layoutStatusLineWithHeight: m_statusLine.frame.size.height];
+}
+
+-(CGRect)voiceKeyboardInputFrame {
+    if (!m_inputLine.isFirstResponder || !m_voiceTapOverlay.superview || [VoiceManager shared].voiceMode == VoiceModeOff)
+        return CGRectNull;
+    CGFloat height = MAX(44, ceil(m_inputLine.font.lineHeight) + 8);
+    return CGRectMake(8, CGRectGetMinY(m_voiceTapOverlay.frame) - height,
+                      MAX(0, m_voiceTapOverlay.bounds.size.width - 16), height);
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -2521,171 +2532,81 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 // The part of the keyboard that overlaps the story's window, as a zero-origin rect, derived from
 // the keyboard's end frame (reported in screen coordinates). Replaces the long-deprecated
 // UIKeyboardBoundsUserInfoKey, which reported the keyboard's own bounds and then needed clamping.
-static CGRect KeyboardEndFrame(NSDictionary *userInfo) {
-    NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    return kbFrameEndValue ? [kbFrameEndValue CGRectValue] : CGRectNull;
+-(void)updateKeyboardFrame:(NSNotification *)notification {
+    NSValue *value = notification.userInfo[UIKeyboardFrameEndUserInfoKey];
+    if (!value) return;
+    CGRect keyboard = value.CGRectValue;
+    if (m_kbShown && CGRectEqualToRect(keyboard, m_handledKbWillShowFrame)) return;
+    m_handledKbWillShowFrame = keyboard;
+    UIWindow *window = self.view.window;
+    if (window) {
+        keyboard = [window convertRect:keyboard fromWindow:nil];
+        keyboard = [self.view convertRect:keyboard fromView:window];
+    }
+    CGRect overlap = CGRectIntersection(self.view.bounds, keyboard);
+    BOOL docked = !CGRectIsNull(overlap) && !CGRectIsEmpty(overlap)
+        && CGRectGetMaxY(keyboard) >= CGRectGetMaxY(self.view.bounds) - 1
+        && overlap.size.width >= self.view.bounds.size.width * 0.8;
+    m_kbdSize = CGSizeMake(self.view.bounds.size.width, docked ? overlap.size.height : 0);
+    m_kbShown = m_kbdSize.height > 0;
+    if (docked || m_inputLine.isFirstResponder) {
+        [self clearPendingVoiceCommand];
+        ++m_voiceRestartGeneration;
+        m_voiceListenPending = NO;
+        m_voiceAutoListenReady = NO;
+        if ([VoiceManager shared].isListening) [[VoiceManager shared] stopListening];
+    }
+    [self showKeyboardLockState];
+    [self updateVoiceButtonIcons];
+    [self autosize];
+    [m_inputLine updatePosition];
+    if (gStoryInterp == kGlxStory) { iosif_recompute_screensize(); screen_size_changed = 1; }
 }
 
-static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
-    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
-    if (CGRectIsNull(kbEndFrame) || !window)
-        return CGRectZero;
-    CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
-    CGRect overlap = CGRectIntersection(window.bounds, windowRect);
-    if (CGRectIsNull(overlap))
-        return CGRectZero;
-    return CGRectMake(0, 0, overlap.size.width, overlap.size.height);
+-(void)keyboardWillChangeFrame:(NSNotification *)notification {
+    [self updateKeyboardFrame:notification];
 }
 
 -(void) keyboardDidShow:(NSNotification*)notif {
-    // Even though we already did this in keyboardWillShow, we do it again here
-    // so the animation of the storyview resizing will sync up with the keyboard
-    // appearing, to make sure the size is correct for whether the
-    // the nav bar and device status line are visible.
-    // The storyViewFullFrame call cannot tell if these items are visible or not
-    // during a rotation because the show/hide hasn't taken effect yet,
-    // so resizing again here will be correct.
-    NSDictionary *userInfo = [notif userInfo];
-    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
-    if (CGRectIsEmpty(bounds))
-        return;
-    // UIKit re-posts the show notifications every time the keyboard window lays itself out, and
-    // the resizing below moves the input line the keyboard tracks, which lays it out again.
-    // Only react when the keyboard frame has actually changed, or the two feed each other forever.
-    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
-    if (m_kbShown && !CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbDidShowFrame))
-        return;
-    m_handledKbDidShowFrame = kbEndFrame;
-
-    // iOS 8.0 doesn't sent hide notifications for undocked kbd
-    // and instead sends another show notification with smaller frame height
-    NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPad && frameUserInfoValue) { // undocked keyboards exist only on iPad
-        CGRect frameEnd = [frameUserInfoValue CGRectValue];
-        CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
-        if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
-            if (m_kbShown) // do our own hide notification
-                [self keyboardWillHide:notif];
-            return;
-        }
-    }
-    m_kbShown = YES;
-    [self showKeyboardLockState]; // keep the toggle's title ("Hide Keyboard") in step
-    [self clearPendingVoiceCommand];
-    if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
-        [self resetTapOverlayToMicIdle];
-    ++m_voiceRestartGeneration;
-    m_voiceListenPending = NO;
-    m_voiceAutoListenReady = NO;
-
-    // Stop active listening when keyboard appears — can't use both simultaneously
-    if ([VoiceManager shared].isListening) {
-        [[VoiceManager shared] stopListening];
-    }
-
-    CGRect frame = [self storyViewFullFrame];
-    m_kbdSize = bounds.size;
-
-    [m_storyView setBottomMargin: 8];
-    frame.size.height -= bounds.size.height;
-    
-    [UIView beginAnimations: @"kbd" context: 0];
-    [UIView setAnimationBeginsFromCurrentState:YES];
-
-    //NSLog(@"keyboarddidshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
-    [m_storyView setFrame: frame];
-
-    [self layoutStatusLine];
-    [UIView commitAnimations];
-
-    [m_inputLine updatePosition];
-
-    if (gStoryInterp == kGlxStory) {
-        iosif_recompute_screensize();
-        screen_size_changed = 1;
-    }
+    [self updateKeyboardFrame:notif];
 }
 
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
-    [self showKeyboardLockState]; // keep the toggle's title ("Show Keyboard") in step
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
-    if (gStoryInterp == kGlxStory) {
-        iosif_recompute_screensize();
-        screen_size_changed = 1;
-    }
-    // Re-show voice overlay now that keyboard is gone
-    if (m_voiceTapOverlay && [VoiceManager shared].sttEnabled) {
-        [self autosize];
-        [self scrollStoryViewToEnd];
+    [self showKeyboardLockState];
+    [self updateVoiceButtonIcons];
+    [self autosize];
+    [m_inputLine updatePosition];
+    if (gStoryInterp == kGlxStory) { iosif_recompute_screensize(); screen_size_changed = 1; }
+    if (m_voiceResumeAfterKeyboard) {
+        m_voiceResumeAfterKeyboard = NO;
+        m_voiceAutoListenReady = YES;
+        [self scheduleVoiceListening];
     }
 }
 
--(CGSize) keyboardSize {
-    return m_kbdSize;
-}
+-(CGSize) keyboardSize { return m_kbdSize; }
 
 -(void) keyboardWillShow:(NSNotification*)notif {
-    NSDictionary *userInfo = [notif userInfo];
-    // See keyboardDidShow: ignore repeats for a keyboard frame already laid out for. The content
-    // offset bump below in particular must only happen once per actual keyboard change.
-    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
-    if (!CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbWillShowFrame))
-        return;
-    m_handledKbWillShowFrame = kbEndFrame;
-
-    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
-    CGRect frame = [self storyViewFullFrame];
-
-#if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
-#endif
+    [self updateKeyboardFrame:notif];
     if (m_notesController)
-        [m_notesController keyboardWillShow: bounds];
-
-    frame.size.height -= bounds.size.height;
-    
-    [UIView beginAnimations: @"kbd" context: 0];
-    [UIView setAnimationDuration: 0.3];
-    [UIView setAnimationBeginsFromCurrentState:YES];
-
-    CGPoint cofst = [m_storyView contentOffset];
-    cofst.y += bounds.size.height;
-    [m_storyView setContentOffset: cofst];
-    
-    [m_storyView setFrame: frame];
-    //NSLog(@"keyboardwillshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
-    [self layoutStatusLine];
-    
-    [UIView commitAnimations];
-
-    [self scrollStoryViewToEnd: YES];
-    
-    [m_inputLine updatePosition];
-    
-    //NSLog(@"kbd will show notif frame height=%f kbbh=%f", frame.size.height, bounds.size.height);
+        [m_notesController keyboardWillShow:(CGRect){CGPointZero, m_kbdSize}];
+    [self scrollStoryViewToEnd:YES];
 }
 
-
 -(void) keyboardWillHide:(NSNotification*)notif {
-    CGRect frame = [self storyViewFullFrame];
-#if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
-#endif
-    if (m_notesController)
-        [m_notesController keyboardWillHide];
-    
-    [UIView beginAnimations: @"kbd" context: 0];
-    [UIView setAnimationDuration: 0.3];
-    [UIView setAnimationBeginsFromCurrentState:YES];
-    
-    [m_storyView setFrame: frame];
-    
-    [self layoutStatusLine];
-    [UIView commitAnimations];
+    [m_notesController keyboardWillHide];
     m_kbShown = NO;
+    m_kbdSize = CGSizeZero;
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
+    [self showKeyboardLockState];
+    [self updateVoiceButtonIcons];
+    [self autosize];
+    [m_inputLine updatePosition];
 }
 
 -(BOOL) isKBShown {
@@ -5425,12 +5346,9 @@ static BOOL migateDropboxAuth() {
 
 -(void)toggleTTS {
     VoiceManager *vm = [VoiceManager shared];
-    if (vm.isSpeaking) {
-        [self stopCurrentVoiceSpeech];
-        return;
-    }
     if (vm.ttsEnabled) {
         vm.voiceMode = vm.sttEnabled ? VoiceModeSTTOnly : VoiceModeOff;
+        if (vm.isSpeaking) [self stopCurrentVoiceSpeech];
     } else {
         vm.voiceMode = vm.sttEnabled ? VoiceModeBoth : VoiceModeTTSOnly;
     }
@@ -5464,6 +5382,8 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)updateVoiceButtonIcons {
+    if ([VoiceManager shared].voiceMode != VoiceModeOff && !m_voiceTapOverlay) [self setupVoiceTapOverlay];
+    [self updateVoiceControlBar];
     [self updateVoiceReplayActions];
     if (@available(iOS 13.0, *)) {
         VoiceManager *vm = [VoiceManager shared];
@@ -5472,14 +5392,17 @@ static BOOL migateDropboxAuth() {
         UIButton *ttsBtn = [cv viewWithTag:901];
         UIButton *sttBtn = [cv viewWithTag:902];
         UIButton *kbdBtn = [cv viewWithTag:903];
-        kbdBtn.accessibilityLabel = m_kbShown ? @"Hide keyboard" : @"Show keyboard";
+        kbdBtn.accessibilityLabel = m_inputLine.isFirstResponder ? @"Disable keyboard input" : @"Enable keyboard input";
+        kbdBtn.accessibilityValue = m_inputLine.isFirstResponder ? @"On" : @"Off";
         if (ttsBtn) {
-            ttsBtn.accessibilityLabel = vm.isSpeaking ? @"Stop reading" : (vm.ttsEnabled ? @"Disable text to speech" : @"Enable text to speech");
-            [ttsBtn setImage:[[UIImage systemImageNamed:vm.isSpeaking ? @"stop.fill" : (vm.ttsEnabled ? @"speaker.wave.1.fill" : @"speaker.slash")]
+            ttsBtn.accessibilityLabel = vm.ttsEnabled ? @"Disable text to speech" : @"Enable text to speech";
+            ttsBtn.accessibilityValue = vm.ttsEnabled ? @"On" : @"Off";
+            [ttsBtn setImage:[[UIImage systemImageNamed:vm.ttsEnabled ? @"speaker.wave.1.fill" : @"speaker.slash"]
                               imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         }
         if (sttBtn) {
             sttBtn.accessibilityLabel = vm.sttEnabled ? @"Disable speech to text" : @"Enable speech to text";
+            sttBtn.accessibilityValue = vm.sttEnabled ? @"On" : @"Off";
             [sttBtn setImage:[[UIImage systemImageNamed:vm.sttEnabled ? @"mic.fill" : @"mic.slash"]
                               imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         }
@@ -5491,6 +5414,8 @@ static BOOL migateDropboxAuth() {
     NSArray *actions = vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff && !m_pendingVoiceCommand
         ? @[[[UIAccessibilityCustomAction alloc] initWithName:@"Replay last response" target:self selector:@selector(replayLastVoiceResponse:)]] : nil;
     m_voiceTapOverlay.accessibilityCustomActions = actions;
+    m_voiceMicButton.accessibilityCustomActions = actions;
+    m_voiceSpeechButton.accessibilityCustomActions = actions;
     [self.navigationItem.rightBarButtonItem.customView viewWithTag:901].accessibilityCustomActions = actions;
 }
 
@@ -5502,6 +5427,7 @@ static BOOL migateDropboxAuth() {
         || (self.navigationController && self.navigationController.topViewController != self)
         || UIApplication.sharedApplication.applicationState != UIApplicationStateActive) return NO;
     m_voiceAutoListenReady = NO;
+    m_voiceInputError = nil;
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
     if (vm.isListening && !m_inputLine.isFirstResponder) m_inputLine.text = @"";
@@ -5672,6 +5598,8 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)stopVoiceActivity {
+    m_voiceResumeAfterKeyboard = NO;
+    m_voiceInputError = nil;
     [self clearPendingVoiceCommand];
     m_voiceSessionActive = NO;
     m_voiceAutoListenReady = NO;
@@ -5699,7 +5627,7 @@ static BOOL migateDropboxAuth() {
         return;
     m_voiceSessionActive = YES;
     [VoiceManager shared].delegate = self;
-    if ([VoiceManager shared].sttEnabled)
+    if ([VoiceManager shared].voiceMode != VoiceModeOff)
         [self setupVoiceTapOverlay];
     [self updateVoiceButtonIcons];
     [self autosize];
@@ -5771,79 +5699,101 @@ static BOOL migateDropboxAuth() {
     if (givePauseCue) [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackNavigationPaused];
 }
 
--(void)voiceManagerDidStartSpeaking {
-    [self updateVoiceButtonIcons];
-    [self stopVoiceListeningAnimation];
-    m_voiceTapOverlay.accessibilityLabel = @"Stop reading";
-    m_voiceTapOverlay.accessibilityValue = m_pendingVoiceCommand ? @"Reading command confirmation" : @"Reading response";
-    m_voiceTapOverlay.accessibilityHint = @"Double-tap to pause voice interaction, or use a two-finger double-tap.";
-    if (@available(iOS 13.0, *)) {
-        UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
-
-        // Update toolbar speaker icon to stop icon
-        UIView *cv = self.navigationItem.rightBarButtonItem.customView;
-        UIButton *ttsBtn = [cv viewWithTag:901];
-        if (ttsBtn) {
-            [ttsBtn setImage:[[UIImage systemImageNamed:@"stop.fill"]
-                              imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
-        }
-
-        // Update tap overlay to show stop icon during TTS
-        UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
-        if (micIcon) {
-            micIcon.image = [UIImage systemImageNamed:@"stop.circle.fill"
-                                    withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]];
-            micIcon.tintColor = [[UIColor systemOrangeColor] colorWithAlphaComponent:0.7];
-        }
-        UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-        if (hint) {
-            hint.text = @"Tap to stop";
-            hint.textColor = [[UIColor systemOrangeColor] colorWithAlphaComponent:0.6];
-        }
-    }
+-(void)voiceContentSizeChanged:(NSNotification *)notification {
+    [self updateVoiceControlBar];
+    [self autosize];
+    [m_inputLine updatePosition];
 }
 
--(void)resetTapOverlayToMicIdle {
-    [self stopVoiceListeningAnimation];
-    m_voiceTapOverlay.accessibilityLabel = @"Start listening";
-    BOOL paused = [VoiceManager shared].voiceOverNavigationPaused;
-    m_voiceTapOverlay.accessibilityValue = paused ? @"Paused for VoiceOver navigation" : @"Not listening";
-    m_voiceTapOverlay.accessibilityHint = @"Double-tap to start dictation, or use a two-finger double-tap. Navigating with VoiceOver pauses dictation.";
-    UILabel *idleHint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-    idleHint.text = @"Tap to speak";
-    idleHint.textColor = m_defaultFGColor;
-    if (@available(iOS 13.0, *)) {
-        UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
-        if (micIcon) {
-            micIcon.image = [UIImage systemImageNamed:@"mic.circle.fill"
-                                    withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]];
-            micIcon.tintColor = [[UIColor systemBlueColor] colorWithAlphaComponent:0.5];
-        }
-        UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-        if (hint) {
-            hint.text = @"Tap to speak";
-            hint.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.4];
-        }
+-(void)updateVoiceControlBar {
+    if (!m_voiceTapOverlay) return;
+    VoiceManager *vm = [VoiceManager shared];
+    m_voiceTapOverlay.isAccessibilityElement = NO;
+    m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
+    m_voiceMicButton.hidden = !vm.sttEnabled;
+    BOOL speaking = vm.isSpeaking;
+    m_voiceSpeechButton.hidden = !vm.ttsEnabled && !speaking && !vm.lastStoryResponse.length;
+    BOOL preparing = m_voicePreparing && !speaking && !vm.isListening;
+    NSString *micTitle = vm.isListening ? @"Listening" : (speaking ? @"Waiting" : (preparing ? @"Preparing…" : @"Start listening"));
+    NSString *micLabel = vm.isListening ? @"Stop listening" : (speaking ? @"Microphone waiting for narration" : (preparing ? @"Preparing microphone" : @"Start listening"));
+    NSString *micValue = vm.isListening ? @"Listening" : (vm.voiceOverNavigationPaused ? @"Paused for VoiceOver navigation" : @"Not listening");
+    if (m_voiceInputError) { micTitle = @"Retry microphone"; micLabel = @"Retry microphone"; micValue = @"Recognition failed. Not listening"; }
+    [m_voiceMicButton setTitle:micTitle forState:UIControlStateNormal];
+    m_voiceMicButton.accessibilityLabel = micLabel;
+    m_voiceMicButton.accessibilityValue = micValue;
+    m_voiceMicButton.accessibilityHint = m_voiceInputError
+        ? @"Double-tap to retry, or use a two-finger double-tap. You can also use the keyboard."
+        : @"Starts or stops dictation. You can also use a two-finger double-tap with VoiceOver. Navigating with VoiceOver pauses dictation.";
+    m_voiceMicButton.enabled = !speaking && !preparing;
+    [m_voiceSpeechButton setTitle:speaking ? @"Stop reading" : @"Replay" forState:UIControlStateNormal];
+    m_voiceSpeechButton.accessibilityLabel = speaking ? @"Stop reading" : @"Replay last response";
+    m_voiceSpeechButton.accessibilityValue = speaking ? @"Reading response" : @"";
+    m_voiceSpeechButton.enabled = speaking || (vm.lastStoryResponse.length > 0 && !m_pendingVoiceCommand);
+    for (UIButton *button in @[m_voiceMicButton, m_voiceSpeechButton]) {
+        button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        button.titleLabel.numberOfLines = 2;
+        button.tintColor = vm.isListening && button == m_voiceMicButton ? UIColor.systemRedColor : (m_background.tintColor ?: UIColor.systemBlueColor);
+        [button setTitleColor:button.tintColor forState:UIControlStateNormal];
     }
-    [self updateVoiceConfirmationDisplay];
+    if (preparing) {
+        if (@available(iOS 13.0, *)) m_voiceMicButton.tintColor = UIColor.secondaryLabelColor;
+        else m_voiceMicButton.tintColor = UIColor.grayColor;
+    }
+    if (@available(iOS 13.0, *)) {
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:17 weight:UIImageSymbolWeightRegular];
+        [m_voiceMicButton setImage:[UIImage systemImageNamed:vm.isListening ? @"mic.fill" : @"mic" withConfiguration:config] forState:UIControlStateNormal];
+        [m_voiceSpeechButton setImage:[UIImage systemImageNamed:speaking ? @"stop.fill" : @"arrow.counterclockwise" withConfiguration:config] forState:UIControlStateNormal];
+    }
+    // Keep the container's state useful to switch/accessibility integrations;
+    // its children are the actual accessible controls.
+    m_voiceTapOverlay.accessibilityLabel = micLabel;
+    m_voiceTapOverlay.accessibilityValue = speaking ? @"Reading response" : micValue;
+    m_voiceTapOverlay.accessibilityHint = m_voiceMicButton.accessibilityHint;
+    UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
+    hint.hidden = !m_pendingVoiceCommand && !m_voiceInputError;
+    hint.textColor = m_defaultFGColor;
+    hint.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    if (m_voiceInputError && !m_pendingVoiceCommand) hint.text = m_voiceInputError;
     [self updateVoiceReplayActions];
 }
 
--(void)showVoiceListeningPreparation {
+-(CGFloat)voiceControlBarHeightForWidth:(CGFloat)width {
+    CGFloat height = [m_voiceBarStack systemLayoutSizeFittingSize:CGSizeMake(MAX(1, width - 24), 0)
+        withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
+    return MAX(52, ceil(height) + 8);
+}
+
+-(void)voiceMicrophoneTapped:(UIButton *)button {
+    VoiceManager *vm = [VoiceManager shared];
+    if (vm.isSpeaking) return; // Narration has its own Stop control.
+    [self activateVoiceInput];
+}
+
+-(void)voiceSpeechTapped:(UIButton *)button {
+    if ([VoiceManager shared].isSpeaking) [self stopCurrentVoiceSpeech];
+    else [self replayLastVoiceResponse:nil];
+}
+
+-(void)voiceManagerDidStartSpeaking {
+    m_voicePreparing = NO;
     [self stopVoiceListeningAnimation];
-    m_voiceTapOverlay.accessibilityLabel = @"Preparing microphone";
-    m_voiceTapOverlay.accessibilityValue = @"Not listening yet";
-    UIColor *color = [UIColor grayColor];
-    if (@available(iOS 13.0, *)) {
-        color = [UIColor secondaryLabelColor];
-        UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
-        micIcon.image = [UIImage systemImageNamed:@"mic.circle.fill"
-                                withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]];
-        micIcon.tintColor = color;
-    }
-    UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
-    hint.text = @"Preparing microphone…";
-    hint.textColor = color;
+    [self updateVoiceButtonIcons];
+    [self updateVoiceConfirmationDisplay];
+}
+
+-(void)resetTapOverlayToMicIdle {
+    m_voicePreparing = NO;
+    [self stopVoiceListeningAnimation];
+    [self updateVoiceControlBar];
+    [self updateVoiceConfirmationDisplay];
+}
+
+-(void)showVoiceListeningPreparation {
+    m_voicePreparing = YES;
+    m_voiceInputError = nil;
+    [self stopVoiceListeningAnimation];
+    [self updateVoiceControlBar];
 }
 
 -(void)voiceManagerDidFinishSpeaking {
@@ -5851,6 +5801,11 @@ static BOOL migateDropboxAuth() {
     [self resetTapOverlayToMicIdle];
     m_voiceAutoListenReady = YES;
     [self scheduleVoiceListening];
+}
+
+-(BOOL)voiceManagerWillResumeListening {
+    return m_voiceSessionActive && m_voiceListenPending && [self canAcceptVoiceInput]
+        && ![VoiceManager shared].voiceOverNavigationPaused;
 }
 
 -(void)voiceManagerHighlightRange:(NSRange)range inView:(RichTextView *)view {
@@ -5937,10 +5892,7 @@ static BOOL migateDropboxAuth() {
     m_pendingVoiceCommand = nil;
     if (vm.delegate == self) vm.recognizingConfirmation = NO;
     m_voiceConfirmationButtons.hidden = YES;
-    [m_voiceTapOverlay viewWithTag:999].hidden = NO;
-    m_voiceHintPosition.constant = 36;
-    m_voiceTapOverlay.isAccessibilityElement = YES;
-    [self updateVoiceReplayActions];
+    [self updateVoiceControlBar];
     if (hadPendingCommand) [self autosize];
 }
 
@@ -5948,10 +5900,9 @@ static BOOL migateDropboxAuth() {
     [self updateVoiceReplayActions];
     if (!m_pendingVoiceCommand) return;
     m_voiceConfirmationButtons.hidden = NO;
-    [m_voiceTapOverlay viewWithTag:999].hidden = YES;
-    m_voiceHintPosition.constant = -28;
     m_voiceTapOverlay.isAccessibilityElement = NO; // Expose the action buttons to VoiceOver.
     UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
+    hint.hidden = NO;
     VoiceManager *vm = [VoiceManager shared];
     NSArray *controls = [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage];
     NSString *state = vm.isSpeaking ? @"Reading back…"
@@ -5963,6 +5914,10 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)speakPendingVoiceConfirmation {
+    [self speakPendingVoiceConfirmationIncludingCommand:YES];
+}
+
+-(void)speakPendingVoiceConfirmationIncludingCommand:(BOOL)includeCommand {
     if (!m_pendingVoiceCommand || ![self canAcceptVoiceInput]) return;
     [self updateVoiceConfirmationDisplay];
     VoiceManager *vm = [VoiceManager shared];
@@ -5973,7 +5928,8 @@ static BOOL migateDropboxAuth() {
     [self autosize];
     vm.recognizingConfirmation = YES;
     m_voiceAutoListenReady = NO;
-    [vm speakConfirmationPrompt:[NSString stringWithFormat:@"I heard: %@. %@", m_pendingVoiceCommand, instructions]];
+    [vm speakConfirmationPrompt:includeCommand
+        ? [NSString stringWithFormat:@"I heard: %@. %@", m_pendingVoiceCommand, instructions] : instructions];
     // Playback setup can fail. Keep the visible controls usable in that case.
     if (!vm.isSpeaking) {
         m_voiceAutoListenReady = YES;
@@ -6020,7 +5976,7 @@ static BOOL migateDropboxAuth() {
             NSString *action = vm.recognizedCommandNeedsConfirmation ? nil
                 : [VoiceManager confirmationActionForText:text language:vm.effectiveRecognitionLanguage];
             if (action) [self performVoiceConfirmationAction:action];
-            else [self speakPendingVoiceConfirmation];
+            else [self speakPendingVoiceConfirmationIncludingCommand:NO];
         }
         return;
     }
@@ -6062,9 +6018,9 @@ static BOOL migateDropboxAuth() {
         [[VoiceManager shared] stopListening];
         return;
     }
-    m_voiceTapOverlay.accessibilityLabel = @"Stop listening";
-    m_voiceTapOverlay.accessibilityValue = @"Listening";
-    m_voiceTapOverlay.accessibilityHint = @"Double-tap to stop dictation, or use a two-finger double-tap.";
+    m_voicePreparing = NO;
+    m_voiceInputError = nil;
+    [self updateVoiceControlBar];
     [self startVoiceListeningAnimation];
     [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackReady];
     [self updateVoiceReplayActions];
@@ -6074,11 +6030,6 @@ static BOOL migateDropboxAuth() {
     UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
     if (micIcon) {
         micIcon.tintColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.8];
-    }
-    UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-    if (hint) {
-        hint.text = @"Listening...";
-        hint.textColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.6];
     }
     [self updateVoiceConfirmationDisplay];
 }
@@ -6102,95 +6053,93 @@ static BOOL migateDropboxAuth() {
     [self updateVoiceButtonIcons];
     [self resetTapOverlayToMicIdle];
     UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];
-    hint.text = [error.domain isEqualToString:@"FrotzVoice"] && error.code == 5
+    m_voiceInputError = [error.domain isEqualToString:@"FrotzVoice"] && error.code == 5
         ? @"Voice input with VoiceOver unavailable. Tap to retry or use keyboard."
         : @"Speech unavailable. Tap to retry";
+    [self updateVoiceControlBar];
     m_voiceTapOverlay.accessibilityLabel = hint.text;
     m_voiceTapOverlay.accessibilityValue = @"Recognition failed. Not listening";
     m_voiceTapOverlay.accessibilityHint = @"Double-tap to retry, or use a two-finger double-tap. You can also use the keyboard.";
     [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackError];
+    [self autosize];
     NSLog(@"Voice recognition error: domain=%@ code=%ld", error.domain, (long)error.code);
 }
 
 #pragma mark - Voice Tap Overlay
 
 -(void)setupVoiceTapOverlay {
-    if (m_voiceTapOverlay)
-        return;
-
-    FrotzVoiceInputView *inputView = [[FrotzVoiceInputView alloc] initWithFrame:CGRectZero];
+    if (m_voiceTapOverlay) return;
+    FrotzVoiceInputView *bar = [[FrotzVoiceInputView alloc] initWithFrame:CGRectZero];
     __weak StoryMainViewController *weakSelf = self;
-    inputView.activation = ^BOOL { return [weakSelf activateVoiceInput]; };
-    m_voiceTapOverlay = inputView;
-    m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
-    m_voiceTapOverlay.layer.borderColor = [[UIColor grayColor] colorWithAlphaComponent:0.2].CGColor;
-    m_voiceTapOverlay.layer.borderWidth = 0.5;
-    m_voiceTapOverlay.userInteractionEnabled = YES;
-    m_voiceTapOverlay.isAccessibilityElement = YES;
-    m_voiceTapOverlay.accessibilityTraits = UIAccessibilityTraitButton | UIAccessibilityTraitStartsMediaSession;
-    m_voiceTapOverlay.accessibilityHint = @"Starts or stops dictation. Navigating with VoiceOver pauses dictation.";
-    m_voiceTapOverlay.accessibilityIdentifier = @"voiceInput";
-    m_voiceTapOverlay.accessibilityLabel = @"Start listening";
-
-    // Large mic icon — this replaces the on-screen keyboard in voice mode
-    if (@available(iOS 13.0, *)) {
-        UIImageView *micIcon = [[UIImageView alloc] initWithImage:
-            [UIImage systemImageNamed:@"mic.circle.fill"
-                    withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:80 weight:UIImageSymbolWeightLight]]];
-        micIcon.tintColor = [[UIColor systemBlueColor] colorWithAlphaComponent:0.5];
-        micIcon.translatesAutoresizingMaskIntoConstraints = NO;
-        micIcon.tag = 999;
-        micIcon.contentMode = UIViewContentModeScaleAspectFit;
-        [m_voiceTapOverlay addSubview:micIcon];
-
-        [NSLayoutConstraint activateConstraints:@[
-            [micIcon.centerXAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerXAnchor],
-            [micIcon.centerYAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerYAnchor constant:-12],
-        ]];
-    }
-    UILabel *hint = [[UILabel alloc] init];
-    hint.text = @"Tap to speak";
-    hint.font = [UIFont systemFontOfSize:14];
-    hint.textColor = m_defaultFGColor;
-    hint.numberOfLines = 2;
-    hint.adjustsFontSizeToFitWidth = YES;
-    hint.minimumScaleFactor = 0.8;
-    hint.translatesAutoresizingMaskIntoConstraints = NO;
-    hint.tag = 998;
-    [m_voiceTapOverlay addSubview:hint];
-    m_voiceHintPosition = [hint.centerYAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerYAnchor constant:36];
+    bar.activation = ^BOOL { return [weakSelf activateVoiceInput]; };
+    m_voiceTapOverlay = bar;
+    bar.backgroundColor = m_defaultBGColor;
+    bar.isAccessibilityElement = NO;
+    bar.accessibilityTraits = UIAccessibilityTraitStartsMediaSession;
+    bar.accessibilityIdentifier = @"voiceControls";
+    UIView *separator = [UIView new];
+    separator.backgroundColor = [UIColor grayColor];
+    separator.alpha = 0.25;
+    separator.translatesAutoresizingMaskIntoConstraints = NO;
+    [bar addSubview:separator];
     [NSLayoutConstraint activateConstraints:@[
-        [hint.centerXAnchor constraintEqualToAnchor:m_voiceTapOverlay.centerXAnchor],
-        m_voiceHintPosition,
-        [hint.leadingAnchor constraintEqualToAnchor:m_voiceTapOverlay.leadingAnchor constant:16],
-        [hint.trailingAnchor constraintEqualToAnchor:m_voiceTapOverlay.trailingAnchor constant:-16],
+        [separator.topAnchor constraintEqualToAnchor:bar.topAnchor],
+        [separator.leadingAnchor constraintEqualToAnchor:bar.leadingAnchor],
+        [separator.trailingAnchor constraintEqualToAnchor:bar.trailingAnchor],
+        [separator.heightAnchor constraintEqualToConstant:0.5]
     ]];
-
+    m_voiceMicButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    m_voiceSpeechButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    m_voiceMicButton.tag = 904; m_voiceSpeechButton.tag = 905;
+    m_voiceMicButton.imageView.tag = 999;
+    m_voiceMicButton.accessibilityIdentifier = @"voiceInput";
+    m_voiceSpeechButton.accessibilityIdentifier = @"voiceReplay";
+    m_voiceMicButton.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
+    m_voiceSpeechButton.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
+    [m_voiceMicButton addTarget:self action:@selector(voiceMicrophoneTapped:) forControlEvents:UIControlEventTouchUpInside];
+    [m_voiceSpeechButton addTarget:self action:@selector(voiceSpeechTapped:) forControlEvents:UIControlEventTouchUpInside];
+    UIStackView *row = [[UIStackView alloc] initWithArrangedSubviews:@[m_voiceMicButton, m_voiceSpeechButton]];
+    row.distribution = UIStackViewDistributionFillEqually;
+    row.spacing = 8;
+    for (UIButton *button in @[m_voiceMicButton, m_voiceSpeechButton]) {
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
+        button.contentEdgeInsets = UIEdgeInsetsMake(8, 6, 8, 6);
+    }
+    UILabel *hint = [UILabel new];
+    hint.tag = 998;
+    hint.numberOfLines = 0;
+    hint.adjustsFontForContentSizeCategory = YES;
+    hint.hidden = YES;
     NSMutableArray *buttons = [NSMutableArray array];
-    NSArray *titles = @[@"Confirm", @"Retry", @"Cancel"];
-    for (NSUInteger i = 0; i < titles.count; ++i) {
+    for (NSUInteger i = 0; i < 3; ++i) {
         UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
-        [button setTitle:titles[i] forState:UIControlStateNormal];
+        NSString *title = @[@"Confirm", @"Retry", @"Cancel"][i];
+        [button setTitle:title forState:UIControlStateNormal];
+        button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+        button.titleLabel.adjustsFontForContentSizeCategory = YES;
+        button.titleLabel.numberOfLines = 0;
         button.tag = 910 + i;
-        button.accessibilityIdentifier = [NSString stringWithFormat:@"voice%@", titles[i]];
+        button.accessibilityIdentifier = [@"voice" stringByAppendingString:title];
+        [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
         [button addTarget:self action:@selector(voiceConfirmationButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
         [buttons addObject:button];
     }
     m_voiceConfirmationButtons = [[UIStackView alloc] initWithArrangedSubviews:buttons];
-    m_voiceConfirmationButtons.axis = UILayoutConstraintAxisHorizontal;
     m_voiceConfirmationButtons.distribution = UIStackViewDistributionFillEqually;
-    m_voiceConfirmationButtons.translatesAutoresizingMaskIntoConstraints = NO;
+    m_voiceConfirmationButtons.spacing = 4;
     m_voiceConfirmationButtons.hidden = YES;
-    [m_voiceTapOverlay addSubview:m_voiceConfirmationButtons];
+    m_voiceBarStack = [[UIStackView alloc] initWithArrangedSubviews:@[hint, m_voiceConfirmationButtons, row]];
+    m_voiceBarStack.axis = UILayoutConstraintAxisVertical;
+    m_voiceBarStack.spacing = 4;
+    m_voiceBarStack.translatesAutoresizingMaskIntoConstraints = NO;
+    [bar addSubview:m_voiceBarStack];
     [NSLayoutConstraint activateConstraints:@[
-        [m_voiceConfirmationButtons.leadingAnchor constraintEqualToAnchor:m_voiceTapOverlay.leadingAnchor constant:12],
-        [m_voiceConfirmationButtons.trailingAnchor constraintEqualToAnchor:m_voiceTapOverlay.trailingAnchor constant:-12],
-        [m_voiceConfirmationButtons.bottomAnchor constraintEqualToAnchor:m_voiceTapOverlay.safeAreaLayoutGuide.bottomAnchor constant:-4],
-        [m_voiceConfirmationButtons.heightAnchor constraintEqualToConstant:44]
+        [m_voiceBarStack.leadingAnchor constraintEqualToAnchor:bar.leadingAnchor constant:12],
+        [m_voiceBarStack.trailingAnchor constraintEqualToAnchor:bar.trailingAnchor constant:-12],
+        [m_voiceBarStack.topAnchor constraintEqualToAnchor:bar.topAnchor constant:4],
+        [m_voiceBarStack.bottomAnchor constraintLessThanOrEqualToAnchor:bar.bottomAnchor constant:-4]
     ]];
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(voiceTapOverlayTapped:)];
-    tap.cancelsTouchesInView = NO;
-    [m_voiceTapOverlay addGestureRecognizer:tap];
+    [self updateVoiceControlBar];
 }
 
 -(void)voiceTapOverlayTapped:(UITapGestureRecognizer *)gesture {
@@ -6211,6 +6160,15 @@ static BOOL migateDropboxAuth() {
     if (vm.isSpeaking) {
         [self stopCurrentVoiceSpeech];
         return YES;
+    }
+
+    if (m_inputLine.isFirstResponder || m_kbShown) {
+        if (!m_voiceSessionActive || !vm.sttEnabled) return NO;
+        m_voiceResumeAfterKeyboard = YES;
+        [vm resumeAfterVoiceOverNavigation];
+        [self dismissKeyboard];
+        if (m_kbShown) return YES; // Start only when keyboard dismissal completes.
+        m_voiceResumeAfterKeyboard = NO; // A physical keyboard needs no hide animation.
     }
 
     if ([self canAcceptVoiceInput]) {

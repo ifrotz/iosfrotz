@@ -767,7 +767,7 @@ enum FrotzPrefsRows
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     if (section == kFrotzPrefsSection)
-        return @"With VoiceOver, narration uses VoiceOver’s voice and rate. Moving focus pauses dictation. Use a two-finger double-tap to start or stop listening. The speech controls’ Actions menu offers Replay last response without taking a turn. A rising tone means the microphone is ready; a falling pair means navigation paused it; three low tones indicate an error.";
+        return @"The top microphone and speaker buttons enable speech input and narration. The bar below the story starts or stops listening, stops reading, and replays the last response without taking a turn. It stays available above the keyboard. With VoiceOver, narration uses VoiceOver’s voice and rate; moving focus pauses dictation. Use a two-finger double-tap to start or stop listening, or choose Replay last response in the controls’ Actions menu. A rising tone means the microphone is ready; a falling pair means navigation paused it; three low tones indicate an error.";
     return nil;
 }
 

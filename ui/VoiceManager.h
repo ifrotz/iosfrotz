@@ -49,6 +49,8 @@ typedef NS_ENUM(NSInteger, VoiceFeedback) {
 - (void)voiceManagerSTTError:(NSError *)error;
 @optional
 - (void)voiceManagerDidPauseForVoiceOverDiscardingInput:(BOOL)discardInput;
+// Called after a response finishes; keep audio active only for a scheduled handoff.
+- (BOOL)voiceManagerWillResumeListening;
 @end
 
 @interface VoiceManager : NSObject <AVSpeechSynthesizerDelegate>

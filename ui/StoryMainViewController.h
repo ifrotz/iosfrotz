@@ -129,6 +129,11 @@ extern StoryBrowser *theStoryBrowser;
     NSUInteger m_ttsStartRunTextLen;     // length of text in the starting run before our append
     NSUInteger m_ttsHighlightBias;       // leading whitespace chars stripped before sending to TTS
     UIView *m_voiceTapOverlay;
+    UIStackView *m_voiceBarStack;
+    UIButton *m_voiceMicButton, *m_voiceSpeechButton;
+    NSString *m_voiceInputError;
+    BOOL m_voicePreparing;
+    BOOL m_voiceResumeAfterKeyboard;
     NSString *m_pendingVoiceCommand;
     UIStackView *m_voiceConfirmationButtons;
     NSLayoutConstraint *m_voiceHintPosition;
@@ -166,6 +171,8 @@ extern StoryBrowser *theStoryBrowser;
 -(BOOL) isRegularWidth;
 -(BOOL) hasWidePhoneWidth;
 -(int) defaultTextViewWidth;
+// A dedicated typing row above the compact voice controls, or CGRectNull.
+-(CGRect)voiceKeyboardInputFrame;
 -(void) resizeStatusWindow;
 -(void) launchStory;
 -(void) abandonStory:(BOOL)deleteAutoSave;
