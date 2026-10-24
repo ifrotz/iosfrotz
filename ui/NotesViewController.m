@@ -65,6 +65,11 @@ static const int kNotesTitleHeight = 24;
     UIFont *font = [UIFont fontWithName:m_fontName ? m_fontName : @"MarkerFelt-Wide" size:self.defaultFontSize];
 
     m_scrollView = [[HScrollView alloc] initWithFrame:m_frame];
+    // This scroll view pages between the story and the notes, so its scrollable range must be
+    // exactly two pages wide. Don't let UIKit add the safe-area insets (e.g. the Duo's trailing
+    // button strip) as content insets: that adds extra horizontal travel past the notes page and
+    // makes UIKit scroll sideways to reveal the input line when the keyboard appears.
+    m_scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     [m_scrollView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
     [m_scrollView setAutoresizesSubviews:YES];
     [m_scrollView setDelegate: self];
@@ -107,7 +112,7 @@ static const int kNotesTitleHeight = 24;
     
     [m_notesView setEditable: YES];
     [m_notesView setDelegate: self];
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
+    if (m_frame.size.width > m_frame.size.height)
         m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
     else
         m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
@@ -122,7 +127,7 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(NSInteger)defaultFontSize {
-    return m_defaultFontSize ? m_defaultFontSize : gLargeScreenDevice ? 20 : 16;
+    return m_defaultFontSize ? m_defaultFontSize : self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 20 : 16;
 }
 
 -(BOOL)hasCustomDefaultFontSize {
@@ -338,6 +343,16 @@ static const int kNotesTitleHeight = 24;
     frame.origin.x = frame.size.width;
     frame.origin.y = 0;
     [m_notesBGView  setFrame: frame];
+
+    // Lay the title and text view out from the real bounds. Their initial frames from loadView
+    // are empty (the story view is now sized by its parent rather than the screen), so relying on
+    // autoresizing alone would split the width between the text view and its margins.
+    [m_notesTitle sizeToFit];
+    m_notesTitle.center = CGPointMake(frame.size.width/2, m_notesTitle.frame.size.height/2);
+    // The parchment page spans the full width; keep the text itself clear of a trailing vertical
+    // bar (the Duo's button strip), which arrives as a trailing safe-area inset.
+    CGFloat trailingInset = m_scrollView.safeAreaInsets.right;
+    [m_notesView setFrame: CGRectMake(0, kNotesTitleHeight, frame.size.width - trailingInset, frame.size.height - kNotesTitleHeight)];
     
     frame.size.width *= 2;
     [m_scrollView setContentSize: frame.size];
@@ -346,7 +361,8 @@ static const int kNotesTitleHeight = 24;
     else
         [m_scrollView setContentOffset: CGPointMake(0, 0)];
 
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation]))
+    CGSize scrollSize = m_scrollView.bounds.size;
+    if (scrollSize.width > scrollSize.height)
         m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
     else
         m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);

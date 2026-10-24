@@ -35,14 +35,26 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self loadAboutContent];
+}
 
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    // The font size and the 80-column advice depend on the horizontal size class, so refresh
+    // the page if the size class changes while it is showing (e.g. folding/unfolding).
+    if (self.viewIfLoaded.window && previousTraitCollection.horizontalSizeClass != self.traitCollection.horizontalSizeClass)
+        [self loadAboutContent];
+}
+
+- (void)loadAboutContent {
+    BOOL regularWidth = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
     FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     [webView removeFromSuperview];
     [webView setFrame: self.view.frame];
     [self.view addSubview: webView];
     [webView setAutoresizingMask: UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     webView.backgroundColor = [UIColor darkGrayColor];
-    int baseFontSize = 12 + (gLargeScreenDevice?2:0);
+    int baseFontSize = 12 + (regularWidth?2:0);
     NSString *content = [NSString stringWithFormat: @
                          "<html><body>\n"
                          "<style type=\"text/css\">\n"
@@ -97,7 +109,7 @@
                          "Very recent additions to IFDB (or poorly reviewed ones) may not be available in the bundle. "
                          "The bundled list of stories will be expanded with each release of Frotz, but if you'd like to request a particular addition, "
                          "visit the Frotz support link in the App Store<sup>*</sup>.",
-                         (!gLargeScreenDevice) ?
+                         (!regularWidth) ?
                          @"<strong>Please note that some games expect a screen at least 80 columns wide, and may produce clipped output</strong>, especially when printing fixed-width text or block quotations.  "
                          "Turning your device into landscape (sideways) orientation will usually allow you to view such content correctly.  " : @"",
                          ((iosif_ifrotz_verbose_debug & 2) || !(iosif_ifrotz_verbose_debug & 4)) ? @"" :

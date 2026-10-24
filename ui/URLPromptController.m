@@ -34,9 +34,8 @@
 
 - (void)loadView
 {
-    // add the top-most parent view
-    CGRect appFrame = [[UIScreen mainScreen] applicationFrame];
-    CGRect frame = CGRectMake(0, 0, appFrame.size.width, kSearchBarHeight);
+    // add the top-most parent view; the presenter sets the width when it adds the view
+    CGRect frame = CGRectMake(0, 0, 0, kSearchBarHeight);
     UIView *contentView = [[UIView alloc] initWithFrame: frame];
 
     [contentView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
@@ -45,7 +44,7 @@
     contentView.backgroundColor = [UIColor whiteColor];
     self.view = contentView;
     
-    m_textbar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.0, 0.0, appFrame.size.width, kSearchBarHeight)];
+    m_textbar = [[UISearchBar alloc] initWithFrame: frame];
     
     UIImage *img = [UIImage imageNamed: @"icon-url-srch"];
     UIImageView *imgView = [[UIImageView alloc] initWithImage: img];

@@ -134,12 +134,13 @@ extern char SAVE_PATH[], AUTOSAVE_FILE[];
 extern int iosif_textview_width, iosif_textview_height; // in characters
 extern int iosif_screenwidth, iosif_screenheight; // in pixels
 extern int iosif_fixed_font_width, iosif_fixed_font_height;
+// Nonzero when the story view's horizontal size class is regular (iPad, or a wide window such as
+// an unfolded iPhone Duo). Maintained by StoryMainViewController; replaces the old launch-time
+// gLargeScreenDevice idiom check for the interpreter-side C code, which has no view to ask.
+extern int iosif_regular_width;
 void iosif_recompute_screensize(void);
 
 extern int iosif_ifrotz_verbose_debug;
-
-extern bool gLargeScreenDevice;
-extern int gLargeScreenPhone;
 
 #ifdef __cplusplus
 } // extern "C"

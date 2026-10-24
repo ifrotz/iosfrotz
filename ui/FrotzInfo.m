@@ -115,7 +115,7 @@
         if (!settingsNavController) {
             settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
         }
-        if (!gLargeScreenDevice)
+        if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular)
             [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
         [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
         [m_navigationController presentModalViewController: settingsNavController animated:YES];

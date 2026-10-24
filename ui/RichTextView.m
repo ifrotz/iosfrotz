@@ -582,7 +582,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 -(void)reset {
     BOOL origLandscape = m_origFrame.size.width > m_origFrame.size.height;
-    BOOL nowLandscape = UIInterfaceOrientationIsLandscape([[self delegate] interfaceOrientation]);
+    CGSize containerSize = [[self delegate] view].bounds.size;
+    BOOL nowLandscape = containerSize.width > containerSize.height;
     if (origLandscape ^ nowLandscape) {
         m_origFrame = CGRectMake(m_origFrame.origin.y, m_origFrame.origin.x, m_origFrame.size.height, m_origFrame.size.width);
     }
@@ -677,7 +678,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     CGRect frame = self.frame;
     int curImageIndex = 0;
     myRect.size.width = frame.size.width;
-    NSUInteger i, l = [m_textRuns count];
+    // Text runs can briefly outnumber their layout positions/styles while text is being
+    // appended; only draw the runs that have both.
+    NSUInteger i, l = MIN([m_textRuns count], MIN([m_textPos count], [m_textStyles count]));
     CGPoint lastUniqPt = CGPointMake(0,0);
     CGFloat prevY = 0;
     CGPoint pt, nextPos;
@@ -2039,7 +2042,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(void)rememberTopLineForReflow {
-    NSUInteger i, l = [m_textRuns count];
+    // Text runs can briefly outnumber their layout positions while text is being appended, so
+    // only walk the runs that have a position.
+    NSUInteger i, l = MIN([m_textRuns count], [m_textPos count]);
     CGFloat topY = self.contentOffset.y;
     
     CGPoint lastUniqPt = CGPointMake(0,0), pt;
@@ -2255,7 +2260,7 @@ static NSString *kCommand = @"Command";
 }
 
 -(NSInteger) getTextRunAtPoint:(CGPoint)touchPoint {
-    NSUInteger i, l = [m_textRuns count];
+    NSUInteger i, l = MIN([m_textRuns count], MIN([m_textPos count], [m_textStyles count]));
     CGPoint lastUniqPt = CGPointMake(0,0), pt, nextPos;
     NSInteger lastUniqIndex = 0;
     for (i=0; i < l; ++i) {

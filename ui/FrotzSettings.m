@@ -224,7 +224,7 @@ enum FrotzPrefsRows
     if (value != lastValue) {
         m_storyFontSizeCell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, value];
         m_newStoryFontSize = (int)value;
-        if (gLargeScreenDevice)
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
             [m_storyDelegate setFont: [m_storyDelegate fontName] withSize: value];
     }
     lastValue = value;
@@ -238,7 +238,7 @@ enum FrotzPrefsRows
     if (value != lastValue) {
         m_notesFontSizeCell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, value];
         m_newNotesFontSize = (int)value;
-        if (gLargeScreenDevice)
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
             [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: value];
     }
     lastValue = value;

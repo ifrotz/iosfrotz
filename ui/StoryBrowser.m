@@ -186,7 +186,7 @@ void removeOldPngSplash(const char *filename) {
         [m_settings setNotesDelegate: m_storyMainViewController.notesController];
 
         if (!hasStoryBoard) {
-            m_details = [[StoryDetailsController alloc] initWithNibName:gLargeScreenDevice ? @"StoryDetailsController-ipad":@"StoryDetailsController"
+            m_details = [[StoryDetailsController alloc] initWithNibName:self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"StoryDetailsController-ipad":@"StoryDetailsController"
                                                                  bundle:nil];
             [m_details setStoryBrowser:self];
         }
@@ -360,9 +360,7 @@ void removeOldPngSplash(const char *filename) {
             
             NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
             // Update thumbnails if device image scale > 1.0
-            CGFloat scale = 1.0;
-            if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
-                scale = [[UIScreen mainScreen] scale];
+            CGFloat scale = self.traitCollection.displayScale;
             for (StoryInfo *si in m_storyNames) {
                 NSString *storyFile = [[si path] lastPathComponent];
                 NSString *story = [storyFile stringByDeletingPathExtension];
@@ -381,7 +379,7 @@ void removeOldPngSplash(const char *filename) {
                     NSString *pathExt = [storyFile pathExtension];
                     BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
                     NSData *data = nil;
-                    if (!isZblorb || !gLargeScreenDevice)
+                    if (!isZblorb || self.traitCollection.userInterfaceIdiom != UIUserInterfaceIdiomPad)
                         data = [self splashDataForStory: story];
                     if (!data && isZblorb)
                         data = imageDataFromBlorb([si path]);
@@ -1382,21 +1380,25 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
         NSString *ext = [storyPath pathExtension];
         BOOL isBlorb = ([ext isEqualToString:@"zblorb"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"]);
+        // Fit artwork to the window, the local counterpart of the old screen-size cap; fall back
+        // to this view's bounds if it is not in a window yet.
+        CGRect artworkBounds = self.view.window ? self.view.window.bounds : self.view.bounds;
+        UITraitCollection *artworkTraits = self.traitCollection;
         if (storySplashPath && [defaultManager fileExistsAtPath:storySplashPath])
-            m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storySplashPath],0,0);
+            m_details.artwork = scaledUIImageForBounds([UIImage imageWithContentsOfFile: storySplashPath],0,0, artworkBounds, artworkTraits);
         else if ([self shouldUseCachedBuiltinSplash: storyName]) {
             NSString *storyCacheSplashPath = [self cacheSplashPathForBuiltinStory: storyName];
             if (![defaultManager fileExistsAtPath: storyCacheSplashPath]) {
                 NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
                 extractOneFileFromZIP(splashesZipPath,[storyCacheSplashPath stringByDeletingLastPathComponent],[storyCacheSplashPath lastPathComponent]);
-                m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storyCacheSplashPath],0,0);
+                m_details.artwork = scaledUIImageForBounds([UIImage imageWithContentsOfFile: storyCacheSplashPath],0,0, artworkBounds, artworkTraits);
             }
         }
         else {
             if (isBlorb) {
                 NSData *data = imageDataFromBlorb(storyPath);
                 if (data) {
-                    UIImage *image = scaledUIImage([UIImage imageWithData: data], 0, 0);
+                    UIImage *image = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, artworkBounds, artworkTraits);
                     m_details.artwork = image;
                 }
             }
@@ -1645,7 +1647,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             itemSize = CGSizeMake(fullItemSize.width, imgSize.height/imgSize.width*fullItemSize.height);
 
         // https://stackoverflow.com/questions/2788028/, adapted for centered aspectFit
-        UIGraphicsBeginImageContextWithOptions(fullItemSize, NO, UIScreen.mainScreen.scale);
+        UIGraphicsBeginImageContextWithOptions(fullItemSize, NO, tableView.traitCollection.displayScale);
         CGRect imageRect = CGRectMake(fullItemSize.width/2.0-itemSize.width/2.0, fullItemSize.height/2.0-itemSize.height/2.0, itemSize.width, itemSize.height);
         [image drawInRect:imageRect];
         cell.imageView.image = image = UIGraphicsGetImageFromCurrentImageContext();

@@ -64,7 +64,7 @@ BOOL isHiddenFile(NSString *file) {
         CGSize cgSize = [m_webView frame].size;
         [m_startButton setFrame:
          CGRectMake(cgSize.width/2 - 130,
-                    gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
+                    self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
     }
 }
@@ -225,7 +225,7 @@ BOOL isHiddenFile(NSString *file) {
             [m_startButton removeFromSuperview];
         }
     }
-    int fontBase = 12 + (smallScreen ? -2:0) + (gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 6:0);
+    int fontBase = 12 + (smallScreen ? -2:0) + (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 6:0);
     NSString *message =  [NSString stringWithFormat: @
                           "<html><body>\n"
                           "<style type=\"text/css\">\n"

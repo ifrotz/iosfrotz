@@ -89,7 +89,7 @@
 }
 
 - (BOOL)textFieldShouldBeginEditing:(UITextField*)textField {
-    if (!gLargeScreenDevice)
+    if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular)
         [self.tableView setContentOffset:CGPointMake(0, 125) animated:YES];
 
     return YES;
@@ -99,7 +99,7 @@
     if (textField.text.length < 2)
 	return NO;
     [m_textField resignFirstResponder];
-    if (!gLargeScreenDevice)
+    if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular)
         [self.tableView setContentOffset:CGPointZero animated:YES];
     return YES;
 }

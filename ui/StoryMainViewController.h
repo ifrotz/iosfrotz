@@ -104,6 +104,8 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_ignoreWordSelection;
 
     NSInteger m_statusFixedFontSize;
+    NSInteger m_appliedWidthLevel;
+    CGSize m_lastLayoutSize;
     CGFloat m_statusFixedFontWidth;
     NSInteger m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
@@ -144,6 +146,9 @@ extern StoryBrowser *theStoryBrowser;
 - (void) setIgnoreWordSelection:(BOOL)ignore;
 - (void) abortToBrowser;
 - (void)autosize;
+-(BOOL) isRegularWidth;
+-(BOOL) hasWidePhoneWidth;
+-(int) defaultTextViewWidth;
 -(void) resizeStatusWindow;
 -(void) launchStory;
 -(void) abandonStory:(BOOL)deleteAutoSave;

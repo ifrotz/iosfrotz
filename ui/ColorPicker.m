@@ -649,8 +649,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)loadView {
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    BOOL fullScreenLarge = (frame.size.width > 760);
+    // The presenter sizes the view; layoutViews positions the subviews from the real bounds.
+    CGRect frame = CGRectZero;
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
@@ -678,8 +678,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
     UIImage *hsvCursorImage = [UIImage imageNamed:@"hsv-crosshair"];
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
-    UIImage *valCursorImage = [UIImage imageNamed:
-                                                        (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair")];
+    UIImage *valCursorImage = [UIImage imageNamed: @"val-crosshair"]; // swapped for the large variant in layoutViews
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
 
     CGRect cursFrame = [m_hsvCursor frame];
@@ -721,21 +720,26 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         hsvBaseYOrigin += 120;
         rightMargin += 20;
     }
+    // The value cursor image matches the wider value bar of the large layout; choose it from the
+    // live bounds here rather than from the screen size at load time.
+    UIImage *valCursorImage = [UIImage imageNamed: (fullScreenLarge ? @"val-crosshair-ipad" : @"val-crosshair")];
+    if (m_valueCursor.image != valCursorImage) {
+        m_valueCursor.image = valCursorImage;
+        [m_valueCursor sizeToFit];
+    }
+
     CGFloat leftNotch = 0, rightNotch = 0;
     UIEdgeInsets safeInsets = self.view.safeAreaInsets;
-    CGFloat topMargin = safeInsets.top;
-    if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
-        topMargin = 24;
-        if (safeInsets.left > 0) {
-            leftNotch = safeInsets.left;
-            leftNotch -= leftMargin;
-            leftMargin += leftNotch;
-        }
-    } else if (UIInterfaceOrientationLandscapeLeft == [self interfaceOrientation]) {
-        topMargin = 24;
-        if (safeInsets.right > 0) {
-            rightNotch = safeInsets.right;
-        }
+    // Each edge's own inset is applied regardless of orientation: whichever side carries a
+    // notch or a vertical bar reports it, so there is no need to know left from right landscape.
+    CGFloat topMargin = frame.size.width > frame.size.height ? 24 : safeInsets.top;
+    if (safeInsets.left > 0) {
+        leftNotch = safeInsets.left;
+        leftNotch -= leftMargin;
+        leftMargin += leftNotch;
+    }
+    if (safeInsets.right > 0) {
+        rightNotch = safeInsets.right;
     }
 
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f + topMargin,

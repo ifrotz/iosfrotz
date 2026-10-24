@@ -22,6 +22,19 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    [self loadGettingStartedContent];
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    // The status line advice depends on the horizontal size class, so refresh the page if the
+    // size class changes while it is showing (e.g. folding/unfolding).
+    if (self.viewIfLoaded.window && previousTraitCollection.horizontalSizeClass != self.traitCollection.horizontalSizeClass)
+        [self loadGettingStartedContent];
+}
+
+- (void)loadGettingStartedContent {
+    BOOL regularWidth = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
     FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
 
     [webView removeFromSuperview];
@@ -113,7 +126,7 @@
                               "%@"
                               "<br/>"
                               "</body>\n",
-                              !gLargeScreenDevice ?
+                              !regularWidth ?
                               @"<p>Many games display a status line at the top of the screen with your current location, the time or score, or other relevant info.\n"
                               "In some cases the story can only display all the information it needs to when using a small font.  If you are "
                               "using a larger font and the status line is truncated, you can pinch to decrease the font size temporarily in order to see the full status line.</p>\n" : @""]

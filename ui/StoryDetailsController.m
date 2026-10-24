@@ -292,7 +292,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     
     m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
     if (m_willResume) {
-        if (gLargeScreenDevice) {
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
             [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
         } else {
             [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
@@ -366,7 +366,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     // For some reason in iOS 4.2 this doesn't work because the frame hasn't been scaled yet
     // in willAnimRotation...  so I'm initializing it here with a hardcoded scale of half.
     m_artSizeLandscape = m_artworkView.bounds.size;
-    CGFloat landscapeScale = gLargeScreenDevice ? 0.5 : 0.8;
+    CGFloat landscapeScale = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 0.5 : 0.8;
     m_artSizeLandscape.width *= landscapeScale;
     m_artSizeLandscape.height *= landscapeScale;
     

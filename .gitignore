@@ -32,6 +32,7 @@ xcuserdata
 *.moved-aside
 *.xcuserstate
 Pods
+Frotz.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
 
 ## Obj-C/Swift specific
 *.hmap

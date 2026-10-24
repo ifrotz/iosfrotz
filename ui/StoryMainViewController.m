@@ -48,8 +48,6 @@
 
 #include <CoreText/CoreText.h>
 
-#define kDefaultTextViewWidth ((gLargeScreenDevice || gLargeScreenPhone) ? 80 : kDefaultTextViewMinWidth)
-
 #define kClearEscChar '\f'
 #define kClearEscCode "\f"
 #define kSetDefColorsChar '\007'
@@ -65,6 +63,7 @@
 int iosif_textview_width = kDefaultTextViewMinWidth;
 int iosif_textview_height = kDefaultTextViewHeight;
 int iosif_screenwidth = 320, iosif_screenheight = 480;
+int iosif_regular_width = 0;
 int iosif_fixed_font_width = 5, iosif_fixed_font_height = 10;
 
 int do_autosave = 0, autosave_done = 0, refresh_savedir = 0, restore_frame_count;
@@ -802,13 +801,20 @@ void iosif_recompute_screensize() {
     __block CGRect pFrame;
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
+    // The parent is the full-width paging background; the width the Glk layer may use for its
+    // windows is that minus the trailing vertical bar (the Duo's button strip), matching
+    // storyViewFullFrame.
     if ([NSThread isMainThread]) {
         UIView *parentView = [storyView superview];
         pFrame = [parentView frame];
+        pFrame.size.width -= theSMVC.view.safeAreaInsets.right;
+        iosif_regular_width = [theSMVC isRegularWidth];
     } else {
         dispatch_sync(dispatch_get_main_queue(), ^{
             UIView *parentView = [storyView superview];
             pFrame = [parentView frame];
+            pFrame.size.width -= theSMVC.view.safeAreaInsets.right;
+            iosif_regular_width = [theSMVC isRegularWidth];
         });
     }
     pFrame.size.height -= [theSMVC keyboardSize].height;
@@ -903,9 +909,9 @@ glui32 iosif_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
             UIImage *img = [UIImage imageWithData: data];
             if (img) {
                 if (width)
-                    *width = gLargeScreenDevice ? img.size.width : img.size.width / 2;
+                    *width = iosif_regular_width ? img.size.width : img.size.width / 2;
                 if (height)
-                    *height = gLargeScreenDevice ? img.size.height : img.size.height / 2;
+                    *height = iosif_regular_width ? img.size.height : img.size.height / 2;
                 return TRUE;
             }
         }
@@ -1499,7 +1505,7 @@ static void setColorTable(RichTextView *v) {
             data = [NSData dataWithBytesNoCopy: blorbres->data.ptr length:blorbres->length freeWhenDone:NO];
         
         if (data) {
-            img = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            img = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, self.view.bounds, self.traitCollection); // scales down to view size if too big, else leaves alone
             //img = [UIImage imageWithData: data];
             glkImageCache[imgKey] = img;
         }
@@ -1726,6 +1732,17 @@ extern void gli_ios_set_focus(window_t *winNum);
 -(void)viewDidDisappear:(BOOL)animated {
 }
 
+-(void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    // loadView no longer sizes the subviews from the screen, so lay them out from the real
+    // bounds whenever those change (first layout after a push, fold/unfold, split view resize).
+    CGSize size = self.view.bounds.size;
+    if (m_storyView && !CGSizeEqualToSize(size, m_lastLayoutSize)) {
+        m_lastLayoutSize = size;
+        [self autosize];
+    }
+}
+
 -(void)viewDidAppear:(BOOL)animated {
     [self checkAccessibility];
 
@@ -1756,7 +1773,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     else
         refresh_savedir = 0;
 
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
+    if ([self viewIsWiderThanTall]) {
         m_landscape = YES;
     }
     else {
@@ -1887,7 +1904,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
         if (data) {
             NSNumber *imgKey = @(imageNum);
-            image = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            image = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, theSMVC.view.bounds, theSMVC.traitCollection); // scales down to view size if too big, else leaves alone
             glkImageCache[imgKey] = image;
         }
     }
@@ -1901,12 +1918,13 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         return;
     }
     
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
+    // The parent controller sizes the view before it appears and autosize lays out the subviews
+    // from the real bounds, so start from an empty frame rather than the screen bounds.
+    CGRect frame = CGRectZero;
 
     self.automaticallyAdjustsScrollViewInsets = NO;
-    self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
-    float navHeight = self.topLayoutGuide.length;
+    self.view = [[UIView alloc] initWithFrame:frame];
+    float navHeight = self.view.safeAreaInsets.top;
     frame.origin.y = navHeight;
     frame.size.height -= navHeight;
 
@@ -1982,7 +2000,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     edgeInsets.bottom = 8;
     [m_storyView setContentInset: edgeInsets];
     
-    m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+    m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     [self loadPrefs];
     
     [m_storyView setAutoresizingMask: /*UIViewAutoresizingFlexibleTopMargin|*/UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin|
@@ -2070,7 +2088,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         CGFloat inputLineWidth = frame.size.width;
         frame.size = origViewFrame.size;
         frame = [m_inputLine.superview convertRect:frame toView:view.superview];
-        CGFloat maxDist = [[UIScreen mainScreen] applicationFrame].size.height;
+        CGFloat maxDist = self.view.bounds.size.height;
         if (frame.origin.y - origViewFrame.origin.y > maxDist)
             frame.origin.y = origViewFrame.origin.y + maxDist;
         CGFloat duration = animDuration;
@@ -2166,26 +2184,32 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
+    iosif_regular_width = [self isRegularWidth];
     if (m_storyView)
         [self hideInputHelper];
+    [self updateFontsForWidthIfNeeded];
     if (m_notesController)
         [m_notesController autosize];
 }
 
 - (BOOL)prefersStatusBarHidden {
-    return m_landscape && !gLargeScreenDevice;
+    // Hide the status bar in the wide layout only when vertical space is tight (phone landscape).
+    return m_landscape && self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
 }
 
 - (void)autosize {
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])
-        || self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
+    BOOL regularWidth = [self isRegularWidth];
+    BOOL compactHeight = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
+    iosif_regular_width = regularWidth;
+    [self updateFontsForWidthIfNeeded];
+    if ([self viewIsWiderThanTall] || regularWidth) {
         m_landscape = YES;
-        if (!gLargeScreenDevice) {
+        if (compactHeight) {
             [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation: UIStatusBarAnimationSlide];
         }
-        [self.navigationController setNavigationBarHidden:gLargeScreenDevice?NO:YES animated:YES];
+        [self.navigationController setNavigationBarHidden:compactHeight animated:YES];
     } else {
-        if (!gLargeScreenDevice) {
+        if (!regularWidth) {
             [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation: UIStatusBarAnimationSlide];
         }
         m_landscape = NO;
@@ -2205,8 +2229,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_landscape && m_autoRestoreDict!=nil)
         frame.size.height += 20;
 
-    CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
-    CGRect bgRect = CGRectMake(0, 0, applicationFrame.size.width, frame.size.height);
+    CGRect bgRect = CGRectMake(0, self.view.safeAreaInsets.top, self.view.bounds.size.width, frame.size.height);
     //NSLog(@"autosize bg frame=(%f,%f,%f,%f)", bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
 
     m_background.frame = bgRect;
@@ -2218,9 +2241,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         frame.size.height -= m_kbdSize.height;
         [m_storyView setBottomMargin: 8];
     } else {
-        UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-        [m_storyView setBottomMargin: safeInsets.bottom];
+        [m_storyView setBottomMargin: self.view.safeAreaInsets.bottom];
     }
     [m_storyView setFrame: frame];
 
@@ -2254,10 +2275,19 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(CGRect) storyViewFullFrame {
     CGRect frame = self.view.bounds;
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+
+    // The paging background sits below the top safe-area inset (navigation bar) when the view
+    // extends under it, so the area available to the story is the bounds minus that inset. The
+    // background scroll view used to pick this up as an automatic content inset; it no longer does.
+    frame.size.height -= safeInsets.top;
 
     CGPoint origin = m_storyView.frame.origin;
     frame.origin.x += origin.x;
     frame.size.width -= origin.x;
+    // Keep the story text clear of a trailing vertical bar (the Duo's button strip), which the
+    // system reports as a trailing safe-area inset. The paging background behind it stays full width.
+    frame.size.width -= safeInsets.right;
     return frame;
 }
 
@@ -2304,7 +2334,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     // iOS 8.0 doesn't sent hide notifications for undocked kbd
     // and instead sends another show notification with smaller frame height
     NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (gLargeScreenDevice && frameUserInfoValue) {
+    if (self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPad && frameUserInfoValue) { // undocked keyboards exist only on iPad
         CGRect frameEnd = [frameUserInfoValue CGRectValue];
         CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
         if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
@@ -2582,6 +2612,67 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     m_landscape = landscape;
 }
 
+// Replaces the launch-time gLargeScreenDevice idiom check: YES when there is room for the wide
+// (formerly iPad-only) layout, which now also covers wide windows such as an unfolded iPhone Duo.
+-(BOOL)isRegularWidth {
+    return self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+}
+
+// Replaces the launch-time gLargeScreenPhone screen-size check with a live one on the current
+// view width: YES for current iPhones and the folded Duo (375pt and wider), which get 80 columns
+// and the full-size fixed-width and status fonts; NO for SE-class widths, which get the small ones.
+-(BOOL)hasWidePhoneWidth {
+    if (![self isViewLoaded])
+        return NO;
+    return self.view.bounds.size.width >= 375;
+}
+
+// Width classification covering only the inputs setFont: actually uses (regular width, and the
+// wide phone width), so that font metrics are redone only when one of them changes.
+-(NSInteger)widthLevel {
+    return ([self isRegularWidth] ? 2 : 0) + ([self hasWidePhoneWidth] ? 1 : 0);
+}
+
+// The fixed-width and status line font sizes derive from the available width (see setFont:), so
+// re-apply the current font when the width classification changes, e.g. on fold/unfold or resize.
+-(void)updateFontsForWidthIfNeeded {
+    if (!m_storyView || !m_fontname)
+        return;
+    if ([self widthLevel] == m_appliedWidthLevel)
+        return;
+    // Defer the reflow: this is reached from traitCollectionDidChange: in the middle of a view
+    // hierarchy change (e.g. the push that autorestores a story), when the story view's text runs
+    // and their layout positions are not yet in sync. Re-check once UIKit has finished.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (m_storyView && m_fontname && [self widthLevel] != m_appliedWidthLevel) {
+            [self setFont: nil withSize: 0];
+            // The status window and Glk grid rows were sized from the previous font metrics
+            // (on first launch, from before the view had a width); re-measure them now.
+            [self resizeStatusWindow];
+        }
+    });
+}
+
+// Replaces the old kDefaultTextViewWidth macro: 80 columns when the view is regular-width or at
+// least 375pt wide, otherwise the minimum. Safe to call from the interpreter thread.
+-(int)defaultTextViewWidth {
+    __block BOOL wide = NO;
+    void (^measure)(void) = ^{
+        wide = [self isRegularWidth] || [self hasWidePhoneWidth];
+    };
+    if ([NSThread isMainThread])
+        measure();
+    else
+        dispatch_sync(dispatch_get_main_queue(), measure);
+    return wide ? 80 : kDefaultTextViewMinWidth;
+}
+
+// Aspect-ratio test that replaces the deprecated interfaceOrientation landscape check.
+-(BOOL)viewIsWiderThanTall {
+    CGSize size = self.view.bounds.size;
+    return size.width > size.height;
+}
+
 -(void) setFont: (NSString*)fontName withSize:(NSInteger)size {
     NSInteger maxFontSize = 32;
     if (fontName) {
@@ -2590,7 +2681,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if (size)
         m_fontSize = size;
     if (m_fontSize < 1)
-        m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+        m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     else if (m_fontSize < 8)
         m_fontSize = 8;
     else if (m_fontSize > maxFontSize)
@@ -2609,18 +2700,20 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if ([font pointSize] != m_fontSize)
         font = [font fontWithSize: m_fontSize];
 #if UseRichTextView
+    BOOL regularWidth = [self isRegularWidth];
+    m_appliedWidthLevel = [self widthLevel];
     bool normalSizedStatusFont = UseFullSizeStatusLineFont;
-	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
+	bool normalSizeFixedFont = normalSizedStatusFont || regularWidth || [self hasWidePhoneWidth];
     [m_storyView setFontBase: font size: m_fontSize];
     NSInteger fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontBase: [m_storyView fixedFont] size: fixedFontSize];
     [m_storyView reflowText];
     if (normalSizedStatusFont) {
-        int lowRange = gLargeScreenDevice ? 12 : 8;
-        int hiRange = gLargeScreenDevice ? 20 : 16;
+        int lowRange = regularWidth ? 12 : 8;
+        int hiRange = regularWidth ? 20 : 16;
         m_statusFixedFontSize = fixedFontSize > hiRange ? hiRange : fixedFontSize < lowRange ? lowRange : fixedFontSize;
     }
-    else if (gLargeScreenDevice)
+    else if (regularWidth)
         m_statusFixedFontSize = 15;
     else
         m_statusFixedFontSize = normalSizeFixedFont ? 9 : 8;
@@ -2631,7 +2724,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [m_statusLine setFixedFontBase: statusFixedFont size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
     m_statusFixedFontWidth = !normalSizeFixedFont ? 5.0 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4.0;
-    m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont lineHeight];
+    // The status window (Z-machine upper window, Glk grid rows) is sized from this value plus one
+    // per row, so it must track the row height the status line actually draws. Measure it rather
+    // than assuming 9 for the small font or truncating lineHeight, or bottom rows get cut off.
+    CGFloat statusRowHeight = ceil([m_statusLine fixedFontSize].height);
+    m_statusFixedFontPixelHeight = MAX(1, (NSInteger)statusRowHeight - 1);
     [m_statusLine reflowText];
     
     if (gStoryInterp == kGlxStory) {
@@ -2661,7 +2758,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 }
 
 -(void) setFixedFont: (NSString*)font {
-    NSInteger fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
+    NSInteger fixedFontSize = [self isRegularWidth] ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFont: [UIFont fontWithName: font size: fixedFontSize]];
 }
 
@@ -3426,7 +3523,7 @@ static int iosif_top_win_height = 1;
                 [storyView setFrame: viewFrame];
                 [storyView appendText: @"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"];
             }
-            if (gLargeScreenDevice)
+            if ([self isRegularWidth])
                 [storyView appendText: @"\n\n[End of story. Tap 'Select Story' to exit.]\n\n"];
             else
                 [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
@@ -3614,7 +3711,7 @@ static UIColor *scanColor(NSString *colorStr) {
 }
 
 static void setScreenDims(char *storyNameBuf) {
-    iosif_textview_width = kDefaultTextViewWidth;
+    iosif_textview_width = [theSMVC defaultTextViewWidth];
     iosif_textview_height = kDefaultTextViewHeight;
     
     if (gStoryInterp == kZStory) {
@@ -4030,17 +4127,18 @@ static void setScreenDims(char *storyNameBuf) {
         NSString *pathExt = [[self currentStory] pathExtension];
         BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
         NSData *data = nil;
-        if (!isZblorb || !gLargeScreenDevice)
+        BOOL regularWidth = [self isRegularWidth];
+        if (!isZblorb || !regularWidth)
             data = [storyBrowser splashDataForStory: story];
         if (!data && isZblorb)
             data = imageDataFromBlorb([self currentStory]);
         
         if (data) {
             UIImage *timg = [[UIImage alloc] initWithData: data];
-            UIImage *splashImage = scaledUIImage(timg, 0, 0);
+            UIImage *splashImage = scaledUIImageForBounds(timg, 0, 0, self.view.bounds, self.traitCollection);
             m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
 
-            UIImage *thumb = scaledUIImage(splashImage, 40, 32);
+            UIImage *thumb = scaledUIImageForBounds(splashImage, 40, 32, self.view.bounds, self.traitCollection);
             if (thumb) {
                 [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
                 [storyBrowser saveMetaData];
@@ -4049,9 +4147,9 @@ static void setScreenDims(char *storyNameBuf) {
             CGRect rect = [m_splashImageView bounds];
             
             CGSize mySize = [self view].frame.size;	    
-            if (gLargeScreenDevice || rect.size.width > 320 || rect.size.height > 320) {
+            if (regularWidth || rect.size.width > 320 || rect.size.height > 320) {
                 float scale = 1.0f;
-                if (gLargeScreenDevice && rect.size.height <= 512 && rect.size.width <= 512) {
+                if (regularWidth && rect.size.height <= 512 && rect.size.width <= 512) {
                     scale = (rect.size.height <= 320 && rect.size.width <= 320) ? 2.0f : 1.5f;
                 } else if (rect.size.height > mySize.height-40 || rect.size.width > mySize.width) {
                     scale = mySize.height / rect.size.height;
@@ -4405,7 +4503,7 @@ static void setScreenDims(char *storyNameBuf) {
         [self setTextColor: m_defaultFGColor makeDefault:NO];
         [self setBackgroundColor: m_defaultBGColor makeDefault:NO];
     }
-    m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+    m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     [self setFont: [UIFont fontWithName:kVariableWidthFontName size:m_fontSize]];
     m_completionEnabled = YES;
     m_canEditStoryInfo = NO;
@@ -4990,6 +5088,8 @@ static BOOL migateDropboxAuth() {
     return [[self.viewControllers lastObject] shouldAutorotate];
 }
 
+// TODO: Modernization - Consider adopting `prefersInterfaceOrientationLocked` (iOS 26+)
+// as the modern replacement for orientation locking via `supportedInterfaceOrientations`.
 -(NSUInteger)supportedInterfaceOrientations {
     return [[self.viewControllers lastObject] supportedInterfaceOrientations];
 }

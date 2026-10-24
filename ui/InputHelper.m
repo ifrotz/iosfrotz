@@ -108,10 +108,12 @@ const CGFloat kHistoryLineHeight = 20.0;
     } else {
         CGRect frame = [tableView frame];
         NSUInteger nLines;
-        BOOL isLandscape = UIInterfaceOrientationIsLandscape([self interfaceOrientation]);
-        int maxLines = gLargeScreenDevice ? (isLandscape ? 14 : 24) : (isLandscape ? 6 : 7);
+        CGSize parentSize = parentView.bounds.size;
+        BOOL isLandscape = parentSize.width > parentSize.height;
+        BOOL regularWidth = parentView.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+        int maxLines = regularWidth ? (isLandscape ? 14 : 24) : (isLandscape ? 6 : 7);
         if (![m_delegate isFirstResponder])
-            maxLines += gLargeScreenDevice ? 10 : 6;
+            maxLines += regularWidth ? 10 : 6;
         
         if (m_mode == FrotzInputHelperModeMoreWords)
             nLines = maxLines;

@@ -139,9 +139,10 @@
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     BOOL isLandscape = [storyController isLandscape];
     CGPoint ihpt = CGPointMake(isLandscape ? 100 : 2, ypos-8);
-    if (gLargeScreenDevice)
+    BOOL regularWidth = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+    if (regularWidth)
         ihpt.x += self.frame.origin.x;
-    else if (!gLargeScreenDevice && ![storyController isKBLocked] && [self isFirstResponder]
+    else if (!regularWidth && ![storyController isKBLocked] && [self isFirstResponder]
                 && isLandscape)
         ihpt = CGPointMake(100, ypos);
     // point is bottom-LEFT of helper view; 140 is height of helper

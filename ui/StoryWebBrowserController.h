@@ -56,6 +56,7 @@ typedef UIWebView StoryWebView;
     SWBDownloadState m_state;
     BOOL m_backToStoryList;
     BOOL m_storyAlreadyInstalled;
+    BOOL m_didInitialLayout;
     NSMutableArray *m_expectedArchiveFiles;
 }
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb NS_DESIGNATED_INITIALIZER;

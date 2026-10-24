@@ -58,19 +58,11 @@ const NSString *kBookmarkVersionKey = @"Version";
     UINavigationController *nc = [self navigationController];
     const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
     const float toolBarHeight = nc ? navBarHeight : 44.0;
-    CGRect frame = [[UIScreen mainScreen] bounds];
-    UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-    if (@available(iOS 11.0,*)) {
-        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-    }
-    frame.origin.y += navBarHeight;
-    frame.size.height -= navBarHeight;
+    // Frames are assigned in viewWillLayoutSubviews from the view's real bounds and safe area;
+    // from then on the autoresizing masks keep the layout up to date, as before.
+    m_background = [[UIView alloc] initWithFrame: CGRectZero];
 
-    m_background = [[UIView alloc] initWithFrame: frame];
-
-    frame.origin.y = 0;
-    frame.size.height -= toolBarHeight;
-    m_scrollView = [[UIScrollView alloc] initWithFrame: frame];
+    m_scrollView = [[UIScrollView alloc] initWithFrame: CGRectZero];
     [m_scrollView setScrollEnabled: NO];
     [m_scrollView setBackgroundColor: [UIColor blackColor]];
     [m_scrollView setDelegate: self];
@@ -81,9 +73,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_background setBackgroundColor: [UIColor blackColor]];
     [m_background addSubview: m_scrollView];
 
-    frame = [m_scrollView bounds];
-    frame.size.height -= safeInsets.bottom;
-    m_webView = [[StoryWebView alloc] initWithFrame: frame];
+    m_webView = [[StoryWebView alloc] initWithFrame: CGRectZero];
     [m_background setAutoresizesSubviews: YES];
 
     [m_webView setAutoresizesSubviews: YES];
@@ -103,9 +93,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_webView setDelegate: self];
 #endif
 
-    frame.origin.y = frame.size.height;
-    frame.size.height = toolBarHeight;
-    m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
+    m_toolBar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 0, 0, toolBarHeight)];
     [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
 
     [m_toolBar setBarStyle: UIBarStyleBlack];
@@ -131,13 +119,39 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     m_bookmarkListController = [[BookmarkListController alloc] init];
     [m_bookmarkListController setDelegate: self];
-    CGRect blistFrame = [m_webView bounds];
-    blistFrame.size.height += [m_toolBar frame].size.height;
-    [[m_bookmarkListController view] setFrame: blistFrame];
 
     self.navigationItem.title = @"Story Browser";
 
     [self setInformSearchType];
+}
+
+-(void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    // One-time initial layout from the real bounds and safe area (this used to be done in loadView
+    // from the screen bounds and the key window's insets). Later changes are handled by the
+    // autoresizing masks and by the URL bar/bookmark code, which adjust these frames themselves.
+    if (m_didInitialLayout)
+        return;
+    m_didInitialLayout = YES;
+
+    CGRect frame = self.view.bounds;
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    const CGFloat toolBarHeight = m_toolBar.frame.size.height;
+
+    frame.size.height -= toolBarHeight;
+    [m_scrollView setFrame: frame];
+
+    frame = [m_scrollView bounds];
+    frame.size.height -= safeInsets.bottom;
+    [m_webView setFrame: frame];
+
+    frame.origin.y = frame.size.height;
+    frame.size.height = toolBarHeight;
+    [m_toolBar setFrame: frame];
+
+    CGRect blistFrame = [m_webView bounds];
+    blistFrame.size.height += toolBarHeight;
+    [[m_bookmarkListController view] setFrame: blistFrame];
 }
 
 -(void)setButtonItems:(BOOL)canCancel {
@@ -874,12 +888,12 @@ const NSString *kBookmarkVersionKey = @"Version";
             UIImage *image = [UIImage imageWithData: picData];
             if (image) {
                 NSLog(@"saving pic data for %@", story);
-                UIImage *thumb = scaledUIImage(image, 40, 32);
+                UIImage *thumb = scaledUIImageForBounds(image, 40, 32, self.view.bounds, self.traitCollection);
                 if (thumb) {
                     [m_storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
                     saveMeta = YES;
                 }
-                UIImage *splash = scaledUIImage(image, 0, 0);
+                UIImage *splash = scaledUIImageForBounds(image, 0, 0, self.view.bounds, self.traitCollection);
                 if (splash) {
                     [m_storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
                 }

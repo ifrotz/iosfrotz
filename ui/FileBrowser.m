@@ -311,7 +311,7 @@
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
     [super viewWillDisappear:animated];
-    if (animated && UIInterfaceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
+    if (animated && self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
         [self.navigationController.view.superview setHidden: YES];
 }
 
@@ -469,15 +469,21 @@
         if( [m_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] ) {
             
             if (m_dialogType == kFBDoShowViewScripts) {
-                CGRect bounds = self.view.bounds;
-                CGFloat margin = self.view.safeAreaInsets.top;
-                bounds.origin.y += margin;
-                bounds.size.height -= margin;
-                UITextView *textView = [[UITextView alloc] initWithFrame: bounds];
+                UITextView *textView = [[UITextView alloc] initWithFrame: CGRectZero];
                 NSString *text = [[NSString alloc] initWithData: [[NSFileManager defaultManager] contentsAtPath: [self selectedFile]] encoding:NSUTF8StringEncoding];
                 textView.text = text;
                 textView.editable = NO;
+                textView.translatesAutoresizingMaskIntoConstraints = NO;
                 [self.view addSubview: textView];
+                // Pin to the safe area guide so the text keeps clear of bars and device insets
+                // as they change, instead of baking in the inset at creation time.
+                UILayoutGuide *safeArea = self.view.safeAreaLayoutGuide;
+                [NSLayoutConstraint activateConstraints: @[
+                    [textView.topAnchor constraintEqualToAnchor: safeArea.topAnchor],
+                    [textView.bottomAnchor constraintEqualToAnchor: safeArea.bottomAnchor],
+                    [textView.leadingAnchor constraintEqualToAnchor: safeArea.leadingAnchor],
+                    [textView.trailingAnchor constraintEqualToAnchor: safeArea.trailingAnchor],
+                ]];
                 self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
                     initWithBarButtonSystemItem: UIBarButtonSystemItemDone
                     target:self action:@selector(doneWithTextFile:)];
