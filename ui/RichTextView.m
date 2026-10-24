@@ -151,10 +151,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     UIColor *c = m_fgColor;
     NSUInteger index = m_currentTextColorIndex;
     NSUInteger colorCount = [m_colorIndex count];
-    if ((index <= 1 || index-1 >= m_currentTextColorIndex < [m_colorArray count])
+    if ((index <= 1 || index-1 >= [m_colorArray count])
         && colorCount > 0) {
         index = [m_colorIndex[colorCount-1] unsignedIntValue] & 0xFFFF;
-        if (index > 1)
+        if (index > 1 && index-1 < [m_colorArray count])
             m_currentTextColorIndex = index;
     }
     if (index > 1)
