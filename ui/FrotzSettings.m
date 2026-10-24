@@ -36,6 +36,8 @@
 #define kFontSizeStr "Story Font Size (%d)"
 #define kNotesSizeStr "Notes Font Size (%d)"
 
+#import "FrotzAlert.h"
+
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
 @synthesize infoDelegate = m_infoDelegate;
@@ -83,30 +85,6 @@ enum FrotzPrefsRows
     [UIView commitAnimations];
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if(m_resetting) {
-        NSIndexPath *idx = [[self tableView] indexPathForSelectedRow];
-        if (idx)
-            [[self tableView] deselectRowAtIndexPath: idx animated:YES];
-        m_resetting = NO;
-        if (buttonIndex == 1) {
-            [m_storyDelegate resetSettingsToDefault];
-            m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
-            m_newNotesFontSize = m_origNotesFontSize = (int)[m_notesDelegate fontSize];
-            m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
-            m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
-            [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
-            [[self tableView] reloadData];
-        }
-        return;
-    }
-    // else FTP Alert
-    if (buttonIndex == 1) {
-        [m_fileTransferInfo stopServer];
-        [self donePressed];
-    }
-}
-
 -(void)updateAccessibility {
     [m_colorPicker updateAccessibility];
 }
@@ -114,10 +92,13 @@ enum FrotzPrefsRows
 -(void)donePressed {
     if (m_fileTransferInfo) {
         if ([m_fileTransferInfo serverIsRunning]) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"File server running"
-                                                            message: @"The file server will be disabled when you exit settings"
-                                                           delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
-            [alert show];
+            FrotzShowAlert(self, @"File server running", @"The file server will be disabled when you exit settings",
+                           @"Cancel", @[@"OK"], ^(NSInteger buttonIndex) {
+                if (buttonIndex == 1) {
+                    [m_fileTransferInfo stopServer];
+                    [self donePressed];
+                }
+            });
             return;
         }
     }
@@ -599,10 +580,22 @@ enum FrotzPrefsRows
             break;
         case kFrotzResetSection: {
             m_resetting = YES;
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Reset Preferences"
-                message: @"Do you want to reset all color and font settings to their defaults?"
-                delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"OK", nil];
-            [alert show];
+            FrotzShowAlert(self, @"Reset Preferences", @"Do you want to reset all color and font settings to their defaults?",
+                           @"Cancel", @[@"OK"], ^(NSInteger buttonIndex) {
+                NSIndexPath *idx = [[self tableView] indexPathForSelectedRow];
+                if (idx)
+                    [[self tableView] deselectRowAtIndexPath: idx animated:YES];
+                m_resetting = NO;
+                if (buttonIndex == 1) {
+                    [m_storyDelegate resetSettingsToDefault];
+                    m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
+                    m_newNotesFontSize = m_origNotesFontSize = (int)[m_notesDelegate fontSize];
+                    m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
+                    m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
+                    [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
+                    [[self tableView] reloadData];
+                }
+            });
         }
             break;
 

@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,weak,nullable) StoryBrowser *browser;
 @end
 
-@interface StoryBrowser : UITableViewController <UIActionSheetDelegate,
+@interface StoryBrowser : UITableViewController <
     UISplitViewControllerDelegate, UIPopoverControllerDelegate,
     UISearchBarDelegate, UISearchControllerDelegate, UISearchResultsUpdating,
     UITableViewDataSource, UITableViewDelegate> {

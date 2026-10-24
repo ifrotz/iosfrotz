@@ -1143,6 +1143,8 @@ static void setColorTable(RichTextView *v) {
 }
 
 
+#import "FrotzAlert.h"
+
 @implementation StoryMainViewController 
 @synthesize fontName = m_fontname;
 @synthesize fontSize = m_fontSize;
@@ -1647,12 +1649,6 @@ extern void gli_ios_set_focus(window_t *winNum);
 - (void)abortToBrowser {
     [self abandonStory: YES];
     [m_storyBrowser didPressModalStoryListButton];
-}
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 1) {
-        [self abortToBrowser];
-    }
 }
 
 -(void)setNavBarTint {
@@ -3513,8 +3509,7 @@ static int iosif_top_win_height = 1;
         if ([m_currentStory length] > 0) {
             if (finished == 2) {
                 finished = -1;
-                UIAlertView *dialog = [[UIAlertView alloc] initWithTitle:@"Unreadable story file" message: @"Frotz doesn't understand the format of this file" delegate:self cancelButtonTitle:@"Drat" otherButtonTitles:nil];
-                [dialog show];
+                FrotzShowAlert(self, @"Unreadable story file", @"Frotz doesn't understand the format of this file", @"Drat", nil, nil);
             }
             [storyView setFreezeDisplay:NO];
             [storyView setTextStyle: kFTBold];
@@ -4821,14 +4816,12 @@ static BOOL migateDropboxAuth() {
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client)
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
-                                                        message: 
-                              [NSString stringWithFormat:
-                               @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
-                               "with separate subfolders per story.  You can access this area from Frotz on other "
-                               "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
-                                                       delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [alert show];
+        FrotzShowAlert(self, @"Account linked",
+                       [NSString stringWithFormat:
+                        @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
+                        "with separate subfolders per story.  You can access this area from Frotz on other "
+                        "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]],
+                       @"OK", nil, nil);
         [self dbRefreshFolder: [self dbSavePath] createIfNotExists:YES];
     }
 #endif

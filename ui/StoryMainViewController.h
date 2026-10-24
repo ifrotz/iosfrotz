@@ -55,7 +55,7 @@ extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
-    UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
     LockableKeyboard>
 {

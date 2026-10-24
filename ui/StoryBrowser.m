@@ -77,6 +77,8 @@ void removeOldPngSplash(const char *filename) {
         [defaultManager removeItemAtPath: path error: &error];
 }
 
+#import "FrotzAlert.h"
+
 @implementation StoryBrowser 
 
 @synthesize searchController = m_searchController;
@@ -100,11 +102,12 @@ void removeOldPngSplash(const char *filename) {
 
 -(BOOL)checkMinimumDiskSpace:(long long)minSpace freeSpace:(long long)freeSpace {
     if (freeSpace < minSpace) { // in MB
-        UIAlertView *alert = [[UIAlertView alloc]  initWithTitle:
-                              [NSString stringWithFormat: @"Frotz cannot launch because the device has only %lld MB of storage free.", freeSpace]
-                                                         message: [NSString stringWithFormat:@"Frotz needs at least %lld MB to run so that game autosave and other features work correctly.\n\nFrotz will now terminate.", minSpace]
-                                                        delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self, [NSString stringWithFormat: @"Frotz cannot launch because the device has only %lld MB of storage free.", freeSpace],
+                       [NSString stringWithFormat:@"Frotz needs at least %lld MB to run so that game autosave and other features work correctly.\n\nFrotz will now terminate.", minSpace],
+                       @"OK", nil, ^(NSInteger buttonIndex) {
+            if (abortLaunchCondition)
+                exit(1);
+        });
         abortLaunchCondition = YES;
         return YES;
     }
@@ -413,7 +416,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (void)setLaunchPath:(NSString*)path {
     NSFileManager *defaultManager = [NSFileManager defaultManager];
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
     if (m_launchPath) {
         m_launchPath = nil;
     }
@@ -427,18 +430,19 @@ void removeOldPngSplash(const char *filename) {
             m_launchPath = destPath;
         } else {
             NSLog(@"Frotz couldn't read launch URL path: %@", path);
-            alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot read external URL"
-                                                message: [NSString stringWithFormat:@"Error %@: %@ : %@", error, path, destPath]
-                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            alertTitle = @"Frotz cannot read external URL";
+            alertMessage = [NSString stringWithFormat:@"Error %@: %@ : %@", error, path, destPath];
         }
     } else {
         NSLog(@"Frotz launch URL path %@ doesn't exist", path);
-        alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot find external URL"
-                                            message: [NSString stringWithFormat:@".../%@", [path lastPathComponent]]
-                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alertTitle = @"Frotz cannot find external URL";
+        alertMessage = [NSString stringWithFormat:@".../%@", [path lastPathComponent]];
     }
-    if (alert) {
-        [alert show];
+    if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, ^(NSInteger buttonIndex) {
+            if (abortLaunchCondition)
+                exit(1);
+        });
     }
 }
 
@@ -1162,11 +1166,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)delayedPopToSelf {
     [[self navigationController] popToViewController:self animated:NO];
-}
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (abortLaunchCondition)
-        exit(1);
 }
 
 -(void)resumeStory {

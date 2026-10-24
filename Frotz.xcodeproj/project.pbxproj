@@ -13,6 +13,7 @@
 		2892E4100DC94CBA00A64D0F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */; };
 		440470942BF8FBE10099B632 /* Pods_Frotz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6828BF8AAB28523DEEF2B73 /* Pods_Frotz.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		44115BCC308D44E600C78775 /* FrotzSceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */; };
+		44115BCF308D729900C78775 /* FrotzAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = 44115BCE308D729900C78775 /* FrotzAlert.m */; };
 		4413B1631071CA2700D39E6A /* RichTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4413B1611071CA2700D39E6A /* RichTextView.m */; };
 		4414E2D9104CDA0B008C3F56 /* FrotzWordPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */; };
 		4414E2DC104CDA21008C3F56 /* FrotzWordPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 4414E2DB104CDA21008C3F56 /* FrotzWordPicker.m */; };
@@ -552,6 +553,8 @@
 		440DACE1125D8CA70014A8FD /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrotzSceneDelegate.h; sourceTree = "<group>"; };
 		44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FrotzSceneDelegate.m; sourceTree = "<group>"; };
+		44115BCD308D728E00C78775 /* FrotzAlert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrotzAlert.h; sourceTree = "<group>"; };
+		44115BCE308D729900C78775 /* FrotzAlert.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FrotzAlert.m; sourceTree = "<group>"; };
 		4413B1611071CA2700D39E6A /* RichTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RichTextView.m; sourceTree = "<group>"; };
 		4413B1621071CA2700D39E6A /* RichTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RichTextView.h; sourceTree = "<group>"; };
 		4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FrotzWordPicker.xib; sourceTree = "<group>"; };
@@ -1367,6 +1370,8 @@
 				4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */,
 				44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */,
 				44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */,
+				44115BCD308D728E00C78775 /* FrotzAlert.h */,
+				44115BCE308D729900C78775 /* FrotzAlert.m */,
 			);
 			name = UI;
 			path = ui;
@@ -2667,6 +2672,7 @@
 				446B9EAD0E2075D1002BDD65 /* StoryMainViewController.m in Sources */,
 				449C92461122188D006CCDF9 /* StoryView.m in Sources */,
 				4488D1D30E21E81F008C6FE0 /* StoryWebBrowserController.m in Sources */,
+				44115BCF308D729900C78775 /* FrotzAlert.m in Sources */,
 				44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */,
 				44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */,
 				441EC8670E10BD4400E74625 /* ui_audio_none.c in Sources */,

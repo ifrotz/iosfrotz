@@ -32,6 +32,8 @@ BOOL isHiddenFile(NSString *file) {
 }
 
 
+#import "FrotzAlert.h"
+
 @implementation FileTransferInfo
 @synthesize serverIsRunning = m_running;
 
@@ -291,10 +293,9 @@ BOOL isHiddenFile(NSString *file) {
         [[UIApplication sharedApplication] setIdleTimerDisabled: YES]; 
     } else {
         [self stopServer];
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unable to start FTP server"
-                                                        message: error ? [error localizedFailureReason] : @"A network error occurred"
-                                                       delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self, @"Unable to start FTP server",
+                       error ? [error localizedFailureReason] : @"A network error occurred",
+                       @"OK", nil, nil);
     }
 }
 

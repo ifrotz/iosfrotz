@@ -35,6 +35,8 @@ const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
 
+#import "FrotzAlert.h"
+
 @implementation StoryWebBrowserController
 
 @synthesize snarfedStoryName;
@@ -188,8 +190,7 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             [fileMgr removeItemAtPath: zipFile error: nil];
             if (count > 0) {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:" message: storyList delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-                [alert show];
+                FrotzShowAlert(self.navigationController ?: self, @"Extracted the following story files from archive:", storyList, @"OK", nil, nil);
                 [self browserDidPressBackButton];
             }
         }
@@ -625,21 +626,19 @@ const NSString *kBookmarkVersionKey = @"Version";
         [m_receivedData writeToFile: outFile atomically: NO];
     m_receivedData = nil;
     m_currentRequest = nil;
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
     NSString *storyFile = nil;
     if (isBadLoad) {
-        alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
-                                           message:@"The web server returned an error page instead of the expected file"
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alertTitle = @"Unable to retrieve file";
+        alertMessage = @"The web server returned an error page instead of the expected file";
         stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
         NSMutableArray *zList = listOfZFilesInZIP(outFile);
         BOOL delZip = NO;
         if (!zList || [zList count] == 0) {
-            alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
-                                               message:@"Sorry, this archive contains no playable story files"
-                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            alertTitle = @"No Z-Code content";
+            alertMessage = @"Sorry, this archive contains no playable story files";
             delZip = YES;
         } else {
             if ([zList count] > 1) {
@@ -663,11 +662,12 @@ const NSString *kBookmarkVersionKey = @"Version";
         storyFile = urlString;
         doAddedAlert = YES;
     }
-    if (doAddedAlert)
-        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: storyFile]
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    if (alert) {
-        [alert show];
+    if (doAddedAlert) {
+        alertTitle = @"Selected story added\nto Story List";
+        alertMessage = [m_storyBrowser fullTitleForStory: storyFile];
+    }
+    if (alertTitle) {
+        FrotzShowAlert(self.navigationController ?: self, alertTitle, alertMessage, @"OK", nil, nil);
     }
 
     [m_activityView stopAnimating];
@@ -689,9 +689,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: [m_webView isLoading]];
     [self setButtonItems: [m_webView isLoading]];
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
-                                                   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    [alert show];
+    FrotzShowAlert(self, @"Error", @"Couldn't load content", @"OK", nil, nil);
 }
 
 #if UseWKWebViewForIFDBBrowser
@@ -868,9 +866,7 @@ const NSString *kBookmarkVersionKey = @"Version";
             m_state = kSWBFetchingImage;
             loadingPic = YES;
         } else {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
-                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
+            FrotzShowAlert(self, @"Connection error", @"Could not download cover art", @"OK", nil, nil);
         }
 
     }
@@ -935,20 +931,14 @@ static bool bypassBundle = NO;
             storyFile = [[[request mainDocumentURL] path] lastPathComponent];
         NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
         if (extractOneFileFromZIP(bundledGamesPath, gamePath, storyFile) == 0) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List:"
-                                                            message: [m_storyBrowser fullTitleForStory: storyFile]
-                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
+            FrotzShowAlert(self.navigationController ?: self, @"Selected story added\nto Story List:",
+                           [m_storyBrowser fullTitleForStory: storyFile], @"OK", nil, nil);
             [self browserDidPressBackButton];
         } else {
-            UIAlertView *alert;
             if (m_storyAlreadyInstalled)
-                alert = [[UIAlertView alloc] initWithTitle:@"Metadata installed" message:@"Refreshed metadata (title, authors, etc.) for previously installed unbundled story"
-                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                FrotzShowAlert(self, @"Metadata installed", @"Refreshed metadata (title, authors, etc.) for previously installed unbundled story", @"OK", nil, nil);
             else
-                alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Could not extract story from bundled archive"
-                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
+                FrotzShowAlert(self, @"Error", @"Could not extract story from bundled archive", @"OK", nil, nil);
         }
         if (m_expectedArchiveFiles) {
             m_expectedArchiveFiles = nil;
@@ -969,9 +959,7 @@ static bool bypassBundle = NO;
         m_state = kSWBFetchingStory;
         //	[connection release];
     } else {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not retrieve file"
-                                                       delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self, @"Connection error", @"Could not retrieve file", @"OK", nil, nil);
     }
 }
 
@@ -1065,12 +1053,14 @@ static bool bypassBundle = NO;
         m_storyAlreadyInstalled = [m_storyBrowser storyIsInstalled: urlString];
         if (![self IFDBContentExistsInBundle: urlString]  // in bundled
             && !m_storyAlreadyInstalled) { // or they've already manually installed it; allow redownload to get title and artwork
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"In-App Download unsupported"
-                                                            message:@"Sorry, this story is not bundled and can't be downloaded by Frotz."
-                                  //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
-                                                           delegate:self cancelButtonTitle:@"Dismiss"
-                                                  otherButtonTitles: m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0 ? @"Open in Safari":nil, nil];
-            [alert show];
+            BOOL canOpenInSafari = m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0;
+            FrotzShowAlert(self, @"In-App Download unsupported",
+                           @"Sorry, this story is not bundled and can't be downloaded by Frotz.",
+                           //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
+                           @"Dismiss", canOpenInSafari ? @[@"Open in Safari"] : nil, ^(NSInteger buttonIndex) {
+                if (buttonIndex == 1 && m_currentRequest)
+                    [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
+            });
             return NO;
         }
 #endif
@@ -1095,13 +1085,6 @@ static bool bypassBundle = NO;
     m_state = kSWBIdle;
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 1) {
-        if (m_currentRequest)
-            [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
-    }
-}
-
 - (void)handleLoadFinished {
     if (m_currentRequest) {
         //NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
@@ -1121,21 +1104,22 @@ static bool bypassBundle = NO;
 }
 
 - (void)handleLoadFailureWithError:(NSError *)error {
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
 
     if ([error code]==102) { //WebKitErrorDomain, Frame Load Error
         if (m_currentRequest && [[[m_currentRequest URL] host] isEqualToString: @"www.youtube.com"])
             ; // ignore (happens when you use YT 'Open in App' button, which succeeds, but also fails here)
-        else
-            alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
+        else {
+            alertTitle = @"Unknown File Type";
+            alertMessage = @"Frotz cannot handle this type of file.\n";
                  //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        }
     } else if ([error code] != NSURLErrorCancelled) {
-        alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
-                                          delegate:self cancelButtonTitle:@"OK"otherButtonTitles: nil];
+        alertTitle = [error localizedDescription];
+        alertMessage = [error localizedFailureReason];
     }
-    if (alert) {
-        [alert show];
+    if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, nil);
     }
     //NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
 

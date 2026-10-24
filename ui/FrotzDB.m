@@ -22,6 +22,8 @@
 - (NSURL *)authURL;
 @end
 #endif
+#import "FrotzAlert.h"
+
 @implementation FrotzDBController
 @synthesize delegate = m_delegate;
 
@@ -117,27 +119,6 @@
     return YES;
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (m_isUnlinking) {
-        m_isUnlinking = NO;
-
-        if (buttonIndex == 1) {
-#if UseDropBoxSDK
-            [DBClientsManager unlinkAndResetClients];
-#endif
-            [[self tableView] reloadData];
-        }
-    } else { // change DB folder
-        StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
-        if (buttonIndex == 1) {
-            if (![[smvc dbTopPath] isEqualToString: m_textField.text]) {
-                [smvc setDBTopPath: m_textField.text];
-            }
-        } 
-        m_textField.text = [smvc dbTopPath];
-    }
-}
-
 -(void)textFieldDidEndEditing:(UITextField *)textField {
     NSString *newFolder = [textField text];
     StoryMainViewController *smvc = (StoryMainViewController*)m_delegate;
@@ -146,17 +127,21 @@
             m_textField.text = [newFolder substringToIndex: [newFolder length]-1];
         if ([smvc dbIsActive]) {
             if (![self isLinked]) {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Must link account to change Sync Folder"
-                                message: @"You have previously synched with a different Dropbox folder. You must relink "
-                                "your account before changing folders so the change can take effect."
-                                delegate:self cancelButtonTitle:@"OK" otherButtonTitles:  nil];
-                [alert show];
+                FrotzShowAlert(self, @"Must link account to change Sync Folder",
+                               @"You have previously synched with a different Dropbox folder. You must relink "
+                               "your account before changing folders so the change can take effect.",
+                               @"OK", nil, ^(NSInteger buttonIndex) {
+                    m_textField.text = [smvc dbTopPath];
+                });
                 textField.text = [smvc dbTopPath];
             } else {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Change Dropbox Sync Folder?"
-                                message: @"Any Frotz files previously synched with Dropbox will be moved to the new location."
-                                delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Change", nil];
-                [alert show];
+                FrotzShowAlert(self, @"Change Dropbox Sync Folder?",
+                               @"Any Frotz files previously synched with Dropbox will be moved to the new location.",
+                               @"Cancel", @[@"Change"], ^(NSInteger buttonIndex) {
+                    if (buttonIndex == 1 && ![[smvc dbTopPath] isEqualToString: m_textField.text])
+                        [smvc setDBTopPath: m_textField.text];
+                    m_textField.text = [smvc dbTopPath];
+                });
             }
         } else {
             [smvc setDBTopPath: m_textField.text];
@@ -364,10 +349,17 @@
                 case 1: {
                     if ([self isLinked]) {
                         m_isUnlinking = YES;
-                        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unlink Account"
-                                                                        message: @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized."
-                                                                       delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Unlink", nil];
-                        [alert show];
+                        FrotzShowAlert(self, @"Unlink Account",
+                                       @"Do you want to unlink your Dropbox account from Frotz?  Game files will no longer be automatically synchronized.",
+                                       @"Cancel", @[@"Unlink"], ^(NSInteger buttonIndex) {
+                            m_isUnlinking = NO;
+                            if (buttonIndex == 1) {
+#if UseDropBoxSDK
+                                [DBClientsManager unlinkAndResetClients];
+#endif
+                                [[self tableView] reloadData];
+                            }
+                        });
                     }
                     break;
                 }

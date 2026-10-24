@@ -13,7 +13,7 @@
 
 @class StoryDetailsController;
 
-@interface FrotzImageView : UIImageView  <UIAlertViewDelegate>
+@interface FrotzImageView : UIImageView
 {
     StoryDetailsController *__weak m_detailsController;
     NSTimer *m_tapTimer;
@@ -29,11 +29,11 @@
 
 @interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate,
 #if UseWKWebViewForFrotzStoryDetails
-    WKNavigationDelegate,
+    WKNavigationDelegate
 #else
-    UIWebViewDelegate,
+    UIWebViewDelegate
 #endif
-    UIActionSheetDelegate> {
+    > {
 
     IBOutlet UITextField *m_titleField;
     IBOutlet UITextField *m_authorField;

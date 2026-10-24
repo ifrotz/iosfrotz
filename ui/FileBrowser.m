@@ -54,6 +54,8 @@
 @end
 
 
+#import "FrotzAlert.h"
+
 @implementation FileBrowser
 @synthesize delegate = m_delegate;
 @synthesize path = m_path;
@@ -259,9 +261,13 @@
         }
         if (exists && m_dialogType != kFBDoShowScript) {
             if (!m_alertView) {
-                m_alertView = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
-                                                               delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Save", nil];
-                [m_alertView show];
+                m_alertView = FrotzShowAlert(self, @"Overwrite File", @"Do you want to save over this file?",
+                                             @"Cancel", @[@"Save"], ^(NSInteger buttonIndex) {
+                    m_alertView = nil;
+                    if (buttonIndex == 1) {
+                        [m_textField endEditing: YES];
+                    }
+                });
             }
             return;
         }
@@ -499,14 +505,6 @@
 -(void)doneWithTextFile:(id)sender {
     [m_delegate fileBrowser:self fileSelected:[self selectedFile]];
 }    
-
-// Called when a button is clicked. The view will be automatically dismissed after this call returns
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    m_alertView = nil;
-    if (buttonIndex == 1) { 
-        [m_textField endEditing: YES];
-    }
-}
 
 - (NSString *)selectedFile {
     if (m_textField && [[m_textField text] length] > 0)

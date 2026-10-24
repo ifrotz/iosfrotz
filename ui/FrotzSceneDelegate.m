@@ -14,6 +14,7 @@
 #import "StoryView.h"
 #import "StoryDetailsController.h"
 #import "FrotzDB.h"
+#import "FrotzAlert.h"
 
 @interface FrotzWindow : UIWindow
 {
@@ -173,10 +174,8 @@
         }
     } else {
         NSLog(@"Frotz launched w/unknown URL: %@", launchURL);
-        UIAlertView *alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot handle URL"
-                message: [NSString stringWithFormat:@"%@", launchURL]
-                delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self.window.rootViewController, @"Frotz cannot handle URL",
+                       [NSString stringWithFormat:@"%@", launchURL], @"OK", nil, nil);
     }
 
     return NO;
