@@ -221,6 +221,12 @@ static const int kNotesTitleHeight = 24;
     return [m_notesView text];
 }
 
+-(BOOL)isShown {
+    CGPoint ofst = [m_scrollView contentOffset];
+    CGRect frame = [m_scrollView frame];
+    return (ofst.x >= frame.size.width);
+}
+
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (scrollView == m_scrollView) {
         CGPoint ofst = [scrollView contentOffset];

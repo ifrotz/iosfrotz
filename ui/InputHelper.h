@@ -11,6 +11,8 @@
 
 @protocol FrotzInputDelegate <NSObject>
 -(void)inputHelperString:(NSString*)string;
+-(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
+-(BOOL)validateWord:(NSString*)word;
 -(BOOL)isFirstResponder;
 @end
 

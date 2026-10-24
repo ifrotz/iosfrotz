@@ -1472,20 +1472,29 @@ static BOOL hasAccessibility;
             [self appendAE];
     }
     m_prevLineNotTerminated = lineNotTerminated;
-#if 0
+#if 00
+    if (m_currentTextStyle & RichTextStyleFixedWidth)
+        return;
+    if ([text hasPrefix: @">"])
+        text = [@"Command Prompt?" stringByAppendingString: [text substringFromIndex: 1]];
     AVSpeechUtterance *utter = [AVSpeechUtterance speechUtteranceWithString: text];
+//    AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice voiceWithLanguage: nil];
     AVSpeechSynthesisVoice *voice = [AVSpeechSynthesisVoice voiceWithIdentifier:
+            @"com.apple.voice.enhanced.en-US.Evan"];
                                      //AVSpeechSynthesisVoiceIdentifierAlex];
                                     // @"com.apple.ttsbundle.siri_male_en-US_compact"];
-    @"com.apple.voice.enhanced.en-US.Evan"];
                                      //@"com.apple.ttsbundle.Tom-premium"];
-    NSArray<AVSpeechSynthesisVoice *> *voices = [AVSpeechSynthesisVoice speechVoices];
-    NSLog(@"voices: %@", voices);
+//    NSArray<AVSpeechSynthesisVoice *> *voices = [AVSpeechSynthesisVoice speechVoices];
+//    NSLog(@"voices: %@", voices);
     utter.voice = voice;
-    utter.rate = 0.6;
+    utter.rate = 0.55;
+    utter.volume = 1.0;
+    [m_selectionDelegate stopListening];
     static AVSpeechSynthesizer *avsynth;
-    if (!avsynth)
+    if (!avsynth) {
         avsynth = [[AVSpeechSynthesizer alloc] init];
+        avsynth.usesApplicationAudioSession = NO;
+    }
     [avsynth speakUtterance: utter];
 #endif
 }

@@ -116,7 +116,19 @@
 -(BOOL)becomeFirstResponder {
     if (![self isFirstResponder] && [self canBecomeFirstResponder])
         [m_inputHelper hideInputHelper];
-    return [super becomeFirstResponder];
+    BOOL ret = [super becomeFirstResponder];
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    if (ret)
+        [storyController pauseOrResumeDictation: YES];
+    return ret;
+}
+
+-(BOOL)resignFirstResponder {
+    BOOL ret = [super resignFirstResponder];
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    if (ret)
+        [storyController pauseOrResumeDictation: NO];
+    return ret;
 }
 
 -(void)inputHelperString:(NSString*)string {
@@ -128,6 +140,27 @@
         string = [self.text stringByAppendingString: string];
     }
     [self setText: string];
+}
+
+-(BOOL)validateWord:(NSString*)word {
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    BOOL isAmbig = NO;
+    if (word && [word length] > 0) {
+        NSString *match = [storyController completeWord: word prevString: nil isAmbiguous:&isAmbig];
+        if (match) // && !isAmbig)
+            return YES;
+    }
+    return NO;
+}
+
+-(void)acceptDictation:(NSString*)string final:(BOOL)isFinal; {
+    if (isFinal) {
+        [self setText: @""];
+        [self inputHelperString: string];
+        StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+        [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
+    } else
+        [self setText: string];
 }
 
 -(CGPoint)helperLaunchPosition {
@@ -541,7 +574,7 @@ const int kCompletionViewTag = 21;
     } else {
         word = [word stringByAppendingString: text];
         NSString *completion = [storyController completeWord: word prevString:prevString isAmbiguous:&m_completionAmbiguous];
-        if (completion) {
+        if (completion && ![completion isEqualToString: word]) {
             [m_completionLabel setText: completion];
             CGFloat inputLineWidth = frame.size.width;
             CGSize textSize = [completion sizeWithFont:[self font]];

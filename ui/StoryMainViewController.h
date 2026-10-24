@@ -16,13 +16,13 @@
 
 */
 #import <UIKit/UIKit.h>
-#import <Speech/SFSpeechRecognizer.h>
 #import "TransitionView.h"
 #import "FrotzInfo.h"
 #import "InputHelper.h"
 #import "FrotzWordPicker.h"
 #import "FileBrowser.h"
 #import "NotesViewController.h"
+#import "StoryDictationController.h"
 
 @class StoryBrowser;
 @class FrotzView;
@@ -55,10 +55,10 @@ extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
-@class SFSpeechRecognizer, SFSpeechAudioBufferRecognitionRequest, AVAudioEngine, AVAudioSession, AVAudioInputNode, SFSpeechRecognitionTask;
+@class SFSpeechRecognizer, AVAudioEngine, AVAudioSession, AVAudioInputNode, SFSpeechRecognitionTask;
 
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
-    UIActionSheetDelegate, SFSpeechRecognizerDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
     LockableKeyboard>
 {
@@ -69,8 +69,10 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableArray *m_glkViews;
 
     UIView *m_background;
+    UIBarButtonItem *m_micButton;
     UIBarButtonItem *m_kbdToggleItem;
     UIBarButtonItem *m_storyListItem; // leading item; created by the browser, which handles its action
+
     UIImageView *m_splashImageView;
     NotesViewController *m_notesController;
     
@@ -124,12 +126,7 @@ extern StoryBrowser *theStoryBrowser;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
     
-    SFSpeechRecognizer *m_sfrecog;
-    SFSpeechAudioBufferRecognitionRequest *m_sfRecogRequest;
-    AVAudioEngine *m_audioEngine;
-    AVAudioSession *m_audioSession;
-    AVAudioInputNode *m_audioInputNode;
-    SFSpeechRecognitionTask *m_recognitionTask;
+    StoryDictationController *m_dictationController;
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;
@@ -151,13 +148,15 @@ extern StoryBrowser *theStoryBrowser;
 -(void) hideNotes;
 @property (nonatomic, getter=isCompletionEnabled) BOOL completionEnabled;
 @property (nonatomic) BOOL canEditStoryInfo;
-- (void) activateKeyboard;
-- (void) toggleKeyboard;
-- (void) forceToggleKeyboard;
+-(void) activateKeyboard;
+-(void) toggleKeyboard;
+-(void) forceToggleKeyboard;
 @property (nonatomic, readonly, strong) id dismissKeyboard;
-- (void) setIgnoreWordSelection:(BOOL)ignore;
-- (void) abortToBrowser;
-- (void)autosize;
+-(void) toggleListenForSpeech;
+-(void) pauseOrResumeDictation:(BOOL)inputLineIsActive;
+-(void) setIgnoreWordSelection:(BOOL)ignore;
+-(void) abortToBrowser;
+-(void) autosize;
 -(BOOL) isRegularWidth;
 -(BOOL) hasWidePhoneWidth;
 -(int) defaultTextViewWidth;
@@ -233,7 +232,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) setLaunchMessage:(NSString*)msg clear:(BOOL)clear;
 -(void) displayLaunchMessageWithDelay: (CGFloat)delay duration:(CGFloat)duration alpha:(CGFloat)alpha;
 @property (nonatomic, readonly) CGPoint cursorOffset;
--(NSString*) completeWord:(NSString*)word prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
+-(NSString*) completeWord:(NSString*)word prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
 // Dropbox API
@@ -266,6 +265,6 @@ extern StoryBrowser *theStoryBrowser;
 @end
 #endif
 
-NS_ASSUME_NONNULL_END
-
 extern NSString *const kDBCFilename; // dropbox cache
+
+NS_ASSUME_NONNULL_END

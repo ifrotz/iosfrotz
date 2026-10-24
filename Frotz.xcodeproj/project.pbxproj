@@ -343,6 +343,7 @@
 		44DA422215E987A2007F61DA /* zcode-320.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA421415E987A2007F61DA /* zcode-320.png */; };
 		44DA422315E987A2007F61DA /* zcode-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA421515E987A2007F61DA /* zcode-640.png */; };
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
+		44E0CC5A30956B4D00A5EA81 /* StoryDictationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
 		44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */; };
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
@@ -1183,6 +1184,8 @@
 		44DA421515E987A2007F61DA /* zcode-640.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "zcode-640.png"; sourceTree = "<group>"; };
 		44E0660A0FE76FEC0003A36B /* InputHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputHelper.h; sourceTree = "<group>"; };
 		44E0660B0FE76FEC0003A36B /* InputHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InputHelper.m; sourceTree = "<group>"; };
+		44E0CC5830956B4D00A5EA81 /* StoryDictationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StoryDictationController.h; sourceTree = "<group>"; };
+		44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StoryDictationController.m; sourceTree = "<group>"; };
 		44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReleaseNotes.h; sourceTree = "<group>"; };
 		44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReleaseNotes.m; sourceTree = "<group>"; };
 		44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
@@ -1301,7 +1304,6 @@
 		080E96DDFE201D6D7F000001 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				44F7B1F81B22C6B800DDD2A3 /* main.m */,
 				447F88281044DC0B002CA22D /* AboutFrotz.h */,
 				447F88291044DC0B002CA22D /* AboutFrotz.m */,
 				44FA76C00E4A5D89007DCC99 /* BookmarkListController.h */,
@@ -1316,22 +1318,27 @@
 				44B6DD380F7C74E500EBE1BD /* FileTransferInfo.m */,
 				448167DB0E7259280022EDC0 /* FontPicker.h */,
 				448167DC0E7259280022EDC0 /* FontPicker.m */,
+				4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */,
+				44115BCD308D728E00C78775 /* FrotzAlert.h */,
+				44115BCE308D729900C78775 /* FrotzAlert.m */,
 				1D3623240D0F684500981E51 /* FrotzAppDelegate.h */,
 				1D3623250D0F684500981E51 /* FrotzAppDelegate.m */,
 				443A7C32115094E00093B4B2 /* FrotzCommonWebView.h */,
 				443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */,
 				44910BE31256F85800409694 /* FrotzDB.h */,
 				44910BE41256F85800409694 /* FrotzDB.m */,
+				443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */,
+				443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */,
 				447E4E870E46545900B33BBF /* FrotzInfo.h */,
 				447E4E880E46545900B33BBF /* FrotzInfo.m */,
+				44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */,
+				44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */,
 				449127E012643AA10013AD7C /* FrotzSettings.h */,
 				44FB393B0E612A3D00142D85 /* FrotzSettings.m */,
 				449C929411221CE9006CCDF9 /* FrotzView.h */,
 				449C929511221CE9006CCDF9 /* FrotzView.m */,
 				4414E2DA104CDA21008C3F56 /* FrotzWordPicker.h */,
 				4414E2DB104CDA21008C3F56 /* FrotzWordPicker.m */,
-				443CD77210FAFD6100A7FB96 /* FrotzHTTPConnection.m */,
-				443CD77310FAFD6100A7FB96 /* FrotzHTTPConnection.h */,
 				449516A90F7DEDA90060F524 /* FTPServ.h */,
 				449516AA0F7DEDA90060F524 /* FTPServ.m */,
 				448164520E6D02C60022EDC0 /* GettingStarted.h */,
@@ -1340,6 +1347,7 @@
 				449127E212643AA10013AD7C /* GlkView.m */,
 				44E0660A0FE76FEC0003A36B /* InputHelper.h */,
 				44E0660B0FE76FEC0003A36B /* InputHelper.m */,
+				44F7B1F81B22C6B800DDD2A3 /* main.m */,
 				4440777B1235F32E0021DEE4 /* NotesViewController.h */,
 				4440777C1235F32E0021DEE4 /* NotesViewController.m */,
 				44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */,
@@ -1347,12 +1355,15 @@
 				444592F91396DBED00C740B9 /* RichTextStyle.h */,
 				4413B1621071CA2700D39E6A /* RichTextView.h */,
 				4413B1611071CA2700D39E6A /* RichTextView.m */,
+				4491CCC42A0F20070054E1F6 /* SelectFiles.swift */,
 				449C92BC11221E7D006CCDF9 /* StatusLine.h */,
 				449C92BD11221E7D006CCDF9 /* StatusLine.m */,
 				446B9EA70E2075D1002BDD65 /* StoryBrowser.h */,
 				446B9EA80E2075D1002BDD65 /* StoryBrowser.m */,
 				447DF3B7123C136500689076 /* StoryDetailsController.h */,
 				447DF3B8123C136500689076 /* StoryDetailsController.m */,
+				44E0CC5830956B4D00A5EA81 /* StoryDictationController.h */,
+				44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */,
 				449C92B111221E21006CCDF9 /* StoryInputLine.h */,
 				449C92B211221E21006CCDF9 /* StoryInputLine.m */,
 				443C9C030E46C32C003A44D4 /* StoryMainViewController.h */,
@@ -1364,17 +1375,11 @@
 				440DAAFA125D68DE0014A8FD /* TextViewExt.h */,
 				44CA12EF0E41076D009AEF85 /* TransitionView.h */,
 				44CA12F00E41076D009AEF85 /* TransitionView.m */,
+				443C9B480E46A518003A44D4 /* ui_utils.h */,
+				443C9B490E46A518003A44D4 /* ui_utils.m */,
 				44C28D031238C41C00EE9FA3 /* URLPromptController.h */,
 				44C28D041238C41C00EE9FA3 /* URLPromptController.m */,
 				44F2FABF11460EF6001AE868 /* WordSelectionProtocol.h */,
-				443C9B480E46A518003A44D4 /* ui_utils.h */,
-				443C9B490E46A518003A44D4 /* ui_utils.m */,
-				4491CCC42A0F20070054E1F6 /* SelectFiles.swift */,
-				4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */,
-				44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */,
-				44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */,
-				44115BCD308D728E00C78775 /* FrotzAlert.h */,
-				44115BCE308D729900C78775 /* FrotzAlert.m */,
 			);
 			name = UI;
 			path = ui;
@@ -2658,6 +2663,7 @@
 				1D3623260D0F684500981E51 /* FrotzAppDelegate.m in Sources */,
 				443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */,
 				44910BE51256F85800409694 /* FrotzDB.m in Sources */,
+				44E0CC5A30956B4D00A5EA81 /* StoryDictationController.m in Sources */,
 				445484FD1B1E675D00E8EE7B /* FrotzHTTPConnection.m in Sources */,
 				447E4E890E46545900B33BBF /* FrotzInfo.m in Sources */,
 				44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */,

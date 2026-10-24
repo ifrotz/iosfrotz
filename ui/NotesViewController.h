@@ -47,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, getter=isVisible, readonly) BOOL visible;
 -(void)show;
 -(void)hide;
+-(BOOL)isShown;
 -(void)loadView;
 -(void)autosize;
 -(void)setFontName: (nullable NSString*)fontName;

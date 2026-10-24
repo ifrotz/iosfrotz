@@ -1408,7 +1408,7 @@ static void setColorTable(RichTextView *v) {
                 [m_glkViews removeLastObject];
             else
                 m_glkViews[viewNum] = [NSNull null];
-        }        
+        }
     }
 }
 
@@ -1509,7 +1509,7 @@ static void setColorTable(RichTextView *v) {
             val2 /= kIOSGlkScaleFactor;
             width /= kIOSGlkScaleFactor;
             height /= kIOSGlkScaleFactor;
-           //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
+            //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
             if (!glkViewImageCache)
                 glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
             CGContextRef cgctx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
@@ -1594,7 +1594,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (viewNum >= [m_glkViews count])
         return nil;
     FrotzView *v = m_glkViews[viewNum];
-    if ((NSNull*)v == [NSNull null]) 
+    if ((NSNull*)v == [NSNull null])
         return nil;
     return v;
 }
@@ -1707,6 +1707,8 @@ extern void gli_ios_set_focus(window_t *winNum);
         return;
     m_kbdToggleItem.title = title;
 
+    [self pauseOrResumeDictation: ![m_notesController isShown]];
+
     __weak StoryMainViewController *weakSelf = self;
     UIAction *lockAction = [UIAction actionWithTitle: lockTitle
                                                image: [UIImage systemImageNamed: m_kbLocked ? @"lock.open" : @"lock"]
@@ -1732,6 +1734,17 @@ extern void gli_ios_set_focus(window_t *winNum);
                                                           options: UIMenuOptionsDisplayInline
                                                          children: @[toggleAction, lockAction]];
     }
+}
+
+- (void) micButtonPressed {
+    [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status)
+     {
+        if (status == SFSpeechRecognizerAuthorizationStatusAuthorized) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self toggleListenForSpeech];
+            });
+        }
+    }];
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -1808,6 +1821,7 @@ extern void gli_ios_set_focus(window_t *winNum);
         [m_notesController hide];
         [m_notesController autosize];
     }
+    [self pauseOrResumeDictation: YES];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -1824,6 +1838,7 @@ extern void gli_ios_set_focus(window_t *winNum);
         [self hideInputHelper];
     if (m_notesController)
         [m_notesController dismissKeyboard];
+    [self pauseOrResumeDictation: NO];
 }
 
 - (void)willMoveToParentViewController:(UIViewController *)parent
@@ -2061,7 +2076,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
-    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+
+    m_micButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"mic"] style:UIBarButtonItemStylePlain target:self action:@selector(micButtonPressed)];
+    m_micButton.title = NSLocalizedString(@"Start Listening", nil);
+    self.navigationItem.rightBarButtonItems = @[ m_kbdToggleItem, m_micButton ];
 
     theSMVC = self;
     theStoryView = m_storyView;
@@ -2077,8 +2095,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_storyView setAccessibilityValue: nil];
         [m_inputLine setAccessibilityValue: nil];
     }
-    
 }
+
 - (void) setIgnoreWordSelection:(BOOL)ignore {
     m_ignoreWordSelection = ignore;
 }
@@ -2828,6 +2846,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 }
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
+
+    [self pauseOrResumeDictation: NO];
+
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
 
     [fileBrowser setPath: storySavePath];
@@ -2851,6 +2872,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [self activateKeyboard];
     refresh_savedir = -1;
     do_filebrowser = kFBHidden;
+    [self pauseOrResumeDictation: NO];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser deleteFile: (NSString*)filePath {
@@ -4759,91 +4781,37 @@ static void setScreenDims(char *storyNameBuf) {
     return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
 }
 
-- (void)listenForSpeech {
-#if 1
-    if (!m_sfrecog) {
-        m_sfrecog =  [[SFSpeechRecognizer alloc] initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]];
-        m_sfrecog.delegate = self;
-
-        m_audioEngine = [[AVAudioEngine alloc] init];
-        m_audioSession = [AVAudioSession sharedInstance];
-    }
-    m_audioInputNode = [m_audioEngine inputNode];
-    NSError *error = nil;
-    // Cancel the previous task if it's running.
-    if (m_recognitionTask) {
-        [m_audioEngine stop];
-        [m_audioInputNode removeTapOnBus: 0];
-        [m_sfRecogRequest endAudio];
-        [m_recognitionTask cancel];
-        m_recognitionTask = nil;
-        m_sfRecogRequest = nil;
-    }
-    [m_audioSession setCategory:AVAudioSessionCategoryRecord mode:AVAudioSessionModeMeasurement options:AVAudioSessionCategoryOptionDuckOthers error: &error];
-    if (error) {
-        NSLog(@"Error1: %@", error);
-    }
-    [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
-    if (error) {
-        NSLog(@"Error2: %@", error);
-    }
-    m_sfRecogRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
-    m_sfRecogRequest.shouldReportPartialResults = YES;
-    __block NSString *currentTranscription = @"";
-    m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest resultHandler:^(SFSpeechRecognitionResult * _Nullable result, NSError * _Nullable error) {
-            BOOL isFinal = NO;
-            if (result && !error) {
-                isFinal = [result isFinal];
-                SFTranscription *transcription = [result bestTranscription];
-                NSString *text = [transcription formattedString];
-                NSLog(@"Final: %d Recog: %@", isFinal, text);
-                currentTranscription = text;
-            }
-            if (error || isFinal) {
-                [m_audioEngine stop];
-                [m_audioInputNode removeTapOnBus: 0];
-                m_sfRecogRequest = nil;
-                m_recognitionTask = nil;
-            }
-        }];
-    if (error) {
-        NSLog(@"Error3: %@", error);
-    }
-    AVAudioFormat *recordingFormat = [m_audioInputNode outputFormatForBus: 0];
-    [m_audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
-        [m_sfRecogRequest appendAudioPCMBuffer: buffer];
-    }];
-
-    [m_audioEngine prepare];
-    [m_audioEngine startAndReturnError: &error];
-    if (error) {
-        NSLog(@"Error4: %@", error);
-    }
-    m_inputLine.text = @"(Listening)";
-  
-    __block NSTimer *timer;
-    timer = [NSTimer scheduledTimerWithTimeInterval:3.0 repeats:NO
-               block:^(NSTimer * _Nonnull timer) {
-        if (currentTranscription.length > 0) {
-            // If the user has stopped speaking for 1 second, stop recording and recognition.
-            [m_audioEngine stop];
-            [m_audioInputNode removeTapOnBus:0];
-            [m_sfRecogRequest endAudio];
-            [m_recognitionTask cancel];
-            m_sfRecogRequest = nil;
-            m_recognitionTask = nil;
-            
-            // Print the final transcription.
-            NSLog(@"Final xscipt: %@", currentTranscription);
-            m_inputLine.text = currentTranscription;
-            currentTranscription = nil;
-            [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: m_inputLine afterDelay: 0.1];
-            [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
-        } else {
-           // [timer rest]
+-(void)toggleListenForSpeech {
+    if (@available(iOS 13.0,*)) {
+        if (!m_dictationController) {
+            m_dictationController = [[StoryDictationController alloc] init];
+            m_dictationController.delegate = m_inputLine;
         }
-    }];
-#endif
+        if (!m_dictationController.isListening) {
+            [m_micButton setImage: [UIImage systemImageNamed:@"mic.fill"]];
+            [m_dictationController listenForSpeech];
+        } else {
+            [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
+            [m_dictationController stopListening];
+        }
+    }
+}
+
+-(void)stopListening {
+    if (@available(iOS 13.0,*)) {
+        [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
+        if (m_dictationController)
+            [m_dictationController stopListening];
+    }
+}
+
+-(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
+    if (m_dictationController) {
+        if (inputLineIsActive && [m_dictationController isPaused])
+            [m_dictationController listenForSpeech];
+        else if (!inputLineIsActive && [m_dictationController isListening])
+            [m_dictationController pauseListening];
+    }
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
@@ -4860,19 +4828,9 @@ static void setScreenDims(char *storyNameBuf) {
     NSTimeInterval duration = 0.02;
     if (m_animDuration)
         duration = m_animDuration;
-    [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: duration];
     
     [self checkAccessibility];
-    if ([[textField text] length] == 0) {
-        [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status)
-         {
-            if (status == SFSpeechRecognizerAuthorizationStatusAuthorized) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self listenForSpeech];
-                });
-            }
-        }];
-    }
+    [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: duration];
     return YES;
 }
 
@@ -5014,7 +4972,7 @@ extern int completion (const zchar *buffer, zchar *result);
 extern int glulxCompleteWord(const char *word, char *result);
 
 
--(NSString*)completeWord:(NSString*)str prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
+-(NSString*)completeWord:(NSString*)str prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
     *isAmbiguous = NO;
     static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get", @"p",
         @"put", @"quit", @"throw", @"tell", @"open", @"pick",
@@ -5135,9 +5093,7 @@ extern int glulxCompleteWord(const char *word, char *result);
             }
         }
     }
-    
-    if (candString && [candString isEqualToString: str])
-        return nil;
+
     return candString;
 }
 
