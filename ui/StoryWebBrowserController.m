@@ -190,8 +190,10 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             [fileMgr removeItemAtPath: zipFile error: nil];
             if (count > 0) {
-                FrotzShowAlert(self.navigationController ?: self, @"Extracted the following story files from archive:", storyList, @"OK", nil, nil);
-                [self browserDidPressBackButton];
+                StoryBrowser *storyBrowser = self.storyBrowser;
+                [self browserDidPressBackButtonWithCompletion:^{
+                    FrotzShowAlert(storyBrowser, @"Extracted the following story files from archive:", storyList, @"OK", nil, nil);
+                }];
             }
         }
         canceledHandler: ^{
@@ -213,8 +215,14 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 -(void)browserDidPressBackButton {
+    [self browserDidPressBackButtonWithCompletion: nil];
+}
+
+// Alerts about a download have to be presented after this controller has been dismissed, or the
+// dismissal takes them down too; callers present them in `completion`, from the story browser.
+-(void)browserDidPressBackButtonWithCompletion:(void (^)(void))completion {
     m_backToStoryList = YES;
-    [self.storyBrowser didPressModalStoryListButton];
+    [self.storyBrowser didPressModalStoryListButtonWithCompletion: completion];
     [self.navigationController popViewControllerAnimated: NO];
 }
 
@@ -563,15 +571,27 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    [m_receivedData setLength: 0];
-}
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [m_receivedData appendData:data];
+// Fetches `request` with NSURLSession and hands the outcome to downloadDidFinish or
+// downloadDidFailWithError: on the main thread (these were the NSURLConnection delegate callbacks).
+- (void)startDownload:(NSURLRequest *)request {
+    __weak StoryWebBrowserController *weakSelf = self;
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            StoryWebBrowserController *strongSelf = weakSelf;
+            if (!strongSelf)
+                return;
+            if (error || !data) {
+                [strongSelf downloadDidFailWithError: error];
+            } else {
+                strongSelf->m_receivedData = [data mutableCopy];
+                [strongSelf downloadDidFinish];
+            }
+        });
+    }];
+    [task resume];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)downloadDidFinish {
     NSURLRequest *request = m_currentRequest;
 
     //NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
@@ -666,19 +686,24 @@ const NSString *kBookmarkVersionKey = @"Version";
         alertTitle = @"Selected story added\nto Story List";
         alertMessage = [m_storyBrowser fullTitleForStory: storyFile];
     }
-    if (alertTitle) {
-        FrotzShowAlert(self.navigationController ?: self, alertTitle, alertMessage, @"OK", nil, nil);
-    }
-
     [m_activityView stopAnimating];
     [m_storyBrowser reloadData];
     m_state = kSWBIdle;
 
-    if (!stay)
-        [self browserDidPressBackButton];
+    if (!stay) {
+        // Returning to the story list dismisses this controller; present the alert afterwards,
+        // from the story browser, or the dismissal would take it down with us.
+        StoryBrowser *storyBrowser = m_storyBrowser;
+        [self browserDidPressBackButtonWithCompletion:^{
+            if (alertTitle)
+                FrotzShowAlert(storyBrowser, alertTitle, alertMessage, @"OK", nil, nil);
+        }];
+    } else if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, nil);
+    }
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void)downloadDidFailWithError:(NSError *)error {
     [m_activityView stopAnimating];
     //NSLog(@"m_currentRequest release connDidFailWithError");
     m_receivedData = nil;
@@ -859,15 +884,11 @@ const NSString *kBookmarkVersionKey = @"Version";
         //saveMeta |= [self savePicData: picData forStory:story];
 
         NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
-        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
-        if (connection) {
-            m_delayedRequest = delayedRequest;
-            m_receivedData = [NSMutableData data];
-            m_state = kSWBFetchingImage;
-            loadingPic = YES;
-        } else {
-            FrotzShowAlert(self, @"Connection error", @"Could not download cover art", @"OK", nil, nil);
-        }
+        m_delayedRequest = delayedRequest;
+        m_receivedData = [NSMutableData data];
+        m_state = kSWBFetchingImage;
+        loadingPic = YES;
+        [self startDownload: picRequest];
 
     }
     if (saveMeta) {
@@ -931,9 +952,11 @@ static bool bypassBundle = NO;
             storyFile = [[[request mainDocumentURL] path] lastPathComponent];
         NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
         if (extractOneFileFromZIP(bundledGamesPath, gamePath, storyFile) == 0) {
-            FrotzShowAlert(self.navigationController ?: self, @"Selected story added\nto Story List:",
-                           [m_storyBrowser fullTitleForStory: storyFile], @"OK", nil, nil);
-            [self browserDidPressBackButton];
+            StoryBrowser *storyBrowser = m_storyBrowser;
+            NSString *storyTitle = [m_storyBrowser fullTitleForStory: storyFile];
+            [self browserDidPressBackButtonWithCompletion:^{
+                FrotzShowAlert(storyBrowser, @"Selected story added\nto Story List:", storyTitle, @"OK", nil, nil);
+            }];
         } else {
             if (m_storyAlreadyInstalled)
                 FrotzShowAlert(self, @"Metadata installed", @"Refreshed metadata (title, authors, etc.) for previously installed unbundled story", @"OK", nil, nil);
@@ -953,14 +976,9 @@ static bool bypassBundle = NO;
     //NSLog(@"Load %@", request);
     m_currentRequest = request;
     //NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
-    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
-    if (connection) {
-        m_receivedData = [NSMutableData data];
-        m_state = kSWBFetchingStory;
-        //	[connection release];
-    } else {
-        FrotzShowAlert(self, @"Connection error", @"Could not retrieve file", @"OK", nil, nil);
-    }
+    m_receivedData = [NSMutableData data];
+    m_state = kSWBFetchingStory;
+    [self startDownload: request];
 }
 
 #if APPLE_FASCISM

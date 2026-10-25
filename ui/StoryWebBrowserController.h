@@ -81,6 +81,7 @@ typedef UIWebView StoryWebView;
 @property (nonatomic, readonly, strong) StoryBrowser *storyBrowser;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 -(void)browserDidPressBackButton;
+-(void)browserDidPressBackButtonWithCompletion:(nullable void (^)(void))completion;
 -(BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (nullable NSURLRequest*)delayedRequest forStory:(nullable NSString*)story;
 -(BOOL)savePicData:(NSData*)picData forStory:(NSString*)story;
 -(void)loadZFile:(NSURLRequest*)request;

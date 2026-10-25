@@ -87,13 +87,13 @@
 }
 
 -(void)dismissInfoModal {
-    [m_navigationController dismissModalViewControllerAnimated:YES];
+    [m_navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 -(void)dismissInfo {
     if (m_navigationController) {
         UINavigationController *nc;
-        if ((nc = (UINavigationController*)m_navigationController.modalViewController)) {
+        if ((nc = (UINavigationController*)m_navigationController.presentedViewController)) {
             if ([nc respondsToSelector:@selector(topViewController)]
                 && [nc topViewController] != m_settings)
                 [nc popToViewController: m_settings animated:YES];
@@ -119,7 +119,7 @@
         // the old flip transition is a full-screen effect that renders badly against a sheet, so use
         // the system transition everywhere.
         [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
-        [m_navigationController presentModalViewController: settingsNavController animated:YES];
+        [m_navigationController presentViewController: settingsNavController animated:YES completion:nil];
     }
 }
 @end

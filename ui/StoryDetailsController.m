@@ -461,22 +461,22 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode {
     if (displayMode == UISplitViewControllerDisplayModeAutomatic)
         displayMode = self.splitViewController.displayMode;
-    if (displayMode == UISplitViewControllerDisplayModePrimaryOverlay && [self isEditing])
+    if (displayMode == UISplitViewControllerDisplayModeOneOverSecondary && [self isEditing])
         [self setEditing:NO animated: YES];
 
     m_descriptionWebView.hidden = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact ? YES : NO;
-    if (displayMode == UISplitViewControllerDisplayModeAllVisible
+    if (displayMode == UISplitViewControllerDisplayModeOneBesideSecondary
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Select a story to begin";
-    else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden
+    else if (displayMode == UISplitViewControllerDisplayModeSecondaryOnly
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Tap 'Select Story' to begin";
     else // if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact)
         m_portraitCoverLabel.text = nil;
 
-    if (displayMode == UISplitViewControllerDisplayModeAllVisible) {
+    if (displayMode == UISplitViewControllerDisplayModeOneBesideSecondary) {
         self.navigationItem.leftBarButtonItem = nil;
-    } else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden || displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
+    } else if (displayMode == UISplitViewControllerDisplayModeSecondaryOnly || displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
         [self setEditing: NO animated: YES];
         if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
             self.navigationItem.leftBarButtonItem = nil; // will have Back button instead

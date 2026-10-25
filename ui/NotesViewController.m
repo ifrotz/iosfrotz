@@ -186,13 +186,13 @@ static const int kNotesTitleHeight = 24;
         if ([fileBrowser textFileCount] > 0) {
             UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
             nc.modalPresentationStyle = UIModalPresentationFormSheet;
-            [m_delegate.navigationController presentModalViewController: nc animated: YES];
+            [m_delegate.navigationController presentViewController: nc animated: YES completion:nil];
         }
     }
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    [m_delegate.navigationController dismissModalViewControllerAnimated:YES];
+    [m_delegate.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser deleteFile: (NSString*)filePath {

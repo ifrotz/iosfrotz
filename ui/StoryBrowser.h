@@ -109,6 +109,7 @@ IBOutlet    StoryDetailsController *m_details;
 - (void)showMainStoryController;
 - (void)autoRestoreAndShowMainStoryController;
 - (void)didPressModalStoryListButton;
+- (void)didPressModalStoryListButtonWithCompletion:(nullable void (^)(void))completion;
 - (void)addTitle: (NSString*)fullName forStory:(NSString*)story;
 - (void)addAuthors: (NSString*)authors forStory:(NSString*)story;
 - (void)addTUID: (NSString*)tuid forStory:(NSString*)story;

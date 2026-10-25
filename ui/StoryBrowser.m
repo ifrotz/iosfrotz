@@ -1116,14 +1116,24 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)didPressModalStoryListButton {
-    if (self.splitViewController && self.splitViewController.presentedViewController) {
-        [self.splitViewController dismissViewControllerAnimated:YES completion:nil];
-        NSString *storyPath = [[m_details storyInfo] path];
-        m_details.willResume = storyPath && [storyPath length] > 0
-        && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
-            || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
-        [m_details refresh];
+    [self didPressModalStoryListButtonWithCompletion: nil];
+}
+
+// `completion` runs once the presented story or browser has been dismissed (or immediately if
+// nothing is presented), so callers can present an alert that would otherwise be dismissed along
+// with the controller that showed it.
+- (void)didPressModalStoryListButtonWithCompletion:(void (^)(void))completion {
+    if (!(self.splitViewController && self.splitViewController.presentedViewController)) {
+        if (completion)
+            completion();
+        return;
     }
+    [self.splitViewController dismissViewControllerAnimated:YES completion:completion];
+    NSString *storyPath = [[m_details storyInfo] path];
+    m_details.willResume = storyPath && [storyPath length] > 0
+    && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
+        || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
+    [m_details refresh];
 }
 
 -(void)launchStory:(NSString*)storyPath {
@@ -1533,12 +1543,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
         if (!self.splitViewController.isCollapsed && (!secondTap ||
-            self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
-            if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)
+            self.splitViewController.displayMode != UISplitViewControllerDisplayModeOneBesideSecondary)) {
+            if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeOneBesideSecondary)
                 [UIView animateWithDuration:0.3 animations:^{
                     if (m_details.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
-                        self.splitViewController.displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
-                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                        self.splitViewController.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
+                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeSecondaryOnly;
                         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
                     }
                 }];

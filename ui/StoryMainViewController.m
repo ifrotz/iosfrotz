@@ -2509,12 +2509,12 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
     nc.modalPresentationStyle = UIModalPresentationFormSheet;
-    [self.navigationController presentModalViewController: nc animated: YES];
+    [self.navigationController presentViewController: nc animated: YES completion:nil];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    if ([self.navigationController modalViewController])
-        [self.navigationController dismissModalViewControllerAnimated:YES];
+    if ([self.navigationController presentedViewController])
+        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 
     if (file)
         strcpy(iosif_filename, [file fileSystemRepresentation]);
