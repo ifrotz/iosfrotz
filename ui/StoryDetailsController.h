@@ -28,13 +28,7 @@
 @end
 
 
-@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate,
-#if UseWKWebViewForFrotzStoryDetails
-    WKNavigationDelegate
-#else
-    UIWebViewDelegate
-#endif
-    > {
+@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate, WKNavigationDelegate> {
 
     IBOutlet UITextField *m_titleField;
     IBOutlet UITextField *m_authorField;
@@ -58,11 +52,7 @@
     NSString *m_title, *m_author, *m_tuid, *m_descriptionHTML;
     StoryInfo *m_storyInfo;
     UIImage *m_artwork;
-#if UseWKWebViewForFrotzStoryDetails
     WKWebView *m_realWebView;
-#else
-    UIWebView *m_realWebView;
-#endif
     StoryBrowser *__weak m_browser;
     FrotzInfo *m_frotzInfoController;
     

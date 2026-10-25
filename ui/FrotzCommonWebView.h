@@ -11,11 +11,7 @@
 #import <WebKit/WebKit.h>
 #import "iosfrotz.h"
 
-#if UseWKWebViewForFrotzInfoDialogs
 typedef WKWebView FrotzWebView;
-#else
-typedef UIWebView FrotzWebView;
-#endif
 
 @interface FrotzCommonWebViewController : UIViewController
 

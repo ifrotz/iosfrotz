@@ -87,13 +87,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_scrollView bringSubviewToFront: m_webView];
 
     [self setView: m_background];
-#if UseWKWebViewForIFDBBrowser
     [m_webView setNavigationDelegate: self];
-#else
-    [m_webView setScalesPageToFit: YES];
-    [m_webView setDetectsPhoneNumbers: NO];
-    [m_webView setDelegate: self];
-#endif
 
     m_toolBar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 0, 0, toolBarHeight)];
     [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
@@ -717,7 +711,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     FrotzShowAlert(self, @"Error", @"Couldn't load content", @"OK", nil, nil);
 }
 
-#if UseWKWebViewForIFDBBrowser
 -(NSString*)syncStringByEvaluatingJavaScriptFromString:(NSString*)jsExpr {
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     __block NSString *result = nil;
@@ -730,15 +723,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
     return result;
 }
-#endif
 
 - (BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story {
-    NSString *pageStr;
-#if UseWKWebViewForIFDBBrowser
-    pageStr = [self syncStringByEvaluatingJavaScriptFromString: @"document.body.innerHTML;"];
-#else
-    pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
-#endif
+    NSString *pageStr = [self syncStringByEvaluatingJavaScriptFromString: @"document.body.innerHTML;"];
     BOOL loadingPic = [self snarfMetaDataFromPage:pageStr pageRequest:request loadRequest:delayedRequest forStory:story];
     return loadingPic;
 }
@@ -1144,8 +1131,6 @@ static bool bypassBundle = NO;
     m_currentRequest = nil;
 }
 
-#if UseWKWebViewForIFDBBrowser
-
 -(NSString*)currentURL {
     return [self syncStringByEvaluatingJavaScriptFromString: @"document.URL;"];
 }
@@ -1192,37 +1177,5 @@ static bool bypassBundle = NO;
     [self updateButtonsForIdle: webView];
     [self handleLoadFailureWithError: error];
 }
-#else
--(NSString*)currentURL {
-    NSString *url = [m_webView stringByEvaluatingJavaScriptFromString:@"document.URL;"];
-    return url;
-}
-
--(NSString*)currentURLTitle {
-    NSString *title = [m_webView stringByEvaluatingJavaScriptFromString:@"document.title;"];
-    return title;
-}
-
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
-    return [self webViewShouldStartLoadWithRequest: request];
-}
-
-- (void)webViewDidStartLoad:(UIWebView *)webView {
-    [m_activityView startAnimating];
-    [m_cancelButtonItem setEnabled: YES];
-    [self setButtonItmes: YES];
-}
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    [self updateButtonsForIdle: webView];
-    [self handleLoadFinished];
-}
-
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
-    [self updateButtonsForIdle: webView];
-    [self handleLoadFailureWithError: error];
-}
-
-#endif
 
 @end

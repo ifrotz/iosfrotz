@@ -364,11 +364,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
     m_realWebView = [[WKWebView alloc] init];
     [m_descriptionWebView addSubview: m_realWebView];
-#if UseWKWebViewForFrotzStoryDetails
     [m_realWebView setNavigationDelegate: self];
-#else
-    [m_realWebView setDelegate: self];
-#endif
     [m_realWebView setFrame: m_descriptionWebView.bounds];
     [m_realWebView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_descriptionWebView setAutoresizesSubviews: YES];
@@ -606,15 +602,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://%@/viewgame?id=%@", kIFDBHost, m_tuid]];
 }
 
-#if UseWKWebViewForFrotzStoryDetails
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
     //NSString *url = [navigationAction.request.URL query];
     decisionHandler(navigationAction.navigationType !=  WKNavigationTypeLinkActivated);
 }
-#else
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
-    return navigationType != UIWebViewNavigationTypeLinkClicked;
-}
-#endif
 
 @end

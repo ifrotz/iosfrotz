@@ -27,18 +27,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory };
 
-#if UseWKWebViewForIFDBBrowser
 typedef WKWebView StoryWebView;
-#else
-typedef UIWebView StoryWebView;
-#endif
 
-@interface StoryWebBrowserController : UIViewController <KeyboardOwner,
-#if UseWKWebViewForIFDBBrowser
-    WKNavigationDelegate,
-#else
-    UIWebViewDelegate,
-#endif
+@interface StoryWebBrowserController : UIViewController <KeyboardOwner, WKNavigationDelegate,
     URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
     UIView *m_background; // UIView
     StoryWebView *m_webView;
@@ -96,19 +87,12 @@ typedef UIWebView StoryWebView;
 - (BOOL)webViewShouldStartLoadWithRequest:(NSURLRequest *)request;
 - (void)handleLoadFinished;
 - (void)handleLoadFailureWithError:(NSError *)error;
-#if UseWKWebViewForIFDBBrowser
 -(void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
 -(void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation;
 -(void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error;
 -(void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
 -(void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error;
-#else
--(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
--(void)webViewDidStartLoad:(UIWebView *)webView;
--(void)webViewDidFinishLoad:(UIWebView *)webView;
--(void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
-#endif
 
 @end
 

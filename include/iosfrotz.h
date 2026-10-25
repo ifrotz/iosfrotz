@@ -162,10 +162,6 @@ extern int iosif_ifrotz_verbose_debug;
 
 #define UseFullSizeStatusLineFont 1
 
-#define UseWKWebViewForFrotzInfoDialogs 1
-#define UseWKWebViewForFrotzStoryDetails 1
-#define UseWKWebViewForIFDBBrowser 1
-
 #define IPHONE_FROTZ_VERS "1.8.8"
 #define IPHONE_FROTZ_RN_VERS IPHONE_FROTZ_VERS // "1.8"
 #define FROTZ_BETA 0
