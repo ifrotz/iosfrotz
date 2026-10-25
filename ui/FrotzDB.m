@@ -341,7 +341,7 @@
                     [DBClientsManager authorizeFromControllerV2:[UIApplication sharedApplication]
                                                      controller:[[self class] topMostController]
                                           loadingStatusDelegate:nil
-                                                        openURL:^(NSURL *url) { [[UIApplication sharedApplication] openURL:url]; }
+                                                        openURL:^(NSURL *url) { [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil]; }
                                                    scopeRequest:scopeRequest];
 #endif
                     break;

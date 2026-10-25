@@ -44,7 +44,7 @@
 }
 
 -(void)rateFrotz {
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/us/app/frotz/id287653015"]];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/us/app/frotz/id287653015"] options:@{} completionHandler:nil];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response

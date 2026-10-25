@@ -1059,7 +1059,7 @@ static bool bypassBundle = NO;
                            //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
                            @"Dismiss", canOpenInSafari ? @[@"Open in Safari"] : nil, ^(NSInteger buttonIndex) {
                 if (buttonIndex == 1 && m_currentRequest)
-                    [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
+                    [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL] options:@{} completionHandler:nil];
             });
             return NO;
         }
@@ -1143,7 +1143,7 @@ static bool bypassBundle = NO;
         UIApplication *app = [UIApplication sharedApplication];
         if ([app canOpenURL:url]) {
             [webView stopLoading];
-            [app openURL: url];
+            [app openURL: url options:@{} completionHandler:nil];
             decisionHandler(WKNavigationActionPolicyCancel);
         } else{
             decisionHandler(WKNavigationActionPolicyCancel);

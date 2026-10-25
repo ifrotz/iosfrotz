@@ -77,7 +77,7 @@
         if ([text rangeOfString:@"://"].length==0)
             text = [@"http://" stringByAppendingString: text];
         m_textbar.text = @"";
-        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text]];
+        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text] options:@{} completionHandler:nil];
         [m_delegate dismissURLPrompt];
         return;
     }
