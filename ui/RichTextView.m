@@ -78,6 +78,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 @dynamic leftMargin;
 @synthesize rightMargin = m_rightMargin;
 @synthesize bottomMargin = m_bottomMargin;
+@synthesize fixedMargins = m_fixedMargins;
 @synthesize lineSpacing = m_extraLineSpacing;
 @synthesize lastAEIndexAccessed = m_lastAEIndexAccessed; 
 @synthesize selectionDelegate = m_selectionDelegate;
@@ -480,6 +481,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 - (void)setNiceMargins:(BOOL)reflow {
+    if (m_fixedMargins)
+        return; // e.g. the status line, whose margins the controller lines up with the story text
     if (m_leftMargin > 0) {
         CGFloat origLeft = m_leftMargin, origRight = m_rightMargin;
         unsigned int origSpacing = m_extraLineSpacing;

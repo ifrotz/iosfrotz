@@ -1729,6 +1729,10 @@ extern void gli_ios_set_focus(window_t *winNum);
         m_lastLayoutSize = size;
         [self autosize];
     }
+    // The status line no longer autoresizes with the paging background, so re-derive its banner
+    // geometry after every layout pass (the ones UIKit runs for status/nav bar changes included).
+    // Cheap: RichTextView's setFrame: ignores an unchanged rect.
+    [self layoutStatusLine];
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -1948,6 +1952,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #if UseRichTextView
     [m_statusLine setLeftMargin: 0];
     [m_statusLine setRightMargin: 0];
+    [m_statusLine setFixedMargins: YES]; // autosize lines its margins up with the story text
     [m_statusLine setTopMargin: 0];
     [m_statusLine setBottomMargin: 0];
     [m_statusLine setBounces: NO];
@@ -1967,7 +1972,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_statusLine.editable = NO;
 #endif
     [m_statusLine setDelegate: self];
-    [m_statusLine setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+    // No autoresizing: layoutStatusLine owns the geometry. UIKit's autoresizing passes (rotation,
+    // status/nav bar changes) preserved whatever side gaps the last explicit write happened to
+    // leave, so the banner width drifted depending on when that write ran.
+    [m_statusLine setAutoresizingMask: UIViewAutoresizingNone];
     
 #if !UseRichTextView
     [m_statusLine setAutocapitalizationType: UITextAutocapitalizationTypeNone];
@@ -2207,11 +2215,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
     CGRect frame = [self storyViewFullFrame];
 
-    if (m_landscape && frame.size.width > 760)
-        [m_statusLine setLeftMargin: 40];
-    else
-        [m_statusLine setLeftMargin: 0];
-
     // Work around weird bug where the owning NotesVC scrollview resizes the view 20
     // pixels smaller when presentModalViewController shows the view.  Dunno why, but this
     // compensates for it.
@@ -2234,17 +2237,32 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     [m_storyView setFrame: frame];
 
-    // The status line sits over the story text, so it shares its side insets.
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.origin.x = self.view.safeAreaInsets.left;
-    statusFrame.size.width = self.view.bounds.size.width - self.view.safeAreaInsets.left - self.view.safeAreaInsets.right;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
 
     [m_statusLine setNeedsDisplay];
     if (m_notesController)
         [m_notesController autosize];
     [self resizeStatusWindow];
 
+}
+
+// The status line is a full-width banner across its superview (the paging background), but its
+// text lines up with the story text: its left margin is the story view's offset plus the margin
+// setNiceMargins: gave it. Every writer of the status line's geometry goes through here so the
+// width can't depend on which path ran last; the height is the only per-caller input.
+- (void)layoutStatusLineWithHeight:(CGFloat)height {
+    if (!m_statusLine || !m_storyView)
+        return;
+    UIView *banner = m_statusLine.superview ? m_statusLine.superview : m_background;
+    [m_statusLine setFrame: CGRectMake(0, 0, banner.bounds.size.width, height)];
+    [m_statusLine setLeftMargin: (unsigned int)(m_storyView.frame.origin.x + [m_storyView leftMargin])];
+    // Status line is fixed width and doesn't wrap so right margin isn't important,
+    // and setting it might actually cause text clipping.
+    // [m_statusLine setRightMargin: (unsigned int)self.view.safeAreaInsets.right];
+}
+
+- (void)layoutStatusLine {
+    [self layoutStatusLineWithHeight: m_statusLine.frame.size.height];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -2360,9 +2378,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     //NSLog(@"keyboarddidshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
     [m_storyView setFrame: frame];
 
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     [UIView commitAnimations];
 
     [m_inputLine updatePosition];
@@ -2417,9 +2433,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     
     [m_storyView setFrame: frame];
     //NSLog(@"keyboardwillshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     
     [UIView commitAnimations];
 
@@ -2445,9 +2459,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     
     [m_storyView setFrame: frame];
     
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     [UIView commitAnimations];
     m_kbShown = NO;
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
@@ -2902,7 +2914,9 @@ static int iosif_top_win_height = 1;
         int skipCol = -1, skipCount = 0, skipCol2 = -1, skipCount2 = 0;
         if (gStoryInterp==kZStory) {
             CGFloat charWidth = m_statusFixedFontWidth;
-            int displayCols = (int)(view.frame.size.width / charWidth + 0.5);
+            // Columns that fit between the text's left margin (which already includes any leading
+            // safe inset, see layoutStatusLine) and the trailing safe inset (the Duo button strip).
+            int displayCols = (int)((view.frame.size.width - view.leftMargin - view.safeAreaInsets.right) / charWidth + 0.5);
             int firstNonReversedRow = 0;
             if (displayCols < h_screen_cols) {
                 needCols = h_screen_cols - displayCols;
@@ -3120,7 +3134,7 @@ static int iosif_top_win_height = 1;
     BOOL glkViewIsGrid = NO;
     if (gStoryInterp == kGlxStory && [m_glkViews count] > 1) {
         NSUInteger glkInputsCount = glkInputs ? [glkInputs count] : 0;
-        
+
         int vn = 0;
         for (RichTextView *v in m_glkViews) {
             if (glkInputsCount <= vn)
@@ -3152,7 +3166,11 @@ static int iosif_top_win_height = 1;
 
     if (iosif_top_win_height == -2) {
         topWinSize = prevTopWinHeight * (m_statusFixedFontPixelHeight+1);
-        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
+
+        if (statusLine == m_statusLine)
+            [self layoutStatusLineWithHeight: topWinSize];
+        else
+            [statusLine setFrame: CGRectMake(0.0f, 0.0f, self.view.bounds.size.width, topWinSize)];
         iosif_top_win_height = prevTopWinHeight;
         [storyView setTopMargin: topWinSize];
         grewStatus = 1;
@@ -3160,15 +3178,15 @@ static int iosif_top_win_height = 1;
 
     if (iosif_top_win_height < 0)
         prevTopWinHeight = -1;
-    
+
     BOOL frozeDisplay = NO;
-    
+
     if (statusLen > 1 && ztop_win_height <=1 && prevTopWinHeight>=3) {
         [storyView setFreezeDisplay: YES];
         [statusLine setFreezeDisplay: YES];
         frozeDisplay = YES;
     }
-    
+
     if (iosif_top_win_height < 0 || prevTopWinHeight != ztop_win_height
                 && (statusLen > 1 && !grewStatus || inputsSinceSaveRestore!=prevInputsSinceSaveRestore ||
                     ztop_win_height==0 || ztop_win_height > prevTopWinHeight)) {
@@ -3179,12 +3197,14 @@ static int iosif_top_win_height = 1;
             grewStatus = 0;
         fast = YES;
         topWinSize = ztop_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
-        
+
         if (!frozeDisplay && (prevTopWinHeight - ztop_win_height > 1 || ztop_win_height - prevTopWinHeight > 1))
             [self setupFadeWithDuration: 0.08];
-        
-        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
-        
+        if (statusLine == m_statusLine)
+            [self layoutStatusLineWithHeight: topWinSize];
+        else
+            [statusLine setFrame: CGRectMake(0.0f, 0.0f, self.view.bounds.size.width, topWinSize)];
+
         iosif_top_win_height = ztop_win_height;
         [storyView setTopMargin: topWinSize+0];
         prevTopWinHeight = ztop_win_height;
@@ -3197,7 +3217,7 @@ static int iosif_top_win_height = 1;
         pthread_cond_signal(&winSizeChangedCond);
     }
     pthread_mutex_unlock(&winSizeMutex);
-    
+
     pthread_mutex_lock(&outputMutex);
     if (finished)
         iosif_flush(NO);
@@ -3480,7 +3500,7 @@ static int iosif_top_win_height = 1;
             sz.width = viewWidth;
             [storyView setContentSize: sz];
         }
-        
+
         if (textLen > 0 || !(ipzAllowInput & kIPZAllowInput) && recentScrollToVisYPos[cwin]!=lastVisibleYPos[cwin]) {
             CGSize contentSz = [storyView contentSize];
             CGSize viewSz = [storyView frame].size;
@@ -3516,7 +3536,7 @@ static int iosif_top_win_height = 1;
         }
     }
     pthread_mutex_unlock(&outputMutex);
-    
+
     if (finished && finished != 1) {
         if ([m_currentStory length] > 0) {
             if (finished == 2) {
