@@ -110,6 +110,7 @@ extern StoryBrowser *theStoryBrowser;
     NSInteger m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
     CGSize m_kbdSize;
+    CGRect m_handledKbWillShowFrame, m_handledKbDidShowFrame; // keyboard end frames already laid out for
     NSTimeInterval m_animDuration;
     NSString *m_launchMessage;
 

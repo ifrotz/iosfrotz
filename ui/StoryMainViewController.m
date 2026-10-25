@@ -1813,9 +1813,13 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_notesController workaroundFirstResponderBug]; // in iOS 6 on iPad, for some reason the notes controller keeps us from getting first responder after a modal dialog is dismissed (e.g. after 'restore' command)
     [self hideNotes];
     if (!m_kbLocked) {
-        if (m_inputLine.window)
-            [m_inputLine becomeFirstResponder];
-        else
+        if (m_inputLine.window) {
+            // Re-requesting first responder for the field that already has it makes UIKit post
+            // keyboardWillShow/DidShow again, which (via the scrolling those handlers do) can
+            // re-enter here and loop.
+            if (![m_inputLine isFirstResponder])
+                [m_inputLine becomeFirstResponder];
+        } else
             m_kbShown = YES; // will becomeFirsResponder in viewDidAppear
     }
 }
@@ -2287,11 +2291,15 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 // The part of the keyboard that overlaps the story's window, as a zero-origin rect, derived from
 // the keyboard's end frame (reported in screen coordinates). Replaces the long-deprecated
 // UIKeyboardBoundsUserInfoKey, which reported the keyboard's own bounds and then needed clamping.
-static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
+static CGRect KeyboardEndFrame(NSDictionary *userInfo) {
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (!kbFrameEndValue || !window)
+    return kbFrameEndValue ? [kbFrameEndValue CGRectValue] : CGRectNull;
+}
+
+static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (CGRectIsNull(kbEndFrame) || !window)
         return CGRectZero;
-    CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
     CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
     CGRect overlap = CGRectIntersection(window.bounds, windowRect);
     if (CGRectIsNull(overlap))
@@ -2311,6 +2319,13 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
     if (CGRectIsEmpty(bounds))
         return;
+    // UIKit re-posts the show notifications every time the keyboard window lays itself out, and
+    // the resizing below moves the input line the keyboard tracks, which lays it out again.
+    // Only react when the keyboard frame has actually changed, or the two feed each other forever.
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (m_kbShown && !CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbDidShowFrame))
+        return;
+    m_handledKbDidShowFrame = kbEndFrame;
 
     // iOS 8.0 doesn't sent hide notifications for undocked kbd
     // and instead sends another show notification with smaller frame height
@@ -2354,6 +2369,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
+    m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();
         screen_size_changed = 1;
@@ -2366,6 +2382,13 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
 -(void) keyboardWillShow:(NSNotification*)notif {
     NSDictionary *userInfo = [notif userInfo];
+    // See keyboardDidShow: ignore repeats for a keyboard frame already laid out for. The content
+    // offset bump below in particular must only happen once per actual keyboard change.
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (!CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbWillShowFrame))
+        return;
+    m_handledKbWillShowFrame = kbEndFrame;
+
     CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
     CGRect frame = [self storyViewFullFrame];
 
@@ -2420,6 +2443,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [m_statusLine setFrame: statusFrame];
     [UIView commitAnimations];
     m_kbShown = NO;
+    m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
 }
 
 -(BOOL) isKBShown {
@@ -3525,7 +3549,10 @@ static int iosif_top_win_height = 1;
     [m_inputLine updatePosition];
     CGFloat contentOffset = scrollView.contentOffset.y;
     CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
-    if (!m_kbShown && maximumOffset > 0 && contentOffset >= maximumOffset+100
+    // m_kbShown lags the keyboard (set in keyboardDidShow, cleared in keyboardWillHide), and
+    // keyboardWillShow scrolls this view, so also check the live responder state or the
+    // show-notification handlers can re-trigger the keyboard they are responding to.
+    if (!m_kbShown && ![m_inputLine isFirstResponder] && maximumOffset > 0 && contentOffset >= maximumOffset+100
         && [self.view window]
         && ![self.navigationController presentedViewController]
         && ![self.notesController isVisible])
