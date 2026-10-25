@@ -112,10 +112,7 @@ static const int kNotesTitleHeight = 24;
     
     [m_notesView setEditable: YES];
     [m_notesView setDelegate: self];
-    if (m_frame.size.width > m_frame.size.height)
-        m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
-    else
-        m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
+    [self updateTextContainerInset];
     [m_notesView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleLeftMargin];
     [m_notesView setBackgroundColor: [UIColor colorWithWhite:1.0 alpha:0.0]];
     [m_notesView setTextColor: [UIColor blackColor]];
@@ -349,10 +346,12 @@ static const int kNotesTitleHeight = 24;
     // autoresizing alone would split the width between the text view and its margins.
     [m_notesTitle sizeToFit];
     m_notesTitle.center = CGPointMake(frame.size.width/2, m_notesTitle.frame.size.height/2);
-    // The parchment page spans the full width; keep the text itself clear of a trailing vertical
-    // bar (the Duo's button strip), which arrives as a trailing safe-area inset.
+    // The parchment page spans the full width; keep the text itself clear of the side safe-area
+    // insets (the Duo's button strip on the trailing side, the Dynamic Island on the leading side
+    // in landscape).
+    CGFloat leadingInset = m_scrollView.safeAreaInsets.left;
     CGFloat trailingInset = m_scrollView.safeAreaInsets.right;
-    [m_notesView setFrame: CGRectMake(0, kNotesTitleHeight, frame.size.width - trailingInset, frame.size.height - kNotesTitleHeight)];
+    [m_notesView setFrame: CGRectMake(leadingInset, kNotesTitleHeight, frame.size.width - leadingInset - trailingInset, frame.size.height - kNotesTitleHeight)];
     
     frame.size.width *= 2;
     [m_scrollView setContentSize: frame.size];
@@ -361,11 +360,21 @@ static const int kNotesTitleHeight = 24;
     else
         [m_scrollView setContentOffset: CGPointMake(0, 0)];
 
+    [self updateTextContainerInset];
+}
+
+// In landscape the text gets a wide inset on each side so lines stay readable. The text view's
+// frame already sits inside the side safe-area insets (Dynamic Island, Duo button strip), which
+// read as margin themselves, so take them out of the inset on each side down to a small minimum.
+- (void)updateTextContainerInset {
     CGSize scrollSize = m_scrollView.bounds.size;
-    if (scrollSize.width > scrollSize.height)
-        m_notesView.textContainerInset = UIEdgeInsetsMake(0, kNotesLandscapeInset, 0, kNotesLandscapeInset);
-    else
-        m_notesView.textContainerInset = UIEdgeInsetsMake(0, 0, 0, 0);
+    if (scrollSize.width > scrollSize.height) {
+        const CGFloat minInset = 5;
+        UIEdgeInsets safeInsets = m_scrollView.safeAreaInsets;
+        m_notesView.textContainerInset = UIEdgeInsetsMake(0, MAX(minInset, kNotesLandscapeInset - safeInsets.left),
+                                                          0, MAX(minInset, kNotesLandscapeInset - safeInsets.right));
+    } else
+        m_notesView.textContainerInset = UIEdgeInsetsZero;
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {

@@ -487,7 +487,11 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         CGFloat origTempLeft = m_tempLeftMargin - m_leftMargin, origTempRight = m_tempRightMargin - m_rightMargin;
 
         if (frame.size.width > 480) {
-            if (frame.origin.x < 5.0) {
+            // The generous margins are for a view spanning the whole text area, as opposed to a Glk
+            // window placed to the right of another. The text area now starts past the leading
+            // safe-area inset (the Dynamic Island in landscape), so measure from there, not from 0.
+            UIEdgeInsets safeInsets = self.superview ? self.superview.safeAreaInsets : UIEdgeInsetsZero;
+            if (frame.origin.x < safeInsets.left + 5.0) {
                 float marginPerc = 0.10;
                 if (m_fontSize >= 28)
                     marginPerc = 0.06;
@@ -495,8 +499,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                     marginPerc = 0.08;
                 if (frame.size.width == 568)
                     marginPerc *= 0.5;
-                m_tempLeftMargin = m_leftMargin = frame.size.width * marginPerc;
-                m_tempRightMargin = m_rightMargin = frame.size.width * marginPerc;
+                // The view already sits inside the side safe-area insets (Dynamic Island, Duo button
+                // strip), which read as margin themselves, so take them out of the margin on each
+                // side down to a small minimum.
+                const CGFloat minMargin = 5;
+                CGFloat margin = frame.size.width * marginPerc;
+                m_tempLeftMargin = m_leftMargin = MAX(minMargin, margin - safeInsets.left);
+                m_tempRightMargin = m_rightMargin = MAX(minMargin, margin - safeInsets.right);
             } else {
                 m_tempLeftMargin = m_leftMargin = TEXT_LEFT_MARGIN;
                 m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;

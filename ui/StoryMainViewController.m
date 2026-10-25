@@ -802,21 +802,20 @@ void iosif_recompute_screensize() {
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
     // The parent is the full-width paging background; the width the Glk layer may use for its
-    // windows is that minus the trailing vertical bar (the Duo's button strip), matching
-    // storyViewFullFrame.
-    if ([NSThread isMainThread]) {
+    // windows is that minus the side safe-area insets (the Duo's button strip, the Dynamic Island
+    // in landscape), matching storyViewFullFrame. resizeGlkView: shifts the windows past the
+    // leading inset.
+    void (^measure)(void) = ^{
         UIView *parentView = [storyView superview];
+        UIEdgeInsets safeInsets = theSMVC.view.safeAreaInsets;
         pFrame = [parentView frame];
-        pFrame.size.width -= theSMVC.view.safeAreaInsets.right;
+        pFrame.size.width -= safeInsets.left + safeInsets.right;
         iosif_regular_width = [theSMVC isRegularWidth];
-    } else {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            UIView *parentView = [storyView superview];
-            pFrame = [parentView frame];
-            pFrame.size.width -= theSMVC.view.safeAreaInsets.right;
-            iosif_regular_width = [theSMVC isRegularWidth];
-        });
-    }
+    };
+    if ([NSThread isMainThread])
+        measure();
+    else
+        dispatch_sync(dispatch_get_main_queue(), measure);
     pFrame.size.height -= [theSMVC keyboardSize].height;
     iosif_textview_width = (int)(pFrame.size.width / fontwid);
     iosif_textview_height = (int)(pFrame.size.height / [[storyView font] lineHeight])+1;
@@ -1341,6 +1340,9 @@ static void setColorTable(RichTextView *v) {
         r.origin.y /= kIOSGlkScaleFactor;
         r.size.width /= kIOSGlkScaleFactor;
         r.size.height /= kIOSGlkScaleFactor;
+        // The Glk layer lays its windows out from x = 0 across the width iosif_recompute_screensize
+        // gave it, which already excludes both side insets; shift them past the leading one.
+        r.origin.x += self.view.safeAreaInsets.left;
         if (viewNum > 0) {
             if (glkGridArray[viewNum].win->type == wintype_Graphics) {
                 window_t *parent = glkGridArray[viewNum].win->parent;
@@ -2232,8 +2234,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     [m_storyView setFrame: frame];
 
+    // The status line sits over the story text, so it shares its side insets.
     CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
+    statusFrame.origin.x = self.view.safeAreaInsets.left;
+    statusFrame.size.width = self.view.bounds.size.width - self.view.safeAreaInsets.left - self.view.safeAreaInsets.right;
     [m_statusLine setFrame: statusFrame];
 
     [m_statusLine setNeedsDisplay];
@@ -2269,12 +2273,15 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // background scroll view used to pick this up as an automatic content inset; it no longer does.
     frame.size.height -= safeInsets.top;
 
-    CGPoint origin = m_storyView.frame.origin;
-    frame.origin.x += origin.x;
-    frame.size.width -= origin.x;
-    // Keep the story text clear of a trailing vertical bar (the Duo's button strip), which the
-    // system reports as a trailing safe-area inset. The paging background behind it stays full width.
-    frame.size.width -= safeInsets.right;
+    // Keep the story text clear of the side safe-area insets: the Duo's button strip arrives as a
+    // trailing inset, and in landscape the Dynamic Island as a leading one. The paging background
+    // behind the text stays full width. Glk games place window 0 themselves (resizeGlkView: applies
+    // the leading inset there, and a window to its left can push it further), so keep that origin.
+    CGFloat leftEdge = safeInsets.left;
+    if (gStoryInterp == kGlxStory)
+        leftEdge = MAX(leftEdge, m_storyView.frame.origin.x);
+    frame.origin.x = leftEdge;
+    frame.size.width -= leftEdge + safeInsets.right;
     return frame;
 }
 
