@@ -925,8 +925,14 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     [super loadView];
     if (!m_details && self.splitViewController.childViewControllers.count > 1) {
-        m_details = self.splitViewController.childViewControllers[1].childViewControllers[0];
+        UIViewController *detailsColumn = self.splitViewController.childViewControllers[1];
+        m_details = detailsColumn.childViewControllers[0];
         [m_details setStoryBrowser:self];
+        // Keep the details column's nav controller: when the split view collapses and the
+        // details page is pushed onto this list, UIKit pulls m_details out of it, and on expand
+        // the nav must be given m_details back (see the separate... delegate method below).
+        if ([detailsColumn isKindOfClass:[UINavigationController class]])
+            m_detailsNav = (UINavigationController*)detailsColumn;
     }
 
     UITableView *realView = [super tableView];
@@ -1453,8 +1459,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // using `secondaryViewController` to do so.  Return YES to prevent UIKit from applying its default behavior; return NO to request that UIKit
 // perform its default collapsing behavior.
 - (BOOL)splitViewController:(UISplitViewController *)splitViewController collapseSecondaryViewController:(UIViewController *)secondaryViewController ontoPrimaryViewController:(UIViewController *)primaryViewController {
-    if (self.splitViewController.presentedViewController)
-        return NO;
+    // Always handle the collapse ourselves: the details page is simply not shown in compact
+    // width until the user asks for it. Letting UIKit do its default (which it did when a story
+    // was presented) moves m_details onto this list behind our back; the expand below then has
+    // to undo whichever of the two happened. One path is easier to keep correct.
     return YES;
 }
 
@@ -1468,8 +1476,25 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // have been configured for display in a regular-width split view controller. If you return `nil`, then `UISplitViewController` will perform
 // its default behavior.
 - (UIViewController*)splitViewController:(UISplitViewController *)splitViewController separateSecondaryViewControllerFromPrimaryViewController:(nonnull UIViewController *)primaryViewController {
-//    NSLog(@"separateSecondaryViewControllerFromPrimaryViewController %@\n  viewControllers: %@", primaryViewController, splitViewController.viewControllers));
-    return nil;
+    // Rebuild the details column ourselves. While collapsed, showing a story's details pushes
+    // m_details onto this list (UIKit's showDetailViewController: does that), which removes it
+    // from the details nav; if it was then popped, nothing owns it and UIKit's default expand
+    // would restore the details nav with zero view controllers, which it refuses to display.
+    if (!m_details)
+        return nil;
+    if ([primaryViewController isKindOfClass:[UINavigationController class]]) {
+        UINavigationController *primaryNav = (UINavigationController*)primaryViewController;
+        NSMutableArray *stack = [primaryNav.viewControllers mutableCopy];
+        if ([stack containsObject: m_details]) {
+            [stack removeObject: m_details];
+            [primaryNav setViewControllers: stack animated:NO];
+        }
+    }
+    if (!m_detailsNav)
+        m_detailsNav = [[StoryDetailsControllerNC alloc] initWithRootViewController: m_details];
+    else if (m_details.navigationController != m_detailsNav || m_detailsNav.viewControllers.count == 0)
+        [m_detailsNav setViewControllers: @[m_details] animated:NO];
+    return m_detailsNav;
 }
 
 -(void)showStoryDetails:(StoryInfo*)storyInfo {

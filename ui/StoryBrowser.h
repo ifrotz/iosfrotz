@@ -60,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 IBOutlet    StoryMainViewController<FrotzFontDelegate> *m_storyMainViewController;
     StoryWebBrowserController *m_webBrowserController;
 IBOutlet    StoryDetailsController *m_details;
+    UINavigationController *m_detailsNav; // the split view's details column from the storyboard
     FrotzInfo *m_frotzInfoController;
     FrotzSettingsController *m_settings;
 

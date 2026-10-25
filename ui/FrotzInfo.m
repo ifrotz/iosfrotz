@@ -115,8 +115,9 @@
         if (!settingsNavController) {
             settingsNavController = [[UINavigationController alloc] initWithRootViewController: m_settings];
         }
-        if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular)
-            [settingsNavController setModalTransitionStyle: UIModalTransitionStyleFlipHorizontal];
+        // A form sheet is a card on compact-width phones (full screen only in compact height), and
+        // the old flip transition is a full-screen effect that renders badly against a sheet, so use
+        // the system transition everywhere.
         [settingsNavController setModalPresentationStyle: UIModalPresentationFormSheet];
         [m_navigationController presentModalViewController: settingsNavController animated:YES];
     }
