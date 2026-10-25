@@ -320,9 +320,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 - (void)drawRect:(CGRect)rect {
     void *bitmapData = NULL;
-    BOOL isDark = NO;
-    if (@available(iOS 13.0, *))
-        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    BOOL isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
     if (!m_imageRef) {
         int x, y, i = 0, j;
         CGFloat r, g, b;
@@ -420,16 +418,9 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)setFrame:(CGRect)frame {
-    if (m_hsvData) {
-        if (@available(iOS 13.0, *)) {
-        } else {// don't cache after iOS 13 in case light/dark mode changes while active
-            if (m_width == frame.size.width && m_height == frame.size.height) {
-                [super setFrame: frame];
-                return;
-            }
-        }
+    // Don't cache the HSV data across frame sets, in case light/dark mode changes while active.
+    if (m_hsvData)
         free(m_hsvData);
-    }
 
     [super setFrame: frame]; // sets m_width/m_height
 
@@ -487,9 +478,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     int x, y, i = 0;
     CGFloat r, g, b;
     CGFloat h, s, v;
-    BOOL isDark = NO;
-    if (@available(iOS 13.0, *))
-        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    BOOL isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
 
     unsigned int wColor, hsv;
 
@@ -637,10 +626,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     if ((self = [super init])!=nil) {
         self.title = NSLocalizedString(@"Select Color", @"");
     }
-    if (@available(iOS 13.0,*)) {
-//        self.modalInPresentation = YES;
-    }
-
     return self;
 }
 
@@ -774,13 +759,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 -(void)updateUserInterfaceStyle {
-    if (@available(iOS 13.0, *)) {
-        [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
-        [m_tileBorder setBackgroundColor: [UIColor labelColor]];
-    } else {
-        [m_background setBackgroundColor: [UIColor whiteColor]];
-        [m_tileBorder setBackgroundColor: [UIColor blackColor]];
-    }
+    [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
+    [m_tileBorder setBackgroundColor: [UIColor labelColor]];
 
     if (!self.navigationItem.titleView) {
         UILabel *titleView = [[UILabel alloc] init];

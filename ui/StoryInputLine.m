@@ -571,7 +571,6 @@ const int kCompletionViewTag = 21;
     
 }
 
-#if __IPHONE_5_1 < __IPHONE_OS_VERSION_MAX_ALLOWED
 - (NSArray *) keyCommands
 {
     NSArray<UIKeyCommand*> *ret = nil;
@@ -629,6 +628,5 @@ const int kCompletionViewTag = 21;
 {
     iosif_feed_input(@"\x1b");
 }
-#endif
 
 @end

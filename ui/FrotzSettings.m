@@ -296,15 +296,9 @@ enum FrotzPrefsRows
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
 
-    if (@available(iOS 13.0, *)) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor:  [UIColor darkGrayColor]];
-    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+    [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
 
     [[self.navigationItem backBarButtonItem] setEnabled: NO];
     [[self.navigationItem leftBarButtonItem] setEnabled: NO];

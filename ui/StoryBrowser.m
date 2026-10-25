@@ -1057,15 +1057,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [self reloadData];
     [self updateNavButton];
 
-    if (@available(iOS 13.0, *)) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
-    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+    [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
     [m_frotzInfoController updateTitle];
 
     [m_tableView scrollToNearestSelectedRowAtScrollPosition: UITableViewScrollPositionMiddle animated:YES];

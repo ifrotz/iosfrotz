@@ -47,15 +47,13 @@
                 }
         }
     }
-    if (@available(iOS 13.4, *)) {
-        if ([event isKindOfClass: [UIPressesEvent class]]) {
-            StoryMainViewController *smvc = [theStoryBrowser storyMainViewController];
-            if ([[smvc view] window]
-                && ![[smvc navigationController] presentedViewController]
-                && ![[smvc notesController] isVisible]) {
-                if (theInputLine.isFirstResponder == NO)
-                    [theInputLine becomeFirstResponder];
-            }
+    if ([event isKindOfClass: [UIPressesEvent class]]) {
+        StoryMainViewController *smvc = [theStoryBrowser storyMainViewController];
+        if ([[smvc view] window]
+            && ![[smvc navigationController] presentedViewController]
+            && ![[smvc notesController] isVisible]) {
+            if (theInputLine.isFirstResponder == NO)
+                [theInputLine becomeFirstResponder];
         }
     }
     [super sendEvent: event];
@@ -87,14 +85,8 @@
     [m_browser storyMainViewController].storyNavController = navigationController;
     //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
 
-    if (@available(iOS 13.0, *)) {
-        [[UINavigationBar appearance] setTintColor:[UIColor labelColor]];
-        [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor systemIndigoColor]];
-    } else {
-        [[UINavigationBar appearance] setTintColor:[UIColor darkGrayColor]];
-        [[UINavigationBar appearance] setBarTintColor: [UIColor whiteColor]];
-        [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor purpleColor]];
-    }
+    [[UINavigationBar appearance] setTintColor:[UIColor labelColor]];
+    [[UIButton appearanceWhenContainedIn: [UITableViewCell class], nil] setTintColor: [UIColor systemIndigoColor]];
 
     // This is now done explicitly for buttons in the StoryDetailsController, and in the xib files
     // because of bugs/misfeatures in the iOS 11 SDK.

@@ -1652,10 +1652,8 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 -(void)setNavBarTint {
-    if (@available(iOS 9.0,*)) {
-        [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
-        [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
-    }
+    [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
+    [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
     [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
     CGColorRef cgColor = [m_defaultBGColor CGColor];
     CGFloat max;
@@ -1669,19 +1667,11 @@ extern void gli_ios_set_focus(window_t *winNum);
     // Not using [UINavigationBar appearance] here; we only want to set the main story's status bar specially,
     // all others will use system light/dark default
     if (max < 0.5) {
-        if (@available(iOS 13.0,*)) {
-            [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
-        }
-        else
-            [self.navigationController.navigationBar setBarTintColor: m_defaultBGColor];
+        [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
         [self.navigationController.navigationBar setTintColor: m_defaultFGColor];
     }
     else {
-        if (@available(iOS 13.0,*)) {
-            [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
-        }
-        else
-            [self.navigationController.navigationBar  setBarTintColor: m_defaultFGColor];
+        [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
         [self.navigationController.navigationBar setTintColor: m_defaultBGColor];
     }
     // let's just leave the keyboard alone, matching system light/dark mode

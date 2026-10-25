@@ -402,15 +402,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    if (@available(iOS 13.0, *)) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor whiteColor]]; // labelColor
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
-    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+    [self.navigationController.navigationBar setTintColor: [UIColor whiteColor]]; // labelColor
     [m_frotzInfoController updateTitle];
     // animation works around issues when returning to details from story
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{

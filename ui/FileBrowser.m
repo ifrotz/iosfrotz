@@ -117,21 +117,14 @@
     [m_backgroundView addSubview: m_tableView];
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
         m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width, 30)];
-        if (@available(iOS 11.0,*)) {
-            UIEdgeInsets insets = UIEdgeInsetsMake(m_textField.frame.size.height, 0, 0, 0);
-            self.additionalSafeAreaInsets = insets;
-        }
+        self.additionalSafeAreaInsets = UIEdgeInsetsMake(m_textField.frame.size.height, 0, 0, 0);
         [m_backgroundView addSubview: m_textField];
 
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           origFrame.size.width,
                                           origFrame.size.height-m_textField.bounds.size.height)];
         [m_textField setReturnKeyType: UIReturnKeyDone];
-        if (@available(iOS 13.0, *)) {
-            [m_textField setBackgroundColor: [UIColor systemBackgroundColor]];
-        } else {
-            [m_textField setBackgroundColor: [UIColor whiteColor]];
-        }
+        [m_textField setBackgroundColor: [UIColor systemBackgroundColor]];
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_textField setPlaceholder: @" filename"];
         [m_textField setDelegate: self];
@@ -185,12 +178,10 @@
 
 -(void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    if (@available(iOS 11.0,*)) {
-        if (m_textField) {
-            CGRect frame = m_textField.frame;
-            frame.origin.y = m_tableView.adjustedContentInset.top;
-            m_textField.frame = frame;
-        }
+    if (m_textField) {
+        CGRect frame = m_textField.frame;
+        frame.origin.y = m_tableView.adjustedContentInset.top;
+        m_textField.frame = frame;
     }
 }
 
@@ -284,13 +275,6 @@
     	[m_delegate fileBrowser:self fileSelected:nil];
 }
 
--(void)viewDidLoad {
-    if (@available(iOS 11.0,*)) {
-    } else {
-        self.edgesForExtendedLayout= UIRectEdgeNone;
-    }
-}
-
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
@@ -302,13 +286,7 @@
     self.navigationItem.rightBarButtonItem = editItem;
     [editItem setEnabled: (m_rowCount > 0)];
 
-    if (@available(iOS 13.0, *)) {
-        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor labelColor]};
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor:  [UIColor darkGrayColor]];
-    }
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor labelColor]};
 
     self.navigationController.presentationController.delegate = self;
 }

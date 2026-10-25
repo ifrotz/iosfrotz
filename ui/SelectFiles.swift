@@ -20,18 +20,8 @@ class FileCell: UITableViewCell {
 
 @objc
 class CheckBox: UIButton {
-    static var checkedImage : UIImage? = {
-        if #available(iOS 13.0, *) {
-            return  UIImage(systemName: "square.and.arrow.down.fill")
-        }
-        return UIImage(named: "square.and.arrow.down.fill")
-    }()
-    static var uncheckedImage : UIImage? = {
-        if #available(iOS 13.0, *) {
-            return UIImage(systemName: "square")
-        }
-        return UIImage(named: "square")
-    }()
+    static var checkedImage : UIImage? = UIImage(systemName: "square.and.arrow.down.fill")
+    static var uncheckedImage : UIImage? = UIImage(systemName: "square")
 
     var isChecked = false {
         didSet {
