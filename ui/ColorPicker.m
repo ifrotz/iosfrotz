@@ -717,7 +717,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     UIEdgeInsets safeInsets = self.view.safeAreaInsets;
     // Each edge's own inset is applied regardless of orientation: whichever side carries a
     // notch or a vertical bar reports it, so there is no need to know left from right landscape.
-    CGFloat topMargin = frame.size.width > frame.size.height ? 24 : safeInsets.top;
+    CGFloat topMargin = /*frame.size.width > frame.size.height ? 24 :*/ safeInsets.top;
     if (safeInsets.left > 0) {
         leftNotch = safeInsets.left;
         leftNotch -= leftMargin;
@@ -728,7 +728,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     }
 
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f + topMargin,
-                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-leftNotch-rightNotch-328,
+                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1)-rightNotch : frame.size.width-leftNotch-rightNotch-328,
                                        colorTileHeight);
     if (!isPortraitish && !fullScreenLarge)
         leftMargin += frame.size.width-leftNotch-rightNotch-312;
