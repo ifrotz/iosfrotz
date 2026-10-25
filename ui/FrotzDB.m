@@ -312,9 +312,11 @@
     return NO;
 }
 
-+ (UIViewController*)topMostController
+- (UIViewController*)topMostController
 {
-    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    // Start from this controller's own window rather than the application's key window, which
+    // is undefined across scenes.
+    UIViewController *topController = self.view.window.rootViewController ?: self;
     while (topController.presentedViewController) {
         topController = topController.presentedViewController;
     }
@@ -339,7 +341,7 @@
                                                                                                @"files.content.read"]
                                                                         includeGrantedScopes:NO];
                     [DBClientsManager authorizeFromControllerV2:[UIApplication sharedApplication]
-                                                     controller:[[self class] topMostController]
+                                                     controller:[self topMostController]
                                           loadingStatusDelegate:nil
                                                         openURL:^(NSURL *url) { [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil]; }
                                                    scopeRequest:scopeRequest];

@@ -18,6 +18,7 @@
     StoryDetailsController *__weak m_detailsController;
     NSTimer *m_tapTimer;
     CGRect m_savedBounds;
+    id m_editMenuInteraction; // UIEditMenuInteraction, iOS 16 and later
 }
 -(void)displayMenu;
 @property (nonatomic, getter=isMagnified, readonly) BOOL magnified;

@@ -108,7 +108,20 @@
 }
 
 -(void)displayMenu {
-    if ([self becomeFirstResponder]) {
+    if (![self becomeFirstResponder])
+        return;
+    if (@available(iOS 16.0, *)) {
+        // The system edit menu takes its items (Copy, Paste) from canPerformAction:withSender:
+        // on the first responder, so the interaction needs no delegate.
+        if (!m_editMenuInteraction) {
+            UIEditMenuInteraction *interaction = [[UIEditMenuInteraction alloc] initWithDelegate:nil];
+            [self addInteraction: interaction];
+            m_editMenuInteraction = interaction;
+        }
+        CGPoint sourcePoint = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMinY(self.bounds));
+        UIEditMenuConfiguration *configuration = [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:sourcePoint];
+        [(UIEditMenuInteraction*)m_editMenuInteraction presentEditMenuWithConfiguration:configuration];
+    } else {
         UIMenuController *sharedMenuController = [UIMenuController sharedMenuController];
         [sharedMenuController setTargetRect: self.frame inView:self.superview];
         [sharedMenuController setMenuVisible:YES animated:YES];

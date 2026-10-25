@@ -2200,17 +2200,14 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [self updateFontsForWidthIfNeeded];
     if ([self viewIsWiderThanTall] || regularWidth) {
         m_landscape = YES;
-        if (compactHeight) {
-            [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation: UIStatusBarAnimationSlide];
-        }
         [self.navigationController setNavigationBarHidden:compactHeight animated:YES];
     } else {
-        if (!regularWidth) {
-            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation: UIStatusBarAnimationSlide];
-        }
         m_landscape = NO;
         [self.navigationController setNavigationBarHidden:NO animated:YES];
     }
+    // The status bar follows prefersStatusBarHidden (view-controller-based appearance), which
+    // reads m_landscape; tell UIKit it may have changed.
+    [self setNeedsStatusBarAppearanceUpdate];
 
     CGRect frame = [self storyViewFullFrame];
 
@@ -2297,20 +2294,19 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 //    NSLog(@"kb will change frame %@", notif);
 //}
 
-static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *window) {
-    // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
-    if (bounds->size.height > bounds->size.width) {
-        CGFloat h = bounds->size.height;
-        bounds->size.height = bounds->size.width;
-        bounds->size.width = h;
-    }
+// The part of the keyboard that overlaps the story's window, as a zero-origin rect, derived from
+// the keyboard's end frame (reported in screen coordinates). Replaces the long-deprecated
+// UIKeyboardBoundsUserInfoKey, which reported the keyboard's own bounds and then needed clamping.
+static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (kbFrameEndValue) {
-        CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
-        CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
-        if (bounds->size.height > window.frame.size.height - windowRect.origin.y)
-            bounds->size.height = window.frame.size.height - windowRect.origin.y;
-    }
+    if (!kbFrameEndValue || !window)
+        return CGRectZero;
+    CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
+    CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
+    CGRect overlap = CGRectIntersection(window.bounds, windowRect);
+    if (CGRectIsNull(overlap))
+        return CGRectZero;
+    return CGRectMake(0, 0, overlap.size.width, overlap.size.height);
 }
 
 -(void) keyboardDidShow:(NSNotification*)notif {
@@ -2322,10 +2318,9 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     // during a rotation because the show/hide hasn't taken effect yet,
     // so resizing again here will be correct.
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
-    if (!boundsValue) // sometimes nil in ios 8???
+    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
+    if (CGRectIsEmpty(bounds))
         return;
-    CGRect bounds = [boundsValue CGRectValue];
 
     // iOS 8.0 doesn't sent hide notifications for undocked kbd
     // and instead sends another show notification with smaller frame height
@@ -2342,7 +2337,6 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     m_kbShown = YES;
     
     CGRect frame = [self storyViewFullFrame];
-    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
     m_kbdSize = bounds.size;
 
     [m_storyView setBottomMargin: 8];
@@ -2382,11 +2376,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 
 -(void) keyboardWillShow:(NSNotification*)notif {
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
-    CGRect bounds = [boundsValue CGRectValue];
+    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
     CGRect frame = [self storyViewFullFrame];
-
-    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
 
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
