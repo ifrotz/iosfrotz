@@ -10,6 +10,9 @@
 #import "RichTextView.h"
 #include <math.h>
 
+NSString *const FrotzVoiceAvailabilityDidChangeNotification = @"FrotzVoiceAvailabilityDidChange";
+static NSString *const kNarrationAvailableKey = @"FrotzNarrationAvailable";
+static NSString *const kDictationAvailableKey = @"FrotzDictationAvailable";
 static NSString *const kVoiceModeKey = @"FrotzVoiceMode";
 static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
 static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
@@ -96,6 +99,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 @synthesize voiceMode = _voiceMode;
+@synthesize narrationAvailable = _narrationAvailable, dictationAvailable = _dictationAvailable;
 
 + (instancetype)shared {
     static VoiceManager *instance = nil;
@@ -236,11 +240,35 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (BOOL)ttsEnabled {
-    return FROTZ_ENABLE_NARRATION && (_voiceMode == VoiceModeTTSOnly || _voiceMode == VoiceModeBoth);
+    return FROTZ_ENABLE_NARRATION && self.narrationAvailable && (_voiceMode == VoiceModeTTSOnly || _voiceMode == VoiceModeBoth);
 }
 
 - (BOOL)sttEnabled {
-    return FROTZ_ENABLE_DICTATION && (_voiceMode == VoiceModeSTTOnly || _voiceMode == VoiceModeBoth);
+    return FROTZ_ENABLE_DICTATION && self.dictationAvailable && (_voiceMode == VoiceModeSTTOnly || _voiceMode == VoiceModeBoth);
+}
+
+- (BOOL)narrationSelected { return (_voiceMode & VoiceModeTTSOnly) != 0; }
+- (BOOL)dictationSelected { return (_voiceMode & VoiceModeSTTOnly) != 0; }
+- (void)setNarrationSelected:(BOOL)selected {
+    _voiceMode = (VoiceMode)(selected ? (_voiceMode | VoiceModeTTSOnly) : (_voiceMode & ~VoiceModeTTSOnly));
+}
+- (void)setDictationSelected:(BOOL)selected {
+    _voiceMode = (VoiceMode)(selected ? (_voiceMode | VoiceModeSTTOnly) : (_voiceMode & ~VoiceModeSTTOnly));
+}
+- (void)setNarrationAvailable:(BOOL)available {
+    if (_narrationAvailable == available) return;
+    _narrationAvailable = available;
+    if (!available && self.isSpeaking && !_speakingConfirmation) [self stopSpeaking];
+    [NSNotificationCenter.defaultCenter postNotificationName:FrotzVoiceAvailabilityDidChangeNotification object:self];
+}
+- (void)setDictationAvailable:(BOOL)available {
+    if (_dictationAvailable == available) return;
+    _dictationAvailable = available;
+    if (!available) {
+        if (self.isListening || _recognitionTask || _inputTapInstalled) [self stopListening];
+        if (_speakingConfirmation) [self stopSpeaking];
+    }
+    [NSNotificationCenter.defaultCenter postNotificationName:FrotzVoiceAvailabilityDidChangeNotification object:self];
 }
 
 - (VoiceMode)voiceMode {
@@ -598,6 +626,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (BOOL)replayLastStoryResponse {
+    if ((!FROTZ_ENABLE_NARRATION || !self.narrationAvailable) && !self.isVoiceOverEnabled) return NO;
     if (!_lastStoryResponse.length || self.voiceMode == VoiceModeOff) return NO;
     [self stopListening];
     [self stopSpeaking];
@@ -647,7 +676,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)speakConfirmationPrompt:(NSString *)text {
-    if (!FROTZ_ENABLE_DICTATION) return;
+    if (!FROTZ_ENABLE_DICTATION || !self.dictationAvailable) return;
     [self stopSpeaking];
     if (!self.speakCommandConfirmations && !self.isVoiceOverEnabled) return;
     [self speakVoiceText:text inView:nil];
@@ -780,7 +809,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 #pragma mark - STT
 
 - (void)requestSTTPermissionsWithCompletion:(void (^)(BOOL granted))completion {
-    if (!FROTZ_ENABLE_DICTATION) { completion(NO); return; }
+    if (!FROTZ_ENABLE_DICTATION || !self.dictationAvailable) { completion(NO); return; }
     [SFSpeechRecognizer requestAuthorization:^(SFSpeechRecognizerAuthorizationStatus status) {
         if (status != SFSpeechRecognizerAuthorizationStatusAuthorized) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -1066,6 +1095,8 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)savePreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:self.narrationAvailable forKey:kNarrationAvailableKey];
+    [defaults setBool:self.dictationAvailable forKey:kDictationAvailableKey];
     [defaults setBool:self.speakCommandConfirmations forKey:kSpeakCommandConfirmationsKey];
     [defaults setInteger:self.commandConfirmationMode forKey:kCommandConfirmationModeKey];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
@@ -1077,6 +1108,8 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    _narrationAvailable = [defaults objectForKey:kNarrationAvailableKey] ? [defaults boolForKey:kNarrationAvailableKey] : YES;
+    _dictationAvailable = [defaults objectForKey:kDictationAvailableKey] ? [defaults boolForKey:kDictationAvailableKey] : YES;
     _speakCommandConfirmations = [defaults objectForKey:kSpeakCommandConfirmationsKey] ? [defaults boolForKey:kSpeakCommandConfirmationsKey] : YES;
     if ([defaults objectForKey:kCommandConfirmationModeKey]) {
         NSInteger storedMode = [defaults integerForKey:kCommandConfirmationModeKey];

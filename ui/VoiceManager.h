@@ -14,6 +14,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+FOUNDATION_EXPORT NSString *const FrotzVoiceAvailabilityDidChangeNotification;
+
 @class RichTextView;
 
 typedef NS_ENUM(NSInteger, VoiceMode) {
@@ -59,6 +61,10 @@ typedef NS_ENUM(NSInteger, VoiceFeedback) {
 + (instancetype)shared;
 
 // State
+@property (nonatomic) BOOL narrationAvailable; // preferences default YES; no automatic start
+@property (nonatomic) BOOL dictationAvailable;
+@property (nonatomic) BOOL narrationSelected; // toolbar mode, retained when unavailable
+@property (nonatomic) BOOL dictationSelected;
 @property (nonatomic) VoiceMode voiceMode;
 @property (nonatomic) float speechRate;        // multiplier, default 1.0
 @property (nonatomic, copy, nullable) NSString *speechVoiceIdentifier; // nil means Automatic

@@ -1212,6 +1212,7 @@ static void setColorTable(RichTextView *v) {
             [center addObserver:self selector:@selector(voiceApplicationDidBecomeActive:)
                            name:UISceneDidActivateNotification object:nil];
         }
+        [center addObserver:self selector:@selector(voiceAvailabilityChanged:) name:FrotzVoiceAvailabilityDidChangeNotification object:nil];
         [center addObserver:self selector:@selector(voiceReduceMotionChanged:)
                        name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
         [center addObserver:self selector:@selector(voiceContentSizeChanged:)
@@ -2044,7 +2045,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [ttsBtn setImage:[[UIImage systemImageNamed:@"speaker.wave.1.fill"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         [ttsBtn addTarget:self action:@selector(toggleTTS) forControlEvents:UIControlEventTouchUpInside];
         ttsBtn.tag = 901;
-        ttsBtn.hidden = !FROTZ_ENABLE_NARRATION;
+        ttsBtn.hidden = !FROTZ_ENABLE_NARRATION || ![VoiceManager shared].narrationAvailable;
         ttsBtn.accessibilityIdentifier = @"voiceNarration";
         ttsBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
 
@@ -2052,7 +2053,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [sttBtn setImage:[[UIImage systemImageNamed:@"mic"] imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         [sttBtn addTarget:self action:@selector(toggleSTT) forControlEvents:UIControlEventTouchUpInside];
         sttBtn.tag = 902;
-        sttBtn.hidden = !FROTZ_ENABLE_DICTATION;
+        sttBtn.hidden = !FROTZ_ENABLE_DICTATION || ![VoiceManager shared].dictationAvailable;
         sttBtn.accessibilityIdentifier = @"voiceDictation";
         sttBtn.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
 
@@ -2063,10 +2064,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         kbdBtn.accessibilityIdentifier = @"voiceKeyboard";
         kbdBtn.accessibilityLabel = @"Show keyboard";
         for (UIButton *button in @[ttsBtn, sttBtn, kbdBtn]) {
-            [NSLayoutConstraint activateConstraints:@[
-                [button.widthAnchor constraintGreaterThanOrEqualToConstant:44],
-                [button.heightAnchor constraintGreaterThanOrEqualToConstant:44]
-            ]];
+            NSLayoutConstraint *width = [button.widthAnchor constraintGreaterThanOrEqualToConstant:44];
+            NSLayoutConstraint *height = [button.heightAnchor constraintGreaterThanOrEqualToConstant:44];
+            width.priority = height.priority = 999;
+            [NSLayoutConstraint activateConstraints:@[width, height]];
         }
 
         UIStackView *toolStack = [[UIStackView alloc] initWithArrangedSubviews:@[ttsBtn, sttBtn, kbdBtn]];
@@ -5421,13 +5422,13 @@ static BOOL migateDropboxAuth() {
 #pragma mark - Voice Mode
 
 -(void)toggleTTS {
-    if (!FROTZ_ENABLE_NARRATION) return;
+    if (!FROTZ_ENABLE_NARRATION || ![VoiceManager shared].narrationAvailable) return;
     VoiceManager *vm = [VoiceManager shared];
     if (vm.ttsEnabled) {
-        vm.voiceMode = vm.sttEnabled ? VoiceModeSTTOnly : VoiceModeOff;
+        vm.narrationSelected = NO;
         if (vm.isSpeaking) [self stopCurrentVoiceSpeech];
     } else {
-        vm.voiceMode = vm.sttEnabled ? VoiceModeBoth : VoiceModeTTSOnly;
+        vm.narrationSelected = YES;
     }
     [vm savePreferences];
     [self updateVoiceButtonIcons];
@@ -5435,19 +5436,22 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)toggleSTT {
-    if (!FROTZ_ENABLE_DICTATION) return;
+    if (!FROTZ_ENABLE_DICTATION || ![VoiceManager shared].dictationAvailable) return;
     VoiceManager *vm = [VoiceManager shared];
     if (vm.sttEnabled) {
         [self clearPendingVoiceCommand];
         [vm stopListening];
-        vm.voiceMode = vm.ttsEnabled ? VoiceModeTTSOnly : VoiceModeOff;
+        vm.dictationSelected = NO;
         [vm savePreferences];
         [self updateVoiceButtonIcons];
         [self autosize];
     } else {
+        NSUInteger permissionGeneration = m_voiceRestartGeneration;
         [vm requestSTTPermissionsWithCompletion:^(BOOL granted) {
+            if (permissionGeneration != self->m_voiceRestartGeneration || vm.delegate != self
+                || !self->m_voiceSessionActive || !vm.dictationAvailable) return;
             if (granted) {
-                vm.voiceMode = vm.ttsEnabled ? VoiceModeBoth : VoiceModeSTTOnly;
+                vm.dictationSelected = YES;
                 [self dismissKeyboard];
                 [self setupVoiceTapOverlay];
             }
@@ -5472,6 +5476,8 @@ static BOOL migateDropboxAuth() {
         UIButton *kbdBtn = [cv viewWithTag:903];
         kbdBtn.accessibilityLabel = m_inputLine.isFirstResponder ? @"Disable keyboard input" : @"Enable keyboard input";
         kbdBtn.accessibilityValue = m_inputLine.isFirstResponder ? @"On" : @"Off";
+        ttsBtn.hidden = !FROTZ_ENABLE_NARRATION || !vm.narrationAvailable;
+        sttBtn.hidden = !FROTZ_ENABLE_DICTATION || !vm.dictationAvailable;
         if (ttsBtn) {
             ttsBtn.accessibilityLabel = vm.ttsEnabled ? @"Disable text to speech" : @"Enable text to speech";
             ttsBtn.accessibilityValue = vm.ttsEnabled ? @"On" : @"Off";
@@ -5495,7 +5501,7 @@ static BOOL migateDropboxAuth() {
             [[UIAccessibilityCustomAction alloc] initWithName:@"Confirm command" target:self selector:@selector(accessibleVoiceConfirm:)],
             [[UIAccessibilityCustomAction alloc] initWithName:@"Retry command" target:self selector:@selector(accessibleVoiceRetry:)],
             [[UIAccessibilityCustomAction alloc] initWithName:@"Cancel command" target:self selector:@selector(accessibleVoiceCancel:)]];
-    } else if (vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff) {
+    } else if (vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff && ((FROTZ_ENABLE_NARRATION && vm.narrationAvailable) || vm.isVoiceOverEnabled)) {
         actions = @[[[UIAccessibilityCustomAction alloc] initWithName:@"Replay last response" target:self selector:@selector(replayLastVoiceResponse:)]];
     }
     m_voiceTapOverlay.accessibilityCustomActions = actions;
@@ -5517,6 +5523,7 @@ static BOOL migateDropboxAuth() {
 
 -(BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action {
     VoiceManager *vm = [VoiceManager shared];
+    if ((!FROTZ_ENABLE_NARRATION || !vm.narrationAvailable) && !vm.isVoiceOverEnabled) return NO;
     if (!m_voiceSessionActive || vm.delegate != self || vm.voiceMode == VoiceModeOff || !vm.lastStoryResponse.length
         || m_pendingVoiceCommand || [self hasPendingVoiceOutput]
         || self.presentedViewController || self.navigationController.presentedViewController
@@ -5744,6 +5751,23 @@ static BOOL migateDropboxAuth() {
     }
 }
 
+-(void)voiceAvailabilityChanged:(NSNotification *)notification {
+    VoiceManager *manager = [VoiceManager shared];
+    if (notification.object != manager) return;
+    if (manager.delegate == self) {
+        ++m_voiceRestartGeneration;
+        m_voiceListenPending = NO;
+        m_voiceAutoListenReady = NO;
+        if (!manager.dictationAvailable) [self clearPendingVoiceCommand];
+        [self updateVoiceButtonIcons];
+    }
+    if (self.isViewLoaded) {
+        [self updateVoiceButtonIcons];
+        [self autosize];
+        [m_inputLine updatePosition];
+    }
+}
+
 -(void)voiceReduceMotionChanged:(NSNotification *)notification {
     if ([VoiceManager shared].isListening && m_voiceSessionActive)
         [self startVoiceListeningAnimation];
@@ -5813,7 +5837,8 @@ static BOOL migateDropboxAuth() {
     m_voiceTapOverlay.opaque = YES;
     m_voiceMicButton.hidden = !vm.sttEnabled;
     BOOL speaking = vm.isSpeaking;
-    m_voiceSpeechButton.hidden = !vm.ttsEnabled && !speaking && !vm.lastStoryResponse.length;
+    BOOL replayAvailable = (FROTZ_ENABLE_NARRATION && vm.narrationAvailable) || vm.isVoiceOverEnabled;
+    m_voiceSpeechButton.hidden = (!replayAvailable && !speaking) || (!vm.ttsEnabled && !speaking && !vm.lastStoryResponse.length);
     BOOL preparing = m_voicePreparing && !speaking && !vm.isListening;
     NSString *micTitle = vm.isListening ? @"Listening" : (speaking ? @"Waiting" : (preparing ? @"Preparing…" : @"Start listening"));
     NSString *micLabel = vm.isListening ? @"Stop listening" : (speaking ? @"Microphone waiting for narration" : (preparing ? @"Preparing microphone" : @"Start listening"));

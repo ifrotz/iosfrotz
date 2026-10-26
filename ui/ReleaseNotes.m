@@ -311,11 +311,13 @@
     NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
     // Always show bundled feature notes, even when older notes are cached or downloaded.
     NSString *voiceNotes = @"<h2>New: Voice Mode</h2>"
-        "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Enable either or both in Settings.</li>"
-        "<li>Voice commands submit the best guess immediately for uninterrupted play. Voice Command Confirmation in Settings offers Off (the default), As Needed for uncertain or corrected commands, and Always for every command line. When reviewing a command, say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons.</li>"
+        "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Choose available controls in Settings &gt; Voice, then enable narration or dictation with the toolbar buttons.</li>"
+        "<li>Voice commands submit the best guess immediately for uninterrupted play. Command Confirmation in Settings &gt; Voice offers Off (the default), As Needed for uncertain or corrected commands, and Always for every command line. When reviewing a command, say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons.</li>"
+        "<li>Review commands in the story’s input area with Confirm, Retry and Cancel. Speak Command Confirmations can be turned off independently; VoiceOver still announces the review.</li>"
+        "<li>While dictation is enabled, tap to page or select story words without opening the keyboard. Selected words stay in the command as recognition changes. Typed commands remain inline and voice controls follow the active text window and game colors.</li>"
         "<li>English recognition can compare similar alternatives using words already shown or entered. Hidden story vocabulary is never used to suggest commands.</li>"
-        "<li>Choose a Speech Voice, preview installed voices, and adjust the Speech Rate. Automatic prefers Premium or Enhanced voices when available.</li>"
-        "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Speech Input Language for other stories or to override metadata.</li>"
+        "<li>Choose a Narration Voice, preview installed voices, and adjust the Narration Rate. Automatic prefers Premium or Enhanced voices when available.</li>"
+        "<li>Automatic voice and input language follow language metadata embedded in Blorb stories, with English as the default. Choose Input Language for other stories or to override metadata.</li>"
         "<li>Download more voices in iOS Settings &gt; Accessibility &gt; Read &amp; Speak &gt; Voices (Spoken Content on older iOS versions).</li>"
         "<li>Follow the highlighted narration and listening animation. Tap the voice controls to stop speaking or listening.</li>"
         "<li>With VoiceOver enabled, game narration uses VoiceOver’s voice and rate. Dictation waits for narration to finish, and moving VoiceOver focus pauses it. Activate Start listening or use a two-finger double-tap to resume hands-free turns. The speech controls offer Replay last response in VoiceOver’s Actions menu, without taking a turn. Distinct sounds and haptics signal readiness, navigation pauses and errors.</li>"

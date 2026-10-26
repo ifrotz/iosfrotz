@@ -95,7 +95,7 @@
 @implementation FrotzSpeechVoiceController
 - (instancetype)init {
     if ((self = [super initWithStyle:UITableViewStyleGrouped])) {
-        self.title = @"Speech Voice";
+        self.title = @"Narration Voice";
         _previewSynthesizer = [[AVSpeechSynthesizer alloc] init];
         _previewSynthesizer.delegate = self;
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
@@ -239,7 +239,7 @@
 @implementation FrotzSpeechLanguageController
 - (instancetype)init {
     if ((self = [super initWithStyle:UITableViewStyleGrouped])) {
-        self.title = @"Speech Input Language";
+        self.title = @"Input Language";
         _locales = [[[SFSpeechRecognizer supportedLocales] allObjects] sortedArrayUsingComparator:^NSComparisonResult(NSLocale *a, NSLocale *b) {
             NSLocale *display = NSLocale.currentLocale;
             NSString *aName = [display localizedStringForLocaleIdentifier:a.localeIdentifier] ?: a.localeIdentifier;
@@ -356,6 +356,116 @@
 }
 @end
 
+// Runtime availability is independent of the player's toolbar mode choices.
+@interface FrotzVoiceSettingsController : FrotzSpeechSettingsController
+@end
+@implementation FrotzVoiceSettingsController
+- (instancetype)init {
+    if ((self = [super initWithStyle:UITableViewStyleGrouped])) {
+        self.title = @"Voice";
+        [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(accessibilityChanged:)
+            name:UIAccessibilityVoiceOverStatusDidChangeNotification object:nil];
+    }
+    return self;
+}
+- (void)dealloc { [NSNotificationCenter.defaultCenter removeObserver:self]; }
+- (void)accessibilityChanged:(NSNotification *)note { [self.tableView reloadData]; }
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.tableView.rowHeight = UITableViewAutomaticDimension;
+    self.tableView.estimatedRowHeight = 64;
+}
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.tableView reloadData];
+}
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView { return 3; }
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return section == 0 ? (FROTZ_ENABLE_DICTATION ? 4 : 0) : section == 1 ? (FROTZ_ENABLE_NARRATION ? 3 : 0) : 0;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+    return section == 0 && FROTZ_ENABLE_DICTATION ? @"Dictation" : section == 1 && FROTZ_ENABLE_NARRATION ? @"Voice Narration" : nil;
+}
+- (NSString *)helpTextForSection:(NSInteger)section {
+    if (section == 0 && FROTZ_ENABLE_DICTATION)
+        return @"Show the app's microphone control. Use it during play to enable dictation, then start or pause listening in the bar below the story. Story taps page or select words while dictation is enabled. The system keyboard's dictation button is separate and does not submit commands automatically. Re-enabling this setting does not start recording.";
+    if (section == 1 && FROTZ_ENABLE_NARRATION)
+        return @"Show the narration control. Use it during play to turn automatic reading on or off. Choose an installed voice and tap it for a preview. For clearer voices, download an Enhanced or Premium voice in iOS Settings → Accessibility → Read & Speak → Voices (Spoken Content on older iOS). Only voices exposed by iOS appear here.";
+    if (section == 2) {
+        if ([VoiceManager shared].isVoiceOverEnabled)
+            return @"VoiceOver uses its own voice and rate. Moving VoiceOver focus pauses dictation so UI speech is not submitted as a command. Use a two-finger double-tap to start or stop listening. Replay last response is also in the controls' Actions menu. A rising tone means listening is ready; a falling pair means navigation paused it; three low tones indicate an error. VoiceOver still announces command review when spoken confirmations are off.";
+        return @"VoiceOver uses its own voice settings. Additional VoiceOver instructions appear here when it is enabled. Keyboard input remains available in every mode.";
+    }
+    return nil;
+}
+- (UISwitch *)switchWithTag:(NSInteger)tag on:(BOOL)on label:(NSString *)label {
+    UISwitch *control = [UISwitch new];
+    control.tag = tag; control.on = on; control.accessibilityLabel = label;
+    [control addTarget:self action:@selector(availabilityChanged:) forControlEvents:UIControlEventValueChanged];
+    return control;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
+    UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
+    cell.textLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    cell.detailTextLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+    cell.textLabel.adjustsFontForContentSizeCategory = YES;
+    cell.detailTextLabel.adjustsFontForContentSizeCategory = YES;
+    cell.textLabel.numberOfLines = cell.detailTextLabel.numberOfLines = 0;
+    VoiceManager *manager = [VoiceManager shared];
+    if (path.section == 0) {
+        cell.textLabel.text = @[@"Dictation Available", @"Input Language", @"Command Confirmation", @"Speak Command Confirmations"][path.row];
+        if (path.row == 0) cell.accessoryView = [self switchWithTag:1 on:manager.dictationAvailable label:cell.textLabel.text];
+        else if (path.row == 3) {
+            cell.accessoryView = [self switchWithTag:3 on:manager.speakCommandConfirmations label:cell.textLabel.text];
+            cell.detailTextLabel.text = @"Read review prompts aloud, independently of story narration. VoiceOver follows its own announcement path.";
+        } else {
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.detailTextLabel.text = path.row == 1 ? (manager.speechRecognitionLanguage ?: @"Automatic — story language") : manager.commandConfirmationDescription;
+        }
+    } else {
+        cell.textLabel.text = @[@"Narration Available", @"Narration Voice", @"Narration Rate"][path.row];
+        if (path.row == 0) cell.accessoryView = [self switchWithTag:2 on:manager.narrationAvailable label:cell.textLabel.text];
+        else if (path.row == 1) {
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            cell.detailTextLabel.text = manager.speechVoiceDescription;
+        } else {
+            UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(0, 0, 130, 44)];
+            slider.minimumValue = 0.5; slider.maximumValue = 3; slider.value = manager.speechRate;
+            slider.accessibilityLabel = @"Narration Rate";
+            slider.accessibilityValue = [NSString stringWithFormat:@"%.1f times", manager.speechRate];
+            [slider addTarget:self action:@selector(rateChanged:) forControlEvents:UIControlEventValueChanged];
+            cell.accessoryView = slider;
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.1f×", manager.speechRate];
+        }
+    }
+    cell.selectionStyle = cell.accessoryView ? UITableViewCellSelectionStyleNone : UITableViewCellSelectionStyleDefault;
+    return cell;
+}
+- (void)availabilityChanged:(UISwitch *)control {
+    VoiceManager *manager = [VoiceManager shared];
+    if (control.tag == 1) manager.dictationAvailable = control.on;
+    else if (control.tag == 2) manager.narrationAvailable = control.on;
+    else manager.speakCommandConfirmations = control.on;
+    [manager savePreferences];
+}
+- (void)rateChanged:(UISlider *)slider {
+    [VoiceManager shared].speechRate = slider.value;
+    slider.accessibilityValue = [NSString stringWithFormat:@"%.1f times", slider.value];
+    UITableViewCell *cell = (id)slider.superview;
+    while (cell && ![cell isKindOfClass:UITableViewCell.class]) cell = (id)cell.superview;
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"%.1f×", slider.value];
+    [[VoiceManager shared] savePreferences];
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
+    [tableView deselectRowAtIndexPath:path animated:YES];
+    UIViewController *next = nil;
+    if (path.section == 0 && path.row == 1) next = [FrotzSpeechLanguageController new];
+    else if (path.section == 0 && path.row == 2) next = [FrotzCommandConfirmationController new];
+    else if (path.section == 1 && path.row == 1) next = [FrotzSpeechVoiceController new];
+    if (next) [self.navigationController pushViewController:next animated:YES];
+}
+@end
+
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
 @synthesize infoDelegate = m_infoDelegate;
@@ -397,6 +507,7 @@ enum FrotzPrefsRows
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
 #endif
+    kFrotzPrefsVoice,
     kFrotzPrefsNumRows
 };
 
@@ -766,10 +877,7 @@ enum FrotzPrefsRows
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) return nil;
-    if (section == kFrotzPrefsSection)
-        return @"The top microphone and speaker buttons enable speech input and narration. The bar below the story starts or stops listening, stops reading, and replays the last response without taking a turn. It stays available above the keyboard. With VoiceOver, narration uses VoiceOver’s voice and rate; moving focus pauses dictation. Use a two-finger double-tap to start or stop listening, or choose Replay last response in the controls’ Actions menu. A rising tone means the microphone is ready; a falling pair means navigation paused it; three low tones indicate an error.";
-    return nil;
+    return nil; // Detailed help is on the Voice page.
 }
 
 - (NSArray<NSNumber *> *)visiblePreferenceRows {
@@ -777,7 +885,8 @@ enum FrotzPrefsRows
     for (NSInteger row = 0; row < kFrotzPrefsNumRows; ++row) {
         BOOL narrationRow = row == kFrotzPrefsTTS || row == kFrotzPrefsSpeechVoice || row == kFrotzPrefsSpeechRate;
         BOOL dictationRow = row == kFrotzPrefsSTT || row == kFrotzPrefsCommandConfirmation || row == kFrotzPrefsSpeechLanguage;
-        if ((narrationRow && !FROTZ_ENABLE_NARRATION) || (dictationRow && !FROTZ_ENABLE_DICTATION)) continue;
+        if (narrationRow || dictationRow) continue;
+        if (row == kFrotzPrefsVoice && !FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) continue;
         [rows addObject:@(row)];
     }
     return rows;
@@ -837,6 +946,7 @@ enum FrotzPrefsRows
     UITableViewCell *cell = [self obtainTableCellForRow:row];
     if (indexPath.section == kFrotzPrefsSection && row >= kFrotzPrefsStoryFontSize
         && row != kFrotzPrefsNotesFont
+        && row != kFrotzPrefsVoice
         && row != kFrotzPrefsSpeechVoice
         && row != kFrotzPrefsSpeechLanguage
         && row != kFrotzPrefsCommandConfirmation
@@ -905,6 +1015,9 @@ enum FrotzPrefsRows
                 case kFrotzPrefsStoryInfoEditing:
                     cell.textLabel.text = @"Story Info Editing";
                     cell.accessoryView = m_switchCtl2;
+                    break;
+                case kFrotzPrefsVoice:
+                    cell.textLabel.text = @"Voice";
                     break;
                 case kFrotzPrefsTTS:
                     cell.textLabel.text = @"Text-to-Speech";
@@ -1000,7 +1113,9 @@ enum FrotzPrefsRows
         }
         case kFrotzPrefsSection:
             //	case kFrotzColorsSection:
-            if (row==kFrotzPrefsTextColor) {
+            if (row==kFrotzPrefsVoice) {
+                viewController = [FrotzVoiceSettingsController new];
+            } else if (row==kFrotzPrefsTextColor) {
                 [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
                 m_colorPicker.title = NSLocalizedString(@"Text Color \u29C9", @"");
                 viewController = m_colorPicker;
