@@ -394,7 +394,7 @@
     if (section == 2) {
         if ([VoiceManager shared].isVoiceOverEnabled)
             return @"VoiceOver uses its own voice and rate. Moving VoiceOver focus pauses dictation so UI speech is not submitted as a command. Use a two-finger double-tap to start or stop listening. Replay last response is also in the controls' Actions menu. A rising tone means listening is ready; a falling pair means navigation paused it; three low tones indicate an error. VoiceOver still announces command review when spoken confirmations are off.";
-        return @"VoiceOver uses its own voice settings. Additional VoiceOver instructions appear here when it is enabled. Keyboard input remains available in every mode.";
+        return @"VoiceOver uses its own voice settings. Additional VoiceOver instructions appear here when it is enabled. Keyboard input remains available in every mode. In a small or fixed-grid input window, tap an enabled toolbar voice button for Voice controls. On iOS 12, use the Voice button to enable either mode and access these actions.";
     }
     return nil;
 }

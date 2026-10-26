@@ -1901,6 +1901,12 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
+    if (m_voiceControlMenu && !self.isMovingFromParentViewController && !self.isBeingDismissed
+        && !self.navigationController.isBeingDismissed
+        && (!self.navigationController || self.navigationController.topViewController == self)) {
+        [super viewWillDisappear:animated];
+        return;
+    }
     [self stopVoiceActivity];
     disable_complete = YES;
     [super viewWillDisappear:animated];
@@ -2078,7 +2084,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         m_kbdToggleItem = toolItem;
         self.navigationItem.rightBarButtonItem = toolItem;
     } else {
-        self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+        [self setupLegacyVoiceToolbar];
     }
 
 }
@@ -2261,6 +2267,18 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 -(NSString *)composedVoiceCommand:(NSString *)transcript {
     NSString *selection = m_voiceSelectedText ?: @"";
     if (!selection.length) return transcript;
+    NSMutableCharacterSet *wordCharacters = [NSCharacterSet.alphanumericCharacterSet mutableCopy];
+    [wordCharacters addCharactersInString:@"'’"];
+    NSRange search = NSMakeRange(0, transcript.length);
+    while (search.length) {
+        NSRange found = [transcript rangeOfString:selection options:NSCaseInsensitiveSearch range:search];
+        if (found.location == NSNotFound) break;
+        BOOL startsWord = found.location == 0 || ![wordCharacters characterIsMember:[transcript characterAtIndex:found.location - 1]];
+        BOOL endsWord = NSMaxRange(found) == transcript.length || ![wordCharacters characterIsMember:[transcript characterAtIndex:NSMaxRange(found)]];
+        if (startsWord && endsWord) return transcript;
+        NSUInteger next = NSMaxRange(found);
+        search = NSMakeRange(next, transcript.length - next);
+    }
     NSArray *words = [selection componentsSeparatedByString:@" "];
     // Preserve deliberate selection without repeating words already heard at
     // the end of the utterance. Never consult the story's hidden vocabulary.
@@ -2277,9 +2295,17 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
     if ([VoiceManager shared].sttEnabled && !(ipzAllowInput & kIPZNoEcho) && !m_pendingVoiceCommand) {
-        if (!m_voicePartialText) m_voicePartialText = m_inputLine.text ?: @"";
-        m_voiceSelectedText = m_voiceSelectedText.length ? [m_voiceSelectedText stringByAppendingFormat:@" %@", text] : [text copy];
-        m_inputLine.text = [self composedVoiceCommand:m_voicePartialText];
+        if (m_inputLine.isFirstResponder || m_kbShown) {
+            // Keyboard edits own the current field; never reconstruct them from
+            // a replaceable recognition snapshot from an earlier selection.
+            m_voiceSelectedText = nil; m_voicePartialText = nil;
+            NSString *current = m_inputLine.text ?: @"";
+            m_inputLine.text = current.length ? [current stringByAppendingFormat:([current hasSuffix:@" "] ? @"%@" : @" %@"), text] : text;
+        } else {
+            if (!m_voicePartialText) m_voicePartialText = m_inputLine.text ?: @"";
+            m_voiceSelectedText = m_voiceSelectedText.length ? [m_voiceSelectedText stringByAppendingFormat:@" %@", text] : [text copy];
+            m_inputLine.text = [self composedVoiceCommand:m_voicePartialText];
+        }
         [m_storyView clearSelection];
         return;
     }
@@ -4695,7 +4721,7 @@ static void setScreenDims(char *storyNameBuf) {
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
         return NO;
-    
+    m_voiceSelectedText = nil; m_voicePartialText = nil;
     // If we accept the input here, word completion from a return key won't get entered.
     // If we call endEditing, then the text is right when we get to the textFieldDidEndEditing callback,
     // but we lose firstResponder and the keyboard goes away.
@@ -4711,8 +4737,10 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
-    if (textField == m_inputLine)
+    if (textField == m_inputLine) {
+        m_voiceSelectedText = nil; m_voicePartialText = nil;
         iosif_feed_input_line([textField.text stringByReplacingCharactersInRange:range withString:string]);
+    }
     return YES;
 }
 
@@ -4755,6 +4783,8 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldFakeDidEndEditing:(UITextField *)textField {
     NSString *inputText = [textField text];
+    m_voiceSelectedText = nil; m_voicePartialText = nil;
+    [self clearPendingVoiceCommand];
     [[VoiceManager shared] rememberPlayerCommand:inputText];
     //    NSLog(@"input str:'%@' len:%d", inputText, [inputText length]);
     BOOL autoplay = [inputText isEqualToString: @"$autoplay"];
@@ -5419,7 +5449,136 @@ static BOOL migateDropboxAuth() {
 
 #pragma mark - Voice Mode
 
+// Keep a touch route when a game-owned grid or small buffer cannot spare bar space.
+- (BOOL)voiceNeedsFallbackControls {
+    return m_voiceSessionActive && m_background && self.currentStory.length
+        && [VoiceManager shared].voiceMode != VoiceModeOff && !m_voiceTapOverlay.superview;
+}
+
+- (void)setupLegacyVoiceToolbar {
+    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"]
+        style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
+    if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) {
+        self.navigationItem.rightBarButtonItems = @[m_kbdToggleItem];
+        return;
+    }
+    m_voiceLegacyItem = [[UIBarButtonItem alloc] initWithTitle:@"Voice" style:UIBarButtonItemStylePlain
+        target:self action:@selector(showVoiceControls:)];
+    m_voiceLegacyItem.accessibilityIdentifier = @"voiceLegacyControls";
+    m_voiceLegacyItem.accessibilityLabel = @"Voice controls";
+    self.navigationItem.rightBarButtonItems = @[m_kbdToggleItem, m_voiceLegacyItem];
+    [self updateVoiceButtonIcons];
+}
+
+- (void)showVoiceControls:(id)sender {
+    VoiceManager *manager = [VoiceManager shared];
+    if (!m_voiceSessionActive || manager.delegate != self || self.presentedViewController
+        || self.navigationController.presentedViewController) return;
+    BOOL wasListening = manager.isListening;
+    m_voiceAutoListenReady = NO;
+    ++m_voiceRestartGeneration;
+    m_voiceListenPending = NO;
+    [manager stopListening]; // Preserve the reviewed command and deliberate selections.
+    NSString *message = m_pendingVoiceCommand ?: (wasListening ? @"Listening paused while voice controls are open." : nil);
+    UIAlertController *menu = [UIAlertController alertControllerWithTitle:@"Voice controls"
+        message:message preferredStyle:UIAlertControllerStyleActionSheet];
+    m_voiceControlMenu = menu;
+    NSUInteger generation = m_voiceStorySessionGeneration;
+    m_voiceControlMenuGeneration = generation;
+    __weak StoryMainViewController *weakSelf = self;
+    __weak UIAlertController *weakMenu = menu;
+    void (^add)(NSString *, NSString *, UIAlertActionStyle) = ^(NSString *title, NSString *action, UIAlertActionStyle style) {
+        [menu addAction:[UIAlertAction actionWithTitle:title style:style handler:^(UIAlertAction *item) {
+            [weakSelf performVoiceFallbackAction:action fromMenu:weakMenu generation:generation];
+        }]];
+    };
+    if (m_pendingVoiceCommand) {
+        add(@"Confirm command", @"confirm", UIAlertActionStyleDefault);
+        add(@"Retry command", @"retry", UIAlertActionStyleDefault);
+        add(@"Cancel command", @"cancel", UIAlertActionStyleDefault);
+    }
+    if (manager.isSpeaking) {
+        add(@"Stop reading", @"speech", UIAlertActionStyleDefault);
+    } else {
+        if (manager.sttEnabled && (!m_pendingVoiceCommand
+            || [VoiceManager confirmationWordsForLanguage:manager.effectiveRecognitionLanguage].count)) {
+            add(m_voiceInputError ? @"Retry microphone" : @"Start listening", @"listen", UIAlertActionStyleDefault);
+        }
+        if (!m_pendingVoiceCommand && manager.lastStoryResponse.length && manager.voiceMode != VoiceModeOff
+            && ((FROTZ_ENABLE_NARRATION && manager.narrationAvailable) || manager.isVoiceOverEnabled)) {
+            add(@"Replay last response", @"speech", UIAlertActionStyleDefault);
+        }
+    }
+    if (FROTZ_ENABLE_NARRATION && manager.narrationAvailable)
+        add(manager.ttsEnabled ? @"Turn off narration" : @"Enable narration", @"narration", UIAlertActionStyleDefault);
+    if (FROTZ_ENABLE_DICTATION && manager.dictationAvailable)
+        add(manager.sttEnabled ? @"Turn off dictation" : @"Enable dictation", @"dictation", UIAlertActionStyleDefault);
+    add(@"Close", @"close", UIAlertActionStyleCancel);
+    UIPopoverPresentationController *popover = menu.popoverPresentationController;
+    if ([sender isKindOfClass:UIBarButtonItem.class]) popover.barButtonItem = sender;
+    else if ([sender isKindOfClass:UIView.class]) {
+        popover.sourceView = sender;
+        popover.sourceRect = ((UIView *)sender).bounds;
+    } else popover.barButtonItem = m_voiceLegacyItem ?: self.navigationItem.rightBarButtonItem;
+    [self presentViewController:menu animated:YES completion:nil];
+}
+
+- (void)performVoiceFallbackAction:(NSString *)action {
+    [self performVoiceFallbackAction:action fromMenu:m_voiceControlMenu generation:m_voiceControlMenuGeneration];
+}
+
+- (void)performVoiceFallbackAction:(NSString *)action fromMenu:(UIAlertController *)menu generation:(NSUInteger)generation {
+    if (!menu || menu != m_voiceControlMenu || self.presentedViewController != menu) return;
+    m_voiceControlMenu = nil; // One action per menu, even during dismissal.
+    __weak StoryMainViewController *weakSelf = self;
+    [self dismissViewControllerAnimated:YES completion:^{
+        StoryMainViewController *self = weakSelf;
+        VoiceManager *manager = [VoiceManager shared];
+        if (!self || generation != self->m_voiceStorySessionGeneration || !self->m_voiceSessionActive
+            || manager.delegate != self || self.presentedViewController || self.navigationController.presentedViewController) return;
+        if ([action isEqualToString:@"listen"]) [self startVoiceListeningFromMenu];
+        else if ([action isEqualToString:@"retry"]) {
+            [self clearPendingVoiceCommand];
+            [self->m_inputLine setText:@""];
+            [self startVoiceListeningFromMenu];
+        } else if ([action isEqualToString:@"confirm"] || [action isEqualToString:@"cancel"])
+            [self performVoiceConfirmationAction:action];
+        else if ([action isEqualToString:@"speech"]) {
+            if (manager.isSpeaking) [self stopCurrentVoiceSpeech];
+            else [self replayLastVoiceResponse:nil];
+        } else if ([action isEqualToString:@"narration"]) [self toggleNarrationMode];
+        else if ([action isEqualToString:@"dictation"]) [self toggleDictationMode];
+    }];
+}
+
+- (void)startVoiceListeningFromMenu {
+    VoiceManager *manager = [VoiceManager shared];
+    if (!manager.sttEnabled) return;
+    if (!manager.isVoiceOverEnabled) { [self activateVoiceInput]; return; }
+    // Let dismissal's focus change settle, then use owned VoiceOver narration
+    // and its completion callback rather than recording the menu's UI speech.
+    NSUInteger generation = m_voiceStorySessionGeneration;
+    __weak StoryMainViewController *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        StoryMainViewController *self = weakSelf;
+        if (!self || generation != self->m_voiceStorySessionGeneration || !self->m_voiceSessionActive
+            || manager.delegate != self || ![self canAcceptVoiceInput]) return;
+        [manager resumeAfterVoiceOverNavigation];
+        self->m_voiceAutoListenReady = YES;
+        [manager speakConfirmationPrompt:@"Starting microphone."];
+        if (!manager.isSpeaking) [self scheduleVoiceListening];
+    });
+}
+
 -(void)toggleTTS {
+    if ([VoiceManager shared].ttsEnabled && [self voiceNeedsFallbackControls]) {
+        [self showVoiceControls:[self.navigationItem.rightBarButtonItem.customView viewWithTag:901]];
+        return;
+    }
+    [self toggleNarrationMode];
+}
+
+-(void)toggleNarrationMode {
     if (!FROTZ_ENABLE_NARRATION || ![VoiceManager shared].narrationAvailable) return;
     VoiceManager *vm = [VoiceManager shared];
     if (vm.ttsEnabled) {
@@ -5434,9 +5593,18 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)toggleSTT {
+    if ([VoiceManager shared].sttEnabled && [self voiceNeedsFallbackControls]) {
+        [self showVoiceControls:[self.navigationItem.rightBarButtonItem.customView viewWithTag:902]];
+        return;
+    }
+    [self toggleDictationMode];
+}
+
+-(void)toggleDictationMode {
     if (!FROTZ_ENABLE_DICTATION || ![VoiceManager shared].dictationAvailable) return;
     VoiceManager *vm = [VoiceManager shared];
     if (vm.sttEnabled) {
+        m_voiceSelectedText = nil; m_voicePartialText = nil;
         [self clearPendingVoiceCommand];
         [vm stopListening];
         vm.dictationSelected = NO;
@@ -5465,6 +5633,12 @@ static BOOL migateDropboxAuth() {
     if ([VoiceManager shared].voiceMode != VoiceModeOff && !m_voiceTapOverlay) [self setupVoiceTapOverlay];
     [self updateVoiceControlBar];
     [self updateVoiceReplayActions];
+    if (m_voiceLegacyItem) {
+        VoiceManager *manager = [VoiceManager shared];
+        BOOL available = (FROTZ_ENABLE_NARRATION && manager.narrationAvailable) || (FROTZ_ENABLE_DICTATION && manager.dictationAvailable);
+        self.navigationItem.rightBarButtonItems = available ? @[m_kbdToggleItem, m_voiceLegacyItem] : @[m_kbdToggleItem];
+        m_voiceLegacyItem.accessibilityValue = [NSString stringWithFormat:@"Narration %@. Dictation %@.", manager.ttsEnabled ? @"on" : @"off", manager.sttEnabled ? @"on" : @"off"];
+    }
     if (@available(iOS 13.0, *)) {
         VoiceManager *vm = [VoiceManager shared];
         UIImageSymbolConfiguration *smallConfig = [UIImageSymbolConfiguration configurationWithPointSize:15 weight:UIImageSymbolWeightRegular];
@@ -5505,6 +5679,7 @@ static BOOL migateDropboxAuth() {
     m_voiceTapOverlay.accessibilityCustomActions = actions;
     m_voiceMicButton.accessibilityCustomActions = actions;
     m_voiceSpeechButton.accessibilityCustomActions = actions;
+    m_voiceLegacyItem.accessibilityCustomActions = actions;
     UIView *toolbar = self.navigationItem.rightBarButtonItem.customView;
     [toolbar viewWithTag:901].accessibilityCustomActions = actions;
     [toolbar viewWithTag:902].accessibilityCustomActions = actions;
@@ -5699,6 +5874,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)stopVoiceActivity {
+    ++m_voiceStorySessionGeneration;
     m_voiceSelectedText = nil; m_voicePartialText = nil;
     m_voiceResumeAfterKeyboard = NO;
     m_voiceInputError = nil;
@@ -5756,7 +5932,10 @@ static BOOL migateDropboxAuth() {
         ++m_voiceRestartGeneration;
         m_voiceListenPending = NO;
         m_voiceAutoListenReady = NO;
-        if (!manager.dictationAvailable) [self clearPendingVoiceCommand];
+        if (!manager.dictationAvailable) {
+            m_voiceSelectedText = nil; m_voicePartialText = nil;
+            [self clearPendingVoiceCommand];
+        }
         [self updateVoiceButtonIcons];
     }
     if (self.isViewLoaded) {
@@ -5811,8 +5990,10 @@ static BOOL migateDropboxAuth() {
     m_voiceAutoListenReady = NO;
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
-    if (discardInput && !m_inputLine.isFirstResponder)
+    if (discardInput && !m_inputLine.isFirstResponder) {
+        m_voiceSelectedText = nil; m_voicePartialText = nil;
         [m_inputLine setText:@""];
+    }
     [self updateVoiceButtonIcons];
     [self resetTapOverlayToMicIdle];
     if (givePauseCue) [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackNavigationPaused];
@@ -6144,7 +6325,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerDidStartListening {
-    m_voiceSelectedText = nil; m_voicePartialText = nil;
+    m_voicePartialText = nil; // Keep deliberate selections made before capture.
     if (![self canAcceptVoiceInput]) {
         [[VoiceManager shared] stopListening];
         return;
@@ -6176,6 +6357,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerSTTError:(NSError *)error {
+    m_voiceSelectedText = nil; m_voicePartialText = nil;
     // A recognition failure must not discard a command already awaiting review.
     if ([VoiceManager shared].delegate == self && [VoiceManager shared].isListening)
         [[VoiceManager shared] stopListening];
@@ -6323,6 +6505,7 @@ static BOOL migateDropboxAuth() {
         ++m_voiceRestartGeneration;
         m_voiceListenPending = NO;
         if (vm.isListening) {
+            m_voiceSelectedText = nil; m_voicePartialText = nil;
             [vm stopListening];
         } else {
             [vm resumeAfterVoiceOverNavigation];

@@ -4,6 +4,7 @@
 #import "StoryMainViewController.h"
 #import "StoryInputLine.h"
 #import "StoryView.h"
+#import "GlkView.h"
 #import "FrotzSettings.h"
 #import "FrotzAppDelegate.h"
 #import "FrotzInfo.h"
@@ -56,6 +57,10 @@
 
 @interface StoryMainViewController (VoiceTesting)
 - (BOOL)shouldActivateKeyboardForStoryTap;
+- (void)setupLegacyVoiceToolbar;
+- (void)showVoiceControls:(id)sender;
+- (void)performVoiceFallbackAction:(NSString *)action;
+- (BOOL)activateVoiceInput;
 - (void)setupVoiceToolbar;
 - (void)updateVoiceButtonIcons;
 - (void)toggleTTS;
@@ -104,6 +109,33 @@
 - (NSString *)currentStory { return @"fixture.z5"; }
 - (BOOL)isKBShown { return NO; }
 - (void)forceToggleKeyboard { ++self.keyboardToggles; }
+@end
+
+@interface TestReviewController : TestTapPolicyController
+@property UIViewController *capturedPresentation;
+@property NSUInteger keyboardActivations;
+@property NSUInteger gameTapEvents;
+@property BOOL handlesGameTap;
+@end
+@implementation TestReviewController
+- (void)activateKeyboard { ++self.keyboardActivations; }
+- (BOOL)scrollStoryViewOnePage:(UIScrollView *)view fraction:(CGFloat)fraction { return NO; }
+- (BOOL)splashVisible { return NO; }
+- (BOOL)tapInView:(UIView *)view atPoint:(CGPoint)point { ++self.gameTapEvents; return self.handlesGameTap; }
+- (UIViewController *)presentedViewController { return self.capturedPresentation; }
+- (void)presentViewController:(UIViewController *)viewController animated:(BOOL)animated completion:(void (^)(void))completion {
+    self.capturedPresentation = viewController;
+    if (completion) completion();
+}
+- (void)dismissViewControllerAnimated:(BOOL)animated completion:(void (^)(void))completion {
+    self.capturedPresentation = nil;
+    if (completion) completion();
+}
+@end
+@interface TestReviewGlkView : GlkView
+@end
+@implementation TestReviewGlkView
+- (BOOL)handleMagnifyTouchWithPhase:(UITouchPhase)phase atPoint:(CGPoint)point { return YES; }
 @end
 
 @interface TestEndingController : StoryMainViewController
@@ -378,6 +410,183 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @end
 
 @implementation FrotzVoiceTests
+- (void)withReviewController:(void (^)(TestReviewController *controller))test {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [self withAutomaticListeningController:^(TestStoryController *unused) {
+            TestReviewController *controller = [TestReviewController new];
+            StoryInputLine *input = [[StoryInputLine alloc] initWithFrame:CGRectMake(0, 0, 320, 44)];
+            [controller setValue:input forKey:@"m_inputLine"];
+            RichTextView *story = [[RichTextView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+            [story appendText:@"A gown and a table are here."];
+            [controller setValue:story forKey:@"m_storyView"];
+            [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+            [controller setValue:@YES forKey:@"m_voiceAutoListenReady"];
+            [controller setValue:@YES forKey:@"m_handsFreeAutoLoop"];
+            [controller setupVoiceTapOverlay];
+            [controller setupVoiceToolbar];
+            self.manager.delegate = controller;
+            self.manager.commandConfirmationMode = VoiceCommandConfirmationOff;
+            int savedInput = ipzAllowInput, savedWindow = cwin;
+            ipzAllowInput = kIPZRequestInput; cwin = 0;
+            @try { test(controller); }
+            @finally {
+                [controller stopVoiceActivity];
+                ipzAllowInput = savedInput; cwin = savedWindow;
+            }
+        }];
+    }];
+}
+- (void)testTypingEditsSurviveFurtherSelectionsWithDictationModeEnabled {
+    [self withReviewController:^(TestReviewController *controller) {
+        TestEditingInputLine *input = [[TestEditingInputLine alloc] initWithFrame:CGRectMake(0, 0, 320, 44)];
+        [controller setValue:input forKey:@"m_inputLine"];
+        input.text = @"put";
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        input.text = [input.text stringByAppendingString:@" on"];
+        [controller textSelected:@"table" animDuration:0 hilightView:nil];
+        XCTAssertEqualObjects(input.text, @"put gown on table");
+        [controller textFieldFakeDidEndEditing:input];
+        input.text = @"open";
+        [controller textSelected:@"box" animDuration:0 hilightView:nil];
+        XCTAssertEqualObjects(input.text, @"open box");
+    }];
+}
+- (void)testManualReturnEndsSelectionCompositionBeforeNextTurn {
+    [self withReviewController:^(TestReviewController *controller) {
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        XCTAssertTrue([controller textFieldShouldReturn:controller.inputLine]);
+        XCTestExpectation *submitted = [self expectationWithDescription:@"manual return delivered"];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ [submitted fulfill]; });
+        [self waitForExpectations:@[submitted] timeout:2];
+        XCTAssertNil([controller valueForKey:@"m_voiceSelectedText"]);
+        XCTAssertNil([controller valueForKey:@"m_voicePartialText"]);
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"gown"]));
+    }];
+}
+- (void)testSelectedWordBeforeMicrophoneStartSurvivesTheSpokenTurn {
+    [self withReviewController:^(TestReviewController *controller) {
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"take"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+    }];
+}
+- (void)testFinalTranscriptAlreadyContainingSelectedPhraseDoesNotDuplicateIt {
+    [self withReviewController:^(TestReviewController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendText:@"take" final:NO handler:self.recognizer.handlers.lastObject];
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        [self sendAlternatives:@[@"take gown from table"] confidence:0.95];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown from table"]));
+    }];
+}
+- (void)testGlkStoryTapsKeepDictationAndGameOwnedEventsSeparate {
+    [self withReviewController:^(TestReviewController *controller) {
+        TestReviewGlkView *story = [[TestReviewGlkView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        story.delegate = controller;
+        TestStoryTouch *touch = [TestStoryTouch new];
+        touch.phase = UITouchPhaseEnded; touch.timestamp = 20000;
+        for (NSNumber *mode in @[@(VoiceModeSTTOnly), @(VoiceModeOff)]) {
+            self.manager.voiceMode = mode.integerValue;
+            NSUInteger before = controller.keyboardActivations;
+            touch.tapCount = 2; [story handleTouch:(id)touch withEvent:nil];
+            touch.tapCount = 1; [story handleTouch:(id)touch withEvent:nil];
+            XCTestExpectation *single = [self expectationWithDescription:@"Glk single tap resolved"];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ [single fulfill]; });
+            [self waitForExpectations:@[single] timeout:2];
+            XCTAssertEqual(controller.keyboardActivations - before, mode.integerValue == VoiceModeOff ? 2u : 0u);
+        }
+        self.manager.voiceMode = VoiceModeSTTOnly;
+        story.tapInputEnabled = YES; controller.handlesGameTap = YES;
+        NSUInteger before = controller.keyboardActivations;
+        touch.tapCount = 1; [story handleTouch:(id)touch withEvent:nil];
+        XCTAssertEqual(controller.gameTapEvents, 1u);
+        XCTAssertEqual(controller.keyboardActivations, before);
+    }];
+}
+- (void)testLegacyVoiceToolbarCanEnableBothModesWithoutSystemSymbols {
+    [self withReviewController:^(TestReviewController *controller) {
+        self.manager.voiceMode = VoiceModeOff;
+        [controller setupLegacyVoiceToolbar];
+        UIBarButtonItem *voice = nil;
+        for (UIBarButtonItem *item in controller.navigationItem.rightBarButtonItems)
+            if ([item.accessibilityIdentifier isEqualToString:@"voiceLegacyControls"]) voice = item;
+        XCTAssertNotNil(voice); XCTAssertEqual(voice.action, @selector(showVoiceControls:));
+        [controller showVoiceControls:voice];
+        [controller performVoiceFallbackAction:@"narration"];
+        XCTAssertTrue(self.manager.ttsEnabled);
+        [controller showVoiceControls:voice];
+        [controller performVoiceFallbackAction:@"dictation"];
+        void (^reply)(BOOL) = self.manager.permissionCompletion;
+        self.manager.permissionCompletion = nil;
+        XCTAssertNotNil(reply); if (reply) reply(YES);
+        XCTAssertTrue(self.manager.sttEnabled);
+        XCTAssertFalse(self.manager.isListening, @"Mode configuration must not start capture");
+    }];
+}
+- (void)testHiddenVoiceBarStillOffersTouchCaptureAndCommandReview {
+    [self withReviewController:^(TestReviewController *controller) {
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 240, 70)];
+        [controller setValue:background forKey:@"m_background"];
+        RichTextView *story = (id)controller.storyView; story.frame = background.bounds;
+        [background addSubview:story];
+        [controller setValue:@"take gown" forKey:@"m_pendingVoiceCommand"];
+        [controller refreshVoicePresentationForInputWindow];
+        XCTAssertNil(((UIView *)[controller valueForKey:@"m_voiceTapOverlay"]).superview);
+        [controller toggleSTT];
+        UIAlertController *menu = (id)controller.capturedPresentation;
+        XCTAssertTrue([menu isKindOfClass:UIAlertController.class]);
+        NSArray *titles = [menu.actions valueForKey:@"title"];
+        XCTAssertTrue([titles containsObject:@"Confirm command"]);
+        XCTAssertTrue([titles containsObject:@"Retry command"]);
+        XCTAssertTrue([titles containsObject:@"Cancel command"]);
+        XCTAssertTrue(self.manager.sttEnabled);
+        [controller performVoiceFallbackAction:@"confirm"];
+        [controller performVoiceFallbackAction:@"confirm"];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        [controller showVoiceControls:nil];
+        XCTAssertEqualObjects([controller valueForKey:@"m_voiceSelectedText"], @"gown");
+        [controller performVoiceFallbackAction:@"listen"];
+        [self drainCallbacks]; XCTAssertTrue(self.manager.isListening);
+        [controller performVoiceFallbackAction:@"listen"];
+        [self.manager stopListening];
+        [controller voiceManagerSTTError:[NSError errorWithDomain:@"test" code:1 userInfo:nil]];
+        [controller showVoiceControls:nil];
+        XCTAssertTrue([[(UIAlertController *)controller.capturedPresentation actions] valueForKey:@"title"] != nil);
+        [controller performVoiceFallbackAction:@"listen"];
+        [self drainCallbacks]; XCTAssertTrue(self.manager.isListening);
+    }];
+}
+- (void)testFallbackMenuActionsCannotResumeAfterLeavingAndReturning {
+    [self withReviewController:^(TestReviewController *controller) {
+        [controller showVoiceControls:nil];
+        [controller stopVoiceActivity];
+        [controller setValue:@YES forKey:@"m_voiceSessionActive"];
+        self.manager.delegate = controller;
+        [controller performVoiceFallbackAction:@"listen"];
+        [self drainCallbacks];
+        XCTAssertFalse(self.manager.isListening);
+        XCTAssertEqual(self.engine.starts, 0u);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testVoiceOverFallbackStartWaitsForItsOwnedAnnouncement {
+    [self withReviewController:^(TestReviewController *controller) {
+        self.manager.voiceOverRunning = YES;
+        self.manager.speakCommandConfirmations = NO;
+        [controller showVoiceControls:nil];
+        [controller performVoiceFallbackAction:@"listen"];
+        [self drainCallbacks];
+        XCTAssertTrue(self.manager.isSpeaking);
+        XCTAssertFalse(self.manager.isListening);
+        NSString *announcement = self.manager.announcements.lastObject;
+        XCTAssertNotNil(announcement);
+        if (announcement) [NSNotificationCenter.defaultCenter postNotificationName:UIAccessibilityAnnouncementDidFinishNotification object:nil userInfo:@{UIAccessibilityAnnouncementKeyStringValue:announcement, UIAccessibilityAnnouncementKeyWasSuccessful:@YES}];
+        [self drainCallbacks];
+        XCTAssertTrue(self.manager.isListening);
+    }];
+}
 - (void)testDictationTripleTapDoesNotSuppressTheNextWordSelection {
     [self withAutomaticListeningController:^(TestStoryController *unused) {
         TestTapPolicyController *controller = [TestTapPolicyController new];
