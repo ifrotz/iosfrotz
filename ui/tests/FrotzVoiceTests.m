@@ -407,6 +407,32 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         } @finally { ipzAllowInput = saved; }
     }];
 }
+- (void)testMissingConfidenceAloneDoesNotInterruptSmartConfirmation {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"plugh"] confidence:0];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"plugh"]));
+        XCTAssertNil([controller valueForKey:@"m_pendingVoiceCommand"]);
+    }];
+}
+- (void)testSafeAmbiguityWithMissingScoresStillNeedsReview {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"wet", @"west", @"wait"] confidence:0];
+        XCTAssertTrue(self.manager.recognizedCommandNeedsConfirmation);
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+    }];
+}
+- (void)testChangedFinalCommandAfterEndAudioIsReviewedEvenWithHighConfidence {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendText:@"take gown" final:NO handler:self.recognizer.handlers.lastObject];
+        [self.manager silenceTimerFired];
+        [self sendAlternatives:@[@"bake down"] confidence:0.95];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"bake down");
+    }];
+}
 - (void)testFailedRecordingPreflightReleasesAudioRetainedForHandoff {
     self.manager.voiceMode = VoiceModeBoth;
     self.voiceDelegate.keepAudioForListening = YES;

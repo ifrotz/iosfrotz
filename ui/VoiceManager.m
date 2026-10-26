@@ -70,6 +70,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     NSSet<NSString *> *_commandWords;
     NSArray<NSString *> *_commandHints;
     NSMutableOrderedSet<NSString *> *_playerWords;
+    NSString *_lastPartialCommand, *_commandAtEndAudio;
     BOOL _hasReceivedSpeech;  // whether any speech detected this listen session
     BOOL _inputTapInstalled;
     BOOL _finishingRecognition;
@@ -409,12 +410,15 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 + (float)minimumConfidence:(SFTranscription *)transcription {
     float confidence = 1;
-    if (transcription.segments.count == 0) return 0;
+    BOOL measured = NO;
     for (SFTranscriptionSegment *segment in transcription.segments) {
-        if (!isfinite(segment.confidence) || segment.confidence <= 0) return 0;
+        // Apple uses zero/absent scores for unknown confidence. Retain any
+        // measured low score instead of letting an unknown segment hide it.
+        if (!isfinite(segment.confidence) || segment.confidence <= 0) continue;
+        measured = YES;
         confidence = MIN(confidence, segment.confidence);
     }
-    return confidence;
+    return measured ? confidence : 0;
 }
 
 - (NSString *)commandFromResult:(SFSpeechRecognitionResult *)result {
@@ -446,8 +450,11 @@ static float rateMultiplierToAVRate(float multiplier) {
     }
     // Confidence is a heuristic, not a guarantee of intent. Zero/absent scores
     // are unknown. A confidently spoken unusual command must survive unchanged.
-    _recognizedCommandNeedsConfirmation = [[self class] minimumConfidence:result.bestTranscription] < 0.8;
-    if (!_recognizedCommandNeedsConfirmation || self.recognizingConfirmation || self.recognizingCharacterInput
+    float confidence = [[self class] minimumConfidence:result.bestTranscription];
+    BOOL changedFinal = _commandAtEndAudio.length && ![[[self class] commandTokens:_commandAtEndAudio]
+        isEqualToArray:[[self class] commandTokens:original]];
+    _recognizedCommandNeedsConfirmation = (confidence > 0 && confidence < 0.8) || changedFinal;
+    if (confidence >= 0.8 || self.recognizingConfirmation || self.recognizingCharacterInput
         || ![self.effectiveRecognitionLanguage.lowercaseString hasPrefix:@"en"]
         || [original rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"\"'“”‘’«»‹›„‟「」『』＂＇;\n."]].location != NSNotFound)
         return original;
@@ -481,10 +488,15 @@ static float rateMultiplierToAVRate(float multiplier) {
             }
         }
         if (shortCommand && [[[self class] ordinaryEnglishDirections] containsObject:tokens.firstObject]) ++score;
-        if (!safe || changes > 2 || score <= originalScore) continue;
+        if (!safe || changes > 2 || score < originalScore) continue;
+        if (score == originalScore) {
+            _recognizedCommandNeedsConfirmation = YES;
+            continue;
+        }
         if (score > bestScore) { bestScore = score; best = alternative.formattedString; tied = NO; }
         else if (score == bestScore && ![best.lowercaseString isEqualToString:alternative.formattedString.lowercaseString]) tied = YES;
     }
+    if (tied || ![best isEqualToString:original]) _recognizedCommandNeedsConfirmation = YES;
     return tied ? original : best;
 }
 
@@ -835,6 +847,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     }
 
     _hasReceivedSpeech = NO;
+    _lastPartialCommand = nil; _commandAtEndAudio = nil;
     _recognitionRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     _recognitionRequest.shouldReportPartialResults = YES;
     NSArray *controls = [[self class] confirmationWordsForLanguage:self.effectiveRecognitionLanguage];
@@ -876,6 +889,7 @@ static float rateMultiplierToAVRate(float multiplier) {
                     return;
                 }
                 if (text.length > 0) {
+                    self->_lastPartialCommand = text;
                     self->_hasReceivedSpeech = YES;
                     [self.delegate voiceManagerDidRecognizeText:text isFinal:NO];
                     if (!self->_finishingRecognition)
@@ -946,6 +960,7 @@ static float rateMultiplierToAVRate(float multiplier) {
         _inputTapInstalled = NO;
     }
     _finishingRecognition = YES;
+    _commandAtEndAudio = [_lastPartialCommand copy];
     [_recognitionRequest endAudio];
     // Bound the wait for a final result if the speech service never responds.
     _silenceTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self
