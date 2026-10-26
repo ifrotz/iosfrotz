@@ -10,6 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <Speech/Speech.h>
+#import "VoiceFeatures.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

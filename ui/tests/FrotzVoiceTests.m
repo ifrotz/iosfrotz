@@ -1796,3 +1796,85 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
     }
 }
 @end
+
+// These tests run under every compile-time combination, including both features off.
+#ifndef FROTZ_ENABLE_NARRATION
+#define FROTZ_ENABLE_NARRATION 1
+#endif
+#ifndef FROTZ_ENABLE_DICTATION
+#define FROTZ_ENABLE_DICTATION 1
+#endif
+@interface VoiceFeatureGateTests : XCTestCase
+@end
+@implementation VoiceFeatureGateTests
+- (void)testDisabledFeaturesCannotBecomeEffectiveOrOverwriteSavedMode {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    id previous = [defaults objectForKey:@"FrotzVoiceMode"];
+    VoiceManager *manager = [VoiceManager new];
+    manager.voiceMode = VoiceModeBoth;
+    XCTAssertEqual(manager.ttsEnabled, (BOOL)FROTZ_ENABLE_NARRATION);
+    XCTAssertEqual(manager.sttEnabled, (BOOL)FROTZ_ENABLE_DICTATION);
+    XCTAssertEqual(manager.voiceMode, (VoiceMode)((FROTZ_ENABLE_NARRATION ? 1 : 0) | (FROTZ_ENABLE_DICTATION ? 2 : 0)));
+    [manager savePreferences];
+    XCTAssertEqual([defaults integerForKey:@"FrotzVoiceMode"], 3, @"An unavailable feature must not erase the user's saved mode");
+    if (previous) [defaults setObject:previous forKey:@"FrotzVoiceMode"];
+    else [defaults removeObjectForKey:@"FrotzVoiceMode"];
+}
+- (void)testDisabledCaptureDoesNotInitializeRecordingServices {
+    VoiceManager *resources = [VoiceManager new];
+    if (FROTZ_ENABLE_DICTATION) XCTAssertNotNil([resources valueForKey:@"audioEngine"]);
+    if (FROTZ_ENABLE_NARRATION || FROTZ_ENABLE_DICTATION) XCTAssertNotNil([resources valueForKey:@"synthesizer"]);
+#if !FROTZ_ENABLE_DICTATION
+    VoiceManager *manager = [VoiceManager new];
+    XCTAssertNil([manager valueForKey:@"audioEngine"]);
+    XCTAssertNil([manager valueForKey:@"speechRecognizer"]);
+#endif
+#if !FROTZ_ENABLE_DICTATION && !FROTZ_ENABLE_NARRATION
+    VoiceManager *silent = [VoiceManager new];
+    XCTAssertNil([silent valueForKey:@"synthesizer"]);
+#endif
+}
+- (void)testCompiledOutControlsAreNotOfferedInTheToolbar {
+    StoryMainViewController *controller = [StoryMainViewController new];
+    [controller setupVoiceToolbar];
+    UIView *toolbar = controller.navigationItem.rightBarButtonItem.customView;
+    XCTAssertNotNil(controller.navigationItem.rightBarButtonItem, @"Keyboard access remains available in every build");
+    UIView *narration = [toolbar viewWithTag:901];
+    UIView *dictation = [toolbar viewWithTag:902];
+    if (!FROTZ_ENABLE_NARRATION) XCTAssertTrue(narration == nil || narration.hidden);
+    if (!FROTZ_ENABLE_DICTATION) XCTAssertTrue(dictation == nil || dictation.hidden);
+}
+- (void)testCompiledOutSettingsAreNotOffered {
+    FrotzSettingsController *settings = [FrotzSettingsController new];
+    [settings create_UISwitches];
+    NSMutableArray *labels = [NSMutableArray array];
+    for (NSInteger row = 0; row < [settings tableView:nil numberOfRowsInSection:1]; ++row) {
+        UITableViewCell *cell = [settings tableView:nil cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:1]];
+        if (cell.textLabel.text) [labels addObject:cell.textLabel.text];
+    }
+    XCTAssertTrue([labels containsObject:@"Text Color"]);
+    if (!FROTZ_ENABLE_NARRATION) {
+        XCTAssertFalse([labels containsObject:@"Text-to-Speech"]);
+        XCTAssertFalse([labels containsObject:@"Speech Voice"]);
+    }
+    if (!FROTZ_ENABLE_DICTATION) {
+        XCTAssertFalse([labels containsObject:@"Speech-to-Text"]);
+        XCTAssertFalse([labels containsObject:@"Speech Input Language"]);
+        XCTAssertFalse([labels containsObject:@"Voice Command Confirmation"]);
+    }
+}
+- (void)testInactiveVoiceDoesNotReportOtherAudioInterruptions {
+    VoiceManager *manager = [VoiceManager new];
+    manager.voiceMode = VoiceModeOff;
+    TestVoiceDelegate *delegate = [TestVoiceDelegate new];
+    manager.delegate = delegate;
+    [NSNotificationCenter.defaultCenter postNotificationName:AVAudioSessionInterruptionNotification object:nil
+        userInfo:@{AVAudioSessionInterruptionTypeKey:@(AVAudioSessionInterruptionTypeBegan)}];
+    XCTestExpectation *drained = [self expectationWithDescription:@"interruption callback drained"];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        XCTAssertEqual(delegate.errors, 0u, @"Classic play must not display a microphone error for unrelated audio");
+        [drained fulfill];
+    });
+    [self waitForExpectations:@[drained] timeout:2];
+}
+@end

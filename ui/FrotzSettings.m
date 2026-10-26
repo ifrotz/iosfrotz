@@ -766,9 +766,21 @@ enum FrotzPrefsRows
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) return nil;
     if (section == kFrotzPrefsSection)
         return @"The top microphone and speaker buttons enable speech input and narration. The bar below the story starts or stops listening, stops reading, and replays the last response without taking a turn. It stays available above the keyboard. With VoiceOver, narration uses VoiceOver’s voice and rate; moving focus pauses dictation. Use a two-finger double-tap to start or stop listening, or choose Replay last response in the controls’ Actions menu. A rising tone means the microphone is ready; a falling pair means navigation paused it; three low tones indicate an error.";
     return nil;
+}
+
+- (NSArray<NSNumber *> *)visiblePreferenceRows {
+    NSMutableArray *rows = [NSMutableArray array];
+    for (NSInteger row = 0; row < kFrotzPrefsNumRows; ++row) {
+        BOOL narrationRow = row == kFrotzPrefsTTS || row == kFrotzPrefsSpeechVoice || row == kFrotzPrefsSpeechRate;
+        BOOL dictationRow = row == kFrotzPrefsSTT || row == kFrotzPrefsCommandConfirmation || row == kFrotzPrefsSpeechLanguage;
+        if ((narrationRow && !FROTZ_ENABLE_NARRATION) || (dictationRow && !FROTZ_ENABLE_DICTATION)) continue;
+        [rows addObject:@(row)];
+    }
+    return rows;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -777,7 +789,7 @@ enum FrotzPrefsRows
         return kFrotzInfoNumRows;
     } else if (section == kFrotzResetSection)
         return 1;
-    return kFrotzPrefsNumRows;
+    return self.visiblePreferenceRows.count;
 }
 
 // to determine specific row height for each cell, override this.  In this example, each row is determined
@@ -821,14 +833,15 @@ enum FrotzPrefsRows
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSInteger row = [indexPath row];
+    if (indexPath.section == kFrotzPrefsSection) row = [self.visiblePreferenceRows[row] integerValue];
     UITableViewCell *cell = [self obtainTableCellForRow:row];
-    if (indexPath.section == kFrotzPrefsSection && indexPath.row >= kFrotzPrefsStoryFontSize
-        && indexPath.row != kFrotzPrefsNotesFont
-        && indexPath.row != kFrotzPrefsSpeechVoice
-        && indexPath.row != kFrotzPrefsSpeechLanguage
-        && indexPath.row != kFrotzPrefsCommandConfirmation
+    if (indexPath.section == kFrotzPrefsSection && row >= kFrotzPrefsStoryFontSize
+        && row != kFrotzPrefsNotesFont
+        && row != kFrotzPrefsSpeechVoice
+        && row != kFrotzPrefsSpeechLanguage
+        && row != kFrotzPrefsCommandConfirmation
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-        && indexPath.row != kFrotzPrefsDropbox
+        && row != kFrotzPrefsDropbox
 #endif
         || indexPath.section == kFrotzResetSection)
         cell.accessoryType = UITableViewCellAccessoryNone;
@@ -963,6 +976,7 @@ enum FrotzPrefsRows
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {   
     NSInteger section = indexPath.section, row = indexPath.row;
+    if (section == kFrotzPrefsSection) row = [self.visiblePreferenceRows[row] integerValue];
     m_selectedSection = section;
     m_selectedRow = row;
     UIViewController *viewController = nil;

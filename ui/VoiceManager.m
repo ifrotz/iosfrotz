@@ -92,6 +92,8 @@ static float rateMultiplierToAVRate(float multiplier) {
     NSDictionary<NSString *, NSString *> *_charInputMap;
 }
 
+@synthesize voiceMode = _voiceMode;
+
 + (instancetype)shared {
     static VoiceManager *instance = nil;
     static dispatch_once_t onceToken;
@@ -103,12 +105,16 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (instancetype)init {
     if (self = [super init]) {
+#if FROTZ_ENABLE_NARRATION || FROTZ_ENABLE_DICTATION
+        // Dictation-only builds still support optional spoken confirmations.
         _synthesizer = [[AVSpeechSynthesizer alloc] init];
         _synthesizer.delegate = self;
-
+#endif
+#if FROTZ_ENABLE_DICTATION
         _audioEngine = [[AVAudioEngine alloc] init];
         _speechRecognizer = [[SFSpeechRecognizer alloc] initWithLocale:[NSLocale localeWithLocaleIdentifier:@"en-US"]];
         _speechRecognizer.queue = [NSOperationQueue mainQueue];
+#endif
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioSessionInterrupted:)
                                                     name:AVAudioSessionInterruptionNotification object:nil];
         NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
@@ -208,6 +214,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)updateSpeechRecognizer {
+    if (!FROTZ_ENABLE_DICTATION) return;
     NSString *language = self.effectiveRecognitionLanguage;
     if ([_speechRecognizer.locale.localeIdentifier isEqualToString:language]) return;
     if (_speechRecognizer) [self stopListening];
@@ -226,11 +233,15 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (BOOL)ttsEnabled {
-    return _voiceMode == VoiceModeTTSOnly || _voiceMode == VoiceModeBoth;
+    return FROTZ_ENABLE_NARRATION && (_voiceMode == VoiceModeTTSOnly || _voiceMode == VoiceModeBoth);
 }
 
 - (BOOL)sttEnabled {
-    return _voiceMode == VoiceModeSTTOnly || _voiceMode == VoiceModeBoth;
+    return FROTZ_ENABLE_DICTATION && (_voiceMode == VoiceModeSTTOnly || _voiceMode == VoiceModeBoth);
+}
+
+- (VoiceMode)voiceMode {
+    return (VoiceMode)((self.ttsEnabled ? VoiceModeTTSOnly : 0) | (self.sttEnabled ? VoiceModeSTTOnly : 0));
 }
 
 - (BOOL)isSpeaking {
@@ -268,6 +279,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)speakAccessibilityText:(NSString *)text {
+    if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) return;
     NSString *trimmed = [text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     if (!self.isVoiceOverEnabled || trimmed.length == 0) return;
     [self stopListening];
@@ -624,6 +636,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)speakVoiceText:(NSString *)text inView:(RichTextView *)view {
+    if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) return;
     if (text.length == 0) return;
     if (self.isVoiceOverEnabled) {
         [self speakAccessibilityText:text];
@@ -746,6 +759,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 #pragma mark - STT
 
 - (void)requestSTTPermissionsWithCompletion:(void (^)(BOOL granted))completion {
+    if (!FROTZ_ENABLE_DICTATION) { completion(NO); return; }
     [SFSpeechRecognizer requestAuthorization:^(SFSpeechRecognizerAuthorizationStatus status) {
         if (status != SFSpeechRecognizerAuthorizationStatusAuthorized) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -987,6 +1001,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)audioSessionInterrupted:(NSNotification *)notification {
+    if (self.voiceMode == VoiceModeOff && !self.isSpeaking && !self.isListening) return;
     if ([notification.userInfo[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue] != AVAudioSessionInterruptionTypeBegan)
         return;
     dispatch_async(dispatch_get_main_queue(), ^{
