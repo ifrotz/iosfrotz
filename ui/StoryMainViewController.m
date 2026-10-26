@@ -2594,8 +2594,11 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
         return;
 
     [m_storyView setBackgroundColor: color];
-    
-    [m_background setBackgroundColor: m_defaultBGColor];
+
+    // The paging background shows around the story view (it is what sits behind the Duo's button
+    // strip), so it follows the color actually in effect, not just the settings default. Games
+    // like Photopia change the background color as they go.
+    [m_background setBackgroundColor: color];
 
     [self setNavBarTint];
     
