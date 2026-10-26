@@ -98,6 +98,7 @@ typedef NS_ENUM(NSInteger, VoiceFeedback) {
 - (void)resumeSpeaking;
 
 // Spoiler-safe command context comes only from displayed text and player input.
+@property (nonatomic) BOOL speakCommandConfirmations; // persisted, default YES; VoiceOver announces independently
 @property (nonatomic) VoiceCommandConfirmationMode commandConfirmationMode; // persisted, default Off
 @property (nonatomic, readonly) NSString *commandConfirmationDescription;
 @property (nonatomic, readonly) BOOL recognizedCommandNeedsConfirmation; // uncertainty, independent of the preference

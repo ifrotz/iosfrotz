@@ -9,6 +9,33 @@
 #import "FrotzInfo.h"
 #import <objc/runtime.h>
 
+// Each case owns these preferences, including when rerunning a previously used QA app.
+@interface VoicePreferenceIsolatedTestCase : XCTestCase
+@property (nonatomic, copy) NSDictionary<NSString *, id> *savedFeaturePreferences;
+@end
+@implementation VoicePreferenceIsolatedTestCase
+- (void)setUp {
+    [super setUp];
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSMutableDictionary *saved = [NSMutableDictionary dictionary];
+    for (NSString *key in @[@"FrotzSpeakCommandConfirmations", @"FrotzNarrationAvailable", @"FrotzDictationAvailable"]) {
+        saved[key] = [defaults objectForKey:key] ?: NSNull.null;
+        [defaults removeObjectForKey:key];
+    }
+    self.savedFeaturePreferences = saved;
+}
+- (void)tearDown {
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    for (NSString *key in self.savedFeaturePreferences) {
+        id value = self.savedFeaturePreferences[key];
+        if (value == NSNull.null) [defaults removeObjectForKey:key];
+        else [defaults setObject:value forKey:key];
+    }
+    self.savedFeaturePreferences = nil;
+    [super tearDown];
+}
+@end
+
 @interface FrotzSettingsController (ConfirmationTesting)
 - (void)create_UISwitches;
 @end
@@ -88,6 +115,7 @@
 @end
 
 @interface VoiceManager (Testing)
+@property (nonatomic) BOOL speakCommandConfirmations;
 + (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices;
 + (AVSpeechSynthesisVoice *)automaticVoiceFromVoices:(NSArray<AVSpeechSynthesisVoice *> *)voices language:(NSString *)language;
 + (NSString *)languageFromBlorbAtPath:(NSString *)path;
@@ -336,7 +364,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 - (AVAudioSession *)recordingAudioSession { return (id)self.session; }
 @end
 
-@interface FrotzVoiceTests : XCTestCase
+@interface FrotzVoiceTests : VoicePreferenceIsolatedTestCase
 @property TestVoiceManager *manager;
 @property TestAudioEngine *engine;
 @property TestSpeechRecognizer *recognizer;
@@ -431,6 +459,41 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         [self sendAlternatives:@[@"bake down"] confidence:0.95];
         XCTAssertEqual(controller.submittedCommands.count, 0u);
         XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"bake down");
+    }];
+}
+- (void)testSpokenConfirmationPreferenceDefaultsOnAndPersistsOff {
+    [self withSavedVoiceDefaults:^(NSUserDefaults *defaults) {
+        [defaults removeObjectForKey:@"FrotzSpeakCommandConfirmations"];
+        VoiceManager *fresh = [VoiceManager new];
+        XCTAssertTrue(fresh.speakCommandConfirmations);
+        fresh.speakCommandConfirmations = NO;
+        [fresh savePreferences];
+        XCTAssertFalse([VoiceManager new].speakCommandConfirmations);
+    }];
+}
+- (void)testSilentConfirmationDoesNotSpeakButRemainsAvailableToVoiceOver {
+    VoiceManager *manager = [VoiceManager new];
+    manager.voiceMode = VoiceModeSTTOnly;
+    manager.speakCommandConfirmations = NO;
+    TestSynthesizer *synth = [TestSynthesizer new];
+    [manager setValue:synth forKey:@"synthesizer"];
+    [manager speakConfirmationPrompt:@"Say confirm, retry or cancel."];
+    XCTAssertEqual(synth.utterances, 0u);
+    self.manager.speakCommandConfirmations = NO;
+    self.manager.voiceOverRunning = YES;
+    [self.manager speakConfirmationPrompt:@"Say confirm, retry or cancel."];
+    XCTAssertEqualObjects(self.manager.announcements.lastObject, @"Say confirm, retry or cancel.");
+    [manager stopSpeaking];
+}
+- (void)testSilentPromptStartsConfirmationCaptureWithoutSubmittingTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.speakCommandConfirmations = NO;
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4];
+        [self drainCallbacks];
+        XCTAssertEqual(controller.submittedCommands.count, 0u);
+        XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"bake down");
+        XCTAssertTrue(self.manager.isListening);
     }];
 }
 - (void)testFailedRecordingPreflightReleasesAudioRetainedForHandoff {
@@ -1219,7 +1282,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 }
 - (void)testSelectedVoicePersistsAndMissingVoiceFallsBack {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode", @"FrotzSpeakCommandConfirmations"];
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
     for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: [NSNull null];
     @try {
@@ -1358,7 +1421,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 }
 - (void)withSavedVoiceDefaults:(void (^)(NSUserDefaults *defaults))test {
     NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
-    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode"];
+    NSArray *keys = @[@"FrotzVoiceMode", @"FrotzSpeechRate", @"FrotzSpeechVoiceIdentifier", @"FrotzSpeechRecognitionLanguage", @"FrotzVoiceCommandConfirmationEnabled", @"FrotzVoiceCommandConfirmationMode", @"FrotzSpeakCommandConfirmations"];
     NSMutableDictionary *saved = [NSMutableDictionary dictionary];
     for (NSString *key in keys) saved[key] = [defaults objectForKey:key] ?: NSNull.null;
     @try { test(defaults); }
@@ -2003,7 +2066,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 #ifndef FROTZ_ENABLE_DICTATION
 #define FROTZ_ENABLE_DICTATION 1
 #endif
-@interface VoiceFeatureGateTests : XCTestCase
+@interface VoiceFeatureGateTests : VoicePreferenceIsolatedTestCase
 @end
 @implementation VoiceFeatureGateTests
 - (void)testDisabledFeaturesCannotBecomeEffectiveOrOverwriteSavedMode {

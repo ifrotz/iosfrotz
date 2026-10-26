@@ -15,6 +15,7 @@ static NSString *const kSpeechRateKey = @"FrotzSpeechRate";
 static NSString *const kSpeechVoiceKey = @"FrotzSpeechVoiceIdentifier";
 static NSString *const kRecognitionLanguageKey = @"FrotzSpeechRecognitionLanguage";
 static NSString *const kLegacyCommandConfirmationKey = @"FrotzVoiceCommandConfirmationEnabled";
+static NSString *const kSpeakCommandConfirmationsKey = @"FrotzSpeakCommandConfirmations";
 static NSString *const kCommandConfirmationModeKey = @"FrotzVoiceCommandConfirmationMode";
 
 // Only bibliographic language is used; story text is never inspected or sent for detection.
@@ -80,6 +81,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     // TTS state
     NSString *_currentUtteranceText;  // full text of current utterance for range mapping
     BOOL _isPaused;
+    BOOL _speakingConfirmation;
     AVSpeechUtterance *_activeUtterance;
     NSMutableArray<AVSpeechUtterance *> *_speechParagraphs;
     NSMapTable<AVSpeechUtterance *, NSNumber *> *_speechOffsets;
@@ -304,6 +306,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     if (!_accessibilityAnnouncement || ![notification.userInfo[UIAccessibilityAnnouncementKeyStringValue] isEqual:_accessibilityAnnouncement])
         return;
     _accessibilityAnnouncement = nil;
+    _speakingConfirmation = NO;
     if ([notification.userInfo[UIAccessibilityAnnouncementKeyWasSuccessful] boolValue]) {
         [self.delegate voiceManagerDidFinishSpeaking];
     } else {
@@ -573,6 +576,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)speakText:(NSString *)text inView:(RichTextView *)view {
     if (!self.ttsEnabled) return;
+    _speakingConfirmation = NO;
     [self rememberStoryResponse:text];
     [self speakVoiceText:text inView:view];
 }
@@ -643,8 +647,11 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)speakConfirmationPrompt:(NSString *)text {
+    if (!FROTZ_ENABLE_DICTATION) return;
     [self stopSpeaking];
+    if (!self.speakCommandConfirmations && !self.isVoiceOverEnabled) return;
     [self speakVoiceText:text inView:nil];
+    _speakingConfirmation = self.isSpeaking;
 }
 
 - (void)speakVoiceText:(NSString *)text inView:(RichTextView *)view {
@@ -690,6 +697,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 }
 
 - (void)stopSpeaking {
+    _speakingConfirmation = NO;
     _accessibilityAnnouncement = nil;
     _activeUtterance = nil;
     _speechParagraphs = nil;
@@ -747,6 +755,7 @@ static float rateMultiplierToAVRate(float multiplier) {
     _activeUtterance = nil;
     _currentUtteranceText = nil;
     _isPaused = NO;
+    _speakingConfirmation = NO;
     [self clearHighlight];
     NSLog(@"Voice speech finished");
     [self.delegate voiceManagerDidFinishSpeaking];
@@ -1057,6 +1066,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)savePreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:self.speakCommandConfirmations forKey:kSpeakCommandConfirmationsKey];
     [defaults setInteger:self.commandConfirmationMode forKey:kCommandConfirmationModeKey];
     [defaults setInteger:_voiceMode forKey:kVoiceModeKey];
     [defaults setFloat:_speechRate forKey:kSpeechRateKey];
@@ -1067,6 +1077,7 @@ static float rateMultiplierToAVRate(float multiplier) {
 
 - (void)loadPreferences {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    _speakCommandConfirmations = [defaults objectForKey:kSpeakCommandConfirmationsKey] ? [defaults boolForKey:kSpeakCommandConfirmationsKey] : YES;
     if ([defaults objectForKey:kCommandConfirmationModeKey]) {
         NSInteger storedMode = [defaults integerForKey:kCommandConfirmationModeKey];
         self.commandConfirmationMode = storedMode >= VoiceCommandConfirmationOff && storedMode <= VoiceCommandConfirmationAlways
