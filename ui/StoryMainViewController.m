@@ -1358,6 +1358,7 @@ static void setColorTable(RichTextView *v) {
     int viewNum = [arg[0] intValue];
     CGRect r = [arg[1] CGRectValue];
     RichTextView *v = m_glkViews[viewNum];
+    if (v == m_voicePresentationOwner) [self restoreVoicePresentationFrame];
     //NSLog(@"resizeglk: %d : (%f,%f,%f,%f)", viewNum, r.origin.x, r.origin.y, r.size.width, r.size.height);
     if (v) {
         r.origin.x /= kIOSGlkScaleFactor;
@@ -1403,11 +1404,19 @@ static void setColorTable(RichTextView *v) {
             [v setFrame: r];
         }
     }
+    [self refreshVoicePresentationForInputWindow];
 }
 
 -(void)destroyGlkView:(NSNumber*)arg {
     int viewNum = [arg intValue];
     if (viewNum >= 0) {
+        if (m_glkViews[viewNum] == m_voicePresentationOwner) {
+            [self clearPendingVoiceCommand];
+            ++m_voiceRestartGeneration;
+            m_voiceListenPending = NO;
+            [[VoiceManager shared] stopListening];
+            [self restoreVoicePresentationFrame];
+        }
         if (glkGridArray[viewNum].win->type == wintype_Graphics)
             freeGlkViewImageCache(viewNum);
 
@@ -1430,6 +1439,7 @@ static void setColorTable(RichTextView *v) {
                 m_glkViews[viewNum] = [NSNull null];
         }        
     }
+    [self refreshVoicePresentationForInputWindow];
 }
 
 -(void)setGlkBGColor:(NSNumber*)arg {
@@ -1441,6 +1451,7 @@ static void setColorTable(RichTextView *v) {
         CGFloat blue = (color & 0xff) / 255.0;
         UIColor *bgColor = [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
         [m_glkViews[winNum] setBackgroundColor: bgColor];
+        [self updateVoiceControlBar];
     }
 }
 
@@ -1624,7 +1635,14 @@ extern void gli_ios_set_focus(window_t *winNum);
             window_t *win = glkGridArray[winNum].win;
             if (win && (win->char_request || win->line_request)) {
                 gli_ios_set_focus(win); 	// bcs??? cross-thread unsafe
+                if (cwin != (int)winNum) {
+                    [self clearPendingVoiceCommand];
+                    ++m_voiceRestartGeneration;
+                    m_voiceListenPending = NO;
+                    [[VoiceManager shared] stopListening];
+                }
                 cwin = (int)winNum;
+                [self refreshVoicePresentationForInputWindow];
                 [m_inputLine updatePosition];
             }
         }
@@ -2388,6 +2406,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 }
 
 - (void)autosize {
+    [self restoreVoicePresentationFrame];
     BOOL regularWidth = [self isRegularWidth];
     BOOL compactHeight = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
     iosif_regular_width = regularWidth;
@@ -2422,24 +2441,11 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // iOS 8 seems to be auto-restoring the first responder and bringing the keyboard back when you return to the story from the
     // story list, which we never had to deal with before.  Worse, sometimes keyboardDidShow notification happens after viewDidAppear,
     // and sometimes BEFORE, so we have to handle it here as well. If KB is already shown, adjust frame accordingly.
-    BOOL voiceOverlayVisible = m_voiceTapOverlay && [VoiceManager shared].voiceMode != VoiceModeOff;
-    CGFloat overlayHeight = 0;
-    CGFloat typingHeight = voiceOverlayVisible && m_inputLine.isFirstResponder ? MAX(44, ceil(m_inputLine.font.lineHeight) + 8) : 0;
-
-    if (m_kbShown) {
-        frame.size.height -= m_kbdSize.height;
-        [m_storyView setBottomMargin: 8];
-    }
-    if (voiceOverlayVisible) {
-        overlayHeight = [self voiceControlBarHeightForWidth:frame.size.width];
-        if (!m_kbShown) overlayHeight += self.view.safeAreaInsets.bottom;
-        frame.size.height -= overlayHeight;
-        frame.size.height -= typingHeight;
-        [m_storyView setBottomMargin: 8];
-    } else {
-        [m_storyView setBottomMargin: self.view.safeAreaInsets.bottom];
-    }
-    [m_storyView setFrame: frame];
+    if (m_kbShown) frame.size.height -= m_kbdSize.height;
+    [m_storyView setBottomMargin:m_kbShown ? 8 : self.view.safeAreaInsets.bottom];
+    // Glk owns its leaf rectangles. Resizing the root leaf here can cover maps
+    // and sibling text windows; its normal resize callbacks handle the canvas.
+    if (gStoryInterp != kGlxStory) [m_storyView setFrame:frame];
 
     [self layoutStatusLine];
 
@@ -2448,17 +2454,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_notesController autosize];
     [self resizeStatusWindow];
 
-    // Position voice tap overlay below story view (like the keyboard)
-    if (voiceOverlayVisible) {
-        m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
-        m_voiceTapOverlay.frame = CGRectMake(0, CGRectGetMaxY(frame) + typingHeight, frame.size.width, overlayHeight);
-        if (!m_voiceTapOverlay.superview) {
-            [m_background addSubview:m_voiceTapOverlay];
-        }
-        [m_background bringSubviewToFront:m_voiceTapOverlay];
-    } else if (m_voiceTapOverlay && m_voiceTapOverlay.superview) {
-        [m_voiceTapOverlay removeFromSuperview];
-    }
+    [self refreshVoicePresentationForInputWindow];
 }
 
 // The status line is a full-width banner across its superview (the paging background), but its
@@ -2480,12 +2476,52 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [self layoutStatusLineWithHeight: m_statusLine.frame.size.height];
 }
 
--(CGRect)voiceKeyboardInputFrame {
-    if (!m_inputLine.isFirstResponder || !m_voiceTapOverlay.superview || [VoiceManager shared].voiceMode == VoiceModeOff)
-        return CGRectNull;
-    CGFloat height = MAX(44, ceil(m_inputLine.font.lineHeight) + 8);
-    return CGRectMake(8, CGRectGetMinY(m_voiceTapOverlay.frame) - height,
-                      MAX(0, m_voiceTapOverlay.bounds.size.width - 16), height);
+-(RichTextView *)voiceInputView {
+    if (gStoryInterp != kGlxStory) return (id)m_storyView;
+    if (cwin < 0 || cwin >= m_glkViews.count) return nil;
+    window_t *win = glkGridArray[cwin].win;
+    // Fixed grids keep every game-owned row. Never attach an accessory to a
+    // graphics window or a closed/reused window slot.
+    if (!win || win->type != wintype_TextBuffer || glkGridArray[cwin].pendingClose) return nil;
+    id view = m_glkViews[cwin];
+    return [view isKindOfClass:RichTextView.class] ? view : nil;
+}
+
+-(void)restoreVoicePresentationFrame {
+    if (m_voicePresentationOwner) m_voicePresentationOwner.frame = m_voiceOwnerFrame;
+    m_voicePresentationOwner = nil;
+}
+
+-(void)refreshVoicePresentationForInputWindow {
+    RichTextView *owner = [self voiceInputView];
+    if (!m_voiceTapOverlay || [VoiceManager shared].voiceMode == VoiceModeOff
+        || !owner.superview || !m_background) {
+        [self restoreVoicePresentationFrame];
+        [m_voiceTapOverlay removeFromSuperview];
+        return;
+    }
+    if (m_voicePresentationOwner != owner) [self restoreVoicePresentationFrame];
+    CGRect original = m_voicePresentationOwner == owner ? m_voiceOwnerFrame : owner.frame;
+    CGFloat height = [self voiceControlBarHeightForWidth:original.size.width];
+    CGRect converted = [m_background convertRect:original fromView:owner.superview];
+    if (!m_kbShown && fabs(CGRectGetMaxY(converted) - CGRectGetHeight(m_background.bounds)) < 2)
+        height += self.view.safeAreaInsets.bottom;
+    // A tiny text window must retain its input line. Toolbar/accessibility
+    // controls remain available until the story returns to a roomy buffer.
+    if (original.size.height < height + MAX(44, m_inputLine.font.lineHeight + 2)) {
+        [self restoreVoicePresentationFrame];
+        [m_voiceTapOverlay removeFromSuperview];
+        return;
+    }
+    m_voicePresentationOwner = owner;
+    m_voiceOwnerFrame = original;
+    CGRect textFrame = original;
+    textFrame.size.height -= height;
+    if (!CGRectEqualToRect(owner.frame, textFrame)) owner.frame = textFrame;
+    m_voiceTapOverlay.frame = CGRectMake(converted.origin.x, CGRectGetMaxY(converted) - height, converted.size.width, height);
+    [m_background addSubview:m_voiceTapOverlay];
+    [self updateVoiceControlBar];
+    m_inputLine.backgroundColor = UIColor.clearColor;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -2739,6 +2775,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // strip), so it follows the color actually in effect, not just the settings default. Games
     // like Photopia change the background color as they go.
     [m_background setBackgroundColor: color];
+    [self updateVoiceControlBar];
 
     [self setNavBarTint];
     
@@ -2765,6 +2802,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_statusLine setBackgroundColor: color];
 #endif
     [m_inputLine setTextColor: color];
+    [self updateVoiceControlBar];
     [m_storyView setNeedsLayout];
     [m_statusLine setNeedsLayout];
 }
@@ -3558,6 +3596,7 @@ static int iosif_top_win_height = 1;
     } else
         continuousPrintCount = 0;
 
+    [self refreshVoicePresentationForInputWindow];
     [self speakPendingVoiceOutput];
     [self scheduleVoiceListening];
 
@@ -5717,7 +5756,8 @@ static BOOL migateDropboxAuth() {
     if (!m_voiceTapOverlay) return;
     VoiceManager *vm = [VoiceManager shared];
     m_voiceTapOverlay.isAccessibilityElement = NO;
-    m_voiceTapOverlay.backgroundColor = m_defaultBGColor;
+    RichTextView *owner = [self voiceInputView] ?: (id)m_storyView;
+    m_voiceTapOverlay.backgroundColor = [owner getCurrentBackgroundColor] ?: m_defaultBGColor;
     m_voiceMicButton.hidden = !vm.sttEnabled;
     BOOL speaking = vm.isSpeaking;
     m_voiceSpeechButton.hidden = !vm.ttsEnabled && !speaking && !vm.lastStoryResponse.length;
@@ -5741,7 +5781,7 @@ static BOOL migateDropboxAuth() {
         button.titleLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
         button.titleLabel.adjustsFontForContentSizeCategory = YES;
         button.titleLabel.numberOfLines = 2;
-        button.tintColor = vm.isListening && button == m_voiceMicButton ? UIColor.systemRedColor : (m_background.tintColor ?: UIColor.systemBlueColor);
+        button.tintColor = vm.isListening && button == m_voiceMicButton ? UIColor.systemRedColor : ([owner getCurrentTextColor] ?: m_defaultFGColor ?: UIColor.systemBlueColor);
         [button setTitleColor:button.tintColor forState:UIControlStateNormal];
     }
     if (preparing) {
@@ -5760,7 +5800,7 @@ static BOOL migateDropboxAuth() {
     m_voiceTapOverlay.accessibilityHint = m_voiceMicButton.accessibilityHint;
     UILabel *hint = [m_voiceTapOverlay viewWithTag:998];
     hint.hidden = !m_pendingVoiceCommand && !m_voiceInputError;
-    hint.textColor = m_defaultFGColor;
+    hint.textColor = [([self voiceInputView] ?: (id)m_storyView) getCurrentTextColor] ?: m_defaultFGColor;
     hint.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
     if (m_voiceInputError && !m_pendingVoiceCommand) hint.text = m_voiceInputError;
     [self updateVoiceReplayActions];
@@ -5918,7 +5958,7 @@ static BOOL migateDropboxAuth() {
             : (vm.isListening ? [NSString stringWithFormat:@"Say %@, %@ or %@", controls[0], controls[1], controls[2]] : @"Tap to answer, or use the buttons"));
     hint.text = [NSString stringWithFormat:@"Heard: %@\n%@", m_pendingVoiceCommand, state];
     hint.accessibilityLabel = hint.text;
-    hint.textColor = m_defaultFGColor;
+    hint.textColor = [([self voiceInputView] ?: (id)m_storyView) getCurrentTextColor] ?: m_defaultFGColor;
 }
 
 -(void)speakPendingVoiceConfirmation {
@@ -6034,7 +6074,7 @@ static BOOL migateDropboxAuth() {
     [self updateVoiceReplayActions];
 
     // Visual feedback: tint the input line and update mic overlay
-    [m_inputLine setBackgroundColor:[UIColor colorWithRed:1.0 green:0.9 blue:0.9 alpha:1.0]];
+    [m_inputLine setBackgroundColor:UIColor.clearColor];
     UIImageView *micIcon = [m_voiceTapOverlay viewWithTag:999];
     if (micIcon) {
         micIcon.tintColor = [[UIColor systemRedColor] colorWithAlphaComponent:0.8];
@@ -6048,7 +6088,7 @@ static BOOL migateDropboxAuth() {
         [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackStopped];
 
     // Reset input line background and mic overlay
-    [m_inputLine setBackgroundColor:m_defaultBGColor];
+    [m_inputLine setBackgroundColor:UIColor.clearColor];
     [self resetTapOverlayToMicIdle];
 }
 
@@ -6057,7 +6097,7 @@ static BOOL migateDropboxAuth() {
     m_voiceAutoListenReady = NO;
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
-    [m_inputLine setBackgroundColor:m_defaultBGColor];
+    [m_inputLine setBackgroundColor:UIColor.clearColor];
     [self updateVoiceButtonIcons];
     [self resetTapOverlayToMicIdle];
     UILabel *hint = (UILabel *)[m_voiceTapOverlay viewWithTag:998];

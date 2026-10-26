@@ -149,6 +149,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return m_currentTextColorIndex;
 }
 
+-(UIColor*)getCurrentBackgroundColor {
+    return m_currBgColor ?: m_bgColor ?: self.backgroundColor;
+}
+
 -(UIColor*)getCurrentTextColor {
     UIColor *c = m_fgColor;
     NSUInteger index = m_currentTextColorIndex;

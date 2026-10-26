@@ -141,6 +141,7 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 - (void)prepareForKeyboardShowHide;
 - (void)rememberTopLineForReflow;
 @property (nonatomic, getter=getCurrentTextColor, readonly, copy) UIColor *currentTextColor;
+@property (nonatomic, getter=getCurrentBackgroundColor, readonly, copy) UIColor *currentBackgroundColor;
 - (void)resetColors;
 - (void)resetMargins;
 - (void)setNiceMargins:(BOOL)reflow;

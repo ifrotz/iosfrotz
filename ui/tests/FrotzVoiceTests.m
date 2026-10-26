@@ -29,6 +29,8 @@
 - (void)keyboardDidShow:(NSNotification *)notification;
 - (CGFloat)voiceControlBarHeightForWidth:(CGFloat)width;
 - (BOOL)canAcceptVoiceInput;
+- (RichTextView *)voiceInputView;
+- (void)refreshVoicePresentationForInputWindow;
 - (void)setupVoiceTapOverlay;
 - (BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action;
 - (void)startVoiceListeningAnimation;
@@ -39,9 +41,11 @@
 
 @interface TestStoryController : StoryMainViewController
 @property NSMutableArray<NSString *> *submittedCommands;
+@property RichTextView *voiceOwnerOverride;
 @end
 @implementation TestStoryController
 - (BOOL)canAcceptVoiceInput { return YES; }
+- (RichTextView *)voiceInputView { return self.voiceOwnerOverride ?: [super voiceInputView]; }
 - (void)autosize {} // Keep keyboard-layout work outside these voice-state tests.
 - (void)textFieldFakeDidEndEditing:(UITextField *)field {
     if (!self.submittedCommands) self.submittedCommands = [NSMutableArray array];
@@ -358,7 +362,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         XCTAssertEqualObjects(speech.accessibilityLabel, @"Stop reading");
     }];
 }
-- (void)testTypedCommandStaysAboveTheVoiceBarInsteadOfCoveringTheMicrophone {
+- (void)testTypedCommandStaysInlineAndTransparentWithVoiceEnabled {
     [self withAutomaticListeningController:^(TestStoryController *controller) {
         UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
         UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
@@ -372,11 +376,95 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         input.delegate = controller;
         [background addSubview:input];
         [controller setValue:input forKey:@"m_inputLine"];
+        input.font = [UIFont systemFontOfSize:17];
+        int savedInput = ipzAllowInput;
+        ipzAllowInput = kIPZRequestInput;
         [input updatePosition];
-        XCTAssertEqualWithAccuracy(CGRectGetMaxY(input.frame), 500, 0.1);
-        XCTAssertGreaterThanOrEqual(input.bounds.size.height, 44);
+        ipzAllowInput = savedInput;
+        XCTAssertLessThan(CGRectGetMaxY(input.frame), 500);
+        XCTAssertEqualWithAccuracy(input.bounds.size.height, input.font.lineHeight + 2, 0.1);
         XCTAssertFalse(CGRectIntersectsRect(input.frame, bar.frame));
-        XCTAssertEqualObjects(input.backgroundColor, paper, @"The typing row must cover story text underneath it");
+        XCTAssertTrue(input.backgroundColor == nil || CGColorGetAlpha(input.backgroundColor.CGColor) == 0);
+        XCTAssertNil(input.placeholder);
+    }];
+}
+- (void)testListeningPreservesTransparentInputAndCurrentStoryColors {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        StoryInputLine *input = [controller valueForKey:@"m_inputLine"];
+        input.backgroundColor = UIColor.clearColor;
+        [controller voiceManagerDidStartListening];
+        XCTAssertEqual(CGColorGetAlpha(input.backgroundColor.CGColor), 0);
+        UIColor *paper = [UIColor colorWithRed:0.2 green:0.3 blue:0.4 alpha:1];
+        [controller setBackgroundColor:paper makeDefault:NO];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualObjects(bar.backgroundColor, paper);
+        [controller voiceManagerDidStopListening];
+        XCTAssertEqual(CGColorGetAlpha(input.backgroundColor.CGColor), 0);
+        XCTAssertEqualObjects(bar.backgroundColor, paper);
+    }];
+}
+- (void)testVoiceAccessoryFollowsInputOwnerWithoutResizingSiblingWindows {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+        [controller setValue:background forKey:@"m_background"];
+        RichTextView *first = (id)controller.storyView;
+        first.frame = CGRectMake(0, 0, 160, 480);
+        [background addSubview:first];
+        UIView *map = [[UIView alloc] initWithFrame:CGRectMake(160, 0, 160, 480)];
+        [background addSubview:map];
+        RichTextView *second = [[RichTextView alloc] initWithFrame:CGRectMake(0, 100, 160, 380)];
+        second.backgroundColor = UIColor.brownColor;
+        [background addSubview:second];
+        controller.voiceOwnerOverride = first;
+        [controller refreshVoicePresentationForInputWindow];
+        CGFloat reducedHeight = first.frame.size.height;
+        XCTAssertLessThan(reducedHeight, 480);
+        [controller refreshVoicePresentationForInputWindow];
+        XCTAssertEqualWithAccuracy(first.frame.size.height, reducedHeight, 0.1);
+        controller.voiceOwnerOverride = second;
+        [controller refreshVoicePresentationForInputWindow];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualWithAccuracy(first.frame.size.height, 480, 0.1);
+        XCTAssertEqualWithAccuracy(CGRectGetMaxY(bar.frame), 480, 0.1);
+        XCTAssertEqualObjects(bar.backgroundColor, UIColor.brownColor);
+        XCTAssertFalse(CGRectIntersectsRect(bar.frame, map.frame));
+        XCTAssertTrue(CGRectEqualToRect(map.frame, CGRectMake(160, 0, 160, 480)));
+        [second removeFromSuperview];
+        [controller refreshVoicePresentationForInputWindow];
+        XCTAssertNil(bar.superview);
+    }];
+}
+- (void)testAccessoryRefreshPreservesTheGamesInputColorAndScrollPosition {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+        [controller setValue:background forKey:@"m_background"];
+        RichTextView *story = (id)controller.storyView;
+        story.frame = CGRectMake(0, 0, 320, 480);
+        [background addSubview:story];
+        [story setTextColor:UIColor.blackColor];
+        [controller inputLine].textColor = UIColor.magentaColor; // e.g. a game-owned upper-window prompt
+        [controller refreshVoicePresentationForInputWindow];
+        XCTAssertEqualObjects([controller inputLine].textColor, UIColor.magentaColor);
+        story.contentSize = CGSizeMake(320, 600);
+        story.contentOffset = CGPointMake(0, 150);
+        [controller refreshVoicePresentationForInputWindow];
+        XCTAssertEqualWithAccuracy(story.contentOffset.y, 150, 0.1);
+    }];
+}
+- (void)testAccessoryUsesTheActiveGamePaletteWithoutAnExtraTurn {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+        [controller setValue:background forKey:@"m_background"];
+        RichTextView *story = (id)controller.storyView;
+        [background addSubview:story];
+        story.backgroundColor = UIColor.yellowColor;
+        [story getOrAllocColorIndex:UIColor.orangeColor]; // index1 is the renderer's default sentinel
+        story.bgColorIndex = [story getOrAllocColorIndex:UIColor.blackColor];
+        story.textColorIndex = [story getOrAllocColorIndex:UIColor.whiteColor];
+        [controller refreshVoicePresentationForInputWindow];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertEqualObjects(bar.backgroundColor, UIColor.blackColor);
+        XCTAssertEqualObjects(((UIButton *)[bar viewWithTag:904]).tintColor, UIColor.whiteColor);
     }];
 }
 - (void)testFloatingAndPhysicalKeyboardsDoNotReserveAFullKeyboardHeight {
