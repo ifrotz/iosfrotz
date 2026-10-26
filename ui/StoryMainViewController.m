@@ -4401,8 +4401,29 @@ static void setScreenDims(char *storyNameBuf) {
     return inputsSinceSaveRestore != 0;
 }
 
+// Drop the system AutoFill group (contacts, passwords, ...) from the input line's edit menu; it is
+// never useful for a parser command line. Paste and the other suggested actions are kept.
+- (UIMenu *)textField:(UITextField *)textField editMenuForCharactersInRange:(NSRange)range
+     suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(16.0)) {
+    NSMutableArray<UIMenuElement *> *actions = [NSMutableArray arrayWithCapacity: [suggestedActions count]];
+    for (UIMenuElement *element in suggestedActions) {
+        if ([element isKindOfClass: [UIMenu class]]) {
+            UIMenu *menu = (UIMenu *)element;
+            BOOL isAutoFill;
+            if (@available(iOS 17.0, *))
+                isAutoFill = [menu.identifier isEqualToString: UIMenuAutoFill];
+            else // iOS 16 has no public identifier for the group; fall back to its (English) title
+                isAutoFill = [menu.title isEqualToString: @"AutoFill"];
+            if (isAutoFill)
+                continue;
+        }
+        [actions addObject: element];
+    }
+    return [UIMenu menuWithChildren: actions];
+}
+
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    
+
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
         return NO;
