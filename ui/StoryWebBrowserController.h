@@ -47,7 +47,8 @@ typedef WKWebView StoryWebView;
     SWBDownloadState m_state;
     BOOL m_backToStoryList;
     BOOL m_storyAlreadyInstalled;
-    BOOL m_didInitialLayout;
+    CGRect m_laidOutBounds;           // geometry the subviews were last laid out for; see
+    UIEdgeInsets m_laidOutSafeInsets; // viewWillLayoutSubviews
     NSMutableArray *m_expectedArchiveFiles;
 }
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb NS_DESIGNATED_INITIALIZER;

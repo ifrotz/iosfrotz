@@ -123,30 +123,49 @@ const NSString *kBookmarkVersionKey = @"Version";
 
 -(void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    // One-time initial layout from the real bounds and safe area (this used to be done in loadView
-    // from the screen bounds and the key window's insets). Later changes are handled by the
-    // autoresizing masks and by the URL bar/bookmark code, which adjust these frames themselves.
-    if (m_didInitialLayout)
-        return;
-    m_didInitialLayout = YES;
-
-    CGRect frame = self.view.bounds;
+    // Lay the subviews out from the real bounds and safe area (this used to be done once in
+    // loadView from the screen bounds and the key window's insets). Redo it whenever either
+    // changes: autoresizing follows size changes but keeps the bottom gap from the inset that was
+    // current at the time, which goes stale on rotation and on a Duo fold/unfold. Don't redo it
+    // otherwise, since the URL bar and bookmark code move these frames by animated deltas and a
+    // relayout in the middle of those would snap them back.
+    CGRect bounds = self.view.bounds;
     UIEdgeInsets safeInsets = self.view.safeAreaInsets;
-    const CGFloat toolBarHeight = m_toolBar.frame.size.height;
+    if (CGRectEqualToRect(bounds, m_laidOutBounds) && UIEdgeInsetsEqualToEdgeInsets(safeInsets, m_laidOutSafeInsets))
+        return;
+    m_laidOutBounds = bounds;
+    m_laidOutSafeInsets = safeInsets;
 
-    frame.size.height -= toolBarHeight;
+    const CGFloat toolBarHeight = m_toolBar.frame.size.height;
+    BOOL urlBarShown = [[m_urlBarController view] superview] != nil;
+    BOOL bookmarksShown = [[m_bookmarkListController view] superview] != nil;
+
+    // Everything hangs below the top safe-area inset: zero when the view sits below the navigation
+    // bar, the bar's bottom edge when the view extends under it (which varies with orientation, so
+    // no fixed bar height can stand in for it).
+    CGRect frame = bounds;
+    frame.origin.y = safeInsets.top;
+    frame.size.height -= safeInsets.top + toolBarHeight;
     [m_scrollView setFrame: frame];
 
     frame = [m_scrollView bounds];
     frame.size.height -= safeInsets.bottom;
+    CGRect toolBarFrame = CGRectMake(0, safeInsets.top + frame.size.height, frame.size.width, toolBarHeight);
+    if (urlBarShown) { // same offset promptURL applies
+        frame.origin.y += kSearchBarHeight;
+        frame.size.height -= kSearchBarHeight;
+        [[m_urlBarController view] setFrame: [self urlBarFrameHidden: NO]];
+    }
     [m_webView setFrame: frame];
+    [m_toolBar setFrame: toolBarFrame];
 
-    frame.origin.y = frame.size.height;
-    frame.size.height = toolBarHeight;
-    [m_toolBar setFrame: frame];
-
-    CGRect blistFrame = [m_webView bounds];
-    blistFrame.size.height += toolBarHeight;
+    CGRect blistFrame;
+    if (bookmarksShown) // same placement showBookmarks uses
+        blistFrame = [self bookmarkListFrame];
+    else {
+        blistFrame = [m_webView bounds];
+        blistFrame.size.height += toolBarHeight;
+    }
     [[m_bookmarkListController view] setFrame: blistFrame];
 }
 
@@ -476,6 +495,19 @@ const NSString *kBookmarkVersionKey = @"Version";
     [[[self view] layer] addAnimation:animation forKey:@"fadebar"];
 }
 
+// The URL bar sits just below the top safe-area inset (the navigation bar when the view extends
+// under it), and slides up behind it when hidden.
+-(CGRect)urlBarFrameHidden:(BOOL)hidden {
+    CGFloat top = self.view.safeAreaInsets.top;
+    return CGRectMake(0, hidden ? top - kSearchBarHeight : top, m_webView.frame.size.width, kSearchBarHeight);
+}
+
+// The bookmark list fills from below the URL bar down to the bottom of the toolbar.
+-(CGRect)bookmarkListFrame {
+    CGFloat top = self.view.safeAreaInsets.top + kSearchBarHeight;
+    return CGRectMake(0, top, m_webView.frame.size.width, CGRectGetMaxY(m_toolBar.frame) - top);
+}
+
 -(void)promptURL {
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
@@ -485,14 +517,14 @@ const NSString *kBookmarkVersionKey = @"Version";
         webFrame.origin.y += kSearchBarHeight;
         webFrame.size.height -= kSearchBarHeight;
 
-        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: YES]];
         UIView *v = [self view];
         [v addSubview: urlView];
 
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
 
-        [urlView setFrame: CGRectMake(0, 0, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: NO]];
         [v bringSubviewToFront: urlView];
         [UIView commitAnimations];
     } else {
@@ -533,7 +565,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         webFrame.size.height += kSearchBarHeight;
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
-        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: YES]];
         if ([[m_bookmarkListController view] superview]) {
             [self setupFade];
             [[m_bookmarkListController view] removeFromSuperview];
@@ -556,9 +588,8 @@ const NSString *kBookmarkVersionKey = @"Version";
     if ([[m_bookmarkListController view] superview])
         [[m_bookmarkListController view] removeFromSuperview];
     else {
-        CGRect webFrame = [m_webView frame];
         UIView *bmView = [m_bookmarkListController view];
-        [bmView setFrame: CGRectMake(0, 40+kSearchBarHeight, webFrame.size.width, webFrame.size.height+44-kSearchBarHeight)];
+        [bmView setFrame: [self bookmarkListFrame]];
         //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];
