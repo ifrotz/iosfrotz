@@ -2197,6 +2197,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     return m_landscape && self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
 }
 
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    // From iOS 26 the default style adapts to the content under each part of the status bar, which
+    // is what we want where it straddles the dark game bar and the light story text (or vice versa) [iPhone Duo].
+    // Before that "default" just follows light/dark mode, so keep the light indicators the black
+    // navigation bar used to imply (see setNavBarTint). Reached via FrotzNavigationController.
+    if (@available(iOS 26.0, *))
+        return UIStatusBarStyleDefault;
+    return UIStatusBarStyleLightContent;
+}
+
 - (void)autosize {
     BOOL regularWidth = [self isRegularWidth];
     BOOL compactHeight = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;

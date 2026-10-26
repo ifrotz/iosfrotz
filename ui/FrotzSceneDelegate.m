@@ -60,6 +60,18 @@
 }
 @end
 
+// A stock UINavigationController derives the status bar style from its bar's barStyle; this one
+// defers to the top view controller so the story screen can pick the adaptive style, which keeps
+// the indicators readable where they overlap mixed light and dark content (the Duo's status bar).
+@interface FrotzNavigationController : UINavigationController
+@end
+
+@implementation FrotzNavigationController
+- (UIViewController *)childViewControllerForStatusBarStyle {
+    return self.topViewController;
+}
+@end
+
 @implementation FrotzSceneDelegate {
     StoryBrowser *m_browser;
 }
@@ -81,7 +93,7 @@
     if (connectionOptions.shortcutItem)
         [m_browser setPostLaunch];
 
-    UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
+    UINavigationController* navigationController = [[FrotzNavigationController alloc] initWithRootViewController: [m_browser storyMainViewController]];
     [m_browser storyMainViewController].storyNavController = navigationController;
     //NSLog(@"smbc snc %@ nc %@", [m_browser storyMainViewController].storyNavController, [m_browser storyMainViewController].navigationController);
 
