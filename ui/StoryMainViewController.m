@@ -2075,8 +2075,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         toolStack.spacing = 0; // Three distinct 44-point targets; leave room for Settings.
 
         UIBarButtonItem *toolItem = [[UIBarButtonItem alloc] initWithCustomView:toolStack];
-        m_ttsToggleItem = toolItem;
-        m_sttToggleItem = toolItem;
         m_kbdToggleItem = toolItem;
         self.navigationItem.rightBarButtonItem = toolItem;
     } else {
@@ -5479,13 +5477,13 @@ static BOOL migateDropboxAuth() {
         ttsBtn.hidden = !FROTZ_ENABLE_NARRATION || !vm.narrationAvailable;
         sttBtn.hidden = !FROTZ_ENABLE_DICTATION || !vm.dictationAvailable;
         if (ttsBtn) {
-            ttsBtn.accessibilityLabel = vm.ttsEnabled ? @"Disable text to speech" : @"Enable text to speech";
+            ttsBtn.accessibilityLabel = vm.ttsEnabled ? @"Disable narration" : @"Enable narration";
             ttsBtn.accessibilityValue = vm.ttsEnabled ? @"On" : @"Off";
             [ttsBtn setImage:[[UIImage systemImageNamed:vm.ttsEnabled ? @"speaker.wave.1.fill" : @"speaker.slash"]
                               imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];
         }
         if (sttBtn) {
-            sttBtn.accessibilityLabel = vm.sttEnabled ? @"Disable speech to text" : @"Enable speech to text";
+            sttBtn.accessibilityLabel = vm.sttEnabled ? @"Disable dictation" : @"Enable dictation";
             sttBtn.accessibilityValue = vm.sttEnabled ? @"On" : @"Off";
             [sttBtn setImage:[[UIImage systemImageNamed:vm.sttEnabled ? @"mic.fill" : @"mic.slash"]
                               imageByApplyingSymbolConfiguration:smallConfig] forState:UIControlStateNormal];

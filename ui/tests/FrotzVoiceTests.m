@@ -813,7 +813,7 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
             [controller setupVoiceToolbar];
             [controller updateVoiceButtonIcons];
             UIButton *config = [controller.navigationItem.rightBarButtonItem.customView viewWithTag:901];
-            XCTAssertEqualObjects(config.accessibilityLabel, @"Disable text to speech");
+            XCTAssertEqualObjects(config.accessibilityLabel, @"Disable narration");
             [controller toggleTTS];
             XCTAssertFalse(self.manager.ttsEnabled);
             XCTAssertTrue(self.manager.sttEnabled);

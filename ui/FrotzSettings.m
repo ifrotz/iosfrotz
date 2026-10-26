@@ -420,7 +420,7 @@
             cell.detailTextLabel.text = @"Read review prompts aloud, independently of story narration. VoiceOver follows its own announcement path.";
         } else {
             cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-            cell.detailTextLabel.text = path.row == 1 ? (manager.speechRecognitionLanguage ?: @"Automatic — story language") : manager.commandConfirmationDescription;
+            cell.detailTextLabel.text = path.row == 1 ? (manager.speechRecognitionLanguage ? ([NSLocale.currentLocale localizedStringForLocaleIdentifier:manager.effectiveRecognitionLanguage] ?: manager.effectiveRecognitionLanguage) : @"Automatic — story language") : manager.commandConfirmationDescription;
         }
     } else {
         cell.textLabel.text = @[@"Narration Available", @"Narration Voice", @"Narration Rate"][path.row];
@@ -498,6 +498,7 @@ enum FrotzPrefsRows
     kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
+    // Retired root rows retain their original integer values.
     kFrotzPrefsTTS,
     kFrotzPrefsSTT,
     kFrotzPrefsCommandConfirmation,
@@ -623,57 +624,15 @@ enum FrotzPrefsRows
     m_switchCtl2.backgroundColor = [UIColor clearColor];
     [m_switchCtl2 setOn: [m_storyDelegate canEditStoryInfo]];
 
-    m_switchCtl3 = [[UISwitch alloc] initWithFrame:frame];
-    m_switchCtl3.accessibilityLabel = @"Text-to-Speech";
-    [m_switchCtl3 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
-    m_switchCtl3.backgroundColor = [UIColor clearColor];
-    [m_switchCtl3 setOn: [VoiceManager shared].ttsEnabled];
-
-    m_switchCtl4 = [[UISwitch alloc] initWithFrame:frame];
-    m_switchCtl4.accessibilityLabel = @"Speech-to-Text";
-    [m_switchCtl4 addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
-    m_switchCtl4.backgroundColor = [UIColor clearColor];
-    [m_switchCtl4 setOn: [VoiceManager shared].sttEnabled];
 
 }
 
 - (void)switchAction:(id)sender
 {
     if (sender == m_switchCtl)
-        [m_storyDelegate setCompletionEnabled: [sender isOn]];
+        [m_storyDelegate setCompletionEnabled:[sender isOn]];
     else if (sender == m_switchCtl2)
-        [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
-    else if (sender == m_switchCtl3) {
-        // TTS toggle
-        VoiceManager *vm = [VoiceManager shared];
-        if ([sender isOn]) {
-            vm.voiceMode = vm.sttEnabled ? VoiceModeBoth : VoiceModeTTSOnly;
-        } else {
-            [vm stopSpeaking];
-            vm.voiceMode = vm.sttEnabled ? VoiceModeSTTOnly : VoiceModeOff;
-        }
-        [vm savePreferences];
-    } else if (sender == m_switchCtl4) {
-        // STT toggle
-        NSUInteger generation = ++m_sttPermissionGeneration;
-        VoiceManager *vm = [VoiceManager shared];
-        if ([sender isOn]) {
-            [vm requestSTTPermissionsWithCompletion:^(BOOL granted) {
-                if (generation != self->m_sttPermissionGeneration || !self->m_switchCtl4.isOn)
-                    return;
-                if (granted) {
-                    vm.voiceMode = vm.ttsEnabled ? VoiceModeBoth : VoiceModeSTTOnly;
-                } else {
-                    [self->m_switchCtl4 setOn:NO animated:YES];
-                }
-                [vm savePreferences];
-            }];
-        } else {
-            [vm stopListening];
-            vm.voiceMode = vm.ttsEnabled ? VoiceModeTTSOnly : VoiceModeOff;
-            [vm savePreferences];
-        }
-    }
+        [m_storyDelegate setCanEditStoryInfo:[sender isOn]];
 }
 
 - (void)storyFontSliderAction:(UISlider*)sender
@@ -702,16 +661,6 @@ enum FrotzPrefsRows
             [m_notesDelegate setFont: [m_notesDelegate fontName] withSize: value];
     }
     lastValue = value;
-}
-
-#define kSpeechRateStr "Speech Rate (%.1fx)"
-
-- (void)speechRateSliderAction:(UISlider*)sender
-{
-    float value = roundf([sender value] * 4.0f) / 4.0f; // snap to 0.25 increments
-    m_speechRateCell.textLabel.text = [NSString stringWithFormat: @kSpeechRateStr, value];
-    [VoiceManager shared].speechRate = value;
-    [[VoiceManager shared] savePreferences];
 }
 
 - (void)loadView
@@ -756,13 +705,6 @@ enum FrotzPrefsRows
     m_origNotesFontSize = (int)[m_notesDelegate fontSize];
     m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 
-    m_speechRateSliderCtl = [[UISlider alloc] initWithFrame:sframe];
-    [m_speechRateSliderCtl addTarget:self action:@selector(speechRateSliderAction:) forControlEvents:UIControlEventValueChanged];
-    m_speechRateSliderCtl.backgroundColor = [UIColor clearColor];
-    m_speechRateSliderCtl.minimumValue = 0.5;
-    m_speechRateSliderCtl.maximumValue = 3.0;
-    m_speechRateSliderCtl.continuous = YES;
-    m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 }
 
 -(void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color {
@@ -793,9 +735,6 @@ enum FrotzPrefsRows
     m_tableView.dataSource = self;
 
     // Sync voice switches with current state (may have been toggled from toolbar)
-    [m_switchCtl3 setOn:[VoiceManager shared].ttsEnabled animated:NO];
-    [m_switchCtl4 setOn:[VoiceManager shared].sttEnabled animated:NO];
-    m_speechRateSliderCtl.value = [VoiceManager shared].speechRate;
 
     [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
     [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
@@ -947,9 +886,6 @@ enum FrotzPrefsRows
     if (indexPath.section == kFrotzPrefsSection && row >= kFrotzPrefsStoryFontSize
         && row != kFrotzPrefsNotesFont
         && row != kFrotzPrefsVoice
-        && row != kFrotzPrefsSpeechVoice
-        && row != kFrotzPrefsSpeechLanguage
-        && row != kFrotzPrefsCommandConfirmation
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
         && row != kFrotzPrefsDropbox
 #endif
@@ -1019,38 +955,6 @@ enum FrotzPrefsRows
                 case kFrotzPrefsVoice:
                     cell.textLabel.text = @"Voice";
                     break;
-                case kFrotzPrefsTTS:
-                    cell.textLabel.text = @"Text-to-Speech";
-                    cell.accessoryView = m_switchCtl3;
-                    break;
-                case kFrotzPrefsSTT:
-                    cell.textLabel.text = @"Speech-to-Text";
-                    cell.accessoryView = m_switchCtl4;
-                    break;
-                case kFrotzPrefsCommandConfirmation:
-                    cell.textLabel.text = @"Voice Command Confirmation";
-                    cell.textLabel.numberOfLines = 0;
-                    cell.detailTextLabel.text = [VoiceManager shared].commandConfirmationDescription;
-                    cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-                    break;
-                case kFrotzPrefsSpeechRate:
-                    m_speechRateCell = cell;
-                    cell.textLabel.text = [NSString stringWithFormat: @kSpeechRateStr, [m_speechRateSliderCtl value]];
-                    cell.accessoryView = m_speechRateSliderCtl;
-                    break;
-                case kFrotzPrefsSpeechVoice:
-                    cell.textLabel.text = @"Speech Voice";
-                    cell.detailTextLabel.text = [VoiceManager shared].speechVoiceDescription;
-                    cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-                    break;
-                case kFrotzPrefsSpeechLanguage: {
-                    VoiceManager *manager = [VoiceManager shared];
-                    cell.textLabel.text = @"Speech Input Language";
-                    cell.detailTextLabel.text = manager.speechRecognitionLanguage
-                        ? ([NSLocale.currentLocale localizedStringForLocaleIdentifier:manager.effectiveRecognitionLanguage] ?: manager.effectiveRecognitionLanguage) : @"Automatic";
-                    cell.selectionStyle = UITableViewCellSelectionStyleDefault;
-                    break;
-                }
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
                 case kFrotzPrefsDropbox:
                     cell.textLabel.text = @"Dropbox Settings";
@@ -1127,12 +1031,6 @@ enum FrotzPrefsRows
                 viewController = m_storyFontPicker;
             } else if (row==kFrotzPrefsNotesFont)
                 viewController = m_notesFontPicker;
-            else if (row==kFrotzPrefsCommandConfirmation)
-                viewController = [[FrotzCommandConfirmationController alloc] init];
-            else if (row==kFrotzPrefsSpeechVoice)
-                viewController = [[FrotzSpeechVoiceController alloc] init];
-            else if (row==kFrotzPrefsSpeechLanguage)
-                viewController = [[FrotzSpeechLanguageController alloc] init];
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
             else if (row==kFrotzPrefsDropbox) {
                 viewController = m_frotzDB;

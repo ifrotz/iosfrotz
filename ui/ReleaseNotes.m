@@ -311,7 +311,7 @@
     NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
     // Always show bundled feature notes, even when older notes are cached or downloaded.
     NSString *voiceNotes = @"<h2>New: Voice Mode</h2>"
-        "<ul><li>Listen to stories with Text-to-Speech and speak commands with Speech-to-Text. Choose available controls in Settings &gt; Voice, then enable narration or dictation with the toolbar buttons.</li>"
+        "<ul><li>Listen to stories with voice narration and speak commands with app dictation. Choose available controls in Settings &gt; Voice, then enable narration or dictation with the toolbar buttons.</li>"
         "<li>Voice commands submit the best guess immediately for uninterrupted play. Command Confirmation in Settings &gt; Voice offers Off (the default), As Needed for uncertain or corrected commands, and Always for every command line. When reviewing a command, say Confirm, Retry or Cancel in supported languages, or use the on-screen buttons.</li>"
         "<li>Review commands in the story’s input area with Confirm, Retry and Cancel. Speak Command Confirmations can be turned off independently; VoiceOver still announces the review.</li>"
         "<li>While dictation is enabled, tap to page or select story words without opening the keyboard. Selected words stay in the command as recognition changes. Typed commands remain inline and voice controls follow the active text window and game colors.</li>"

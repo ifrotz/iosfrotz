@@ -121,8 +121,6 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_dbActive;
 
     // Voice mode
-    UIBarButtonItem *m_ttsToggleItem;
-    UIBarButtonItem *m_sttToggleItem;
     NSMutableString *m_ttsAccumulatedText;
     NSMapTable<RichTextView *, NSMutableString *> *m_voiceOutputBuffers;
     NSUInteger m_ttsStartRunIndex;       // view run count when TTS accumulation started
