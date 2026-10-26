@@ -122,11 +122,15 @@
 }
 
 - (void)windowScene:(UIWindowScene *)windowScene performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
+    // UIKit expects exactly one callback per invocation, so unknown shortcut types report failure
+    // rather than leaving the shortcut in progress.
+    BOOL handled = NO;
     if ([[shortcutItem type] isEqualToString: @"storylist"]) {
         [m_browser setPostLaunch];
         [[m_browser navigationController] popToViewController:m_browser animated:YES];
-        completionHandler(YES);
+        handled = YES;
     }
+    completionHandler(handled);
 }
 
 - (void)scene:(UIScene *)scene openURLContexts:(NSSet<UIOpenURLContext *> *)URLContexts {
