@@ -3,6 +3,7 @@
 #import "RichTextView.h"
 #import "StoryMainViewController.h"
 #import "StoryInputLine.h"
+#import "StoryView.h"
 #import "FrotzSettings.h"
 #import "FrotzAppDelegate.h"
 #import "FrotzInfo.h"
@@ -23,6 +24,7 @@
 @end
 
 @interface StoryMainViewController (VoiceTesting)
+- (BOOL)shouldActivateKeyboardForStoryTap;
 - (void)setupVoiceToolbar;
 - (void)updateVoiceButtonIcons;
 - (void)toggleTTS;
@@ -51,6 +53,26 @@
     if (!self.submittedCommands) self.submittedCommands = [NSMutableArray array];
     [self.submittedCommands addObject:field.text ?: @""];
 }
+@end
+
+// Exercise the real StoryView tap route without bringing up a system keyboard.
+@interface TestStoryTouch : NSObject
+@property NSUInteger tapCount;
+@property UITouchPhase phase;
+@property NSTimeInterval timestamp;
+@property UIView *view;
+- (CGPoint)locationInView:(UIView *)view;
+@end
+@implementation TestStoryTouch
+- (CGPoint)locationInView:(UIView *)view { return CGPointMake(100, 100); }
+@end
+@interface TestTapPolicyController : TestStoryController
+@property NSUInteger keyboardToggles;
+@end
+@implementation TestTapPolicyController
+- (NSString *)currentStory { return @"fixture.z5"; }
+- (BOOL)isKBShown { return NO; }
+- (void)forceToggleKeyboard { ++self.keyboardToggles; }
 @end
 
 @interface TestEndingController : StoryMainViewController
@@ -322,6 +344,69 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
 @end
 
 @implementation FrotzVoiceTests
+- (void)testDictationTripleTapDoesNotSuppressTheNextWordSelection {
+    [self withAutomaticListeningController:^(TestStoryController *unused) {
+        TestTapPolicyController *controller = [TestTapPolicyController new];
+        StoryView *story = [[StoryView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+        story.delegate = controller;
+        TestStoryTouch *touch = [TestStoryTouch new];
+        touch.tapCount = 3; touch.phase = UITouchPhaseEnded; touch.timestamp = 10000;
+        self.manager.voiceMode = VoiceModeSTTOnly;
+        [story handleTouch:(id)touch withEvent:nil];
+        XCTAssertFalse([[controller valueForKey:@"m_ignoreWordSelection"] boolValue]);
+        XCTAssertEqual(controller.keyboardToggles, 0u);
+        self.manager.voiceMode = VoiceModeOff;
+        [story handleTouch:(id)touch withEvent:nil];
+        XCTAssertTrue([[controller valueForKey:@"m_ignoreWordSelection"] boolValue]);
+        XCTAssertEqual(controller.keyboardToggles, 1u, @"Classic triple-tap keeps its existing behavior");
+    }];
+}
+- (void)testStoryTapKeepsDictationActiveButClassicTapStillTypes {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.voiceMode = VoiceModeSTTOnly;
+        XCTAssertFalse([controller shouldActivateKeyboardForStoryTap]);
+        self.manager.voiceMode = VoiceModeTTSOnly;
+        XCTAssertTrue([controller shouldActivateKeyboardForStoryTap]);
+        self.manager.voiceMode = VoiceModeOff;
+        XCTAssertTrue([controller shouldActivateKeyboardForStoryTap]);
+    }];
+}
+- (void)testSelectedWordsSurviveChangingPartialAndFinalRecognition {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.commandConfirmationMode = VoiceCommandConfirmationOff;
+        [controller voiceManagerDidRecognizeText:@"take" isFinal:NO];
+        int saved = ipzAllowInput;
+        ipzAllowInput = kIPZRequestInput;
+        [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+        XCTestExpectation *selection = [self expectationWithDescription:@"selection copied"];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ [selection fulfill]; });
+        [self waitForExpectations:@[selection] timeout:1];
+        [controller voiceManagerDidRecognizeText:@"take the" isFinal:NO];
+        XCTAssertEqualObjects([controller inputLine].text, @"take the gown");
+        [controller voiceManagerDidRecognizeText:@"take gown" isFinal:YES];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"take gown"]));
+        ipzAllowInput = saved;
+    }];
+}
+- (void)testRepeatedSelectionDoesNotSubmitAndCancellationClearsComposition {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        self.manager.commandConfirmationMode = VoiceCommandConfirmationOff;
+        int saved = ipzAllowInput;
+        @try {
+            ipzAllowInput = kIPZRequestInput;
+            [controller voiceManagerDidRecognizeText:@"put" isFinal:NO];
+            [controller textSelected:@"gown" animDuration:0 hilightView:nil];
+            [controller textSelected:@"on table" animDuration:0 hilightView:nil];
+            XCTAssertEqualObjects([controller inputLine].text, @"put gown on table");
+            XCTAssertEqual(controller.submittedCommands.count, 0u);
+            [controller voiceManagerDidRecognizeText:@"put the" isFinal:NO];
+            XCTAssertEqualObjects([controller inputLine].text, @"put the gown on table");
+            [controller stopVoiceActivity];
+            XCTAssertNil([controller valueForKey:@"m_voiceSelectedText"]);
+            XCTAssertNil([controller valueForKey:@"m_voicePartialText"]);
+        } @finally { ipzAllowInput = saved; }
+    }];
+}
 - (void)testFailedRecordingPreflightReleasesAudioRetainedForHandoff {
     self.manager.voiceMode = VoiceModeBoth;
     self.voiceDelegate.keepAudioForListening = YES;

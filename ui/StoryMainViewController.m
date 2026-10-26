@@ -2255,7 +2255,36 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_storyView clearSelection];
 }
 
+-(BOOL)shouldActivateKeyboardForStoryTap {
+    return ![VoiceManager shared].sttEnabled;
+}
+
+-(NSString *)composedVoiceCommand:(NSString *)transcript {
+    NSString *selection = m_voiceSelectedText ?: @"";
+    if (!selection.length) return transcript;
+    NSArray *words = [selection componentsSeparatedByString:@" "];
+    // Preserve deliberate selection without repeating words already heard at
+    // the end of the utterance. Never consult the story's hidden vocabulary.
+    for (NSUInteger count = words.count; count > 0; --count) {
+        NSString *prefix = [[words subarrayWithRange:NSMakeRange(0, count)] componentsJoinedByString:@" "];
+        if ([transcript caseInsensitiveCompare:prefix] == NSOrderedSame
+            || [transcript.lowercaseString hasSuffix:[@" " stringByAppendingString:prefix.lowercaseString]]) {
+            selection = [[words subarrayWithRange:NSMakeRange(count, words.count - count)] componentsJoinedByString:@" "];
+            break;
+        }
+    }
+    return selection.length ? (transcript.length ? [NSString stringWithFormat:@"%@ %@", transcript, selection] : selection) : transcript;
+}
+
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
+    if ([VoiceManager shared].sttEnabled && !(ipzAllowInput & kIPZNoEcho) && !m_pendingVoiceCommand) {
+        if (!m_voicePartialText) m_voicePartialText = m_inputLine.text ?: @"";
+        m_voiceSelectedText = m_voiceSelectedText.length ? [m_voiceSelectedText stringByAppendingFormat:@" %@", text] : [text copy];
+        m_inputLine.text = [self composedVoiceCommand:m_voicePartialText];
+        [m_storyView clearSelection];
+        return;
+    }
+
     m_ignoreWordSelection = NO;
     if (/*m_kbShown && */!(ipzAllowInput & kIPZNoEcho)) {
         // m_kbShown commented out so this still works with paired hardware keyboards
@@ -4763,6 +4792,7 @@ static void setScreenDims(char *storyNameBuf) {
 
 - (void)textFieldDidBeginEditing:(UITextField *)textField {
     if (textField == m_inputLine) {
+        m_voiceSelectedText = nil; m_voicePartialText = nil;
         [self clearPendingVoiceCommand];
         if (m_voiceListenPending && ![VoiceManager shared].isSpeaking)
             [self resetTapOverlayToMicIdle];
@@ -5645,6 +5675,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)stopVoiceActivity {
+    m_voiceSelectedText = nil; m_voicePartialText = nil;
     m_voiceResumeAfterKeyboard = NO;
     m_voiceInputError = nil;
     [self clearPendingVoiceCommand];
@@ -6028,8 +6059,11 @@ static BOOL migateDropboxAuth() {
         }
         return;
     }
-    // Show recognized text in input field
+    // Keep selected words separate from Apple's replaceable partial transcript.
+    m_voicePartialText = text;
+    if (!(ipzAllowInput & kIPZNoEcho)) text = [self composedVoiceCommand:text];
     [m_inputLine setText:text];
+    if (isFinal) { m_voiceSelectedText = nil; m_voicePartialText = nil; }
     VoiceManager *vm = [VoiceManager shared];
     BOOL reviewCommand = vm.commandConfirmationMode == VoiceCommandConfirmationAlways
         || (vm.commandConfirmationMode == VoiceCommandConfirmationAsNeeded && vm.recognizedCommandNeedsConfirmation);
@@ -6062,6 +6096,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerDidStartListening {
+    m_voiceSelectedText = nil; m_voicePartialText = nil;
     if (![self canAcceptVoiceInput]) {
         [[VoiceManager shared] stopListening];
         return;
