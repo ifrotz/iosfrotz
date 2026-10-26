@@ -496,6 +496,50 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         XCTAssertTrue(self.manager.isListening);
     }];
 }
+- (void)testFailedConfirmationRecognitionKeepsTheCommandAndUsableButtons {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4]; [self drainCallbacks];
+        [self.manager stopListening];
+        [controller voiceManagerSTTError:[NSError errorWithDomain:@"test" code:1 userInfo:nil]];
+        XCTAssertEqualObjects([controller valueForKey:@"m_pendingVoiceCommand"], @"bake down");
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        UIButton *confirm = [bar viewWithTag:910];
+        XCTAssertFalse(confirm.superview.hidden);
+        XCTAssertNil(controller.presentedViewController);
+        [confirm sendActionsForControlEvents:UIControlEventTouchUpInside];
+        [confirm sendActionsForControlEvents:UIControlEventTouchUpInside];
+        XCTAssertEqualObjects(controller.submittedCommands, (@[@"bake down"]));
+    }];
+}
+- (void)testConfirmationPanelStaysOpaqueAndScrollableInAShortInputWindow {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        UIView *background = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 240, 150)];
+        [controller setValue:background forKey:@"m_background"];
+        RichTextView *story = (id)controller.storyView;
+        story.frame = background.bounds;
+        story.backgroundColor = UIColor.clearColor;
+        [background addSubview:story];
+        [controller setValue:UIColor.whiteColor forKey:@"m_defaultBGColor"];
+        [controller scheduleVoiceListening]; [self drainCallbacks];
+        [self sendAlternatives:@[@"bake down"] confidence:0.4]; [self drainCallbacks];
+        [controller refreshVoicePresentationForInputWindow];
+        UIView *bar = [controller valueForKey:@"m_voiceTapOverlay"];
+        XCTAssertNotNil(bar.superview);
+        XCTAssertEqual(CGColorGetAlpha(bar.backgroundColor.CGColor), 1);
+        XCTAssertGreaterThanOrEqual(story.frame.size.height, 44);
+        [bar layoutIfNeeded];
+        UIScrollView *scroll = [bar viewWithTag:997];
+        XCTAssertTrue([scroll isKindOfClass:UIScrollView.class]);
+        XCTAssertGreaterThan(scroll.contentSize.height, scroll.bounds.size.height);
+        for (NSNumber *tag in @[@910, @911, @912]) {
+            UIButton *button = [bar viewWithTag:tag.integerValue];
+            XCTAssertGreaterThanOrEqual(button.bounds.size.width, 44);
+            XCTAssertGreaterThanOrEqual(button.bounds.size.height, 44);
+            XCTAssertTrue(button.isAccessibilityElement);
+        }
+    }];
+}
 - (void)testFailedRecordingPreflightReleasesAudioRetainedForHandoff {
     self.manager.voiceMode = VoiceModeBoth;
     self.voiceDelegate.keepAudioForListening = YES;

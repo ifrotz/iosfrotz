@@ -2535,9 +2535,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     CGRect converted = [m_background convertRect:original fromView:owner.superview];
     if (!m_kbShown && fabs(CGRectGetMaxY(converted) - CGRectGetHeight(m_background.bounds)) < 2)
         height += self.view.safeAreaInsets.bottom;
-    // A tiny text window must retain its input line. Toolbar/accessibility
-    // controls remain available until the story returns to a roomy buffer.
-    if (original.size.height < height + MAX(44, m_inputLine.font.lineHeight + 2)) {
+    CGFloat available = original.size.height - MAX(44, m_inputLine.font.lineHeight + 2);
+    // Keep input reachable; a short buffer scrolls the existing controls.
+    height = MIN(height, available);
+    if (available < 52 || original.size.width < 112) {
         [self restoreVoicePresentationFrame];
         [m_voiceTapOverlay removeFromSuperview];
         return;
@@ -5488,13 +5489,31 @@ static BOOL migateDropboxAuth() {
 
 -(void)updateVoiceReplayActions {
     VoiceManager *vm = [VoiceManager shared];
-    NSArray *actions = vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff && !m_pendingVoiceCommand
-        ? @[[[UIAccessibilityCustomAction alloc] initWithName:@"Replay last response" target:self selector:@selector(replayLastVoiceResponse:)]] : nil;
+    NSArray *actions = nil;
+    if (m_pendingVoiceCommand) {
+        actions = @[
+            [[UIAccessibilityCustomAction alloc] initWithName:@"Confirm command" target:self selector:@selector(accessibleVoiceConfirm:)],
+            [[UIAccessibilityCustomAction alloc] initWithName:@"Retry command" target:self selector:@selector(accessibleVoiceRetry:)],
+            [[UIAccessibilityCustomAction alloc] initWithName:@"Cancel command" target:self selector:@selector(accessibleVoiceCancel:)]];
+    } else if (vm.lastStoryResponse.length && vm.voiceMode != VoiceModeOff) {
+        actions = @[[[UIAccessibilityCustomAction alloc] initWithName:@"Replay last response" target:self selector:@selector(replayLastVoiceResponse:)]];
+    }
     m_voiceTapOverlay.accessibilityCustomActions = actions;
     m_voiceMicButton.accessibilityCustomActions = actions;
     m_voiceSpeechButton.accessibilityCustomActions = actions;
-    [self.navigationItem.rightBarButtonItem.customView viewWithTag:901].accessibilityCustomActions = actions;
+    UIView *toolbar = self.navigationItem.rightBarButtonItem.customView;
+    [toolbar viewWithTag:901].accessibilityCustomActions = actions;
+    [toolbar viewWithTag:902].accessibilityCustomActions = actions;
 }
+
+-(BOOL)accessibleVoiceReviewAction:(NSString *)action {
+    if (!m_pendingVoiceCommand || ![self canAcceptVoiceInput] || (ipzAllowInput & kIPZNoEcho)) return NO;
+    [self performVoiceConfirmationAction:action];
+    return YES;
+}
+-(BOOL)accessibleVoiceConfirm:(UIAccessibilityCustomAction *)action { return [self accessibleVoiceReviewAction:@"confirm"]; }
+-(BOOL)accessibleVoiceRetry:(UIAccessibilityCustomAction *)action { return [self accessibleVoiceReviewAction:@"retry"]; }
+-(BOOL)accessibleVoiceCancel:(UIAccessibilityCustomAction *)action { return [self accessibleVoiceReviewAction:@"cancel"]; }
 
 -(BOOL)replayLastVoiceResponse:(UIAccessibilityCustomAction *)action {
     VoiceManager *vm = [VoiceManager shared];
@@ -5788,7 +5807,10 @@ static BOOL migateDropboxAuth() {
     VoiceManager *vm = [VoiceManager shared];
     m_voiceTapOverlay.isAccessibilityElement = NO;
     RichTextView *owner = [self voiceInputView] ?: (id)m_storyView;
-    m_voiceTapOverlay.backgroundColor = [owner getCurrentBackgroundColor] ?: m_defaultBGColor;
+    UIColor *paper = [owner getCurrentBackgroundColor];
+    if (!paper || CGColorGetAlpha(paper.CGColor) < 1) paper = m_defaultBGColor ?: UIColor.whiteColor;
+    m_voiceTapOverlay.backgroundColor = paper;
+    m_voiceTapOverlay.opaque = YES;
     m_voiceMicButton.hidden = !vm.sttEnabled;
     BOOL speaking = vm.isSpeaking;
     m_voiceSpeechButton.hidden = !vm.ttsEnabled && !speaking && !vm.lastStoryResponse.length;
@@ -5838,6 +5860,8 @@ static BOOL migateDropboxAuth() {
 }
 
 -(CGFloat)voiceControlBarHeightForWidth:(CGFloat)width {
+    m_voiceConfirmationButtons.axis = width < 320 || UIContentSizeCategoryIsAccessibilityCategory(UIApplication.sharedApplication.preferredContentSizeCategory)
+        ? UILayoutConstraintAxisVertical : UILayoutConstraintAxisHorizontal;
     CGFloat height = [m_voiceBarStack systemLayoutSizeFittingSize:CGSizeMake(MAX(1, width - 24), 0)
         withHorizontalFittingPriority:UILayoutPriorityRequired verticalFittingPriority:UILayoutPriorityFittingSizeLevel].height;
     return MAX(52, ceil(height) + 8);
@@ -5984,7 +6008,8 @@ static BOOL migateDropboxAuth() {
     hint.hidden = NO;
     VoiceManager *vm = [VoiceManager shared];
     NSArray *controls = [VoiceManager confirmationWordsForLanguage:vm.effectiveRecognitionLanguage];
-    NSString *state = vm.isSpeaking ? @"Reading back…"
+    NSString *state = m_voiceInputError ? @"Microphone unavailable. Use the buttons, or retry listening."
+        : vm.isSpeaking ? @"Reading back…"
         : (controls.count == 0 ? @"Use the buttons below"
             : (vm.isListening ? [NSString stringWithFormat:@"Say %@, %@ or %@", controls[0], controls[1], controls[2]] : @"Tap to answer, or use the buttons"));
     hint.text = [NSString stringWithFormat:@"Heard: %@\n%@", m_pendingVoiceCommand, state];
@@ -6128,7 +6153,9 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)voiceManagerSTTError:(NSError *)error {
-    [self clearPendingVoiceCommand];
+    // A recognition failure must not discard a command already awaiting review.
+    if ([VoiceManager shared].delegate == self && [VoiceManager shared].isListening)
+        [[VoiceManager shared] stopListening];
     m_voiceAutoListenReady = NO;
     ++m_voiceRestartGeneration;
     m_voiceListenPending = NO;
@@ -6145,6 +6172,7 @@ static BOOL migateDropboxAuth() {
     m_voiceTapOverlay.accessibilityHint = @"Double-tap to retry, or use a two-finger double-tap. You can also use the keyboard.";
     [[VoiceManager shared] playVoiceFeedback:VoiceFeedbackError];
     [self autosize];
+    [self updateVoiceConfirmationDisplay];
     NSLog(@"Voice recognition error: domain=%@ code=%ld", error.domain, (long)error.code);
 }
 
@@ -6203,6 +6231,8 @@ static BOOL migateDropboxAuth() {
         button.titleLabel.numberOfLines = 0;
         button.tag = 910 + i;
         button.accessibilityIdentifier = [@"voice" stringByAppendingString:title];
+        button.isAccessibilityElement = YES;
+        button.accessibilityLabel = title;
         [button.heightAnchor constraintGreaterThanOrEqualToConstant:44].active = YES;
         [button addTarget:self action:@selector(voiceConfirmationButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
         [buttons addObject:button];
@@ -6215,12 +6245,23 @@ static BOOL migateDropboxAuth() {
     m_voiceBarStack.axis = UILayoutConstraintAxisVertical;
     m_voiceBarStack.spacing = 4;
     m_voiceBarStack.translatesAutoresizingMaskIntoConstraints = NO;
-    [bar addSubview:m_voiceBarStack];
+    UIScrollView *scroll = [UIScrollView new];
+    scroll.tag = 997;
+    scroll.accessibilityIdentifier = @"voiceControlsScroll";
+    scroll.translatesAutoresizingMaskIntoConstraints = NO;
+    scroll.alwaysBounceVertical = NO;
+    [bar addSubview:scroll];
+    [scroll addSubview:m_voiceBarStack];
     [NSLayoutConstraint activateConstraints:@[
-        [m_voiceBarStack.leadingAnchor constraintEqualToAnchor:bar.leadingAnchor constant:12],
-        [m_voiceBarStack.trailingAnchor constraintEqualToAnchor:bar.trailingAnchor constant:-12],
-        [m_voiceBarStack.topAnchor constraintEqualToAnchor:bar.topAnchor constant:4],
-        [m_voiceBarStack.bottomAnchor constraintLessThanOrEqualToAnchor:bar.bottomAnchor constant:-4]
+        [scroll.leadingAnchor constraintEqualToAnchor:bar.leadingAnchor],
+        [scroll.trailingAnchor constraintEqualToAnchor:bar.trailingAnchor],
+        [scroll.topAnchor constraintEqualToAnchor:bar.topAnchor],
+        [scroll.bottomAnchor constraintEqualToAnchor:bar.bottomAnchor],
+        [m_voiceBarStack.leadingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.leadingAnchor constant:12],
+        [m_voiceBarStack.trailingAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.trailingAnchor constant:-12],
+        [m_voiceBarStack.widthAnchor constraintEqualToAnchor:scroll.frameLayoutGuide.widthAnchor constant:-24],
+        [m_voiceBarStack.topAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.topAnchor constant:4],
+        [m_voiceBarStack.bottomAnchor constraintEqualToAnchor:scroll.contentLayoutGuide.bottomAnchor constant:-4]
     ]];
     [self updateVoiceControlBar];
 }
