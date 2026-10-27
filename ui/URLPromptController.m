@@ -45,13 +45,11 @@
     self.view = contentView;
     
     m_textbar = [[UISearchBar alloc] initWithFrame: frame];
-    
-    UIImage *img = [UIImage imageNamed: @"icon-url-srch"];
-    UIImageView *imgView = [[UIImageView alloc] initWithImage: img];
-    [m_textbar addSubview: imgView];
-    [m_textbar bringSubviewToFront:imgView];
-    CGSize isz = [img size];
-    [imgView setFrame: CGRectMake(14, 9, isz.width, isz.height)];
+
+    // This is a URL field, not a search: drop the magnifying glass. It is the search text field's
+    // left view, so hiding that removes both the icon and the space it reserves. (Setting the
+    // search icon image to nil would only restore the default.)
+    m_textbar.searchTextField.leftViewMode = UITextFieldViewModeNever;
 
     m_textbar.placeholder = @"URL";
     m_textbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;

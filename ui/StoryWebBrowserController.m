@@ -108,7 +108,12 @@ const NSString *kBookmarkVersionKey = @"Version";
     m_searchButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch target:self action:@selector(setSearchType)];
 
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    m_activityView.hidesWhenStopped = YES;
     m_activButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_activityView];
+    // The spinner is a status indicator, not a button: no glass capsule behind it, so there is
+    // nothing drawn at all while idle and just the spinner while loading.
+    if (@available(iOS 26.0, *))
+        m_activButtonItem.hidesSharedBackground = YES;
 
     [self updateRightBarButtonItems];
 
