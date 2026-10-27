@@ -1012,18 +1012,24 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController: nil];
     searchController.searchResultsUpdater = self;
-    searchController.dimsBackgroundDuringPresentation = NO;
-    UISearchBar *searchBar = searchController.searchBar;
+    searchController.obscuresBackgroundDuringPresentation = NO;
     searchController.searchBar.delegate = self;
-    //_tblDropDown.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    [self.searchController.searchBar sizeToFit];
     [self setSearchController: searchController];
 
-    self.tableView.tableHeaderView = searchBar;
-    CGRect newBounds = self.tableView.bounds;
-    newBounds.origin.y += searchBar.frame.size.height;
-    self.tableView.bounds = newBounds;
+    // The navigation item hosts the search bar. It used to be the table's header view, scrolled up
+    // under the navigation bar until pulled down; with the bar now transparent (Liquid Glass) that
+    // "hidden" bar showed through behind the bar buttons. UIKit places and collapses it correctly
+    // here, and handles it on the iPhone Duo along with the rest of the bar content.
+    self.navigationItem.searchController = searchController;
+    self.navigationItem.hidesSearchBarWhenScrolling = YES;
+    // Since iOS 15 plain tables pad about 22pt above each section header, which showed as a large
+    // gap between the search bar and the first header. iOS 26 no longer shows it, so only
+    // earlier systems are adjusted.
+    if (@available(iOS 26.0, *)) {
+    } else {
+        self.tableView.sectionHeaderTopPadding = 0;
+    }
     [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 
     if (m_launchPath)

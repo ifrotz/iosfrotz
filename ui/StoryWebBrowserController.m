@@ -184,6 +184,22 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.leftBarButtonItem = backItem;
     [self updateRightBarButtonItems];
 
+    // Before iOS 26 the bar is styled through appearance objects: the legacy barStyle and
+    // barTintColor set in viewWillAppear don't control its transparent scroll-edge state, which
+    // left the "Story Browser" title dark on the black page. Give this screen an opaque black bar
+    // with white title text in every state. (Liquid Glass bars on iOS 26 handle contrast themselves.)
+    if (@available(iOS 26.0, *)) {
+    } else {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundColor = [UIColor blackColor];
+        appearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+        self.navigationItem.standardAppearance = appearance;
+        self.navigationItem.scrollEdgeAppearance = appearance;
+        self.navigationItem.compactAppearance = appearance;
+        self.navigationItem.compactScrollEdgeAppearance = appearance;
+    }
+
     self.edgesForExtendedLayout=UIRectEdgeNone;
 }
 
