@@ -29,25 +29,30 @@
 -(void)loadView {
     [super loadView];
     
-    CGRect frame = CGRectMake(0,0, 106, 44);
-    
-    m_titleTextView = [[UILabel alloc] initWithFrame: CGRectMake(20,0,54,44)];
+    // The title view is just the "Frotz" label. The (i) used to sit inside it, but custom title
+    // views are never relocated, whereas bar button items with a symbol move to the side on the
+    // iPhone Duo (vertical controls), so the (i) is a bar button item that owners add to their
+    // trailing items (see infoBarButtonItem).
+    CGRect frame = CGRectMake(0,0, 54, 44);
+
+    m_titleTextView = [[UILabel alloc] initWithFrame: frame];
     [m_titleTextView setText: @"Frotz"];
-    
+    m_titleTextView.textAlignment = NSTextAlignmentCenter;
+
     m_titleTextView.backgroundColor = [UIColor clearColor];
     m_titleTextView.font = [UIFont boldSystemFontOfSize: 20];
-    
+
     UIView *view = [self view];
     [view setAutoresizingMask: UIViewAutoresizingNone];
     [view setFrame: frame];
     view.backgroundColor = [UIColor clearColor];
     [view addSubview: m_titleTextView];
-    m_infoButton = [UIButton buttonWithType: UIButtonTypeInfoLight];
-    [m_infoButton setFrame: CGRectMake(74, 0, 32, 44)];
+
+    m_infoBarItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"info.circle"]
+                                                      style: UIBarButtonItemStylePlain target: self action: @selector(frotzInfo)];
+    m_infoBarItem.title = NSLocalizedString(@"Frotz Settings", nil); // shown in overflow menus and used by accessibility
     [self updateAccessibility];
-    [view addSubview: m_infoButton];
-    [m_infoButton addTarget:self action:@selector(frotzInfo) forControlEvents: UIControlEventTouchUpInside];
-    
+
     m_doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(frotzInfo)];
     [self updateTitle];
 
@@ -57,12 +62,16 @@
     UINavigationController *nc = m_navigationController;
     UIColor *color = [nc.navigationBar tintColor];
     [m_titleTextView setTextColor: color];
-    [m_infoButton setTintColor: color];
+    // the (i) bar button item follows the bar's tint on its own
 }
 
 -(void)updateAccessibility {
-    if ([m_infoButton respondsToSelector: @selector(setAccessibilityLabel:)])
-        [m_infoButton setAccessibilityLabel: @"Settings"];
+    m_infoBarItem.accessibilityLabel = NSLocalizedString(@"Frotz Settings", nil);
+}
+
+-(UIBarButtonItem*)infoBarButtonItem {
+    (void)[self view]; // created in loadView
+    return m_infoBarItem;
 }
 
 -(UINavigationController*)navController {

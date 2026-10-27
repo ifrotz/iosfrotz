@@ -1682,39 +1682,58 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_frotzInfoController updateTitle];
 }
 
--(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
-    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
-        
-    if (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked"]];
-    else
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard"]];
-//    if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-//        [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
-}
-
+// Keeps the keyboard toggle item in step with the keyboard state: its icon (locked/unlocked), the
+// title the system shows when the item is folded into an overflow menu (which happens on the
+// iPhone Duo's vertical bar when the keyboard leaves little room), and its long-press menu, which
+// carries the lock/unlock action. The menu replaces a UILongPressGestureRecognizer that used to be
+// attached to the item's private backing view and was lost whenever UIKit rebuilt that view.
+// Only assign what actually changed, since each change makes UIKit rebuild the item.
 -(void)showKeyboardLockState {
-    UIView *kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
-    [self showKeyboardLockStateInView: kbdToggleItemView];
-}
+    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
 
--(void)addKeyBoardLockGesture {
-    [self view];
-    UIBarButtonItem *kbdToggleItem = m_kbdToggleItem;
-    UIView *kbdToggleItemView = [kbdToggleItem valueForKey:@"view"];
-    if (kbdToggleItemView) {
-        for (UIGestureRecognizer *recognizer in kbdToggleItemView.gestureRecognizers) {
-            if ([recognizer isKindOfClass:[UILongPressGestureRecognizer class]])
-                return;
-        }
-        UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
-                                                          initWithTarget:self
-                                                          action:@selector(toggleKeyboardLongPress:)];
-        //Broken because there is no customView in a UIBarButtonSystemItemUndo item
-        [kbdToggleItemView addGestureRecognizer:longPressGesture];
-        [self showKeyboardLockStateInView: kbdToggleItemView];
+    BOOL locked = m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder];
+    UIImage *image = [UIImage imageNamed: locked ? @"icon-keyboard-locked" : @"icon-keyboard"];
+    if (m_kbdToggleItem.image != image)
+        [m_kbdToggleItem setImage: image];
+
+    // Decide the title from m_kbShown alone, exactly as toggleKeyboard does: with a hardware
+    // keyboard the input line can be first responder while no software keyboard is showing, and a
+    // tap then tries to show one. m_kbShown also covers the notes page's keyboard.
+    NSString *title = m_kbShown ? NSLocalizedString(@"Hide Keyboard", nil) : NSLocalizedString(@"Show Keyboard", nil);
+    NSString *lockTitle = m_kbLocked ? NSLocalizedString(@"Unlock Keyboard", nil)
+                        : m_kbShown  ? NSLocalizedString(@"Hide and Lock Keyboard", nil)
+                                     : NSLocalizedString(@"Lock Keyboard", nil);
+    BOOL titleChanged = ![m_kbdToggleItem.title isEqualToString: title];
+    BOOL lockTitleChanged = ![[m_kbdToggleItem.menu.children.firstObject title] isEqualToString: lockTitle];
+    if (!titleChanged && !lockTitleChanged)
+        return;
+    m_kbdToggleItem.title = title;
+
+    __weak StoryMainViewController *weakSelf = self;
+    UIAction *lockAction = [UIAction actionWithTitle: lockTitle
+                                               image: [UIImage systemImageNamed: m_kbLocked ? @"lock.open" : @"lock"]
+                                          identifier: nil
+                                             handler: ^(UIAction *action) {
+        if (weakSelf.isKBLocked)
+            [weakSelf unlockKeyboard];
+        else
+            [weakSelf lockKeyboard];
+    }];
+    // Long press on the visible item: just the lock action (a tap already toggles the keyboard).
+    m_kbdToggleItem.menu = [UIMenu menuWithChildren: @[lockAction]];
+
+    // When the item is folded into an overflow menu, UIKit would otherwise show it as a submenu
+    // (its title, then the tap action and the lock action inside), three taps to do anything.
+    // Substitute an inline menu so both actions sit at the overflow's top level next to Settings.
+    if (@available(iOS 16.0, *)) {
+        UIAction *toggleAction = [UIAction actionWithTitle: title
+                                                     image: [UIImage systemImageNamed: m_kbShown ? @"keyboard.chevron.compact.down" : @"keyboard"]
+                                                identifier: nil
+                                                   handler: ^(UIAction *action) { [weakSelf toggleKeyboard]; }];
+        m_kbdToggleItem.menuRepresentation = [UIMenu menuWithTitle: @"" image: nil identifier: nil
+                                                          options: UIMenuOptionsDisplayInline
+                                                         children: @[toggleAction, lockAction]];
     }
-
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -1738,10 +1757,9 @@ extern void gli_ios_set_focus(window_t *winNum);
 -(void)viewDidAppear:(BOOL)animated {
     [self checkAccessibility];
 
-    self.navigationItem.titleView = [m_frotzInfoController view];
+    [self updateTitleViewForVerticalBar];
     
     [self autosize];
-    [self addKeyBoardLockGesture];
     
     if (m_kbShown)
         [m_inputLine becomeFirstResponder];
@@ -1754,7 +1772,14 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
 
-    self.navigationItem.titleView = [m_frotzInfoController view];
+    [self updateTitleViewForVerticalBar];
+    // Trailing: the keyboard toggle on its own (showKeyboardLockState and the accessibility setup
+    // read rightBarButtonItem). Leading: the Story List button, created by the browser which also
+    // handles its action, with the Frotz (i) beside it.
+    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+    if (!m_storyListItem)
+        m_storyListItem = [m_storyBrowser storyListBarButtonItem];
+    self.navigationItem.leftBarButtonItems = @[m_storyListItem, [m_frotzInfoController infoBarButtonItem]];
     [self setNavBarTint];
 
     [m_frotzInfoController setKeyboardOwner: self];
@@ -1865,17 +1890,16 @@ extern void gli_ios_set_focus(window_t *winNum);
     [self showKeyboardLockState];
 }
 
-- (void) toggleKeyboardLongPress:(UILongPressGestureRecognizer*)sender {
+// Hide the keyboard and keep it hidden until unlocked; the keyboard toggle item's long-press menu
+// action (see showKeyboardLockState).
+- (void)lockKeyboard {
     if (m_notesController && [m_notesController isVisible])
         return;
 
     if (m_kbShown)
         [self dismissKeyboard];
     m_kbLocked = YES;
-    if ([sender respondsToSelector:@selector(view)]) {
-        UIView *view = [sender view];
-        [self showKeyboardLockStateInView: view];
-    }
+    [self showKeyboardLockState];
     [m_inputLine setClearButtonMode];
 }
 
@@ -2028,6 +2052,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     
 //    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
+    m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     
@@ -2182,8 +2207,25 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [[m_background layer] addAnimation:animation forKey:@"storyfade"];
 }
 
+// On the iPhone Duo the bar button items move to the vertical bar (iOS 27.1 reports which edge
+// through the trait collection), which would leave the horizontal navigation bar holding nothing
+// but the "Frotz" title. Drop the title view in that case so the bar has no content of its own,
+// and put it back when the items return to the horizontal bar.
+-(void)updateTitleViewForVerticalBar {
+    self.navigationItem.titleView = [self hasVerticalBar] ? nil : [m_frotzInfoController view];
+}
+
+// YES when the system is placing bar items on a vertical bar along one edge (iPhone Duo, iOS 27.1
+// and later); NO everywhere else, so the layout decisions keyed on it are unchanged on other devices.
+-(BOOL)hasVerticalBar {
+    if (@available(iOS 27.1, *))
+        return self.traitCollection.verticalBarEdge != UIVerticalBarEdgeUnspecified;
+    return NO;
+}
+
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
+    [self updateTitleViewForVerticalBar];
     iosif_regular_width = [self isRegularWidth];
     if (m_storyView)
         [self hideInputHelper];
@@ -2214,7 +2256,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [self updateFontsForWidthIfNeeded];
     if ([self viewIsWiderThanTall] || regularWidth) {
         m_landscape = YES;
-        [self.navigationController setNavigationBarHidden:compactHeight animated:YES];
+        // Phone landscape is short on height, so the bar normally goes. On the iPhone Duo the bar
+        // items live on the vertical bar and the title view is dropped (updateTitleViewForVerticalBar),
+        // so the horizontal bar collapses on its own; keep it so the items stay available.
+        [self.navigationController setNavigationBarHidden:(compactHeight && ![self hasVerticalBar]) animated:YES];
     } else {
         m_landscape = NO;
         [self.navigationController setNavigationBarHidden:NO animated:YES];
@@ -2287,7 +2332,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [[m_storyBrowser detailsController] refresh];
     } completion:^(id context) {
         [self setNavBarTint];
-        [self addKeyBoardLockGesture];
         [self autosize];
     } ];
 }
@@ -2375,7 +2419,8 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
         }
     }
     m_kbShown = YES;
-    
+    [self showKeyboardLockState]; // keep the toggle's title ("Hide Keyboard") in step
+
     CGRect frame = [self storyViewFullFrame];
     m_kbdSize = bounds.size;
 
@@ -2402,6 +2447,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
+    [self showKeyboardLockState]; // keep the toggle's title ("Show Keyboard") in step
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();

@@ -56,6 +56,12 @@ const NSString *kBookmarkVersionKey = @"Version";
     return m_frotzInfoController;
 }
 
+// Activity indicator trailing-most, then the Frotz (i) if this screen has a FrotzInfo controller.
+-(void)updateRightBarButtonItems {
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    self.navigationItem.rightBarButtonItems = infoItem ? @[m_activButtonItem, infoItem] : @[m_activButtonItem];
+}
+
 -(void)loadView {
     UINavigationController *nc = [self navigationController];
     const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
@@ -106,7 +112,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     m_activButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_activityView];
 
-    self.navigationItem.rightBarButtonItem = m_activButtonItem;
+    [self updateRightBarButtonItems];
 
     [self setButtonItems: YES];
 
@@ -177,8 +183,13 @@ const NSString *kBookmarkVersionKey = @"Version";
 
 -(void)viewDidLoad {
     self.navigationItem.titleView = [m_frotzInfoController view];
-    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(browserDidPressBackButton)];
+    // Symbol plus title: text-only items stay in a horizontal bar on the iPhone Duo, items with a
+    // symbol move to the side (vertical controls); the title serves overflow menus and accessibility.
+    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"books.vertical"]
+                                                                 style: UIBarButtonItemStylePlain target:self action:@selector(browserDidPressBackButton)];
+    backItem.title = @"Story List";
     self.navigationItem.leftBarButtonItem = backItem;
+    [self updateRightBarButtonItems];
 
     self.edgesForExtendedLayout=UIRectEdgeNone;
 }
@@ -939,7 +950,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 - (void)loadZMeta:(NSURLRequest*)request {
-    self.navigationItem.rightBarButtonItem = m_activButtonItem;
+    [self updateRightBarButtonItems];
 
     [m_activityView startAnimating];
 

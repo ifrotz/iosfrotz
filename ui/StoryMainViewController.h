@@ -67,6 +67,7 @@ extern StoryBrowser *theStoryBrowser;
 
     UIView *m_background;
     UIBarButtonItem *m_kbdToggleItem;
+    UIBarButtonItem *m_storyListItem; // leading item; created by the browser, which handles its action
     UIImageView *m_splashImageView;
     NotesViewController *m_notesController;
     
@@ -128,9 +129,7 @@ extern StoryBrowser *theStoryBrowser;
 -(NSString*)relativePathToAppAbsolutePath:(NSString*)path;
 @property (nonatomic, getter=isKBShown, readonly) BOOL KBShown;
 @property (nonatomic, getter=isKBLocked, readonly) BOOL KBLocked;
--(void) showKeyboardLockStateInView:(UIView*)kbdToggleItemView;
 -(void) showKeyboardLockState;
--(void) addKeyBoardLockGesture;
 -(instancetype) init NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
 -(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;

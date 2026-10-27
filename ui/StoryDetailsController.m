@@ -271,10 +271,11 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)refresh {
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
     if (m_storyInfo != nil && [m_browser canEditStoryInfo])
-        self.navigationItem.rightBarButtonItem = [self editButtonItem];
+        self.navigationItem.rightBarButtonItems = infoItem ? @[[self editButtonItem], infoItem] : @[[self editButtonItem]];
     else {
-        self.navigationItem.rightBarButtonItem = nil;
+        self.navigationItem.rightBarButtonItems = infoItem ? @[infoItem] : nil;
         if (self.isEditing)
             self.editing = NO;
     }

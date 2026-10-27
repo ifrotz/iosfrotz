@@ -97,6 +97,7 @@ IBOutlet    StoryDetailsController *m_details;
 - (void)refresh;
 - (void)reloadData;
 - (void)updateNavButton;
+- (UIBarButtonItem*)storyListBarButtonItem;
 @property (nonatomic, readonly, strong, nullable) UIBarButtonItem *nowPlayingNavItem;
 @property (nonatomic, readonly, strong) StoryMainViewController *storyMainViewController;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;

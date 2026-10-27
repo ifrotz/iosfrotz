@@ -308,7 +308,7 @@ enum FrotzPrefsRows
     self.navigationItem.rightBarButtonItem = doneItem;
     self.navigationController.presentationController.delegate = self;
 
-    self.title = NSLocalizedString(@"Settings", @"");
+    self.title = NSLocalizedString(@"Frotz Settings", @"");
     if (m_storyDelegate)
         m_newStoryFontSize = m_origStoryFontSize = (int)[m_storyDelegate fontSize];
     if (m_notesDelegate)

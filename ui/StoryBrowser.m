@@ -663,10 +663,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             [nc.navigationBar setBarStyle: UIBarStyleDefault];   
         }
         if (nc) {
-            if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-                UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-                nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-            }
+            if (!nc.topViewController.navigationItem.leftBarButtonItem)
+                nc.topViewController.navigationItem.leftBarButtonItem = [self storyListBarButtonItem];
             [self didPressModalStoryListButton];
             nc.modalPresentationStyle = UIModalPresentationFullScreen;
             [self.splitViewController presentViewController:nc animated:YES completion:nil];
@@ -1043,7 +1041,21 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 //    if (gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
 //        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
 //    else
-        self.navigationItem.rightBarButtonItem = m_editButtonItem;
+    {
+        UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+        self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
+    }
+}
+
+// The "Story List" button that returns from a pushed/presented story or browser screen. It carries
+// a symbol as well as its title: text-only items stay in a horizontal bar on the iPhone Duo, while
+// items with a symbol move to the side (vertical controls). The title serves overflow menus and
+// accessibility.
+- (UIBarButtonItem*)storyListBarButtonItem {
+    UIBarButtonItem* item = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"books.vertical"]
+                                                             style: UIBarButtonItemStylePlain target:self action:@selector(didPressModalStoryListButton)];
+    item.title = @"Story List";
+    return item;
 }
 
 - (UIBarButtonItem*)nowPlayingNavItem {
@@ -1097,10 +1109,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     self.splitViewController.presentsWithGesture = NO;
     UINavigationController *nc = m_storyMainViewController.storyNavController;
     if (nc) {
-        if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-            UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-            nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-        }
+        // The story controller installs its own leading items (Story List and the Frotz (i)) in
+        // viewWillAppear, using storyListBarButtonItem.
         nc.modalPresentationStyle = UIModalPresentationFullScreen;
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
