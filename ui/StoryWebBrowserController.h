@@ -35,7 +35,6 @@ typedef WKWebView StoryWebView;
     StoryWebView *m_webView;
     UIScrollView *m_scrollView;
     StoryBrowser *m_storyBrowser;
-    UIToolbar *m_toolBar;
     UIActivityIndicatorView *m_activityView;
     UIBarButtonItem *m_backButtonItem, *m_forwardButtonItem, *m_cancelButtonItem, *m_reloadButtonItem, *m_URLButtonItem, *m_activButtonItem, *m_searchButtonItem, *m_spaceButtonItem;
     URLPromptController *m_urlBarController;

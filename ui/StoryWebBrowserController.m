@@ -63,9 +63,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 -(void)loadView {
-    UINavigationController *nc = [self navigationController];
-    const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
-    const float toolBarHeight = nc ? navBarHeight : 44.0;
     // Frames are assigned in viewWillLayoutSubviews from the view's real bounds and safe area;
     // from then on the autoresizing masks keep the layout up to date, as before.
     m_background = [[UIView alloc] initWithFrame: CGRectZero];
@@ -95,18 +92,19 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self setView: m_background];
     [m_webView setNavigationDelegate: self];
 
-    m_toolBar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 0, 0, toolBarHeight)];
-    [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
-
-    [m_toolBar setBarStyle: UIBarStyleBlack];
-    [m_toolBar setTintColor: [UIColor whiteColor]];
-
-    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
+    // The browser controls are the navigation controller's toolbar items (shown in viewWillAppear)
+    // rather than a UIToolbar of our own: the system places that toolbar at the bottom on most
+    // devices and moves its items to the vertical bar on the iPhone Duo. Each item has a symbol
+    // and a title, so it can go vertical and reads properly in an overflow menu.
+    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"chevron.backward"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
+    m_backButtonItem.title = NSLocalizedString(@"Back", nil);
     m_spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     m_cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel)];
     m_reloadButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refresh)];
-    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavForward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
-    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"icon-url-tool"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"chevron.forward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
+    m_forwardButtonItem.title = NSLocalizedString(@"Forward", nil);
+    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"link"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_URLButtonItem.title = NSLocalizedString(@"Enter URL", nil);
     m_searchButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch target:self action:@selector(setSearchType)];
 
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
@@ -115,9 +113,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self updateRightBarButtonItems];
 
     [self setButtonItems: YES];
-
-    [m_background addSubview: m_toolBar];
-    [m_background bringSubviewToFront: m_toolBar];
 
     m_bookmarkListController = [[BookmarkListController alloc] init];
     [m_bookmarkListController setDelegate: self];
@@ -142,43 +137,36 @@ const NSString *kBookmarkVersionKey = @"Version";
     m_laidOutBounds = bounds;
     m_laidOutSafeInsets = safeInsets;
 
-    const CGFloat toolBarHeight = m_toolBar.frame.size.height;
     BOOL urlBarShown = [[m_urlBarController view] superview] != nil;
     BOOL bookmarksShown = [[m_bookmarkListController view] superview] != nil;
 
     // Everything hangs below the top safe-area inset: zero when the view sits below the navigation
     // bar, the bar's bottom edge when the view extends under it (which varies with orientation, so
-    // no fixed bar height can stand in for it).
+    // no fixed bar height can stand in for it). The toolbar belongs to the navigation controller,
+    // which keeps this view above it, so the bottom inset is just the home indicator, if any.
     CGRect frame = bounds;
     frame.origin.y = safeInsets.top;
-    frame.size.height -= safeInsets.top + toolBarHeight;
+    frame.size.height -= safeInsets.top;
     [m_scrollView setFrame: frame];
 
     frame = [m_scrollView bounds];
     frame.size.height -= safeInsets.bottom;
-    CGRect toolBarFrame = CGRectMake(0, safeInsets.top + frame.size.height, frame.size.width, toolBarHeight);
     if (urlBarShown) { // same offset promptURL applies
         frame.origin.y += kSearchBarHeight;
         frame.size.height -= kSearchBarHeight;
         [[m_urlBarController view] setFrame: [self urlBarFrameHidden: NO]];
     }
     [m_webView setFrame: frame];
-    [m_toolBar setFrame: toolBarFrame];
 
-    CGRect blistFrame;
-    if (bookmarksShown) // same placement showBookmarks uses
-        blistFrame = [self bookmarkListFrame];
-    else {
-        blistFrame = [m_webView bounds];
-        blistFrame.size.height += toolBarHeight;
-    }
-    [[m_bookmarkListController view] setFrame: blistFrame];
+    // same placement showBookmarks uses
+    [[m_bookmarkListController view] setFrame: bookmarksShown ? [self bookmarkListFrame] : [m_webView bounds]];
 }
 
 -(void)setButtonItems:(BOOL)canCancel {
-    [m_toolBar setItems: @[m_backButtonItem, m_spaceButtonItem, m_forwardButtonItem, m_spaceButtonItem,
-                           canCancel ? m_cancelButtonItem : m_reloadButtonItem, m_spaceButtonItem,
-                           m_URLButtonItem, m_spaceButtonItem, m_searchButtonItem]];
+    [self setToolbarItems: @[m_backButtonItem, m_spaceButtonItem, m_forwardButtonItem, m_spaceButtonItem,
+                             canCancel ? m_cancelButtonItem : m_reloadButtonItem, m_spaceButtonItem,
+                             m_URLButtonItem, m_spaceButtonItem, m_searchButtonItem]
+                 animated: NO];
 }
 
 -(void)viewDidLoad {
@@ -386,11 +374,17 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
     [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
     [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
+
+    // The browser controls are this controller's toolbarItems; only this screen shows the toolbar.
+    [self.navigationController.toolbar setBarStyle: UIBarStyleBlack];
+    [self.navigationController.toolbar setTintColor: [UIColor whiteColor]];
+    [self.navigationController setToolbarHidden: NO animated: animated];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
+    [self.navigationController setToolbarHidden: YES animated: animated];
 
     if (!m_backToStoryList) {
         CATransition *animation = [CATransition animation];
@@ -508,15 +502,23 @@ const NSString *kBookmarkVersionKey = @"Version";
 
 // The URL bar sits just below the top safe-area inset (the navigation bar when the view extends
 // under it), and slides up behind it when hidden.
+// Both views span the width between the side safe-area insets. The web view handles those insets
+// itself, but these are plain views of ours, and on the iPhone Duo the vertical bar is one of the
+// side insets and can switch sides on rotation (viewWillLayoutSubviews re-applies these frames).
 -(CGRect)urlBarFrameHidden:(BOOL)hidden {
-    CGFloat top = self.view.safeAreaInsets.top;
-    return CGRectMake(0, hidden ? top - kSearchBarHeight : top, m_webView.frame.size.width, kSearchBarHeight);
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    CGFloat top = safeInsets.top;
+    return CGRectMake(safeInsets.left, hidden ? top - kSearchBarHeight : top,
+                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, kSearchBarHeight);
 }
 
-// The bookmark list fills from below the URL bar down to the bottom of the toolbar.
+// The bookmark list fills from below the URL bar down to the bottom of the content area (the
+// navigation controller's toolbar, when present, sits below this view).
 -(CGRect)bookmarkListFrame {
-    CGFloat top = self.view.safeAreaInsets.top + kSearchBarHeight;
-    return CGRectMake(0, top, m_webView.frame.size.width, CGRectGetMaxY(m_toolBar.frame) - top);
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    CGFloat top = safeInsets.top + kSearchBarHeight;
+    return CGRectMake(safeInsets.left, top,
+                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, CGRectGetMaxY(m_scrollView.frame) - top);
 }
 
 -(void)promptURL {
