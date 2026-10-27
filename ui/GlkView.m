@@ -97,7 +97,7 @@
                 [[NSRunLoop currentRunLoop] addTimer: m_tapTimer forMode: NSDefaultRunLoopMode];
                 lastTimestamp = [touch timestamp];
             } else if (tapCount == 2) {
-                [delegate activateKeyboard];
+                if ([delegate shouldActivateKeyboardForStoryTap]) [delegate activateKeyboard];
                 lastTimestamp = [touch timestamp];
                 m_skipNextTap = NO;
             }
@@ -137,7 +137,7 @@
                     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) { // single key input
                         iosif_feed_input(@" "); // press 'space'
                     } else if (![delegate isKBShown]) {
-                        [delegate activateKeyboard];
+                        if ([delegate shouldActivateKeyboardForStoryTap]) [delegate activateKeyboard];
                     }
                 }
             }

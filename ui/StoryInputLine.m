@@ -10,6 +10,7 @@
 #import "StoryInputLine.h"
 #import "StoryView.h"
 #import "StatusLine.h"
+#import "VoiceManager.h"
 
 #include "iosfrotz.h"
 
@@ -352,6 +353,9 @@ BOOL cursorVisible = YES;
     int pad = 2;
     myFrame.size.height = [[self font] lineHeight]+pad;
 
+    self.backgroundColor = UIColor.clearColor;
+    self.placeholder = nil;
+
     [self setFrame: myFrame];
     if (m_completionLabel) {
         CGRect labelFrame = [m_completionLabel frame];
@@ -433,6 +437,7 @@ const int kCompletionViewTag = 21;
 }
 
 -(void)delayedInput:(NSString*)text {
+    [[VoiceManager shared] rememberPlayerCommand:text];
     iosif_feed_input(text);
 }
 

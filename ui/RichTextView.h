@@ -88,6 +88,9 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
     CGRect m_delayedFrame;
     CGRect m_origFrame;
     RichDataGetImageCallback m_richDataGetImageCallback;
+
+    // Voice mode word highlighting
+    UIView *m_voiceHighlightView;
 }
 
 @property(nonatomic, strong) NSString *text;
@@ -138,6 +141,7 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 - (void)prepareForKeyboardShowHide;
 - (void)rememberTopLineForReflow;
 @property (nonatomic, getter=getCurrentTextColor, readonly, copy) UIColor *currentTextColor;
+@property (nonatomic, getter=getCurrentBackgroundColor, readonly, copy) UIColor *currentBackgroundColor;
 - (void)resetColors;
 - (void)resetMargins;
 - (void)setNiceMargins:(BOOL)reflow;
@@ -164,6 +168,11 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 - (RichTextAE *)updateAE;
 - (void)appendAE;
 - (void)markWaitForInput;
+
+// Voice mode highlighting
+- (void)showVoiceHighlightAtRect:(CGRect)rect;
+- (void)clearVoiceHighlight;
+- (CGRect)rectForTextRun:(NSUInteger)runIndex characterRange:(NSRange)charRange;
 @property (nonatomic, getter=getTextPos, readonly, copy) NSArray<NSValue*> *textPos;
 @property (nonatomic, getter=getSaveDataDict, readonly, copy) NSDictionary *saveDataDict;
 - (void)restoreFromSaveDataDict: (NSDictionary*)saveData;

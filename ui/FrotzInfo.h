@@ -14,6 +14,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol KeyboardOwner <NSObject>
 -(nullable id)dismissKeyboard;
+@optional
+-(void)pauseVoiceForSettings;
+-(void)resumeVoiceAfterSettings;
 @end
 
 @interface FrotzInfo : UIViewController <FrotzSettingsInfoDelegate> {

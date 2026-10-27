@@ -50,6 +50,7 @@
 
     m_infoBarItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"info.circle"]
                                                       style: UIBarButtonItemStylePlain target: self action: @selector(frotzInfo)];
+    m_infoBarItem.accessibilityIdentifier = @"frotzSettings";
     m_infoBarItem.title = NSLocalizedString(@"Frotz Settings", nil); // shown in overflow menus and used by accessibility
     [self updateAccessibility];
 
@@ -96,7 +97,10 @@
 }
 
 -(void)dismissInfoModal {
-    [m_navigationController dismissViewControllerAnimated:YES completion:nil];
+    [m_navigationController dismissViewControllerAnimated:YES completion:^{
+        if ([self->m_kbdOwner respondsToSelector:@selector(resumeVoiceAfterSettings)])
+            [self->m_kbdOwner resumeVoiceAfterSettings];
+    }];
 }
 
 -(void)dismissInfo {
@@ -111,11 +115,16 @@
     }
     if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
         [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
+    if (!m_navigationController.presentedViewController
+        && [m_kbdOwner respondsToSelector:@selector(resumeVoiceAfterSettings)])
+        [m_kbdOwner resumeVoiceAfterSettings];
 }
 
 -(void)frotzInfo {
     UIView *view = [m_settings view]; // Preload view so animation is smoother
     if (![view superview]) { // already presented
+        if ([m_kbdOwner respondsToSelector:@selector(pauseVoiceForSettings)])
+            [m_kbdOwner pauseVoiceForSettings];
         if (m_kbdOwner)
             m_prevResponder = [m_kbdOwner dismissKeyboard];
         [m_settings setInfoDelegate: self];
@@ -132,4 +141,3 @@
     }
 }
 @end
-
