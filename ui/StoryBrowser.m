@@ -1059,6 +1059,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // place of what the system editButtonItem would do (symbols rather than its text titles).
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated: animated];
+    // Only one of the list and the details page edits at a time: side by side (iPad, open Duo)
+    // they would otherwise let a story be deleted or reordered while its details are being typed.
+    if (editing && m_details.isEditing)
+        [m_details setEditing: NO animated: animated];
     m_editButtonItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
     m_editButtonItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
     if (@available(iOS 26.0, *))

@@ -357,6 +357,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated: animated];
+    // Mirror of StoryBrowser: starting to edit here ends list editing, so the two never overlap.
+    if (editing && m_browser.isEditing)
+        [m_browser setEditing: NO animated: animated];
     UIBarButtonItem *editItem = [self editItem];
     editItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
     editItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
