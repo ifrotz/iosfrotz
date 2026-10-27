@@ -44,18 +44,10 @@
 }
 
 -(void)rateFrotz {
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/us/app/frotz/id287653015"]];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/us/app/frotz/id287653015"] options:@{} completionHandler:nil];
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    [m_data setLength: 0];
-}
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [m_data appendData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)releaseNotesDidLoad {
     FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
     
     NSError *error;
@@ -71,7 +63,7 @@
         [self showReleaseNotes];
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void)releaseNotesDidFailWithError:(NSError *)error {
     m_request = nil;
     m_data = nil;
     m_connection = nil;
@@ -99,8 +91,22 @@
         NSURL *myURL = [NSURL URLWithString: [NSString stringWithFormat:@"%@?q=%@,%@&%lu", @FROTZ_REL_URL kRelNotesFilename,
                                                 devModel, devVers, time(0)]];
         m_request = [NSURLRequest requestWithURL: myURL];    
-        m_data = [NSMutableData data];
-        m_connection = [[NSURLConnection alloc] initWithRequest:m_request delegate:self];
+        m_data = nil;
+        __weak ReleaseNotes *weakSelf = self;
+        m_connection = [[NSURLSession sharedSession] dataTaskWithRequest:m_request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                ReleaseNotes *strongSelf = weakSelf;
+                if (!strongSelf)
+                    return;
+                if (error || !data) {
+                    [strongSelf releaseNotesDidFailWithError: error];
+                } else {
+                    strongSelf->m_data = [data mutableCopy];
+                    [strongSelf releaseNotesDidLoad];
+                }
+            });
+        }];
+        [m_connection resume];
     } else
         [self performSelector:@selector(updateReleaseNotesAuto) withObject:nil afterDelay:60*60];
 #endif

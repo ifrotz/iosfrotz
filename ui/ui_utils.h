@@ -28,7 +28,10 @@ CF_IMPLICIT_BRIDGING_DISABLED
 
 CGImageRef drawRectInCGImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, CGImageRef destImageRef) CF_RETURNS_RETAINED;
 
-UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight);
+UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight) __attribute__((deprecated("use scaledUIImageForBounds instead")));
+// bounds: the area the image must fit within (normally the presenting view's bounds).
+// traitCollection: supplies the display scale and horizontal size class of the presenting view.
+UIImage *scaledUIImageForBounds(UIImage *image, size_t newWidth, size_t newHeight, CGRect bounds, UITraitCollection *traitCollection);
 UIImage *drawUIImageInUIImage(UIImage *image, int x, int y, size_t scaleWidth, size_t scaleHeight, UIImage *destImage);
 UIImage *drawRectInUIImage(unsigned int color, CGFloat x, CGFloat y, CGFloat width, CGFloat height, UIImage *destImage);
 UIImage *createBlankUIImage(unsigned int bgColor, size_t destWidth, size_t destHeight);

@@ -109,7 +109,7 @@ void win_pair_rearrange(window_t *win, grect_t *box)
                     case wintype_Graphics:
                         split = dwin->size;
                         if (!dwin->vertical) {
-                            if (win->bbox.right-win->bbox.left == iosif_screenwidth  && !gLargeScreenDevice)
+                            if (win->bbox.right-win->bbox.left == iosif_screenwidth  && !iosif_regular_width)
                                 split /= 2;
                         }
                         break;

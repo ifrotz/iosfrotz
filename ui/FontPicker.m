@@ -39,25 +39,16 @@ API_AVAILABLE(ios(13.0)) @interface FontPickerImpl_FP : UIFontPickerViewControll
 @implementation FontPicker
 +(UIViewController<FrotzFontPicker>*) frotzFontPickerWithTitle:(NSString*)title includingFaces:(BOOL)includeFaces monospaceOnly:(BOOL)monospaceOnly {
     UIViewController<FrotzFontPicker> *fp;
-    if (@available(iOS 13.0, *)) {
-        UIFontPickerViewControllerConfiguration *config = [[UIFontPickerViewControllerConfiguration alloc] init];
-        config.includeFaces = includeFaces;
-        // The filteredTraits interface is fucking next to useless.  You can't show only fonts with normal
-        // weights, and you can't filter out the font with only symbols, because just a mask is not enough,
-        // it needs both a mask and a compare-to value.
-        // Basically the example of monospace selection is the only useful way to use the property.
-        config.filteredTraits = monospaceOnly ? UIFontDescriptorTraitMonoSpace : 0;
-        FontPickerImpl_FP *impl = [[FontPickerImpl_FP alloc] initWithConfiguration: config];
-        impl.fixedFontsOnly = monospaceOnly;
-        fp = impl;
-    } else
-    {
-        FontPickerImpl_TV *impl = [[FontPickerImpl_TV alloc] init];
-        // include faces not implemented
-        impl.fixedFontsOnly = monospaceOnly;
-        impl.includeFaces = includeFaces;
-        fp = impl;
-    }
+    UIFontPickerViewControllerConfiguration *config = [[UIFontPickerViewControllerConfiguration alloc] init];
+    config.includeFaces = includeFaces;
+    // The filteredTraits interface is fucking next to useless.  You can't show only fonts with normal
+    // weights, and you can't filter out the font with only symbols, because just a mask is not enough,
+    // it needs both a mask and a compare-to value.
+    // Basically the example of monospace selection is the only useful way to use the property.
+    config.filteredTraits = monospaceOnly ? UIFontDescriptorTraitMonoSpace : 0;
+    FontPickerImpl_FP *impl = [[FontPickerImpl_FP alloc] initWithConfiguration: config];
+    impl.fixedFontsOnly = monospaceOnly;
+    fp = impl;
     if (title)
         fp.title = title;
     return fp;

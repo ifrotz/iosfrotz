@@ -12,16 +12,13 @@
 #import "TransitionView.h"
 
 @interface FrotzAppDelegate : NSObject <UIApplicationDelegate, TransitionViewDelegate> {
-	
-	UIWindow *m_window;
+		
 	UINavigationController *m_navigationController;
-	StoryBrowser *m_browser;
 	TransitionView *m_transitionView;
 	UIActivityIndicatorView *m_activityView;
 	UIView *m_splash;
 }
 -(BOOL)application:(UIApplication *_Nonnull)application didFinishLaunchingWithOptions:(nullable NSDictionary *)launchOption;
 -(void)fadeSplashScreen;
-@property (nullable, nonatomic, strong) UIWindow *window;
 @end
 

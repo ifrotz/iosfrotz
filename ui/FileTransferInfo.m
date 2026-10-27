@@ -32,6 +32,8 @@ BOOL isHiddenFile(NSString *file) {
 }
 
 
+#import "FrotzAlert.h"
+
 @implementation FileTransferInfo
 @synthesize serverIsRunning = m_running;
 
@@ -64,7 +66,7 @@ BOOL isHiddenFile(NSString *file) {
         CGSize cgSize = [m_webView frame].size;
         [m_startButton setFrame:
          CGRectMake(cgSize.width/2 - 130,
-                    gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
+                    self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 520: (cgSize.height > cgSize.width || cgSize.height > 320) ? cgSize.height-64 : cgSize.height-48,
                     260, 48)];
     }
 }
@@ -183,12 +185,22 @@ BOOL isHiddenFile(NSString *file) {
     CGSize cgSize = m_webView.frame.size;
     if (!m_webView)
         return;
-    char baseHostName[256] = { 0 };
-    if (gethostname(baseHostName, sizeof(baseHostName)-1) == 0 && *baseHostName && strstr(baseHostName, ".")==NULL)
-        strcat(baseHostName, ".local");
     if (cgSize.width * cgSize.height < 320 * 500)
         smallScreen = YES;
     NSString *addr = [self getIPAddress:YES isIPV6:&isIPV6];
+    // A host name other computers can use to reach this device, or empty. gethostname() reports just
+    // "localhost" on current iOS, which means nothing from another machine, so it is only used when
+    // it is a real name (with ".local" for Bonjour). (A reverse DNS lookup of our address was tried
+    // as a fallback and dropped: it needs the Local Network permission and most routers don't
+    // register names for their DHCP clients.)
+    char baseHostName[256] = { 0 };
+    if (gethostname(baseHostName, sizeof(baseHostName)-1) == 0 && *baseHostName
+        && strncasecmp(baseHostName, "localhost", 9) != 0) {
+        if (strstr(baseHostName, ".") == NULL)
+            strcat(baseHostName, ".local");
+    } else {
+        baseHostName[0] = 0;
+    }
     if (addr && m_running) {
         if (m_httpserv && [m_httpserv isRunning]) {
             NSString *bjname = [m_httpserv name];
@@ -225,7 +237,7 @@ BOOL isHiddenFile(NSString *file) {
             [m_startButton removeFromSuperview];
         }
     }
-    int fontBase = 12 + (smallScreen ? -2:0) + (gLargeScreenDevice && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 6:0);
+    int fontBase = 12 + (smallScreen ? -2:0) + (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 6:0);
     NSString *message =  [NSString stringWithFormat: @
                           "<html><body>\n"
                           "<style type=\"text/css\">\n"
@@ -291,10 +303,9 @@ BOOL isHiddenFile(NSString *file) {
         [[UIApplication sharedApplication] setIdleTimerDisabled: YES]; 
     } else {
         [self stopServer];
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Unable to start FTP server"
-                                                        message: error ? [error localizedFailureReason] : @"A network error occurred"
-                                                       delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self, @"Unable to start FTP server",
+                       error ? [error localizedFailureReason] : @"A network error occurred",
+                       @"OK", nil, nil);
     }
 }
 

@@ -14,30 +14,39 @@ static CGContextRef CreateARGBBitmapContext (size_t pixelsWide, size_t pixelsHig
 
 UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
 {
+    // Deprecated bridge for callers that have no view in reach (the HTTP server thread and
+    // StoryBrowser's init-time thumbnail generation). View-based callers should pass their own
+    // bounds and trait collection to scaledUIImageForBounds.
+    UIScreen *screen = [UIScreen mainScreen];
+    return scaledUIImageForBounds(image, newWidth, newHeight, [screen applicationFrame], [screen traitCollection]);
+}
+
+UIImage *scaledUIImageForBounds(UIImage *image, size_t newWidth, size_t newHeight, CGRect bounds, UITraitCollection *traitCollection)
+{
     if (!image)
         return nil;
     CGImageRef inImage = [image CGImage];
     if (!inImage)
         return nil;
 	
-    CGSize screenSize = [[UIScreen mainScreen] applicationFrame].size;
+    CGSize fitSize = bounds.size;
     
     size_t origWidth = CGImageGetWidth(inImage);
     size_t origHeight = CGImageGetHeight(inImage);
     UIImage *img = nil;
     if (newWidth == 0 && newHeight == 0) {
-        if (!gLargeScreenDevice &&
-            (origHeight <= screenSize.height*2 && origWidth <= screenSize.width*2)
+        if (traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular &&
+            (origHeight <= fitSize.height*2 && origWidth <= fitSize.width*2)
             && [image respondsToSelector:@selector(scale)]) {
             // ??? can we also check if the device actually supports scale > 1.0?
-            if ([image scale] < 2.0 && (origHeight > screenSize.height || origWidth > screenSize.width))
+            if ([image scale] < 2.0 && (origHeight > fitSize.height || origWidth > fitSize.width))
                 img = [UIImage imageWithCGImage:inImage scale:2.0 orientation:UIImageOrientationUp];
             else
                 img = image;
             return img;
         }
         
-        newWidth = newHeight = screenSize.width; // fall thru...
+        newWidth = newHeight = fitSize.width; // fall thru...
     }
     
     if (origWidth < newWidth || origHeight < newHeight) {
@@ -51,9 +60,7 @@ UIImage *scaledUIImage(UIImage *image, size_t newWidth, size_t newHeight)
     if (origWidth==newWidth && origHeight==newHeight)
         return image;
 
-    CGFloat scale = 1.0;
-    if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
-        scale = [[UIScreen mainScreen] scale];
+    CGFloat scale = traitCollection.displayScale;
     
     if (scale > 1.0) {
         newWidth *= scale;

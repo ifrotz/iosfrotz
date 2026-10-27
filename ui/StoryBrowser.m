@@ -77,6 +77,8 @@ void removeOldPngSplash(const char *filename) {
         [defaultManager removeItemAtPath: path error: &error];
 }
 
+#import "FrotzAlert.h"
+
 @implementation StoryBrowser 
 
 @synthesize searchController = m_searchController;
@@ -100,11 +102,12 @@ void removeOldPngSplash(const char *filename) {
 
 -(BOOL)checkMinimumDiskSpace:(long long)minSpace freeSpace:(long long)freeSpace {
     if (freeSpace < minSpace) { // in MB
-        UIAlertView *alert = [[UIAlertView alloc]  initWithTitle:
-                              [NSString stringWithFormat: @"Frotz cannot launch because the device has only %lld MB of storage free.", freeSpace]
-                                                         message: [NSString stringWithFormat:@"Frotz needs at least %lld MB to run so that game autosave and other features work correctly.\n\nFrotz will now terminate.", minSpace]
-                                                        delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
+        FrotzShowAlert(self, [NSString stringWithFormat: @"Frotz cannot launch because the device has only %lld MB of storage free.", freeSpace],
+                       [NSString stringWithFormat:@"Frotz needs at least %lld MB to run so that game autosave and other features work correctly.\n\nFrotz will now terminate.", minSpace],
+                       @"OK", nil, ^(NSInteger buttonIndex) {
+            if (abortLaunchCondition)
+                exit(1);
+        });
         abortLaunchCondition = YES;
         return YES;
     }
@@ -186,7 +189,7 @@ void removeOldPngSplash(const char *filename) {
         [m_settings setNotesDelegate: m_storyMainViewController.notesController];
 
         if (!hasStoryBoard) {
-            m_details = [[StoryDetailsController alloc] initWithNibName:gLargeScreenDevice ? @"StoryDetailsController-ipad":@"StoryDetailsController"
+            m_details = [[StoryDetailsController alloc] initWithNibName:self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPad ? @"StoryDetailsController-ipad":@"StoryDetailsController"
                                                                  bundle:nil];
             [m_details setStoryBrowser:self];
         }
@@ -204,8 +207,12 @@ void removeOldPngSplash(const char *filename) {
 
         m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
         
-        m_editButtonItem = [self editButtonItem];
-        [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
+        // Not the system editButtonItem: that one is text-only ("Edit"/"Done"), and text-only items
+        // stay in a horizontal bar on the iPhone Duo instead of moving to the vertical bar. This
+        // one carries a symbol; setEditing:animated: swaps it between pencil and checkmark.
+        m_editButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"pencil"]
+                                                            style: UIBarButtonItemStylePlain target: self action: @selector(toggleEditing)];
+        m_editButtonItem.title = NSLocalizedString(@"Edit", nil);
 
         NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
         NSString *metadataPath = [appSuppPath stringByAppendingPathComponent: kMDFilename];
@@ -360,9 +367,7 @@ void removeOldPngSplash(const char *filename) {
             
             NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
             // Update thumbnails if device image scale > 1.0
-            CGFloat scale = 1.0;
-            if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
-                scale = [[UIScreen mainScreen] scale];
+            CGFloat scale = self.traitCollection.displayScale;
             for (StoryInfo *si in m_storyNames) {
                 NSString *storyFile = [[si path] lastPathComponent];
                 NSString *story = [storyFile stringByDeletingPathExtension];
@@ -381,7 +386,7 @@ void removeOldPngSplash(const char *filename) {
                     NSString *pathExt = [storyFile pathExtension];
                     BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
                     NSData *data = nil;
-                    if (!isZblorb || !gLargeScreenDevice)
+                    if (!isZblorb || self.traitCollection.userInterfaceIdiom != UIUserInterfaceIdiomPad)
                         data = [self splashDataForStory: story];
                     if (!data && isZblorb)
                         data = imageDataFromBlorb([si path]);
@@ -415,7 +420,7 @@ void removeOldPngSplash(const char *filename) {
 
 - (void)setLaunchPath:(NSString*)path {
     NSFileManager *defaultManager = [NSFileManager defaultManager];
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
     if (m_launchPath) {
         m_launchPath = nil;
     }
@@ -429,18 +434,19 @@ void removeOldPngSplash(const char *filename) {
             m_launchPath = destPath;
         } else {
             NSLog(@"Frotz couldn't read launch URL path: %@", path);
-            alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot read external URL"
-                                                message: [NSString stringWithFormat:@"Error %@: %@ : %@", error, path, destPath]
-                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            alertTitle = @"Frotz cannot read external URL";
+            alertMessage = [NSString stringWithFormat:@"Error %@: %@ : %@", error, path, destPath];
         }
     } else {
         NSLog(@"Frotz launch URL path %@ doesn't exist", path);
-        alert = [[UIAlertView alloc]  initWithTitle:@"Frotz cannot find external URL"
-                                            message: [NSString stringWithFormat:@".../%@", [path lastPathComponent]]
-                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alertTitle = @"Frotz cannot find external URL";
+        alertMessage = [NSString stringWithFormat:@".../%@", [path lastPathComponent]];
     }
-    if (alert) {
-        [alert show];
+    if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, ^(NSInteger buttonIndex) {
+            if (abortLaunchCondition)
+                exit(1);
+        });
     }
 }
 
@@ -661,10 +667,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             [nc.navigationBar setBarStyle: UIBarStyleDefault];   
         }
         if (nc) {
-            if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-                UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-                nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-            }
+            if (!nc.topViewController.navigationItem.leftBarButtonItem)
+                nc.topViewController.navigationItem.leftBarButtonItem = [self storyListBarButtonItem];
             [self didPressModalStoryListButton];
             nc.modalPresentationStyle = UIModalPresentationFullScreen;
             [self.splitViewController presentViewController:nc animated:YES completion:nil];
@@ -923,8 +927,14 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     
     [super loadView];
     if (!m_details && self.splitViewController.childViewControllers.count > 1) {
-        m_details = self.splitViewController.childViewControllers[1].childViewControllers[0];
+        UIViewController *detailsColumn = self.splitViewController.childViewControllers[1];
+        m_details = detailsColumn.childViewControllers[0];
         [m_details setStoryBrowser:self];
+        // Keep the details column's nav controller: when the split view collapses and the
+        // details page is pushed onto this list, UIKit pulls m_details out of it, and on expand
+        // the nav must be given m_details back (see the separate... delegate method below).
+        if ([detailsColumn isKindOfClass:[UINavigationController class]])
+            m_detailsNav = (UINavigationController*)detailsColumn;
     }
 
     UITableView *realView = [super tableView];
@@ -1002,18 +1012,24 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
     UISearchController *searchController = [[UISearchController alloc] initWithSearchResultsController: nil];
     searchController.searchResultsUpdater = self;
-    searchController.dimsBackgroundDuringPresentation = NO;
-    UISearchBar *searchBar = searchController.searchBar;
+    searchController.obscuresBackgroundDuringPresentation = NO;
     searchController.searchBar.delegate = self;
-    //_tblDropDown.tableHeaderView = self.searchController.searchBar;
     self.definesPresentationContext = YES;
-    [self.searchController.searchBar sizeToFit];
     [self setSearchController: searchController];
 
-    self.tableView.tableHeaderView = searchBar;
-    CGRect newBounds = self.tableView.bounds;
-    newBounds.origin.y += searchBar.frame.size.height;
-    self.tableView.bounds = newBounds;
+    // The navigation item hosts the search bar. It used to be the table's header view, scrolled up
+    // under the navigation bar until pulled down; with the bar now transparent (Liquid Glass) that
+    // "hidden" bar showed through behind the bar buttons. UIKit places and collapses it correctly
+    // here, and handles it on the iPhone Duo along with the rest of the bar content.
+    self.navigationItem.searchController = searchController;
+    self.navigationItem.hidesSearchBarWhenScrolling = YES;
+    // Since iOS 15 plain tables pad about 22pt above each section header, which showed as a large
+    // gap between the search bar and the first header. iOS 26 no longer shows it, so only
+    // earlier systems are adjusted.
+    if (@available(iOS 26.0, *)) {
+    } else {
+        self.tableView.sectionHeaderTopPadding = 0;
+    }
     [m_details updateBarButtonAndSelectionInstructions: UISplitViewControllerDisplayModeAutomatic];
 
     if (m_launchPath)
@@ -1035,7 +1051,41 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 //    if (gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
 //        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
 //    else
-        self.navigationItem.rightBarButtonItem = m_editButtonItem;
+    {
+        UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+        self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
+    }
+}
+
+- (void)toggleEditing {
+    [self setEditing: !self.editing animated: YES];
+}
+
+// UITableViewController drives the table's editing state; this keeps the Edit item in step, in
+// place of what the system editButtonItem would do (symbols rather than its text titles).
+- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
+    [super setEditing: editing animated: animated];
+    // Only one of the list and the details page edits at a time: side by side (iPad, open Duo)
+    // they would otherwise let a story be deleted or reordered while its details are being typed.
+    if (editing && m_details.isEditing)
+        [m_details setEditing: NO animated: animated];
+    m_editButtonItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
+    m_editButtonItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
+    if (@available(iOS 26.0, *))
+        m_editButtonItem.style = editing ? UIBarButtonItemStyleProminent : UIBarButtonItemStylePlain;
+    else
+        m_editButtonItem.style = editing ? UIBarButtonItemStyleDone : UIBarButtonItemStylePlain;
+}
+
+// The "Story List" button that returns from a pushed/presented story or browser screen. It carries
+// a symbol as well as its title: text-only items stay in a horizontal bar on the iPhone Duo, while
+// items with a symbol move to the side (vertical controls). The title serves overflow menus and
+// accessibility.
+- (UIBarButtonItem*)storyListBarButtonItem {
+    UIBarButtonItem* item = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"books.vertical"]
+                                                             style: UIBarButtonItemStylePlain target:self action:@selector(didPressModalStoryListButton)];
+    item.title = @"Story List";
+    return item;
 }
 
 - (UIBarButtonItem*)nowPlayingNavItem {
@@ -1049,15 +1099,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     [self reloadData];
     [self updateNavButton];
 
-    if (@available(iOS 13.0, *)) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
-    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+    [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
     [m_frotzInfoController updateTitle];
 
     [m_tableView scrollToNearestSelectedRowAtScrollPosition: UITableViewScrollPositionMiddle animated:YES];
@@ -1095,10 +1139,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     self.splitViewController.presentsWithGesture = NO;
     UINavigationController *nc = m_storyMainViewController.storyNavController;
     if (nc) {
-        if (!nc.topViewController.navigationItem.leftBarButtonItem) {
-            UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(didPressModalStoryListButton)];
-            nc.topViewController.navigationItem.leftBarButtonItem = backItem;
-        }
+        // The story controller installs its own leading items (Story List and the Frotz (i)) in
+        // viewWillAppear, using storyListBarButtonItem.
         nc.modalPresentationStyle = UIModalPresentationFullScreen;
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
@@ -1108,14 +1150,24 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)didPressModalStoryListButton {
-    if (self.splitViewController && self.splitViewController.presentedViewController) {
-        [self.splitViewController dismissViewControllerAnimated:YES completion:nil];
-        NSString *storyPath = [[m_details storyInfo] path];
-        m_details.willResume = storyPath && [storyPath length] > 0
-        && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
-            || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
-        [m_details refresh];
+    [self didPressModalStoryListButtonWithCompletion: nil];
+}
+
+// `completion` runs once the presented story or browser has been dismissed (or immediately if
+// nothing is presented), so callers can present an alert that would otherwise be dismissed along
+// with the controller that showed it.
+- (void)didPressModalStoryListButtonWithCompletion:(void (^)(void))completion {
+    if (!(self.splitViewController && self.splitViewController.presentedViewController)) {
+        if (completion)
+            completion();
+        return;
     }
+    [self.splitViewController dismissViewControllerAnimated:YES completion:completion];
+    NSString *storyPath = [[m_details storyInfo] path];
+    m_details.willResume = storyPath && [storyPath length] > 0
+    && ([[m_storyMainViewController currentStory] isEqualToString: storyPath]
+        || [m_storyMainViewController autoSaveExistsForStory: storyPath]);
+    [m_details refresh];
 }
 
 -(void)launchStory:(NSString*)storyPath {
@@ -1164,11 +1216,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
 -(void)delayedPopToSelf {
     [[self navigationController] popToViewController:self animated:NO];
-}
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (abortLaunchCondition)
-        exit(1);
 }
 
 -(void)resumeStory {
@@ -1382,21 +1429,25 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 
         NSString *ext = [storyPath pathExtension];
         BOOL isBlorb = ([ext isEqualToString:@"zblorb"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"blb"]);
+        // Fit artwork to the window, the local counterpart of the old screen-size cap; fall back
+        // to this view's bounds if it is not in a window yet.
+        CGRect artworkBounds = self.view.window ? self.view.window.bounds : self.view.bounds;
+        UITraitCollection *artworkTraits = self.traitCollection;
         if (storySplashPath && [defaultManager fileExistsAtPath:storySplashPath])
-            m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storySplashPath],0,0);
+            m_details.artwork = scaledUIImageForBounds([UIImage imageWithContentsOfFile: storySplashPath],0,0, artworkBounds, artworkTraits);
         else if ([self shouldUseCachedBuiltinSplash: storyName]) {
             NSString *storyCacheSplashPath = [self cacheSplashPathForBuiltinStory: storyName];
             if (![defaultManager fileExistsAtPath: storyCacheSplashPath]) {
                 NSString *splashesZipPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @"splashes.zip"];
                 extractOneFileFromZIP(splashesZipPath,[storyCacheSplashPath stringByDeletingLastPathComponent],[storyCacheSplashPath lastPathComponent]);
-                m_details.artwork = scaledUIImage([UIImage imageWithContentsOfFile: storyCacheSplashPath],0,0);
+                m_details.artwork = scaledUIImageForBounds([UIImage imageWithContentsOfFile: storyCacheSplashPath],0,0, artworkBounds, artworkTraits);
             }
         }
         else {
             if (isBlorb) {
                 NSData *data = imageDataFromBlorb(storyPath);
                 if (data) {
-                    UIImage *image = scaledUIImage([UIImage imageWithData: data], 0, 0);
+                    UIImage *image = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, artworkBounds, artworkTraits);
                     m_details.artwork = image;
                 }
             }
@@ -1452,8 +1503,10 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // using `secondaryViewController` to do so.  Return YES to prevent UIKit from applying its default behavior; return NO to request that UIKit
 // perform its default collapsing behavior.
 - (BOOL)splitViewController:(UISplitViewController *)splitViewController collapseSecondaryViewController:(UIViewController *)secondaryViewController ontoPrimaryViewController:(UIViewController *)primaryViewController {
-    if (self.splitViewController.presentedViewController)
-        return NO;
+    // Always handle the collapse ourselves: the details page is simply not shown in compact
+    // width until the user asks for it. Letting UIKit do its default (which it did when a story
+    // was presented) moves m_details onto this list behind our back; the expand below then has
+    // to undo whichever of the two happened. One path is easier to keep correct.
     return YES;
 }
 
@@ -1467,8 +1520,25 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 // have been configured for display in a regular-width split view controller. If you return `nil`, then `UISplitViewController` will perform
 // its default behavior.
 - (UIViewController*)splitViewController:(UISplitViewController *)splitViewController separateSecondaryViewControllerFromPrimaryViewController:(nonnull UIViewController *)primaryViewController {
-//    NSLog(@"separateSecondaryViewControllerFromPrimaryViewController %@\n  viewControllers: %@", primaryViewController, splitViewController.viewControllers));
-    return nil;
+    // Rebuild the details column ourselves. While collapsed, showing a story's details pushes
+    // m_details onto this list (UIKit's showDetailViewController: does that), which removes it
+    // from the details nav; if it was then popped, nothing owns it and UIKit's default expand
+    // would restore the details nav with zero view controllers, which it refuses to display.
+    if (!m_details)
+        return nil;
+    if ([primaryViewController isKindOfClass:[UINavigationController class]]) {
+        UINavigationController *primaryNav = (UINavigationController*)primaryViewController;
+        NSMutableArray *stack = [primaryNav.viewControllers mutableCopy];
+        if ([stack containsObject: m_details]) {
+            [stack removeObject: m_details];
+            [primaryNav setViewControllers: stack animated:NO];
+        }
+    }
+    if (!m_detailsNav)
+        m_detailsNav = [[StoryDetailsControllerNC alloc] initWithRootViewController: m_details];
+    else if (m_details.navigationController != m_detailsNav || m_detailsNav.viewControllers.count == 0)
+        [m_detailsNav setViewControllers: @[m_details] animated:NO];
+    return m_detailsNav;
 }
 
 -(void)showStoryDetails:(StoryInfo*)storyInfo {
@@ -1507,12 +1577,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     StoryInfo *storyInfo = [self storyInfoForIndexPath: indexPath tableView:tableView];
     if (storyInfo && lastRow != -1) {
         if (!self.splitViewController.isCollapsed && (!secondTap ||
-            self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)) {
-            if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeAllVisible)
+            self.splitViewController.displayMode != UISplitViewControllerDisplayModeOneBesideSecondary)) {
+            if (self.splitViewController.displayMode != UISplitViewControllerDisplayModeOneBesideSecondary)
                 [UIView animateWithDuration:0.3 animations:^{
                     if (m_details.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
-                        self.splitViewController.displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
-                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModePrimaryHidden;
+                        self.splitViewController.displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
+                        self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeSecondaryOnly;
                         self.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
                     }
                 }];
@@ -1645,7 +1715,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
             itemSize = CGSizeMake(fullItemSize.width, imgSize.height/imgSize.width*fullItemSize.height);
 
         // https://stackoverflow.com/questions/2788028/, adapted for centered aspectFit
-        UIGraphicsBeginImageContextWithOptions(fullItemSize, NO, UIScreen.mainScreen.scale);
+        UIGraphicsBeginImageContextWithOptions(fullItemSize, NO, tableView.traitCollection.displayScale);
         CGRect imageRect = CGRectMake(fullItemSize.width/2.0-itemSize.width/2.0, fullItemSize.height/2.0-itemSize.height/2.0, itemSize.width, itemSize.height);
         [image drawInRect:imageRect];
         cell.imageView.image = image = UIGraphicsGetImageFromCurrentImageContext();

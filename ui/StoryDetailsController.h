@@ -13,11 +13,12 @@
 
 @class StoryDetailsController;
 
-@interface FrotzImageView : UIImageView  <UIAlertViewDelegate>
+@interface FrotzImageView : UIImageView
 {
     StoryDetailsController *__weak m_detailsController;
     NSTimer *m_tapTimer;
     CGRect m_savedBounds;
+    id m_editMenuInteraction; // UIEditMenuInteraction, iOS 16 and later
 }
 -(void)displayMenu;
 @property (nonatomic, getter=isMagnified, readonly) BOOL magnified;
@@ -27,13 +28,7 @@
 @end
 
 
-@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate,
-#if UseWKWebViewForFrotzStoryDetails
-    WKNavigationDelegate,
-#else
-    UIWebViewDelegate,
-#endif
-    UIActionSheetDelegate> {
+@interface StoryDetailsController : UIViewController <UIScrollViewDelegate, UITextFieldDelegate, WKNavigationDelegate> {
 
     IBOutlet UITextField *m_titleField;
     IBOutlet UITextField *m_authorField;
@@ -57,13 +52,10 @@
     NSString *m_title, *m_author, *m_tuid, *m_descriptionHTML;
     StoryInfo *m_storyInfo;
     UIImage *m_artwork;
-#if UseWKWebViewForFrotzStoryDetails
     WKWebView *m_realWebView;
-#else
-    UIWebView *m_realWebView;
-#endif
     StoryBrowser *__weak m_browser;
     FrotzInfo *m_frotzInfoController;
+    UIBarButtonItem *m_editItem; // symbol-bearing stand-in for the system editButtonItem
     
     CGSize m_artSizeLandscape, m_artSizePortrait;
 }

@@ -47,7 +47,7 @@ typedef NS_ENUM(unsigned int, FileBrowserState)  { kFBHidden, kFBShown, kFBDoSho
     UIView *m_backgroundView;
     UITableView *m_tableView;
     UITextField *m_textField;
-    UIAlertView *m_alertView;
+    UIAlertController *m_alertView;
     int m_textFileCount;
 }
 - (instancetype)initWithDialogType:(FileBrowserState)dialogType NS_DESIGNATED_INITIALIZER;

@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface FrotzInfo : UIViewController <FrotzSettingsInfoDelegate> {
-    UIButton *m_infoButton;
+    UIBarButtonItem *m_infoBarItem;
     UILabel *m_titleTextView;
 
     UINavigationController *m_navigationController;
@@ -41,6 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) id<KeyboardOwner> keyboardOwner;
 @property (nonatomic, readonly, strong) UINavigationController *navController;
 @property (nonatomic, readonly, strong) UINavigationItem *navItem;
+/// The Frotz (i) settings button. Owners place it among their navigation item's trailing items; as a
+/// bar button item with a symbol it can move to the iPhone Duo's vertical controls.
+@property (nonatomic, readonly, strong) UIBarButtonItem *infoBarButtonItem;
 -(void)updateAccessibility;
 -(void)updateTitle;
 @end

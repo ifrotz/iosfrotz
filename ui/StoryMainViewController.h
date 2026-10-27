@@ -55,7 +55,7 @@ extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
-    UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
     LockableKeyboard>
 {
@@ -67,6 +67,7 @@ extern StoryBrowser *theStoryBrowser;
 
     UIView *m_background;
     UIBarButtonItem *m_kbdToggleItem;
+    UIBarButtonItem *m_storyListItem; // leading item; created by the browser, which handles its action
     UIImageView *m_splashImageView;
     NotesViewController *m_notesController;
     
@@ -104,10 +105,13 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_ignoreWordSelection;
 
     NSInteger m_statusFixedFontSize;
+    NSInteger m_appliedWidthLevel;
+    CGSize m_lastLayoutSize;
     CGFloat m_statusFixedFontWidth;
     NSInteger m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
     CGSize m_kbdSize;
+    CGRect m_handledKbWillShowFrame, m_handledKbDidShowFrame; // keyboard end frames already laid out for
     NSTimeInterval m_animDuration;
     NSString *m_launchMessage;
 
@@ -125,9 +129,7 @@ extern StoryBrowser *theStoryBrowser;
 -(NSString*)relativePathToAppAbsolutePath:(NSString*)path;
 @property (nonatomic, getter=isKBShown, readonly) BOOL KBShown;
 @property (nonatomic, getter=isKBLocked, readonly) BOOL KBLocked;
--(void) showKeyboardLockStateInView:(UIView*)kbdToggleItemView;
 -(void) showKeyboardLockState;
--(void) addKeyBoardLockGesture;
 -(instancetype) init NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
 -(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
@@ -144,6 +146,9 @@ extern StoryBrowser *theStoryBrowser;
 - (void) setIgnoreWordSelection:(BOOL)ignore;
 - (void) abortToBrowser;
 - (void)autosize;
+-(BOOL) isRegularWidth;
+-(BOOL) hasWidePhoneWidth;
+-(int) defaultTextViewWidth;
 -(void) resizeStatusWindow;
 -(void) launchStory;
 -(void) abandonStory:(BOOL)deleteAutoSave;

@@ -27,24 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(unsigned int, SWBDownloadState) { kSWBIdle, kSWBFetchingImage, kSWBFetchingStory };
 
-#if UseWKWebViewForIFDBBrowser
 typedef WKWebView StoryWebView;
-#else
-typedef UIWebView StoryWebView;
-#endif
 
-@interface StoryWebBrowserController : UIViewController <KeyboardOwner,
-#if UseWKWebViewForIFDBBrowser
-    WKNavigationDelegate,
-#else
-    UIWebViewDelegate,
-#endif
+@interface StoryWebBrowserController : UIViewController <KeyboardOwner, WKNavigationDelegate,
     URLPromptDelegate, BookmarkDelegate, UIScrollViewDelegate> {
     UIView *m_background; // UIView
     StoryWebView *m_webView;
     UIScrollView *m_scrollView;
     StoryBrowser *m_storyBrowser;
-    UIToolbar *m_toolBar;
     UIActivityIndicatorView *m_activityView;
     UIBarButtonItem *m_backButtonItem, *m_forwardButtonItem, *m_cancelButtonItem, *m_reloadButtonItem, *m_URLButtonItem, *m_activButtonItem, *m_searchButtonItem, *m_spaceButtonItem;
     URLPromptController *m_urlBarController;
@@ -56,6 +46,8 @@ typedef UIWebView StoryWebView;
     SWBDownloadState m_state;
     BOOL m_backToStoryList;
     BOOL m_storyAlreadyInstalled;
+    CGRect m_laidOutBounds;           // geometry the subviews were last laid out for; see
+    UIEdgeInsets m_laidOutSafeInsets; // viewWillLayoutSubviews
     NSMutableArray *m_expectedArchiveFiles;
 }
 -(StoryWebBrowserController*)initWithBrowser:(StoryBrowser*)sb NS_DESIGNATED_INITIALIZER;
@@ -80,6 +72,7 @@ typedef UIWebView StoryWebView;
 @property (nonatomic, readonly, strong) StoryBrowser *storyBrowser;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
 -(void)browserDidPressBackButton;
+-(void)browserDidPressBackButtonWithCompletion:(nullable void (^)(void))completion;
 -(BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (nullable NSURLRequest*)delayedRequest forStory:(nullable NSString*)story;
 -(BOOL)savePicData:(NSData*)picData forStory:(NSString*)story;
 -(void)loadZFile:(NSURLRequest*)request;
@@ -94,19 +87,12 @@ typedef UIWebView StoryWebView;
 - (BOOL)webViewShouldStartLoadWithRequest:(NSURLRequest *)request;
 - (void)handleLoadFinished;
 - (void)handleLoadFailureWithError:(NSError *)error;
-#if UseWKWebViewForIFDBBrowser
 -(void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
     decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
 -(void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation;
 -(void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError *)error;
 -(void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
 -(void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error;
-#else
--(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
--(void)webViewDidStartLoad:(UIWebView *)webView;
--(void)webViewDidFinishLoad:(UIWebView *)webView;
--(void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
-#endif
 
 @end
 

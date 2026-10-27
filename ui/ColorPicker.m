@@ -320,9 +320,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 - (void)drawRect:(CGRect)rect {
     void *bitmapData = NULL;
-    BOOL isDark = NO;
-    if (@available(iOS 13.0, *))
-        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    BOOL isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
     if (!m_imageRef) {
         int x, y, i = 0, j;
         CGFloat r, g, b;
@@ -420,16 +418,9 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)setFrame:(CGRect)frame {
-    if (m_hsvData) {
-        if (@available(iOS 13.0, *)) {
-        } else {// don't cache after iOS 13 in case light/dark mode changes while active
-            if (m_width == frame.size.width && m_height == frame.size.height) {
-                [super setFrame: frame];
-                return;
-            }
-        }
+    // Don't cache the HSV data across frame sets, in case light/dark mode changes while active.
+    if (m_hsvData)
         free(m_hsvData);
-    }
 
     [super setFrame: frame]; // sets m_width/m_height
 
@@ -487,9 +478,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     int x, y, i = 0;
     CGFloat r, g, b;
     CGFloat h, s, v;
-    BOOL isDark = NO;
-    if (@available(iOS 13.0, *))
-        isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    BOOL isDark = (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
 
     unsigned int wColor, hsv;
 
@@ -637,10 +626,6 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
     if ((self = [super init])!=nil) {
         self.title = NSLocalizedString(@"Select Color", @"");
     }
-    if (@available(iOS 13.0,*)) {
-//        self.modalInPresentation = YES;
-    }
-
     return self;
 }
 
@@ -649,8 +634,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)loadView {
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    BOOL fullScreenLarge = (frame.size.width > 760);
+    // The presenter sizes the view; layoutViews positions the subviews from the real bounds.
+    CGRect frame = CGRectZero;
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
@@ -678,8 +663,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
     UIImage *hsvCursorImage = [UIImage imageNamed:@"hsv-crosshair"];
     m_hsvCursor = [[UIImageView alloc] initWithImage: hsvCursorImage];
-    UIImage *valCursorImage = [UIImage imageNamed:
-                                                        (fullScreenLarge ? @"val-crosshair-ipad":@"val-crosshair")];
+    UIImage *valCursorImage = [UIImage imageNamed: @"val-crosshair"]; // swapped for the large variant in layoutViews
     m_valueCursor = [[UIImageView alloc] initWithImage: valCursorImage];
 
     CGRect cursFrame = [m_hsvCursor frame];
@@ -721,25 +705,30 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         hsvBaseYOrigin += 120;
         rightMargin += 20;
     }
+    // The value cursor image matches the wider value bar of the large layout; choose it from the
+    // live bounds here rather than from the screen size at load time.
+    UIImage *valCursorImage = [UIImage imageNamed: (fullScreenLarge ? @"val-crosshair-ipad" : @"val-crosshair")];
+    if (m_valueCursor.image != valCursorImage) {
+        m_valueCursor.image = valCursorImage;
+        [m_valueCursor sizeToFit];
+    }
+
     CGFloat leftNotch = 0, rightNotch = 0;
     UIEdgeInsets safeInsets = self.view.safeAreaInsets;
-    CGFloat topMargin = safeInsets.top;
-    if (UIInterfaceOrientationLandscapeRight == [self interfaceOrientation]) {
-        topMargin = 24;
-        if (safeInsets.left > 0) {
-            leftNotch = safeInsets.left;
-            leftNotch -= leftMargin;
-            leftMargin += leftNotch;
-        }
-    } else if (UIInterfaceOrientationLandscapeLeft == [self interfaceOrientation]) {
-        topMargin = 24;
-        if (safeInsets.right > 0) {
-            rightNotch = safeInsets.right;
-        }
+    // Each edge's own inset is applied regardless of orientation: whichever side carries a
+    // notch or a vertical bar reports it, so there is no need to know left from right landscape.
+    CGFloat topMargin = /*frame.size.width > frame.size.height ? 24 :*/ safeInsets.top;
+    if (safeInsets.left > 0) {
+        leftNotch = safeInsets.left;
+        leftNotch -= leftMargin;
+        leftMargin += leftNotch;
+    }
+    if (safeInsets.right > 0) {
+        rightNotch = safeInsets.right;
     }
 
     CGRect colorTileFrame = CGRectMake(leftMargin, 24.0f + topMargin,
-                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1) : frame.size.width-leftNotch-rightNotch-328,
+                                       isPortraitish || fullScreenLarge ? frame.size.width-(leftMargin*2-1)-rightNotch : frame.size.width-leftNotch-rightNotch-328,
                                        colorTileHeight);
     if (!isPortraitish && !fullScreenLarge)
         leftMargin += frame.size.width-leftNotch-rightNotch-312;
@@ -770,13 +759,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 -(void)updateUserInterfaceStyle {
-    if (@available(iOS 13.0, *)) {
-        [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
-        [m_tileBorder setBackgroundColor: [UIColor labelColor]];
-    } else {
-        [m_background setBackgroundColor: [UIColor whiteColor]];
-        [m_tileBorder setBackgroundColor: [UIColor blackColor]];
-    }
+    [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
+    [m_tileBorder setBackgroundColor: [UIColor labelColor]];
 
     if (!self.navigationItem.titleView) {
         UILabel *titleView = [[UILabel alloc] init];

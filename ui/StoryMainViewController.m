@@ -48,8 +48,6 @@
 
 #include <CoreText/CoreText.h>
 
-#define kDefaultTextViewWidth ((gLargeScreenDevice || gLargeScreenPhone) ? 80 : kDefaultTextViewMinWidth)
-
 #define kClearEscChar '\f'
 #define kClearEscCode "\f"
 #define kSetDefColorsChar '\007'
@@ -65,6 +63,7 @@
 int iosif_textview_width = kDefaultTextViewMinWidth;
 int iosif_textview_height = kDefaultTextViewHeight;
 int iosif_screenwidth = 320, iosif_screenheight = 480;
+int iosif_regular_width = 0;
 int iosif_fixed_font_width = 5, iosif_fixed_font_height = 10;
 
 int do_autosave = 0, autosave_done = 0, refresh_savedir = 0, restore_frame_count;
@@ -802,15 +801,21 @@ void iosif_recompute_screensize() {
     __block CGRect pFrame;
     CGFloat fontwid = [theSMVC statusFixedFontPixelWidth]; // [@"x" sizeWithFont: [theStatusLine fixedFont]].width;
     FrotzView *storyView = [theSMVC storyView];
-    if ([NSThread isMainThread]) {
+    // The parent is the full-width paging background; the width the Glk layer may use for its
+    // windows is that minus the side safe-area insets (the Duo's button strip, the Dynamic Island
+    // in landscape), matching storyViewFullFrame. resizeGlkView: shifts the windows past the
+    // leading inset.
+    void (^measure)(void) = ^{
         UIView *parentView = [storyView superview];
+        UIEdgeInsets safeInsets = theSMVC.view.safeAreaInsets;
         pFrame = [parentView frame];
-    } else {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            UIView *parentView = [storyView superview];
-            pFrame = [parentView frame];
-        });
-    }
+        pFrame.size.width -= safeInsets.left + safeInsets.right;
+        iosif_regular_width = [theSMVC isRegularWidth];
+    };
+    if ([NSThread isMainThread])
+        measure();
+    else
+        dispatch_sync(dispatch_get_main_queue(), measure);
     pFrame.size.height -= [theSMVC keyboardSize].height;
     iosif_textview_width = (int)(pFrame.size.width / fontwid);
     iosif_textview_height = (int)(pFrame.size.height / [[storyView font] lineHeight])+1;
@@ -903,9 +908,9 @@ glui32 iosif_glk_image_get_info(glui32 image, glui32 *width, glui32 *height) {
             UIImage *img = [UIImage imageWithData: data];
             if (img) {
                 if (width)
-                    *width = gLargeScreenDevice ? img.size.width : img.size.width / 2;
+                    *width = iosif_regular_width ? img.size.width : img.size.width / 2;
                 if (height)
-                    *height = gLargeScreenDevice ? img.size.height : img.size.height / 2;
+                    *height = iosif_regular_width ? img.size.height : img.size.height / 2;
                 return TRUE;
             }
         }
@@ -1137,6 +1142,8 @@ static void setColorTable(RichTextView *v) {
 }
 
 
+#import "FrotzAlert.h"
+
 @implementation StoryMainViewController 
 @synthesize fontName = m_fontname;
 @synthesize fontSize = m_fontSize;
@@ -1333,6 +1340,9 @@ static void setColorTable(RichTextView *v) {
         r.origin.y /= kIOSGlkScaleFactor;
         r.size.width /= kIOSGlkScaleFactor;
         r.size.height /= kIOSGlkScaleFactor;
+        // The Glk layer lays its windows out from x = 0 across the width iosif_recompute_screensize
+        // gave it, which already excludes both side insets; shift them past the leading one.
+        r.origin.x += self.view.safeAreaInsets.left;
         if (viewNum > 0) {
             if (glkGridArray[viewNum].win->type == wintype_Graphics) {
                 window_t *parent = glkGridArray[viewNum].win->parent;
@@ -1499,7 +1509,7 @@ static void setColorTable(RichTextView *v) {
             data = [NSData dataWithBytesNoCopy: blorbres->data.ptr length:blorbres->length freeWhenDone:NO];
         
         if (data) {
-            img = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            img = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, self.view.bounds, self.traitCollection); // scales down to view size if too big, else leaves alone
             //img = [UIImage imageWithData: data];
             glkImageCache[imgKey] = img;
         }
@@ -1643,17 +1653,9 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_storyBrowser didPressModalStoryListButton];
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 1) {
-        [self abortToBrowser];
-    }
-}
-
 -(void)setNavBarTint {
-    if (@available(iOS 9.0,*)) {
-        [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
-        [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
-    }
+    [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
+    [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
     [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
     CGColorRef cgColor = [m_defaultBGColor CGColor];
     CGFloat max;
@@ -1667,19 +1669,11 @@ extern void gli_ios_set_focus(window_t *winNum);
     // Not using [UINavigationBar appearance] here; we only want to set the main story's status bar specially,
     // all others will use system light/dark default
     if (max < 0.5) {
-        if (@available(iOS 13.0,*)) {
-            [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
-        }
-        else
-            [self.navigationController.navigationBar setBarTintColor: m_defaultBGColor];
+        [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
         [self.navigationController.navigationBar setTintColor: m_defaultFGColor];
     }
     else {
-        if (@available(iOS 13.0,*)) {
-            [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
-        }
-        else
-            [self.navigationController.navigationBar  setBarTintColor: m_defaultFGColor];
+        [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
         [self.navigationController.navigationBar setTintColor: m_defaultBGColor];
     }
     // let's just leave the keyboard alone, matching system light/dark mode
@@ -1688,51 +1682,84 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_frotzInfoController updateTitle];
 }
 
--(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
-    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
-        
-    if (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard-locked"]];
-    else
-        [m_kbdToggleItem setImage: [UIImage imageNamed:@"icon-keyboard"]];
-//    if ([kbdToggleItemView respondsToSelector: @selector(setTintColor:)])
-//        [kbdToggleItemView setTintColor: m_kbLocked  && !notesVisible ? [UIColor colorWithRed:0.75 green:0.10 blue:0.25 alpha:1.0] : nil];
-}
-
+// Keeps the keyboard toggle item in step with the keyboard state: its icon (locked/unlocked), the
+// title the system shows when the item is folded into an overflow menu (which happens on the
+// iPhone Duo's vertical bar when the keyboard leaves little room), and its long-press menu, which
+// carries the lock/unlock action. The menu replaces a UILongPressGestureRecognizer that used to be
+// attached to the item's private backing view and was lost whenever UIKit rebuilt that view.
+// Only assign what actually changed, since each change makes UIKit rebuild the item.
 -(void)showKeyboardLockState {
-    UIView *kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
-    [self showKeyboardLockStateInView: kbdToggleItemView];
-}
+    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
 
--(void)addKeyBoardLockGesture {
-    [self view];
-    UIBarButtonItem *kbdToggleItem = m_kbdToggleItem;
-    UIView *kbdToggleItemView = [kbdToggleItem valueForKey:@"view"];
-    if (kbdToggleItemView) {
-        for (UIGestureRecognizer *recognizer in kbdToggleItemView.gestureRecognizers) {
-            if ([recognizer isKindOfClass:[UILongPressGestureRecognizer class]])
-                return;
-        }
-        UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
-                                                          initWithTarget:self
-                                                          action:@selector(toggleKeyboardLongPress:)];
-        //Broken because there is no customView in a UIBarButtonSystemItemUndo item
-        [kbdToggleItemView addGestureRecognizer:longPressGesture];
-        [self showKeyboardLockStateInView: kbdToggleItemView];
+    BOOL locked = m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder];
+    UIImage *image = [UIImage imageNamed: locked ? @"icon-keyboard-locked" : @"icon-keyboard"];
+    if (m_kbdToggleItem.image != image)
+        [m_kbdToggleItem setImage: image];
+
+    // Decide the title from m_kbShown alone, exactly as toggleKeyboard does: with a hardware
+    // keyboard the input line can be first responder while no software keyboard is showing, and a
+    // tap then tries to show one. m_kbShown also covers the notes page's keyboard.
+    NSString *title = m_kbShown ? NSLocalizedString(@"Hide Keyboard", nil) : NSLocalizedString(@"Show Keyboard", nil);
+    NSString *lockTitle = m_kbLocked ? NSLocalizedString(@"Unlock Keyboard", nil)
+                        : m_kbShown  ? NSLocalizedString(@"Hide and Lock Keyboard", nil)
+                                     : NSLocalizedString(@"Lock Keyboard", nil);
+    BOOL titleChanged = ![m_kbdToggleItem.title isEqualToString: title];
+    BOOL lockTitleChanged = ![[m_kbdToggleItem.menu.children.firstObject title] isEqualToString: lockTitle];
+    if (!titleChanged && !lockTitleChanged)
+        return;
+    m_kbdToggleItem.title = title;
+
+    __weak StoryMainViewController *weakSelf = self;
+    UIAction *lockAction = [UIAction actionWithTitle: lockTitle
+                                               image: [UIImage systemImageNamed: m_kbLocked ? @"lock.open" : @"lock"]
+                                          identifier: nil
+                                             handler: ^(UIAction *action) {
+        if (weakSelf.isKBLocked)
+            [weakSelf unlockKeyboard];
+        else
+            [weakSelf lockKeyboard];
+    }];
+    // Long press on the visible item: just the lock action (a tap already toggles the keyboard).
+    m_kbdToggleItem.menu = [UIMenu menuWithChildren: @[lockAction]];
+
+    // When the item is folded into an overflow menu, UIKit would otherwise show it as a submenu
+    // (its title, then the tap action and the lock action inside), three taps to do anything.
+    // Substitute an inline menu so both actions sit at the overflow's top level next to Settings.
+    if (@available(iOS 16.0, *)) {
+        UIAction *toggleAction = [UIAction actionWithTitle: title
+                                                     image: [UIImage systemImageNamed: m_kbShown ? @"keyboard.chevron.compact.down" : @"keyboard"]
+                                                identifier: nil
+                                                   handler: ^(UIAction *action) { [weakSelf toggleKeyboard]; }];
+        m_kbdToggleItem.menuRepresentation = [UIMenu menuWithTitle: @"" image: nil identifier: nil
+                                                          options: UIMenuOptionsDisplayInline
+                                                         children: @[toggleAction, lockAction]];
     }
-
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
 }
 
+-(void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    // loadView no longer sizes the subviews from the screen, so lay them out from the real
+    // bounds whenever those change (first layout after a push, fold/unfold, split view resize).
+    CGSize size = self.view.bounds.size;
+    if (m_storyView && !CGSizeEqualToSize(size, m_lastLayoutSize)) {
+        m_lastLayoutSize = size;
+        [self autosize];
+    }
+    // The status line no longer autoresizes with the paging background, so re-derive its banner
+    // geometry after every layout pass (the ones UIKit runs for status/nav bar changes included).
+    // Cheap: RichTextView's setFrame: ignores an unchanged rect.
+    [self layoutStatusLine];
+}
+
 -(void)viewDidAppear:(BOOL)animated {
     [self checkAccessibility];
 
-    self.navigationItem.titleView = [m_frotzInfoController view];
+    [self updateTitleViewForVerticalBar];
     
     [self autosize];
-    [self addKeyBoardLockGesture];
     
     if (m_kbShown)
         [m_inputLine becomeFirstResponder];
@@ -1745,7 +1772,14 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (!m_frotzInfoController)
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
 
-    self.navigationItem.titleView = [m_frotzInfoController view];
+    [self updateTitleViewForVerticalBar];
+    // Trailing: the keyboard toggle on its own (showKeyboardLockState and the accessibility setup
+    // read rightBarButtonItem). Leading: the Story List button, created by the browser which also
+    // handles its action, with the Frotz (i) beside it.
+    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+    if (!m_storyListItem)
+        m_storyListItem = [m_storyBrowser storyListBarButtonItem];
+    self.navigationItem.leftBarButtonItems = @[m_storyListItem, [m_frotzInfoController infoBarButtonItem]];
     [self setNavBarTint];
 
     [m_frotzInfoController setKeyboardOwner: self];
@@ -1756,7 +1790,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     else
         refresh_savedir = 0;
 
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])) {
+    if ([self viewIsWiderThanTall]) {
         m_landscape = YES;
     }
     else {
@@ -1810,9 +1844,13 @@ extern void gli_ios_set_focus(window_t *winNum);
     [m_notesController workaroundFirstResponderBug]; // in iOS 6 on iPad, for some reason the notes controller keeps us from getting first responder after a modal dialog is dismissed (e.g. after 'restore' command)
     [self hideNotes];
     if (!m_kbLocked) {
-        if (m_inputLine.window)
-            [m_inputLine becomeFirstResponder];
-        else
+        if (m_inputLine.window) {
+            // Re-requesting first responder for the field that already has it makes UIKit post
+            // keyboardWillShow/DidShow again, which (via the scrolling those handlers do) can
+            // re-enter here and loop.
+            if (![m_inputLine isFirstResponder])
+                [m_inputLine becomeFirstResponder];
+        } else
             m_kbShown = YES; // will becomeFirsResponder in viewDidAppear
     }
 }
@@ -1852,17 +1890,16 @@ extern void gli_ios_set_focus(window_t *winNum);
     [self showKeyboardLockState];
 }
 
-- (void) toggleKeyboardLongPress:(UILongPressGestureRecognizer*)sender {
+// Hide the keyboard and keep it hidden until unlocked; the keyboard toggle item's long-press menu
+// action (see showKeyboardLockState).
+- (void)lockKeyboard {
     if (m_notesController && [m_notesController isVisible])
         return;
 
     if (m_kbShown)
         [self dismissKeyboard];
     m_kbLocked = YES;
-    if ([sender respondsToSelector:@selector(view)]) {
-        UIView *view = [sender view];
-        [self showKeyboardLockStateInView: view];
-    }
+    [self showKeyboardLockState];
     [m_inputLine setClearButtonMode];
 }
 
@@ -1887,7 +1924,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             data = [NSData dataWithBytesNoCopy: blorbres.data.ptr length:blorbres.length freeWhenDone:NO];
         if (data) {
             NSNumber *imgKey = @(imageNum);
-            image = scaledUIImage([UIImage imageWithData: data], 0, 0); // scales down too screen size if too big, else leaves alone
+            image = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, theSMVC.view.bounds, theSMVC.traitCollection); // scales down to view size if too big, else leaves alone
             glkImageCache[imgKey] = image;
         }
     }
@@ -1901,12 +1938,13 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         return;
     }
     
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
-    frame.origin.x = 0;  // in left orientation on iPad, this is passed in as 20 for unknown reason
+    // The parent controller sizes the view before it appears and autosize lays out the subviews
+    // from the real bounds, so start from an empty frame rather than the screen bounds.
+    CGRect frame = CGRectZero;
 
     self.automaticallyAdjustsScrollViewInsets = NO;
-    self.view = [[UIView alloc] initWithFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)];
-    float navHeight = self.topLayoutGuide.length;
+    self.view = [[UIView alloc] initWithFrame:frame];
+    float navHeight = self.view.safeAreaInsets.top;
     frame.origin.y = navHeight;
     frame.size.height -= navHeight;
 
@@ -1938,6 +1976,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #if UseRichTextView
     [m_statusLine setLeftMargin: 0];
     [m_statusLine setRightMargin: 0];
+    [m_statusLine setFixedMargins: YES]; // autosize lines its margins up with the story text
     [m_statusLine setTopMargin: 0];
     [m_statusLine setBottomMargin: 0];
     [m_statusLine setBounces: NO];
@@ -1957,7 +1996,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_statusLine.editable = NO;
 #endif
     [m_statusLine setDelegate: self];
-    [m_statusLine setAutoresizingMask: UIViewAutoresizingFlexibleWidth];
+    // No autoresizing: layoutStatusLine owns the geometry. UIKit's autoresizing passes (rotation,
+    // status/nav bar changes) preserved whatever side gaps the last explicit write happened to
+    // leave, so the banner width drifted depending on when that write ran.
+    [m_statusLine setAutoresizingMask: UIViewAutoresizingNone];
     
 #if !UseRichTextView
     [m_statusLine setAutocapitalizationType: UITextAutocapitalizationTypeNone];
@@ -1982,7 +2024,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     edgeInsets.bottom = 8;
     [m_storyView setContentInset: edgeInsets];
     
-    m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+    m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     [self loadPrefs];
     
     [m_storyView setAutoresizingMask: /*UIViewAutoresizingFlexibleTopMargin|*/UIViewAutoresizingFlexibleBottomMargin|UIViewAutoresizingFlexibleRightMargin|
@@ -2010,6 +2052,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     
 //    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
+    m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     
@@ -2070,7 +2113,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         CGFloat inputLineWidth = frame.size.width;
         frame.size = origViewFrame.size;
         frame = [m_inputLine.superview convertRect:frame toView:view.superview];
-        CGFloat maxDist = [[UIScreen mainScreen] applicationFrame].size.height;
+        CGFloat maxDist = self.view.bounds.size.height;
         if (frame.origin.y - origViewFrame.origin.y > maxDist)
             frame.origin.y = origViewFrame.origin.y + maxDist;
         CGFloat duration = animDuration;
@@ -2164,40 +2207,68 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [[m_background layer] addAnimation:animation forKey:@"storyfade"];
 }
 
+// On the iPhone Duo the bar button items move to the vertical bar (iOS 27.1 reports which edge
+// through the trait collection), which would leave the horizontal navigation bar holding nothing
+// but the "Frotz" title. Drop the title view in that case so the bar has no content of its own,
+// and put it back when the items return to the horizontal bar.
+-(void)updateTitleViewForVerticalBar {
+    self.navigationItem.titleView = [self hasVerticalBar] ? nil : [m_frotzInfoController view];
+}
+
+// YES when the system is placing bar items on a vertical bar along one edge (iPhone Duo, iOS 27.1
+// and later); NO everywhere else, so the layout decisions keyed on it are unchanged on other devices.
+-(BOOL)hasVerticalBar {
+    if (@available(iOS 27.1, *))
+        return self.traitCollection.verticalBarEdge != UIVerticalBarEdgeUnspecified;
+    return NO;
+}
+
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
+    [self updateTitleViewForVerticalBar];
+    iosif_regular_width = [self isRegularWidth];
     if (m_storyView)
         [self hideInputHelper];
+    [self updateFontsForWidthIfNeeded];
     if (m_notesController)
         [m_notesController autosize];
 }
 
 - (BOOL)prefersStatusBarHidden {
-    return m_landscape && !gLargeScreenDevice;
+    // Hide the status bar in the wide layout only when vertical space is tight (phone landscape).
+    return m_landscape && self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    // From iOS 26 the default style adapts to the content under each part of the status bar, which
+    // is what we want where it straddles the dark game bar and the light story text (or vice versa) [iPhone Duo].
+    // Before that "default" just follows light/dark mode, so keep the light indicators the black
+    // navigation bar used to imply (see setNavBarTint). Reached via FrotzNavigationController.
+    if (@available(iOS 26.0, *))
+        return UIStatusBarStyleDefault;
+    return UIStatusBarStyleLightContent;
 }
 
 - (void)autosize {
-    if (UIInterfaceOrientationIsLandscape([self interfaceOrientation])
-        || self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
+    BOOL regularWidth = [self isRegularWidth];
+    BOOL compactHeight = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
+    iosif_regular_width = regularWidth;
+    [self updateFontsForWidthIfNeeded];
+    if ([self viewIsWiderThanTall] || regularWidth) {
         m_landscape = YES;
-        if (!gLargeScreenDevice) {
-            [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation: UIStatusBarAnimationSlide];
-        }
-        [self.navigationController setNavigationBarHidden:gLargeScreenDevice?NO:YES animated:YES];
+        // Phone landscape is short on height, so the bar normally goes. On the iPhone Duo the bar
+        // items live on the vertical bar and the title view is dropped (updateTitleViewForVerticalBar),
+        // so the horizontal bar collapses on its own; keep it so the items stay available.
+        [self.navigationController setNavigationBarHidden:(compactHeight && ![self hasVerticalBar]) animated:YES];
     } else {
-        if (!gLargeScreenDevice) {
-            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation: UIStatusBarAnimationSlide];
-        }
         m_landscape = NO;
         [self.navigationController setNavigationBarHidden:NO animated:YES];
     }
+    // The status bar follows prefersStatusBarHidden (view-controller-based appearance), which
+    // reads m_landscape; tell UIKit it may have changed.
+    [self setNeedsStatusBarAppearanceUpdate];
 
     CGRect frame = [self storyViewFullFrame];
-
-    if (m_landscape && frame.size.width > 760)
-        [m_statusLine setLeftMargin: 40];
-    else
-        [m_statusLine setLeftMargin: 0];
 
     // Work around weird bug where the owning NotesVC scrollview resizes the view 20
     // pixels smaller when presentModalViewController shows the view.  Dunno why, but this
@@ -2205,8 +2276,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     if (m_landscape && m_autoRestoreDict!=nil)
         frame.size.height += 20;
 
-    CGRect applicationFrame = [[UIScreen mainScreen] applicationFrame];
-    CGRect bgRect = CGRectMake(0, 0, applicationFrame.size.width, frame.size.height);
+    CGRect bgRect = CGRectMake(0, self.view.safeAreaInsets.top, self.view.bounds.size.width, frame.size.height);
     //NSLog(@"autosize bg frame=(%f,%f,%f,%f)", bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
 
     m_background.frame = bgRect;
@@ -2218,21 +2288,36 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         frame.size.height -= m_kbdSize.height;
         [m_storyView setBottomMargin: 8];
     } else {
-        UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-        [m_storyView setBottomMargin: safeInsets.bottom];
+        [m_storyView setBottomMargin: self.view.safeAreaInsets.bottom];
     }
     [m_storyView setFrame: frame];
 
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
 
     [m_statusLine setNeedsDisplay];
     if (m_notesController)
         [m_notesController autosize];
     [self resizeStatusWindow];
 
+}
+
+// The status line is a full-width banner across its superview (the paging background), but its
+// text lines up with the story text: its left margin is the story view's offset plus the margin
+// setNiceMargins: gave it. Every writer of the status line's geometry goes through here so the
+// width can't depend on which path ran last; the height is the only per-caller input.
+- (void)layoutStatusLineWithHeight:(CGFloat)height {
+    if (!m_statusLine || !m_storyView)
+        return;
+    UIView *banner = m_statusLine.superview ? m_statusLine.superview : m_background;
+    [m_statusLine setFrame: CGRectMake(0, 0, banner.bounds.size.width, height)];
+    [m_statusLine setLeftMargin: (unsigned int)(m_storyView.frame.origin.x + [m_storyView leftMargin])];
+    // Status line is fixed width and doesn't wrap so right margin isn't important,
+    // and setting it might actually cause text clipping.
+    // [m_statusLine setRightMargin: (unsigned int)self.view.safeAreaInsets.right];
+}
+
+- (void)layoutStatusLine {
+    [self layoutStatusLineWithHeight: m_statusLine.frame.size.height];
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -2247,17 +2332,28 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [[m_storyBrowser detailsController] refresh];
     } completion:^(id context) {
         [self setNavBarTint];
-        [self addKeyBoardLockGesture];
         [self autosize];
     } ];
 }
 
 -(CGRect) storyViewFullFrame {
     CGRect frame = self.view.bounds;
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
 
-    CGPoint origin = m_storyView.frame.origin;
-    frame.origin.x += origin.x;
-    frame.size.width -= origin.x;
+    // The paging background sits below the top safe-area inset (navigation bar) when the view
+    // extends under it, so the area available to the story is the bounds minus that inset. The
+    // background scroll view used to pick this up as an automatic content inset; it no longer does.
+    frame.size.height -= safeInsets.top;
+
+    // Keep the story text clear of the side safe-area insets: the Duo's button strip arrives as a
+    // trailing inset, and in landscape the Dynamic Island as a leading one. The paging background
+    // behind the text stays full width. Glk games place window 0 themselves (resizeGlkView: applies
+    // the leading inset there, and a window to its left can push it further), so keep that origin.
+    CGFloat leftEdge = safeInsets.left;
+    if (gStoryInterp == kGlxStory)
+        leftEdge = MAX(leftEdge, m_storyView.frame.origin.x);
+    frame.origin.x = leftEdge;
+    frame.size.width -= leftEdge + safeInsets.right;
     return frame;
 }
 
@@ -2271,20 +2367,23 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 //    NSLog(@"kb will change frame %@", notif);
 //}
 
-static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *window) {
-    // workaround ios 8 beta bug, where bounds width & height are swapped in landscape
-    if (bounds->size.height > bounds->size.width) {
-        CGFloat h = bounds->size.height;
-        bounds->size.height = bounds->size.width;
-        bounds->size.width = h;
-    }
+// The part of the keyboard that overlaps the story's window, as a zero-origin rect, derived from
+// the keyboard's end frame (reported in screen coordinates). Replaces the long-deprecated
+// UIKeyboardBoundsUserInfoKey, which reported the keyboard's own bounds and then needed clamping.
+static CGRect KeyboardEndFrame(NSDictionary *userInfo) {
     NSValue *kbFrameEndValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (kbFrameEndValue) {
-        CGRect kbEndFrame = [kbFrameEndValue CGRectValue];
-        CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
-        if (bounds->size.height > window.frame.size.height - windowRect.origin.y)
-            bounds->size.height = window.frame.size.height - windowRect.origin.y;
-    }
+    return kbFrameEndValue ? [kbFrameEndValue CGRectValue] : CGRectNull;
+}
+
+static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (CGRectIsNull(kbEndFrame) || !window)
+        return CGRectZero;
+    CGRect windowRect = [window convertRect:kbEndFrame fromWindow:nil];
+    CGRect overlap = CGRectIntersection(window.bounds, windowRect);
+    if (CGRectIsNull(overlap))
+        return CGRectZero;
+    return CGRectMake(0, 0, overlap.size.width, overlap.size.height);
 }
 
 -(void) keyboardDidShow:(NSNotification*)notif {
@@ -2296,15 +2395,21 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     // during a rotation because the show/hide hasn't taken effect yet,
     // so resizing again here will be correct.
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
-    if (!boundsValue) // sometimes nil in ios 8???
+    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
+    if (CGRectIsEmpty(bounds))
         return;
-    CGRect bounds = [boundsValue CGRectValue];
+    // UIKit re-posts the show notifications every time the keyboard window lays itself out, and
+    // the resizing below moves the input line the keyboard tracks, which lays it out again.
+    // Only react when the keyboard frame has actually changed, or the two feed each other forever.
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (m_kbShown && !CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbDidShowFrame))
+        return;
+    m_handledKbDidShowFrame = kbEndFrame;
 
     // iOS 8.0 doesn't sent hide notifications for undocked kbd
     // and instead sends another show notification with smaller frame height
     NSValue *frameUserInfoValue = userInfo[UIKeyboardFrameEndUserInfoKey];
-    if (gLargeScreenDevice && frameUserInfoValue) {
+    if (self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPad && frameUserInfoValue) { // undocked keyboards exist only on iPad
         CGRect frameEnd = [frameUserInfoValue CGRectValue];
         CGFloat height = frameEnd.size.width > frameEnd.size.height ? frameEnd.size.height : frameEnd.size.width;
         if (height <= 216 || height == 267) { // hackish check for known undocked kb sizes; hopefully iOS 8 will fix this before release
@@ -2314,9 +2419,9 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         }
     }
     m_kbShown = YES;
-    
+    [self showKeyboardLockState]; // keep the toggle's title ("Hide Keyboard") in step
+
     CGRect frame = [self storyViewFullFrame];
-    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
     m_kbdSize = bounds.size;
 
     [m_storyView setBottomMargin: 8];
@@ -2328,9 +2433,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     //NSLog(@"keyboarddidshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
     [m_storyView setFrame: frame];
 
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     [UIView commitAnimations];
 
     [m_inputLine updatePosition];
@@ -2344,6 +2447,8 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 -(void) keyboardDidHide:(NSNotification*)notif {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
+    [self showKeyboardLockState]; // keep the toggle's title ("Show Keyboard") in step
+    m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();
         screen_size_changed = 1;
@@ -2356,11 +2461,15 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 
 -(void) keyboardWillShow:(NSNotification*)notif {
     NSDictionary *userInfo = [notif userInfo];
-    NSValue *boundsValue = userInfo[UIKeyboardBoundsUserInfoKey];
-    CGRect bounds = [boundsValue CGRectValue];
-    CGRect frame = [self storyViewFullFrame];
+    // See keyboardDidShow: ignore repeats for a keyboard frame already laid out for. The content
+    // offset bump below in particular must only happen once per actual keyboard change.
+    CGRect kbEndFrame = KeyboardEndFrame(userInfo);
+    if (!CGRectIsNull(kbEndFrame) && CGRectEqualToRect(kbEndFrame, m_handledKbWillShowFrame))
+        return;
+    m_handledKbWillShowFrame = kbEndFrame;
 
-    AdjustKBBounds(&bounds, userInfo, m_storyView.window);
+    CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
+    CGRect frame = [self storyViewFullFrame];
 
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
@@ -2380,9 +2489,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     
     [m_storyView setFrame: frame];
     //NSLog(@"keyboardwillshow storyview frame=(%f,%f,%f,%f) boundssize=%f boundsVal=%@", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, bounds.size.height, boundsValue);
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     
     [UIView commitAnimations];
 
@@ -2408,11 +2515,10 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     
     [m_storyView setFrame: frame];
     
-    CGRect statusFrame = [m_statusLine frame];
-    statusFrame.size.width = frame.size.width;
-    [m_statusLine setFrame: statusFrame];
+    [self layoutStatusLine];
     [UIView commitAnimations];
     m_kbShown = NO;
+    m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
 }
 
 -(BOOL) isKBShown {
@@ -2492,12 +2598,12 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
     nc.modalPresentationStyle = UIModalPresentationFormSheet;
-    [self.navigationController presentModalViewController: nc animated: YES];
+    [self.navigationController presentViewController: nc animated: YES completion:nil];
 }
 
 -(void) fileBrowser: (FileBrowser *)browser fileSelected:(NSString *)file {
-    if ([self.navigationController modalViewController])
-        [self.navigationController dismissModalViewControllerAnimated:YES];
+    if ([self.navigationController presentedViewController])
+        [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 
     if (file)
         strcpy(iosif_filename, [file fileSystemRepresentation]);
@@ -2534,8 +2640,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
         return;
 
     [m_storyView setBackgroundColor: color];
-    
-    [m_background setBackgroundColor: m_defaultBGColor];
+
+    // The paging background shows around the story view (it is what sits behind the Duo's button
+    // strip), so it follows the color actually in effect, not just the settings default. Games
+    // like Photopia change the background color as they go.
+    [m_background setBackgroundColor: color];
 
     [self setNavBarTint];
     
@@ -2582,6 +2691,67 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     m_landscape = landscape;
 }
 
+// Replaces the launch-time gLargeScreenDevice idiom check: YES when there is room for the wide
+// (formerly iPad-only) layout, which now also covers wide windows such as an unfolded iPhone Duo.
+-(BOOL)isRegularWidth {
+    return self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+}
+
+// Replaces the launch-time gLargeScreenPhone screen-size check with a live one on the current
+// view width: YES for current iPhones and the folded Duo (375pt and wider), which get 80 columns
+// and the full-size fixed-width and status fonts; NO for SE-class widths, which get the small ones.
+-(BOOL)hasWidePhoneWidth {
+    if (![self isViewLoaded])
+        return NO;
+    return self.view.bounds.size.width >= 375;
+}
+
+// Width classification covering only the inputs setFont: actually uses (regular width, and the
+// wide phone width), so that font metrics are redone only when one of them changes.
+-(NSInteger)widthLevel {
+    return ([self isRegularWidth] ? 2 : 0) + ([self hasWidePhoneWidth] ? 1 : 0);
+}
+
+// The fixed-width and status line font sizes derive from the available width (see setFont:), so
+// re-apply the current font when the width classification changes, e.g. on fold/unfold or resize.
+-(void)updateFontsForWidthIfNeeded {
+    if (!m_storyView || !m_fontname)
+        return;
+    if ([self widthLevel] == m_appliedWidthLevel)
+        return;
+    // Defer the reflow: this is reached from traitCollectionDidChange: in the middle of a view
+    // hierarchy change (e.g. the push that autorestores a story), when the story view's text runs
+    // and their layout positions are not yet in sync. Re-check once UIKit has finished.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (m_storyView && m_fontname && [self widthLevel] != m_appliedWidthLevel) {
+            [self setFont: nil withSize: 0];
+            // The status window and Glk grid rows were sized from the previous font metrics
+            // (on first launch, from before the view had a width); re-measure them now.
+            [self resizeStatusWindow];
+        }
+    });
+}
+
+// Replaces the old kDefaultTextViewWidth macro: 80 columns when the view is regular-width or at
+// least 375pt wide, otherwise the minimum. Safe to call from the interpreter thread.
+-(int)defaultTextViewWidth {
+    __block BOOL wide = NO;
+    void (^measure)(void) = ^{
+        wide = [self isRegularWidth] || [self hasWidePhoneWidth];
+    };
+    if ([NSThread isMainThread])
+        measure();
+    else
+        dispatch_sync(dispatch_get_main_queue(), measure);
+    return wide ? 80 : kDefaultTextViewMinWidth;
+}
+
+// Aspect-ratio test that replaces the deprecated interfaceOrientation landscape check.
+-(BOOL)viewIsWiderThanTall {
+    CGSize size = self.view.bounds.size;
+    return size.width > size.height;
+}
+
 -(void) setFont: (NSString*)fontName withSize:(NSInteger)size {
     NSInteger maxFontSize = 32;
     if (fontName) {
@@ -2590,7 +2760,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if (size)
         m_fontSize = size;
     if (m_fontSize < 1)
-        m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+        m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     else if (m_fontSize < 8)
         m_fontSize = 8;
     else if (m_fontSize > maxFontSize)
@@ -2609,18 +2779,20 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     if ([font pointSize] != m_fontSize)
         font = [font fontWithSize: m_fontSize];
 #if UseRichTextView
+    BOOL regularWidth = [self isRegularWidth];
+    m_appliedWidthLevel = [self widthLevel];
     bool normalSizedStatusFont = UseFullSizeStatusLineFont;
-	bool normalSizeFixedFont = normalSizedStatusFont || gLargeScreenDevice || gLargeScreenPhone>1;
+	bool normalSizeFixedFont = normalSizedStatusFont || regularWidth || [self hasWidePhoneWidth];
     [m_storyView setFontBase: font size: m_fontSize];
     NSInteger fixedFontSize = normalSizeFixedFont ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFontBase: [m_storyView fixedFont] size: fixedFontSize];
     [m_storyView reflowText];
     if (normalSizedStatusFont) {
-        int lowRange = gLargeScreenDevice ? 12 : 8;
-        int hiRange = gLargeScreenDevice ? 20 : 16;
+        int lowRange = regularWidth ? 12 : 8;
+        int hiRange = regularWidth ? 20 : 16;
         m_statusFixedFontSize = fixedFontSize > hiRange ? hiRange : fixedFontSize < lowRange ? lowRange : fixedFontSize;
     }
-    else if (gLargeScreenDevice)
+    else if (regularWidth)
         m_statusFixedFontSize = 15;
     else
         m_statusFixedFontSize = normalSizeFixedFont ? 9 : 8;
@@ -2631,7 +2803,11 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
     [m_statusLine setFixedFontBase: statusFixedFont size: m_statusFixedFontSize];
     UIFont *fixedFont = [m_statusLine fixedFont];
     m_statusFixedFontWidth = !normalSizeFixedFont ? 5.0 : (int)[@"WWWW" sizeWithFont: fixedFont].width/4.0;
-    m_statusFixedFontPixelHeight = !normalSizeFixedFont ? 9 : [fixedFont lineHeight];
+    // The status window (Z-machine upper window, Glk grid rows) is sized from this value plus one
+    // per row, so it must track the row height the status line actually draws. Measure it rather
+    // than assuming 9 for the small font or truncating lineHeight, or bottom rows get cut off.
+    CGFloat statusRowHeight = ceil([m_statusLine fixedFontSize].height);
+    m_statusFixedFontPixelHeight = MAX(1, (NSInteger)statusRowHeight - 1);
     [m_statusLine reflowText];
     
     if (gStoryInterp == kGlxStory) {
@@ -2661,7 +2837,7 @@ static void AdjustKBBounds(CGRect *bounds, NSDictionary *userInfo, UIWindow *win
 }
 
 -(void) setFixedFont: (NSString*)font {
-    NSInteger fixedFontSize = gLargeScreenDevice ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
+    NSInteger fixedFontSize = [self isRegularWidth] ? m_fontSize : (m_fontSize > 12 ? (m_fontSize+5)/2:8);
     [m_storyView setFixedFont: [UIFont fontWithName: font size: fixedFontSize]];
 }
 
@@ -2797,7 +2973,9 @@ static int iosif_top_win_height = 1;
         int skipCol = -1, skipCount = 0, skipCol2 = -1, skipCount2 = 0;
         if (gStoryInterp==kZStory) {
             CGFloat charWidth = m_statusFixedFontWidth;
-            int displayCols = (int)(view.frame.size.width / charWidth + 0.5);
+            // Columns that fit between the text's left margin (which already includes any leading
+            // safe inset, see layoutStatusLine) and the trailing safe inset (the Duo button strip).
+            int displayCols = (int)((view.frame.size.width - view.leftMargin - view.safeAreaInsets.right) / charWidth + 0.5);
             int firstNonReversedRow = 0;
             if (displayCols < h_screen_cols) {
                 needCols = h_screen_cols - displayCols;
@@ -3015,7 +3193,7 @@ static int iosif_top_win_height = 1;
     BOOL glkViewIsGrid = NO;
     if (gStoryInterp == kGlxStory && [m_glkViews count] > 1) {
         NSUInteger glkInputsCount = glkInputs ? [glkInputs count] : 0;
-        
+
         int vn = 0;
         for (RichTextView *v in m_glkViews) {
             if (glkInputsCount <= vn)
@@ -3047,7 +3225,11 @@ static int iosif_top_win_height = 1;
 
     if (iosif_top_win_height == -2) {
         topWinSize = prevTopWinHeight * (m_statusFixedFontPixelHeight+1);
-        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
+
+        if (statusLine == m_statusLine)
+            [self layoutStatusLineWithHeight: topWinSize];
+        else
+            [statusLine setFrame: CGRectMake(0.0f, 0.0f, self.view.bounds.size.width, topWinSize)];
         iosif_top_win_height = prevTopWinHeight;
         [storyView setTopMargin: topWinSize];
         grewStatus = 1;
@@ -3055,15 +3237,15 @@ static int iosif_top_win_height = 1;
 
     if (iosif_top_win_height < 0)
         prevTopWinHeight = -1;
-    
+
     BOOL frozeDisplay = NO;
-    
+
     if (statusLen > 1 && ztop_win_height <=1 && prevTopWinHeight>=3) {
         [storyView setFreezeDisplay: YES];
         [statusLine setFreezeDisplay: YES];
         frozeDisplay = YES;
     }
-    
+
     if (iosif_top_win_height < 0 || prevTopWinHeight != ztop_win_height
                 && (statusLen > 1 && !grewStatus || inputsSinceSaveRestore!=prevInputsSinceSaveRestore ||
                     ztop_win_height==0 || ztop_win_height > prevTopWinHeight)) {
@@ -3074,12 +3256,14 @@ static int iosif_top_win_height = 1;
             grewStatus = 0;
         fast = YES;
         topWinSize = ztop_win_height * (m_statusFixedFontPixelHeight+1) + 0; // was 3 in 1.3, was 6 in 1.2
-        
+
         if (!frozeDisplay && (prevTopWinHeight - ztop_win_height > 1 || ztop_win_height - prevTopWinHeight > 1))
             [self setupFadeWithDuration: 0.08];
-        
-        [statusLine setFrame: CGRectMake(0.0f, 0.0f, viewFrame.size.width,  topWinSize)];
-        
+        if (statusLine == m_statusLine)
+            [self layoutStatusLineWithHeight: topWinSize];
+        else
+            [statusLine setFrame: CGRectMake(0.0f, 0.0f, self.view.bounds.size.width, topWinSize)];
+
         iosif_top_win_height = ztop_win_height;
         [storyView setTopMargin: topWinSize+0];
         prevTopWinHeight = ztop_win_height;
@@ -3092,7 +3276,7 @@ static int iosif_top_win_height = 1;
         pthread_cond_signal(&winSizeChangedCond);
     }
     pthread_mutex_unlock(&winSizeMutex);
-    
+
     pthread_mutex_lock(&outputMutex);
     if (finished)
         iosif_flush(NO);
@@ -3375,7 +3559,7 @@ static int iosif_top_win_height = 1;
             sz.width = viewWidth;
             [storyView setContentSize: sz];
         }
-        
+
         if (textLen > 0 || !(ipzAllowInput & kIPZAllowInput) && recentScrollToVisYPos[cwin]!=lastVisibleYPos[cwin]) {
             CGSize contentSz = [storyView contentSize];
             CGSize viewSz = [storyView frame].size;
@@ -3411,13 +3595,12 @@ static int iosif_top_win_height = 1;
         }
     }
     pthread_mutex_unlock(&outputMutex);
-    
+
     if (finished && finished != 1) {
         if ([m_currentStory length] > 0) {
             if (finished == 2) {
                 finished = -1;
-                UIAlertView *dialog = [[UIAlertView alloc] initWithTitle:@"Unreadable story file" message: @"Frotz doesn't understand the format of this file" delegate:self cancelButtonTitle:@"Drat" otherButtonTitles:nil];
-                [dialog show];
+                FrotzShowAlert(self, @"Unreadable story file", @"Frotz doesn't understand the format of this file", @"Drat", nil, nil);
             }
             [storyView setFreezeDisplay:NO];
             [storyView setTextStyle: kFTBold];
@@ -3426,7 +3609,7 @@ static int iosif_top_win_height = 1;
                 [storyView setFrame: viewFrame];
                 [storyView appendText: @"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"];
             }
-            if (gLargeScreenDevice)
+            if ([self isRegularWidth])
                 [storyView appendText: @"\n\n[End of story. Tap 'Select Story' to exit.]\n\n"];
             else
                 [storyView appendText: @"\n\n[End of story. Tap 'Story List' to exit.]\n\n"];
@@ -3452,7 +3635,10 @@ static int iosif_top_win_height = 1;
     [m_inputLine updatePosition];
     CGFloat contentOffset = scrollView.contentOffset.y;
     CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
-    if (!m_kbShown && maximumOffset > 0 && contentOffset >= maximumOffset+100
+    // m_kbShown lags the keyboard (set in keyboardDidShow, cleared in keyboardWillHide), and
+    // keyboardWillShow scrolls this view, so also check the live responder state or the
+    // show-notification handlers can re-trigger the keyboard they are responding to.
+    if (!m_kbShown && ![m_inputLine isFirstResponder] && maximumOffset > 0 && contentOffset >= maximumOffset+100
         && [self.view window]
         && ![self.navigationController presentedViewController]
         && ![self.notesController isVisible])
@@ -3614,7 +3800,7 @@ static UIColor *scanColor(NSString *colorStr) {
 }
 
 static void setScreenDims(char *storyNameBuf) {
-    iosif_textview_width = kDefaultTextViewWidth;
+    iosif_textview_width = [theSMVC defaultTextViewWidth];
     iosif_textview_height = kDefaultTextViewHeight;
     
     if (gStoryInterp == kZStory) {
@@ -4030,17 +4216,18 @@ static void setScreenDims(char *storyNameBuf) {
         NSString *pathExt = [[self currentStory] pathExtension];
         BOOL isZblorb = ([pathExt isEqualToString:@"zblorb"] || [pathExt isEqualToString:@"gblorb"]);
         NSData *data = nil;
-        if (!isZblorb || !gLargeScreenDevice)
+        BOOL regularWidth = [self isRegularWidth];
+        if (!isZblorb || !regularWidth)
             data = [storyBrowser splashDataForStory: story];
         if (!data && isZblorb)
             data = imageDataFromBlorb([self currentStory]);
         
         if (data) {
             UIImage *timg = [[UIImage alloc] initWithData: data];
-            UIImage *splashImage = scaledUIImage(timg, 0, 0);
+            UIImage *splashImage = scaledUIImageForBounds(timg, 0, 0, self.view.bounds, self.traitCollection);
             m_splashImageView = [[UIImageView alloc] initWithImage: splashImage];
 
-            UIImage *thumb = scaledUIImage(splashImage, 40, 32);
+            UIImage *thumb = scaledUIImageForBounds(splashImage, 40, 32, self.view.bounds, self.traitCollection);
             if (thumb) {
                 [storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
                 [storyBrowser saveMetaData];
@@ -4049,9 +4236,9 @@ static void setScreenDims(char *storyNameBuf) {
             CGRect rect = [m_splashImageView bounds];
             
             CGSize mySize = [self view].frame.size;	    
-            if (gLargeScreenDevice || rect.size.width > 320 || rect.size.height > 320) {
+            if (regularWidth || rect.size.width > 320 || rect.size.height > 320) {
                 float scale = 1.0f;
-                if (gLargeScreenDevice && rect.size.height <= 512 && rect.size.width <= 512) {
+                if (regularWidth && rect.size.height <= 512 && rect.size.width <= 512) {
                     scale = (rect.size.height <= 320 && rect.size.width <= 320) ? 2.0f : 1.5f;
                 } else if (rect.size.height > mySize.height-40 || rect.size.width > mySize.width) {
                     scale = mySize.height / rect.size.height;
@@ -4273,8 +4460,29 @@ static void setScreenDims(char *storyNameBuf) {
     return inputsSinceSaveRestore != 0;
 }
 
+// Drop the system AutoFill group (contacts, passwords, ...) from the input line's edit menu; it is
+// never useful for a parser command line. Paste and the other suggested actions are kept.
+- (UIMenu *)textField:(UITextField *)textField editMenuForCharactersInRange:(NSRange)range
+     suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(16.0)) {
+    NSMutableArray<UIMenuElement *> *actions = [NSMutableArray arrayWithCapacity: [suggestedActions count]];
+    for (UIMenuElement *element in suggestedActions) {
+        if ([element isKindOfClass: [UIMenu class]]) {
+            UIMenu *menu = (UIMenu *)element;
+            BOOL isAutoFill;
+            if (@available(iOS 17.0, *))
+                isAutoFill = [menu.identifier isEqualToString: UIMenuAutoFill];
+            else // iOS 16 has no public identifier for the group; fall back to its (English) title
+                isAutoFill = [menu.title isEqualToString: @"AutoFill"];
+            if (isAutoFill)
+                continue;
+        }
+        [actions addObject: element];
+    }
+    return [UIMenu menuWithChildren: actions];
+}
+
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-    
+
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
     if ((ipzAllowInput & kIPZNoEcho) || cwin == 1)
         return NO;
@@ -4405,7 +4613,7 @@ static void setScreenDims(char *storyNameBuf) {
         [self setTextColor: m_defaultFGColor makeDefault:NO];
         [self setBackgroundColor: m_defaultBGColor makeDefault:NO];
     }
-    m_fontSize = gLargeScreenDevice ? kDefaultPadFontSize : kDefaultFontSize;
+    m_fontSize = [self isRegularWidth] ? kDefaultPadFontSize : kDefaultFontSize;
     [self setFont: [UIFont fontWithName:kVariableWidthFontName size:m_fontSize]];
     m_completionEnabled = YES;
     m_canEditStoryInfo = NO;
@@ -4723,14 +4931,12 @@ static BOOL migateDropboxAuth() {
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client)
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Account linked"
-                                                        message: 
-                              [NSString stringWithFormat:
-                               @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
-                               "with separate subfolders per story.  You can access this area from Frotz on other "
-                               "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]]
-                                                       delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-        [alert show];
+        FrotzShowAlert(self, @"Account linked",
+                       [NSString stringWithFormat:
+                        @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
+                        "with separate subfolders per story.  You can access this area from Frotz on other "
+                        "devices, or using any compatible Interactive Fiction program on other computers.", [self dbTopPath]],
+                       @"OK", nil, nil);
         [self dbRefreshFolder: [self dbSavePath] createIfNotExists:YES];
     }
 #endif
@@ -4990,6 +5196,8 @@ static BOOL migateDropboxAuth() {
     return [[self.viewControllers lastObject] shouldAutorotate];
 }
 
+// TODO: Modernization - Consider adopting `prefersInterfaceOrientationLocked` (iOS 26+)
+// as the modern replacement for orientation locking via `supportedInterfaceOrientations`.
 -(NSUInteger)supportedInterfaceOrientations {
     return [[self.viewControllers lastObject] supportedInterfaceOrientations];
 }

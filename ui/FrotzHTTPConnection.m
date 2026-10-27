@@ -131,7 +131,8 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
     [outdata appendFormat:@"<title>&gt; Frotz</title>"];
     [outdata appendString:@"<style>\nhtml {background-color:#eeeeee}\n body { background-color:#FFFFFF; font-family:Tahoma,Arial,Helvetica,sans-serif; "
      "font-size:18x; margin-left:10%; margin-right:10%; border:2px groove #006600; padding:15px; }\n"
-     " hr { margin-top: 0px; margin-bottom: 0px; padding: 0px;}\n span.submitbut { float:right;}\n</style>\n"];
+     " hr { margin-top: 0px; margin-bottom: 0px; padding: 0px;}\n span.submitbut { float:right;}\n"
+     " div.entry-body { overflow-wrap:anywhere; }\n</style>\n"];
     [outdata appendString: @"\n\
      <script type='text/javascript'>\n\
      \n\
@@ -268,11 +269,13 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
                         if ([saveFile hasSuffix: @".sav"] || [saveFile hasSuffix: @".qut"]) {
                             if (++saveCount == 1)
                                 [saveFileList setString: @"<small>&nbsp;&nbsp;&nbsp;<b><i>Saved Games:</i></b>&nbsp;&nbsp;"];
-                            [saveFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp;&nbsp;", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
+                            // Separate links with a regular space after the nbsp so the list can wrap;
+                            // two nbsp in a row left one unbreakable line that widened the whole page.
+                            [saveFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp; ", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
                         } else if ([saveFile hasSuffix: @".txt"]) {
                             if (++textCount == 1)
                                 scriptFileList = [NSMutableString stringWithString:@"<small>&nbsp;&nbsp;&nbsp;<b><i>Transcripts:</i></b>&nbsp;&nbsp;"];
-                            [scriptFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp;&nbsp;", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
+                            [scriptFileList appendFormat: @"<a href=\"/Saves/%@/%@\">%@</a>&nbsp; ", saveDir, saveFile, [saveFile stringByDeletingPathExtension]];
 
                         }
                     }
@@ -477,11 +480,6 @@ static NSInteger indexOfBytes(NSData *data, NSInteger offset, const char *search
 	BOOL isDir = NO;
 	if ([defaultManager fileExistsAtPath:filePath isDirectory: &isDir] && !isDir) {
         HTTPFileResponse *fileResponse = [[HTTPFileResponse alloc] initWithFilePath:filePath forConnection:self];
-        //xxxxx
-//	    if ([filePath hasSuffix: @".sav"])
-//            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"sav"]];
-//	    else if ([filePath hasSuffix: @".qut"])
-//            [fileResponse setFileName: [[[filePath lastPathComponent] stringByDeletingPathExtension] stringByAppendingPathExtension: @"qut"]];
 	    return fileResponse;
     }
 	else {

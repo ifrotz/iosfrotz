@@ -1,4 +1,5 @@
-platform :ios, '11.0'
+platform :ios, '12.0'
+use_frameworks!
 
 target 'Frotz' do
     pod 'ObjectiveDropboxOfficial'

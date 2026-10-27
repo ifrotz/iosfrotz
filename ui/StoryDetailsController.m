@@ -108,7 +108,20 @@
 }
 
 -(void)displayMenu {
-    if ([self becomeFirstResponder]) {
+    if (![self becomeFirstResponder])
+        return;
+    if (@available(iOS 16.0, *)) {
+        // The system edit menu takes its items (Copy, Paste) from canPerformAction:withSender:
+        // on the first responder, so the interaction needs no delegate.
+        if (!m_editMenuInteraction) {
+            UIEditMenuInteraction *interaction = [[UIEditMenuInteraction alloc] initWithDelegate:nil];
+            [self addInteraction: interaction];
+            m_editMenuInteraction = interaction;
+        }
+        CGPoint sourcePoint = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMinY(self.bounds));
+        UIEditMenuConfiguration *configuration = [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:sourcePoint];
+        [(UIEditMenuInteraction*)m_editMenuInteraction presentEditMenuWithConfiguration:configuration];
+    } else {
         UIMenuController *sharedMenuController = [UIMenuController sharedMenuController];
         [sharedMenuController setTargetRect: self.frame inView:self.superview];
         [sharedMenuController setMenuVisible:YES animated:YES];
@@ -258,8 +271,10 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)refresh {
+    // No Frotz (i) here: the story list and the story screen each have one, and on iPad or an
+    // open iPhone Duo this page is shown beside the story list, which would duplicate it.
     if (m_storyInfo != nil && [m_browser canEditStoryInfo])
-        self.navigationItem.rightBarButtonItem = [self editButtonItem];
+        self.navigationItem.rightBarButtonItem = [self editItem];
     else {
         self.navigationItem.rightBarButtonItem = nil;
         if (self.isEditing)
@@ -292,7 +307,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     
     m_playButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
     if (m_willResume) {
-        if (gLargeScreenDevice) {
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
             [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
         } else {
             [m_playButton setTitle: @"Resume Story" forState:UIControlStateNormal];
@@ -324,8 +339,34 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [self updateSelectStoryHint];
 }
 
+// Not the system editButtonItem: that one is text-only ("Edit"/"Done"), and text-only items stay
+// in a horizontal bar on the iPhone Duo instead of moving to the vertical bar. This one carries a
+// symbol; setEditing:animated: swaps it between pencil and checkmark.
+- (UIBarButtonItem*)editItem {
+    if (!m_editItem) {
+        m_editItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"pencil"]
+                                                      style: UIBarButtonItemStylePlain target: self action: @selector(toggleEditing)];
+        m_editItem.title = NSLocalizedString(@"Edit", nil);
+    }
+    return m_editItem;
+}
+
+- (void)toggleEditing {
+    [self setEditing: !self.editing animated: YES];
+}
+
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated: animated];
+    // Mirror of StoryBrowser: starting to edit here ends list editing, so the two never overlap.
+    if (editing && m_browser.isEditing)
+        [m_browser setEditing: NO animated: animated];
+    UIBarButtonItem *editItem = [self editItem];
+    editItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
+    editItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
+    if (@available(iOS 26.0, *))
+        editItem.style = editing ? UIBarButtonItemStyleProminent : UIBarButtonItemStylePlain;
+    else
+        editItem.style = editing ? UIBarButtonItemStyleDone : UIBarButtonItemStylePlain;
     if (editing) {
         if (m_infoButton)
             [m_infoButton setEnabled:NO];
@@ -351,11 +392,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
     m_realWebView = [[WKWebView alloc] init];
     [m_descriptionWebView addSubview: m_realWebView];
-#if UseWKWebViewForFrotzStoryDetails
     [m_realWebView setNavigationDelegate: self];
-#else
-    [m_realWebView setDelegate: self];
-#endif
     [m_realWebView setFrame: m_descriptionWebView.bounds];
     [m_realWebView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [m_descriptionWebView setAutoresizesSubviews: YES];
@@ -366,7 +403,7 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     // For some reason in iOS 4.2 this doesn't work because the frame hasn't been scaled yet
     // in willAnimRotation...  so I'm initializing it here with a hardcoded scale of half.
     m_artSizeLandscape = m_artworkView.bounds.size;
-    CGFloat landscapeScale = gLargeScreenDevice ? 0.5 : 0.8;
+    CGFloat landscapeScale = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular ? 0.5 : 0.8;
     m_artSizeLandscape.width *= landscapeScale;
     m_artSizeLandscape.height *= landscapeScale;
     
@@ -393,15 +430,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    if (@available(iOS 13.0, *)) {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor whiteColor]]; // labelColor
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor: [UIColor darkGrayColor]];
-    }
+    [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+    [self.navigationController.navigationBar setTintColor: [UIColor whiteColor]]; // labelColor
     [m_frotzInfoController updateTitle];
     // animation works around issues when returning to details from story
     [UIView animateWithDuration:0.5f delay:0.0f usingSpringWithDamping:1.0f initialSpringVelocity:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
@@ -448,22 +479,22 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 -(void)updateBarButtonAndSelectionInstructions:(UISplitViewControllerDisplayMode)displayMode {
     if (displayMode == UISplitViewControllerDisplayModeAutomatic)
         displayMode = self.splitViewController.displayMode;
-    if (displayMode == UISplitViewControllerDisplayModePrimaryOverlay && [self isEditing])
+    if (displayMode == UISplitViewControllerDisplayModeOneOverSecondary && [self isEditing])
         [self setEditing:NO animated: YES];
 
     m_descriptionWebView.hidden = self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact ? YES : NO;
-    if (displayMode == UISplitViewControllerDisplayModeAllVisible
+    if (displayMode == UISplitViewControllerDisplayModeOneBesideSecondary
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Select a story to begin";
-    else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden
+    else if (displayMode == UISplitViewControllerDisplayModeSecondaryOnly
         && self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         m_portraitCoverLabel.text = @"Tap 'Select Story' to begin";
     else // if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact)
         m_portraitCoverLabel.text = nil;
 
-    if (displayMode == UISplitViewControllerDisplayModeAllVisible) {
+    if (displayMode == UISplitViewControllerDisplayModeOneBesideSecondary) {
         self.navigationItem.leftBarButtonItem = nil;
-    } else if (displayMode == UISplitViewControllerDisplayModePrimaryHidden || displayMode == UISplitViewControllerDisplayModePrimaryOverlay) {
+    } else if (displayMode == UISplitViewControllerDisplayModeSecondaryOnly || displayMode == UISplitViewControllerDisplayModeOneOverSecondary) {
         [self setEditing: NO animated: YES];
         if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassCompact) {
             self.navigationItem.leftBarButtonItem = nil; // will have Back button instead
@@ -593,15 +624,9 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
         [m_browser launchBrowserWithURL: [NSString stringWithFormat: @"https://%@/viewgame?id=%@", kIFDBHost, m_tuid]];
 }
 
-#if UseWKWebViewForFrotzStoryDetails
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
     //NSString *url = [navigationAction.request.URL query];
     decisionHandler(navigationAction.navigationType !=  WKNavigationTypeLinkActivated);
 }
-#else
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
-    return navigationType != UIWebViewNavigationTypeLinkClicked;
-}
-#endif
 
 @end

@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,weak,nullable) StoryBrowser *browser;
 @end
 
-@interface StoryBrowser : UITableViewController <UIActionSheetDelegate,
+@interface StoryBrowser : UITableViewController <
     UISplitViewControllerDelegate, UIPopoverControllerDelegate,
     UISearchBarDelegate, UISearchControllerDelegate, UISearchResultsUpdating,
     UITableViewDataSource, UITableViewDelegate> {
@@ -60,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 IBOutlet    StoryMainViewController<FrotzFontDelegate> *m_storyMainViewController;
     StoryWebBrowserController *m_webBrowserController;
 IBOutlet    StoryDetailsController *m_details;
+    UINavigationController *m_detailsNav; // the split view's details column from the storyboard
     FrotzInfo *m_frotzInfoController;
     FrotzSettingsController *m_settings;
 
@@ -96,6 +97,7 @@ IBOutlet    StoryDetailsController *m_details;
 - (void)refresh;
 - (void)reloadData;
 - (void)updateNavButton;
+- (UIBarButtonItem*)storyListBarButtonItem;
 @property (nonatomic, readonly, strong, nullable) UIBarButtonItem *nowPlayingNavItem;
 @property (nonatomic, readonly, strong) StoryMainViewController *storyMainViewController;
 @property (nonatomic, readonly, strong) FrotzInfo *frotzInfoController;
@@ -108,6 +110,7 @@ IBOutlet    StoryDetailsController *m_details;
 - (void)showMainStoryController;
 - (void)autoRestoreAndShowMainStoryController;
 - (void)didPressModalStoryListButton;
+- (void)didPressModalStoryListButtonWithCompletion:(nullable void (^)(void))completion;
 - (void)addTitle: (NSString*)fullName forStory:(NSString*)story;
 - (void)addAuthors: (NSString*)authors forStory:(NSString*)story;
 - (void)addTUID: (NSString*)tuid forStory:(NSString*)story;

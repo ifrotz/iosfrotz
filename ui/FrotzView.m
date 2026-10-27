@@ -79,7 +79,7 @@
     CGRect bounds = [view bounds];
     CGFloat width = bounds.size.width/2.0;
     CGFloat height = bounds.size.height/2.0;
-    if (UseFullSizeStatusLineFont || gLargeScreenDevice)
+    if (UseFullSizeStatusLineFont || self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
         return YES;
     CGFloat magThresY = height*2;
     if (magThresY > 140)

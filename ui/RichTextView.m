@@ -78,6 +78,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 @dynamic leftMargin;
 @synthesize rightMargin = m_rightMargin;
 @synthesize bottomMargin = m_bottomMargin;
+@synthesize fixedMargins = m_fixedMargins;
 @synthesize lineSpacing = m_extraLineSpacing;
 @synthesize lastAEIndexAccessed = m_lastAEIndexAccessed; 
 @synthesize selectionDelegate = m_selectionDelegate;
@@ -151,10 +152,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     UIColor *c = m_fgColor;
     NSUInteger index = m_currentTextColorIndex;
     NSUInteger colorCount = [m_colorIndex count];
-    if ((index <= 1 || index-1 >= m_currentTextColorIndex < [m_colorArray count])
+    if ((index <= 1 || index-1 >= [m_colorArray count])
         && colorCount > 0) {
         index = [m_colorIndex[colorCount-1] unsignedIntValue] & 0xFFFF;
-        if (index > 1)
+        if (index > 1 && index-1 < [m_colorArray count])
             m_currentTextColorIndex = index;
     }
     if (index > 1)
@@ -480,6 +481,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 - (void)setNiceMargins:(BOOL)reflow {
+    if (m_fixedMargins)
+        return; // e.g. the status line, whose margins the controller lines up with the story text
     if (m_leftMargin > 0) {
         CGFloat origLeft = m_leftMargin, origRight = m_rightMargin;
         unsigned int origSpacing = m_extraLineSpacing;
@@ -487,7 +490,11 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         CGFloat origTempLeft = m_tempLeftMargin - m_leftMargin, origTempRight = m_tempRightMargin - m_rightMargin;
 
         if (frame.size.width > 480) {
-            if (frame.origin.x < 5.0) {
+            // The generous margins are for a view spanning the whole text area, as opposed to a Glk
+            // window placed to the right of another. The text area now starts past the leading
+            // safe-area inset (the Dynamic Island in landscape), so measure from there, not from 0.
+            UIEdgeInsets safeInsets = self.superview ? self.superview.safeAreaInsets : UIEdgeInsetsZero;
+            if (frame.origin.x < safeInsets.left + 5.0) {
                 float marginPerc = 0.10;
                 if (m_fontSize >= 28)
                     marginPerc = 0.06;
@@ -495,8 +502,13 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                     marginPerc = 0.08;
                 if (frame.size.width == 568)
                     marginPerc *= 0.5;
-                m_tempLeftMargin = m_leftMargin = frame.size.width * marginPerc;
-                m_tempRightMargin = m_rightMargin = frame.size.width * marginPerc;
+                // The view already sits inside the side safe-area insets (Dynamic Island, Duo button
+                // strip), which read as margin themselves, so take them out of the margin on each
+                // side down to a small minimum.
+                const CGFloat minMargin = 5;
+                CGFloat margin = frame.size.width * marginPerc;
+                m_tempLeftMargin = m_leftMargin = MAX(minMargin, margin - safeInsets.left);
+                m_tempRightMargin = m_rightMargin = MAX(minMargin, margin - safeInsets.right);
             } else {
                 m_tempLeftMargin = m_leftMargin = TEXT_LEFT_MARGIN;
                 m_tempRightMargin = m_rightMargin = TEXT_RIGHT_MARGIN;
@@ -582,7 +594,8 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 -(void)reset {
     BOOL origLandscape = m_origFrame.size.width > m_origFrame.size.height;
-    BOOL nowLandscape = UIInterfaceOrientationIsLandscape([[self delegate] interfaceOrientation]);
+    CGSize containerSize = [[self delegate] view].bounds.size;
+    BOOL nowLandscape = containerSize.width > containerSize.height;
     if (origLandscape ^ nowLandscape) {
         m_origFrame = CGRectMake(m_origFrame.origin.y, m_origFrame.origin.x, m_origFrame.size.height, m_origFrame.size.width);
     }
@@ -677,7 +690,9 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     CGRect frame = self.frame;
     int curImageIndex = 0;
     myRect.size.width = frame.size.width;
-    NSUInteger i, l = [m_textRuns count];
+    // Text runs can briefly outnumber their layout positions/styles while text is being
+    // appended; only draw the runs that have both.
+    NSUInteger i, l = MIN([m_textRuns count], MIN([m_textPos count], [m_textStyles count]));
     CGPoint lastUniqPt = CGPointMake(0,0);
     CGFloat prevY = 0;
     CGPoint pt, nextPos;
@@ -836,62 +851,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     return NO;
 }
 
-static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloat x, CGFloat y, BOOL doDraw) {
-    char *buf = nil;
-    if (!doDraw)
-        x = y = 0;
-    CGContextSaveGState(context);
-    CGContextConcatCTM(context, CGAffineTransformMakeScale(1, -1));
-    CGContextSetTextMatrix(context, CGAffineTransformIdentity);
-    CGContextSetTextDrawingMode(context, doDraw ? kCGTextFill: kCGTextInvisible);
-    const char *s = [text cStringUsingEncoding:NSMacOSRomanStringEncoding];
-    size_t l = s ? strlen(s) : 0;
-    if (!s) { // encoding failed because of missing characters
-        // s = [text cStringUsingEncoding: NSISOLatin1StringEncoding];
-        // l = strlen(s);
-        NSData *d = [text dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
-        s = [d bytes];
-        l = [d length];
-        buf = malloc(l+1);
-        strncpy(buf, s, l);
-        buf[l] = 0;
-        unsigned char *t = (unsigned char*)buf;
-        int i = 0;
-        while (*t) {
-            // Thorn, eth, and accented y do not exist in MacOS Roman, which is the only
-            // font encoding we can render on the iPhone using Quartz 2D
-            if (*t == 0xfd || *t == 0xdd || *t == 0xfe || *t == 0xd0 || *t == 0xf0 || *t == 0xde)
-                *t = '?';
-            else if (*t == '?') { // special case for Aotearoa, since we can't display these in MacOS Roman
-                unichar c = [text characterAtIndex: i];
-                switch(c) {
-                    case 0x0100: *t = 'A'; break;
-                    case 0x0101: *t = 'a'; break;
-                    case 0x0112: *t = 'E'; break;
-                    case 0x0113: *t = 'e'; break;
-                    case 0x012A: *t = 'I'; break;
-                    case 0x012B: *t = 'i'; break;
-                    case 0x014C: *t = 'O'; break;
-                    case 0x014D: *t = 'o'; break;
-                    case 0x016A: *t = 'U'; break;
-                    case 0x016B: *t = 'u'; break;
-                    default: break;
-                }
-            }
-            ++t; ++i;
-        }
-        s = [[NSString stringWithCString:buf encoding:NSISOLatin1StringEncoding] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-        if (!s)
-            s = buf;
-    }
-    CGContextShowTextAtPoint(context, x, y, s, l);
-    CGPoint p = CGContextGetTextPosition(context);
-    CGContextRestoreGState(context);
-    if (buf)
-        free(buf);
-    return p.x - x;
-}
-
 -(void)updateLine:(NSInteger)lineNum withYPos:(CGFloat)yPos {
     NSUInteger count = [m_lineYPos count];
     if (lineNum > 0 && lineNum-1 < count && yPos == [m_lineYPos[lineNum-1] floatValue])
@@ -950,36 +909,18 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     CGFloat minYPos = doDraw ? -rect.origin.y : 0;
     pos.x -= minXPos;
     int nLines = 0, charsDone = 0;
-    CGFloat fontAscender = 0;
     BOOL noWrap = (style & kFTNoWrap) != 0;
-    // We no longer seem to need the Quartz fixed-width text drawing code; using a fixed width font works fine
-    // and isn't restricted to the MacRoman char set. TO-DO: Remove entirely.
-    BOOL isFixed = NO; //(style & kFTFixedWidth);
     if (!len)
         return NO;
 
     if (doDraw) {
-        context = UIGraphicsGetCurrentContext();	
+        context = UIGraphicsGetCurrentContext();
         if (!bgColor) {
             if (fgColor)
                 [fgColor set];
         }
     }
-    if (isFixed) {
-        if (!context) {
-            UIGraphicsBeginImageContext(CGSizeMake(DEFAULT_TILE_WIDTH*2, DEFAULT_TILE_HEIGHT));
-            context = UIGraphicsGetCurrentContext();
-        }
-        
-        // Set fill and stroke colors
-        CGContextSetFillColorWithColor(context, [fgColor CGColor]);
-        CGContextSetStrokeColorWithColor(context, [fgColor CGColor]);
-        
-        // Set text parameters
-        CGContextSelectFont(context, [[font fontName] UTF8String], m_fixedFontSize, kCGEncodingMacRoman);
-        fontAscender = [font ascender];
-    }
-    
+
     while (text && len > 0) {
         NSRange termRange = [text rangeOfString: @"\n"];
         BOOL hasEOL = NO;
@@ -1029,13 +970,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
             }
             NSInteger maxChars = (width - pos.x) / m_fontMinWidth;
             if (len < maxChars || (style & kFTFixedWidth)) {
-                if (isFixed) {
-                    textSize.height = fontHeight;
-                    textSize.width = RTDrawFixedWidthText(context, text, 0, 0, NO);
-                } else 
-                    textSize = [text sizeWithFont:font constrainedToSize:
-                                CGSizeMake(width - pos.x, fontFudge+fontHeight + (noWrap ? 0 :fontFudge + fontHeight))
-                                    lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByWordWrapping];
+                textSize = [text sizeWithFont:font constrainedToSize:
+                            CGSizeMake(width - pos.x, fontFudge+fontHeight + (noWrap ? 0 :fontFudge + fontHeight))
+                                lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByWordWrapping];
                 textWidth = textSize.width;
                 CGFloat xPos = pos.x;
                 if (pos.x <= m_tempLeftMargin && lineNum < [m_lineWidth count]) {
@@ -1065,14 +1002,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                             }
                             [fgColor set];
                         }
-                        if (!isFixed) {
-                            //NSLog(@"xpos2 = %f, actual = %f, text=%@", pos.x, minXPos+xPos, text);
-                            textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
-                        }
-                        else {
-                            // Set fill and stroke colors
-                            textSize.width = RTDrawFixedWidthText(context, text, minXPos+xPos, -fontAscender-pos.y, YES);
-                        }
+                        //NSLog(@"xpos2 = %f, actual = %f, text=%@", pos.x, minXPos+xPos, text);
+                        textSize = [text drawInRect:CGRectMake(minXPos+xPos, pos.y, width - pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
                     }
                     //		    NSLog(@"ft (%f,%f) %@", minXPos+pos.x, pos.y, text);
                     *nextPos = CGPointMake(xPos + textSize.width, pos.y);
@@ -1138,20 +1069,10 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                             CGContextFillRect(context, CGRectMake(minXPos+pos.x, pos.y, width-pos.x, curLineHeight+1));
                         [fgColor set];
                     }
-                    if (!isFixed)
-                        textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
-                    else {
-                        textSize.height = fontHeight;
-                        textSize.width = RTDrawFixedWidthText(context, subtext, minXPos+xPos, -fontAscender-pos.y, YES);
-                    }
+                    textSize = [subtext drawInRect:CGRectMake(minXPos+xPos, pos.y, width-pos.x, fontFudge+fontHeight) withFont:font lineBreakMode:NSLineBreakByClipping];
                 }
                 else {
-                    if (!isFixed)
-                        textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontFudge+fontHeight) lineBreakMode:NSLineBreakByClipping];
-                    else {
-                        textSize.height = fontHeight;
-                        textSize.width = RTDrawFixedWidthText(context, subtext, 0, 0, NO);			
-                    }
+                    textSize = [subtext sizeWithFont:font constrainedToSize: CGSizeMake(width - pos.x, fontFudge+fontHeight) lineBreakMode:NSLineBreakByClipping];
                 }
                 if (noWrap)
                     *nextPos = CGPointMake(xPos + textSize.width, pos.y);
@@ -1185,12 +1106,8 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
                             CGContextFillRect(context, CGRectMake(minXPos, pos.y, width + m_leftMargin, t));
                             [fgColor set];
                         }
-                        if (!isFixed)
-                            textSize = [text drawInRect:CGRectMake(minXPos+pos.x, pos.y, width-pos.x, fontFudge+fontHeight*maxLines) withFont:font
-                                          lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByCharWrapping];
-                        else {
-                            textSize.width = RTDrawFixedWidthText(context, text, minXPos+pos.x, -fontAscender-pos.y, YES);
-                        }
+                        textSize = [text drawInRect:CGRectMake(minXPos+pos.x, pos.y, width-pos.x, fontFudge+fontHeight*maxLines) withFont:font
+                                      lineBreakMode: noWrap ? NSLineBreakByClipping:NSLineBreakByCharWrapping];
                     }
                     else
                         textSize = [text sizeWithFont:font constrainedToSize: CGSizeMake(width, fontFudge+fontHeight*maxLines)
@@ -1254,9 +1171,7 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
     nextPos->x += minXPos;
     if (!doDraw)
         m_numLines += nLines;
-    if (isFixed && !doDraw)
-        UIGraphicsEndImageContext();
-    
+
     return NO;
 }
 
@@ -2039,7 +1954,9 @@ static CGFloat RTDrawFixedWidthText(CGContextRef context, NSString *text, CGFloa
 }
 
 -(void)rememberTopLineForReflow {
-    NSUInteger i, l = [m_textRuns count];
+    // Text runs can briefly outnumber their layout positions while text is being appended, so
+    // only walk the runs that have a position.
+    NSUInteger i, l = MIN([m_textRuns count], [m_textPos count]);
     CGFloat topY = self.contentOffset.y;
     
     CGPoint lastUniqPt = CGPointMake(0,0), pt;
@@ -2255,7 +2172,7 @@ static NSString *kCommand = @"Command";
 }
 
 -(NSInteger) getTextRunAtPoint:(CGPoint)touchPoint {
-    NSUInteger i, l = [m_textRuns count];
+    NSUInteger i, l = MIN([m_textRuns count], MIN([m_textPos count], [m_textStyles count]));
     CGPoint lastUniqPt = CGPointMake(0,0), pt, nextPos;
     NSInteger lastUniqIndex = 0;
     for (i=0; i < l; ++i) {

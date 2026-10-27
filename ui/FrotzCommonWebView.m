@@ -15,7 +15,8 @@ static FrotzWebView *sWebView;
 
 +(FrotzWebView*)sharedWebView {
     if (!sWebView) {
-        sWebView = [[FrotzWebView alloc] initWithFrame: [[UIScreen mainScreen] applicationFrame]];
+        // Every presenter re-frames the shared view to its own view's frame before showing it.
+        sWebView = [[FrotzWebView alloc] initWithFrame: CGRectZero];
         [sWebView setAutoresizingMask: UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth];
         sWebView.backgroundColor = [UIColor darkGrayColor];
     }
@@ -24,9 +25,7 @@ static FrotzWebView *sWebView;
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    if (@available(iOS 13.0,*)) {
-        self.navigationController.navigationBar.scrollEdgeAppearance = self.navigationController.navigationBar.standardAppearance;
-    }
+    self.navigationController.navigationBar.scrollEdgeAppearance = self.navigationController.navigationBar.standardAppearance;
 }
 
 

@@ -48,6 +48,7 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
     CGFloat m_savedTopYOffset;    
     
     unsigned int m_topMargin, m_leftMargin, m_rightMargin, m_bottomMargin;
+    BOOL m_fixedMargins; // margins are set explicitly by the owner; setNiceMargins: leaves them alone
     unsigned int m_tempLeftMargin, m_tempRightMargin;
     unsigned int m_tempLeftYThresh, m_tempRightYThresh;
     unsigned int m_extraLineSpacing;
@@ -102,6 +103,7 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) unsigned int leftMargin;
 @property(nonatomic, assign) unsigned int rightMargin;
 @property(nonatomic, assign) unsigned int bottomMargin;
+@property(nonatomic, assign) BOOL fixedMargins;
 @property(nonatomic, assign) unsigned int lineSpacing;
 @property(nonatomic, assign) NSInteger lastAEIndexAccessed;
 //@property(nonatomic, assign) NSInteger selectedRun;

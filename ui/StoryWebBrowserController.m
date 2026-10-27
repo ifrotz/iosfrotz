@@ -35,6 +35,8 @@ const NSString *kBookmarkURLsKey = @"URLs";
 const NSString *kBookmarkTitlesKey = @"Titles";
 const NSString *kBookmarkVersionKey = @"Version";
 
+#import "FrotzAlert.h"
+
 @implementation StoryWebBrowserController
 
 @synthesize snarfedStoryName;
@@ -54,23 +56,18 @@ const NSString *kBookmarkVersionKey = @"Version";
     return m_frotzInfoController;
 }
 
+// Activity indicator trailing-most, then the Frotz (i) if this screen has a FrotzInfo controller.
+-(void)updateRightBarButtonItems {
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    self.navigationItem.rightBarButtonItems = infoItem ? @[m_activButtonItem, infoItem] : @[m_activButtonItem];
+}
+
 -(void)loadView {
-    UINavigationController *nc = [self navigationController];
-    const float navBarHeight = nc ? nc.navigationBar.frame.size.height : 0.0;
-    const float toolBarHeight = nc ? navBarHeight : 44.0;
-    CGRect frame = [[UIScreen mainScreen] bounds];
-    UIEdgeInsets safeInsets = UIEdgeInsetsMake(0, 0, 0, 0);
-    if (@available(iOS 11.0,*)) {
-        safeInsets = [[[UIApplication sharedApplication] keyWindow] safeAreaInsets];
-    }
-    frame.origin.y += navBarHeight;
-    frame.size.height -= navBarHeight;
+    // Frames are assigned in viewWillLayoutSubviews from the view's real bounds and safe area;
+    // from then on the autoresizing masks keep the layout up to date, as before.
+    m_background = [[UIView alloc] initWithFrame: CGRectZero];
 
-    m_background = [[UIView alloc] initWithFrame: frame];
-
-    frame.origin.y = 0;
-    frame.size.height -= toolBarHeight;
-    m_scrollView = [[UIScrollView alloc] initWithFrame: frame];
+    m_scrollView = [[UIScrollView alloc] initWithFrame: CGRectZero];
     [m_scrollView setScrollEnabled: NO];
     [m_scrollView setBackgroundColor: [UIColor blackColor]];
     [m_scrollView setDelegate: self];
@@ -81,9 +78,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_background setBackgroundColor: [UIColor blackColor]];
     [m_background addSubview: m_scrollView];
 
-    frame = [m_scrollView bounds];
-    frame.size.height -= safeInsets.bottom;
-    m_webView = [[StoryWebView alloc] initWithFrame: frame];
+    m_webView = [[StoryWebView alloc] initWithFrame: CGRectZero];
     [m_background setAutoresizesSubviews: YES];
 
     [m_webView setAutoresizesSubviews: YES];
@@ -95,61 +90,115 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_scrollView bringSubviewToFront: m_webView];
 
     [self setView: m_background];
-#if UseWKWebViewForIFDBBrowser
     [m_webView setNavigationDelegate: self];
-#else
-    [m_webView setScalesPageToFit: YES];
-    [m_webView setDetectsPhoneNumbers: NO];
-    [m_webView setDelegate: self];
-#endif
 
-    frame.origin.y = frame.size.height;
-    frame.size.height = toolBarHeight;
-    m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
-    [m_toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
-
-    [m_toolBar setBarStyle: UIBarStyleBlack];
-    [m_toolBar setTintColor: [UIColor whiteColor]];
-
-    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavBack"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
+    // The browser controls are the navigation controller's toolbar items (shown in viewWillAppear)
+    // rather than a UIToolbar of our own: the system places that toolbar at the bottom on most
+    // devices and moves its items to the vertical bar on the iPhone Duo. Each item has a symbol
+    // and a title, so it can go vertical and reads properly in an overflow menu.
+    m_backButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"chevron.backward"] style:UIBarButtonItemStylePlain target:self action:@selector(goBack)];
+    m_backButtonItem.title = NSLocalizedString(@"Back", nil);
     m_spaceButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     m_cancelButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemStop target:self action:@selector(cancel)];
     m_reloadButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refresh)];
-    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"NavForward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
-    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage imageNamed: @"icon-url-tool"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_forwardButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"chevron.forward"] style:UIBarButtonItemStylePlain target:self action:@selector(goForward)];
+    m_forwardButtonItem.title = NSLocalizedString(@"Forward", nil);
+    m_URLButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"link"] style:UIBarButtonItemStylePlain target:self action:@selector(promptURL)];
+    m_URLButtonItem.title = NSLocalizedString(@"Enter URL", nil);
     m_searchButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemSearch target:self action:@selector(setSearchType)];
 
     m_activityView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    m_activityView.hidesWhenStopped = YES;
     m_activButtonItem = [[UIBarButtonItem alloc] initWithCustomView: m_activityView];
+    // The spinner is a status indicator, not a button: no glass capsule behind it, so there is
+    // nothing drawn at all while idle and just the spinner while loading.
+    if (@available(iOS 26.0, *))
+        m_activButtonItem.hidesSharedBackground = YES;
 
-    self.navigationItem.rightBarButtonItem = m_activButtonItem;
+    [self updateRightBarButtonItems];
 
     [self setButtonItems: YES];
 
-    [m_background addSubview: m_toolBar];
-    [m_background bringSubviewToFront: m_toolBar];
-
     m_bookmarkListController = [[BookmarkListController alloc] init];
     [m_bookmarkListController setDelegate: self];
-    CGRect blistFrame = [m_webView bounds];
-    blistFrame.size.height += [m_toolBar frame].size.height;
-    [[m_bookmarkListController view] setFrame: blistFrame];
 
     self.navigationItem.title = @"Story Browser";
 
     [self setInformSearchType];
 }
 
+-(void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    // Lay the subviews out from the real bounds and safe area (this used to be done once in
+    // loadView from the screen bounds and the key window's insets). Redo it whenever either
+    // changes: autoresizing follows size changes but keeps the bottom gap from the inset that was
+    // current at the time, which goes stale on rotation and on a Duo fold/unfold. Don't redo it
+    // otherwise, since the URL bar and bookmark code move these frames by animated deltas and a
+    // relayout in the middle of those would snap them back.
+    CGRect bounds = self.view.bounds;
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    if (CGRectEqualToRect(bounds, m_laidOutBounds) && UIEdgeInsetsEqualToEdgeInsets(safeInsets, m_laidOutSafeInsets))
+        return;
+    m_laidOutBounds = bounds;
+    m_laidOutSafeInsets = safeInsets;
+
+    BOOL urlBarShown = [[m_urlBarController view] superview] != nil;
+    BOOL bookmarksShown = [[m_bookmarkListController view] superview] != nil;
+
+    // Everything hangs below the top safe-area inset: zero when the view sits below the navigation
+    // bar, the bar's bottom edge when the view extends under it (which varies with orientation, so
+    // no fixed bar height can stand in for it). The toolbar belongs to the navigation controller,
+    // which keeps this view above it, so the bottom inset is just the home indicator, if any.
+    CGRect frame = bounds;
+    frame.origin.y = safeInsets.top;
+    frame.size.height -= safeInsets.top;
+    [m_scrollView setFrame: frame];
+
+    frame = [m_scrollView bounds];
+    frame.size.height -= safeInsets.bottom;
+    if (urlBarShown) { // same offset promptURL applies
+        frame.origin.y += kSearchBarHeight;
+        frame.size.height -= kSearchBarHeight;
+        [[m_urlBarController view] setFrame: [self urlBarFrameHidden: NO]];
+    }
+    [m_webView setFrame: frame];
+
+    // same placement showBookmarks uses
+    [[m_bookmarkListController view] setFrame: bookmarksShown ? [self bookmarkListFrame] : [m_webView bounds]];
+}
+
 -(void)setButtonItems:(BOOL)canCancel {
-    [m_toolBar setItems: @[m_backButtonItem, m_spaceButtonItem, m_forwardButtonItem, m_spaceButtonItem,
-                           canCancel ? m_cancelButtonItem : m_reloadButtonItem, m_spaceButtonItem,
-                           m_URLButtonItem, m_spaceButtonItem, m_searchButtonItem]];
+    [self setToolbarItems: @[m_backButtonItem, m_spaceButtonItem, m_forwardButtonItem, m_spaceButtonItem,
+                             canCancel ? m_cancelButtonItem : m_reloadButtonItem, m_spaceButtonItem,
+                             m_URLButtonItem, m_spaceButtonItem, m_searchButtonItem]
+                 animated: NO];
 }
 
 -(void)viewDidLoad {
     self.navigationItem.titleView = [m_frotzInfoController view];
-    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithTitle:@"Story List" style:UIBarButtonItemStyleBordered target:self action:@selector(browserDidPressBackButton)];
+    // Symbol plus title: text-only items stay in a horizontal bar on the iPhone Duo, items with a
+    // symbol move to the side (vertical controls); the title serves overflow menus and accessibility.
+    UIBarButtonItem* backItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"books.vertical"]
+                                                                 style: UIBarButtonItemStylePlain target:self action:@selector(browserDidPressBackButton)];
+    backItem.title = @"Story List";
     self.navigationItem.leftBarButtonItem = backItem;
+    [self updateRightBarButtonItems];
+
+    // Before iOS 26 the bar is styled through appearance objects: the legacy barStyle and
+    // barTintColor set in viewWillAppear don't control its transparent scroll-edge state, which
+    // left the "Story Browser" title dark on the black page. Give this screen an opaque black bar
+    // with white title text in every state. (Liquid Glass bars on iOS 26 handle contrast themselves.)
+    if (@available(iOS 26.0, *)) {
+    } else {
+        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+        [appearance configureWithOpaqueBackground];
+        appearance.backgroundColor = [UIColor blackColor];
+        appearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+        self.navigationItem.standardAppearance = appearance;
+        self.navigationItem.scrollEdgeAppearance = appearance;
+        self.navigationItem.compactAppearance = appearance;
+        self.navigationItem.compactScrollEdgeAppearance = appearance;
+    }
 
     self.edgesForExtendedLayout=UIRectEdgeNone;
 }
@@ -174,9 +223,10 @@ const NSString *kBookmarkVersionKey = @"Version";
             NSFileManager *fileMgr = [NSFileManager defaultManager];
             [fileMgr removeItemAtPath: zipFile error: nil];
             if (count > 0) {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Extracted the following story files from archive:" message: storyList delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-                [alert show];
-                [self browserDidPressBackButton];
+                StoryBrowser *storyBrowser = self.storyBrowser;
+                [self browserDidPressBackButtonWithCompletion:^{
+                    FrotzShowAlert(storyBrowser, @"Extracted the following story files from archive:", storyList, @"OK", nil, nil);
+                }];
             }
         }
         canceledHandler: ^{
@@ -198,8 +248,14 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 -(void)browserDidPressBackButton {
+    [self browserDidPressBackButtonWithCompletion: nil];
+}
+
+// Alerts about a download have to be presented after this controller has been dismissed, or the
+// dismissal takes them down too; callers present them in `completion`, from the story browser.
+-(void)browserDidPressBackButtonWithCompletion:(void (^)(void))completion {
     m_backToStoryList = YES;
-    [self.storyBrowser didPressModalStoryListButton];
+    [self.storyBrowser didPressModalStoryListButtonWithCompletion: completion];
     [self.navigationController popViewControllerAnimated: NO];
 }
 
@@ -339,11 +395,17 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
     [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
     [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
+
+    // The browser controls are this controller's toolbarItems; only this screen shows the toolbar.
+    [self.navigationController.toolbar setBarStyle: UIBarStyleBlack];
+    [self.navigationController.toolbar setTintColor: [UIColor whiteColor]];
+    [self.navigationController setToolbarHidden: NO animated: animated];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
+    [self.navigationController setToolbarHidden: YES animated: animated];
 
     if (!m_backToStoryList) {
         CATransition *animation = [CATransition animation];
@@ -459,6 +521,27 @@ const NSString *kBookmarkVersionKey = @"Version";
     [[[self view] layer] addAnimation:animation forKey:@"fadebar"];
 }
 
+// The URL bar sits just below the top safe-area inset (the navigation bar when the view extends
+// under it), and slides up behind it when hidden.
+// Both views span the width between the side safe-area insets. The web view handles those insets
+// itself, but these are plain views of ours, and on the iPhone Duo the vertical bar is one of the
+// side insets and can switch sides on rotation (viewWillLayoutSubviews re-applies these frames).
+-(CGRect)urlBarFrameHidden:(BOOL)hidden {
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    CGFloat top = safeInsets.top;
+    return CGRectMake(safeInsets.left, hidden ? top - kSearchBarHeight : top,
+                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, kSearchBarHeight);
+}
+
+// The bookmark list fills from below the URL bar down to the bottom of the content area (the
+// navigation controller's toolbar, when present, sits below this view).
+-(CGRect)bookmarkListFrame {
+    UIEdgeInsets safeInsets = self.view.safeAreaInsets;
+    CGFloat top = safeInsets.top + kSearchBarHeight;
+    return CGRectMake(safeInsets.left, top,
+                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, CGRectGetMaxY(m_scrollView.frame) - top);
+}
+
 -(void)promptURL {
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
@@ -468,14 +551,14 @@ const NSString *kBookmarkVersionKey = @"Version";
         webFrame.origin.y += kSearchBarHeight;
         webFrame.size.height -= kSearchBarHeight;
 
-        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: YES]];
         UIView *v = [self view];
         [v addSubview: urlView];
 
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
 
-        [urlView setFrame: CGRectMake(0, 0, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: NO]];
         [v bringSubviewToFront: urlView];
         [UIView commitAnimations];
     } else {
@@ -516,7 +599,7 @@ const NSString *kBookmarkVersionKey = @"Version";
         webFrame.size.height += kSearchBarHeight;
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
-        [urlView setFrame: CGRectMake(0, -kSearchBarHeight, webFrame.size.width, kSearchBarHeight)];
+        [urlView setFrame: [self urlBarFrameHidden: YES]];
         if ([[m_bookmarkListController view] superview]) {
             [self setupFade];
             [[m_bookmarkListController view] removeFromSuperview];
@@ -539,24 +622,35 @@ const NSString *kBookmarkVersionKey = @"Version";
     if ([[m_bookmarkListController view] superview])
         [[m_bookmarkListController view] removeFromSuperview];
     else {
-        CGRect webFrame = [m_webView frame];
         UIView *bmView = [m_bookmarkListController view];
-        [bmView setFrame: CGRectMake(0, 40+kSearchBarHeight, webFrame.size.width, webFrame.size.height+44-kSearchBarHeight)];
+        [bmView setFrame: [self bookmarkListFrame]];
         //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];
     }
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    [m_receivedData setLength: 0];
-}
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    [m_receivedData appendData:data];
+// Fetches `request` with NSURLSession and hands the outcome to downloadDidFinish or
+// downloadDidFailWithError: on the main thread (these were the NSURLConnection delegate callbacks).
+- (void)startDownload:(NSURLRequest *)request {
+    __weak StoryWebBrowserController *weakSelf = self;
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            StoryWebBrowserController *strongSelf = weakSelf;
+            if (!strongSelf)
+                return;
+            if (error || !data) {
+                [strongSelf downloadDidFailWithError: error];
+            } else {
+                strongSelf->m_receivedData = [data mutableCopy];
+                [strongSelf downloadDidFinish];
+            }
+        });
+    }];
+    [task resume];
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+- (void)downloadDidFinish {
     NSURLRequest *request = m_currentRequest;
 
     //NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
@@ -611,21 +705,19 @@ const NSString *kBookmarkVersionKey = @"Version";
         [m_receivedData writeToFile: outFile atomically: NO];
     m_receivedData = nil;
     m_currentRequest = nil;
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
     NSString *storyFile = nil;
     if (isBadLoad) {
-        alert = [[UIAlertView alloc] initWithTitle:@"Unable to retrieve file"
-                                           message:@"The web server returned an error page instead of the expected file"
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        alertTitle = @"Unable to retrieve file";
+        alertMessage = @"The web server returned an error page instead of the expected file";
         stay = YES;
     }
     else if ([ext isEqualToString: @"zip"] || [ext isEqualToString: @"ZIP"]) {
         NSMutableArray *zList = listOfZFilesInZIP(outFile);
         BOOL delZip = NO;
         if (!zList || [zList count] == 0) {
-            alert = [[UIAlertView alloc] initWithTitle:@"No Z-Code content"
-                                               message:@"Sorry, this archive contains no playable story files"
-                                              delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+            alertTitle = @"No Z-Code content";
+            alertMessage = @"Sorry, this archive contains no playable story files";
             delZip = YES;
         } else {
             if ([zList count] > 1) {
@@ -649,22 +741,28 @@ const NSString *kBookmarkVersionKey = @"Version";
         storyFile = urlString;
         doAddedAlert = YES;
     }
-    if (doAddedAlert)
-        alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List" message: [m_storyBrowser fullTitleForStory: storyFile]
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    if (alert) {
-        [alert show];
+    if (doAddedAlert) {
+        alertTitle = @"Selected story added\nto Story List";
+        alertMessage = [m_storyBrowser fullTitleForStory: storyFile];
     }
-
     [m_activityView stopAnimating];
     [m_storyBrowser reloadData];
     m_state = kSWBIdle;
 
-    if (!stay)
-        [self browserDidPressBackButton];
+    if (!stay) {
+        // Returning to the story list dismisses this controller; present the alert afterwards,
+        // from the story browser, or the dismissal would take it down with us.
+        StoryBrowser *storyBrowser = m_storyBrowser;
+        [self browserDidPressBackButtonWithCompletion:^{
+            if (alertTitle)
+                FrotzShowAlert(storyBrowser, alertTitle, alertMessage, @"OK", nil, nil);
+        }];
+    } else if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, nil);
+    }
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+- (void)downloadDidFailWithError:(NSError *)error {
     [m_activityView stopAnimating];
     //NSLog(@"m_currentRequest release connDidFailWithError");
     m_receivedData = nil;
@@ -675,12 +773,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_forwardButtonItem setEnabled: [m_webView canGoForward]];
     [m_cancelButtonItem setEnabled: [m_webView isLoading]];
     [self setButtonItems: [m_webView isLoading]];
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Couldn't load content"
-                                                   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    [alert show];
+    FrotzShowAlert(self, @"Error", @"Couldn't load content", @"OK", nil, nil);
 }
 
-#if UseWKWebViewForIFDBBrowser
 -(NSString*)syncStringByEvaluatingJavaScriptFromString:(NSString*)jsExpr {
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     __block NSString *result = nil;
@@ -693,15 +788,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     }
     return result;
 }
-#endif
 
 - (BOOL)snarfMetaData: (NSURLRequest*)request loadRequest: (NSURLRequest*)delayedRequest forStory:(NSString*)story {
-    NSString *pageStr;
-#if UseWKWebViewForIFDBBrowser
-    pageStr = [self syncStringByEvaluatingJavaScriptFromString: @"document.body.innerHTML;"];
-#else
-    pageStr = [m_webView stringByEvaluatingJavaScriptFromString:@"document.body.innerHTML;"];
-#endif
+    NSString *pageStr = [self syncStringByEvaluatingJavaScriptFromString: @"document.body.innerHTML;"];
     BOOL loadingPic = [self snarfMetaDataFromPage:pageStr pageRequest:request loadRequest:delayedRequest forStory:story];
     return loadingPic;
 }
@@ -847,17 +936,11 @@ const NSString *kBookmarkVersionKey = @"Version";
         //saveMeta |= [self savePicData: picData forStory:story];
 
         NSURLRequest *picRequest = [NSURLRequest requestWithURL: picURL];
-        NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:picRequest delegate:self];
-        if (connection) {
-            m_delayedRequest = delayedRequest;
-            m_receivedData = [NSMutableData data];
-            m_state = kSWBFetchingImage;
-            loadingPic = YES;
-        } else {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not download cover art"
-                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
-        }
+        m_delayedRequest = delayedRequest;
+        m_receivedData = [NSMutableData data];
+        m_state = kSWBFetchingImage;
+        loadingPic = YES;
+        [self startDownload: picRequest];
 
     }
     if (saveMeta) {
@@ -874,12 +957,12 @@ const NSString *kBookmarkVersionKey = @"Version";
             UIImage *image = [UIImage imageWithData: picData];
             if (image) {
                 NSLog(@"saving pic data for %@", story);
-                UIImage *thumb = scaledUIImage(image, 40, 32);
+                UIImage *thumb = scaledUIImageForBounds(image, 40, 32, self.view.bounds, self.traitCollection);
                 if (thumb) {
                     [m_storyBrowser addThumbData: UIImagePNGRepresentation(thumb) forStory:story];
                     saveMeta = YES;
                 }
-                UIImage *splash = scaledUIImage(image, 0, 0);
+                UIImage *splash = scaledUIImageForBounds(image, 0, 0, self.view.bounds, self.traitCollection);
                 if (splash) {
                     [m_storyBrowser addSplashData: UIImageJPEGRepresentation(splash, 0.8) forStory:story];
                 }
@@ -890,7 +973,7 @@ const NSString *kBookmarkVersionKey = @"Version";
 }
 
 - (void)loadZMeta:(NSURLRequest*)request {
-    self.navigationItem.rightBarButtonItem = m_activButtonItem;
+    [self updateRightBarButtonItems];
 
     [m_activityView startAnimating];
 
@@ -921,20 +1004,16 @@ static bool bypassBundle = NO;
             storyFile = [[[request mainDocumentURL] path] lastPathComponent];
         NSString *bundledGamesPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent: @kBundledZIPFile];
         if (extractOneFileFromZIP(bundledGamesPath, gamePath, storyFile) == 0) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Selected story added\nto Story List:"
-                                                            message: [m_storyBrowser fullTitleForStory: storyFile]
-                                                           delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
-            [self browserDidPressBackButton];
+            StoryBrowser *storyBrowser = m_storyBrowser;
+            NSString *storyTitle = [m_storyBrowser fullTitleForStory: storyFile];
+            [self browserDidPressBackButtonWithCompletion:^{
+                FrotzShowAlert(storyBrowser, @"Selected story added\nto Story List:", storyTitle, @"OK", nil, nil);
+            }];
         } else {
-            UIAlertView *alert;
             if (m_storyAlreadyInstalled)
-                alert = [[UIAlertView alloc] initWithTitle:@"Metadata installed" message:@"Refreshed metadata (title, authors, etc.) for previously installed unbundled story"
-                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                FrotzShowAlert(self, @"Metadata installed", @"Refreshed metadata (title, authors, etc.) for previously installed unbundled story", @"OK", nil, nil);
             else
-                alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"Could not extract story from bundled archive"
-                                                  delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
+                FrotzShowAlert(self, @"Error", @"Could not extract story from bundled archive", @"OK", nil, nil);
         }
         if (m_expectedArchiveFiles) {
             m_expectedArchiveFiles = nil;
@@ -949,16 +1028,9 @@ static bool bypassBundle = NO;
     //NSLog(@"Load %@", request);
     m_currentRequest = request;
     //NSLog(@"m_currentRequest retain loadZFile %@", m_currentRequest);
-    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
-    if (connection) {
-        m_receivedData = [NSMutableData data];
-        m_state = kSWBFetchingStory;
-        //	[connection release];
-    } else {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection error" message:@"Could not retrieve file"
-                                                       delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-        [alert show];
-    }
+    m_receivedData = [NSMutableData data];
+    m_state = kSWBFetchingStory;
+    [self startDownload: request];
 }
 
 #if APPLE_FASCISM
@@ -1051,12 +1123,14 @@ static bool bypassBundle = NO;
         m_storyAlreadyInstalled = [m_storyBrowser storyIsInstalled: urlString];
         if (![self IFDBContentExistsInBundle: urlString]  // in bundled
             && !m_storyAlreadyInstalled) { // or they've already manually installed it; allow redownload to get title and artwork
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"In-App Download unsupported"
-                                                            message:@"Sorry, this story is not bundled and can't be downloaded by Frotz."
-                                  //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
-                                                           delegate:self cancelButtonTitle:@"Dismiss"
-                                                  otherButtonTitles: m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0 ? @"Open in Safari":nil, nil];
-            [alert show];
+            BOOL canOpenInSafari = m_currentRequest && (iosif_ifrotz_verbose_debug & 8)==0;
+            FrotzShowAlert(self, @"In-App Download unsupported",
+                           @"Sorry, this story is not bundled and can't be downloaded by Frotz.",
+                           //"\nVisit the Frotz support page if you'd like to request it be bundled in a future update."
+                           @"Dismiss", canOpenInSafari ? @[@"Open in Safari"] : nil, ^(NSInteger buttonIndex) {
+                if (buttonIndex == 1 && m_currentRequest)
+                    [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL] options:@{} completionHandler:nil];
+            });
             return NO;
         }
 #endif
@@ -1081,13 +1155,6 @@ static bool bypassBundle = NO;
     m_state = kSWBIdle;
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == 1) {
-        if (m_currentRequest)
-            [[UIApplication sharedApplication] openURL: [m_currentRequest mainDocumentURL]];
-    }
-}
-
 - (void)handleLoadFinished {
     if (m_currentRequest) {
         //NSLog(@"m_currentRequest use didFinishLoad %@", m_currentRequest);
@@ -1107,28 +1174,27 @@ static bool bypassBundle = NO;
 }
 
 - (void)handleLoadFailureWithError:(NSError *)error {
-    UIAlertView *alert = nil;
+    NSString *alertTitle = nil, *alertMessage = nil;
 
     if ([error code]==102) { //WebKitErrorDomain, Frame Load Error
         if (m_currentRequest && [[[m_currentRequest URL] host] isEqualToString: @"www.youtube.com"])
             ; // ignore (happens when you use YT 'Open in App' button, which succeeds, but also fails here)
-        else
-            alert = [[UIAlertView alloc] initWithTitle:@"Unknown File Type" message:@"Frotz cannot handle this type of file.\n"
+        else {
+            alertTitle = @"Unknown File Type";
+            alertMessage = @"Frotz cannot handle this type of file.\n";
                  //"Select .z3, .z4, .z5, .z8, or .zblorb game file to download and install it."
-                                          delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        }
     } else if ([error code] != NSURLErrorCancelled) {
-        alert = [[UIAlertView alloc] initWithTitle:[error localizedDescription] message:[error localizedFailureReason]
-                                          delegate:self cancelButtonTitle:@"OK"otherButtonTitles: nil];
+        alertTitle = [error localizedDescription];
+        alertMessage = [error localizedFailureReason];
     }
-    if (alert) {
-        [alert show];
+    if (alertTitle) {
+        FrotzShowAlert(self, alertTitle, alertMessage, @"OK", nil, nil);
     }
     //NSLog(@"m_currentRequest release webviewdidFail %@", m_currentRequest);
 
     m_currentRequest = nil;
 }
-
-#if UseWKWebViewForIFDBBrowser
 
 -(NSString*)currentURL {
     return [self syncStringByEvaluatingJavaScriptFromString: @"document.URL;"];
@@ -1145,7 +1211,7 @@ static bool bypassBundle = NO;
         UIApplication *app = [UIApplication sharedApplication];
         if ([app canOpenURL:url]) {
             [webView stopLoading];
-            [app openURL: url];
+            [app openURL: url options:@{} completionHandler:nil];
             decisionHandler(WKNavigationActionPolicyCancel);
         } else{
             decisionHandler(WKNavigationActionPolicyCancel);
@@ -1176,37 +1242,5 @@ static bool bypassBundle = NO;
     [self updateButtonsForIdle: webView];
     [self handleLoadFailureWithError: error];
 }
-#else
--(NSString*)currentURL {
-    NSString *url = [m_webView stringByEvaluatingJavaScriptFromString:@"document.URL;"];
-    return url;
-}
-
--(NSString*)currentURLTitle {
-    NSString *title = [m_webView stringByEvaluatingJavaScriptFromString:@"document.title;"];
-    return title;
-}
-
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
-    return [self webViewShouldStartLoadWithRequest: request];
-}
-
-- (void)webViewDidStartLoad:(UIWebView *)webView {
-    [m_activityView startAnimating];
-    [m_cancelButtonItem setEnabled: YES];
-    [self setButtonItmes: YES];
-}
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView {
-    [self updateButtonsForIdle: webView];
-    [self handleLoadFinished];
-}
-
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
-    [self updateButtonsForIdle: webView];
-    [self handleLoadFailureWithError: error];
-}
-
-#endif
 
 @end

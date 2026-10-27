@@ -11,6 +11,9 @@
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
 		2892E4100DC94CBA00A64D0F /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */; };
+		440470942BF8FBE10099B632 /* Pods_Frotz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B6828BF8AAB28523DEEF2B73 /* Pods_Frotz.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		44115BCC308D44E600C78775 /* FrotzSceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */; };
+		44115BCF308D729900C78775 /* FrotzAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = 44115BCE308D729900C78775 /* FrotzAlert.m */; };
 		4413B1631071CA2700D39E6A /* RichTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4413B1611071CA2700D39E6A /* RichTextView.m */; };
 		4414E2D9104CDA0B008C3F56 /* FrotzWordPicker.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */; };
 		4414E2DC104CDA21008C3F56 /* FrotzWordPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 4414E2DB104CDA21008C3F56 /* FrotzWordPicker.m */; };
@@ -20,7 +23,6 @@
 		441EC86D0E10BD4400E74625 /* ui_pic.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8610E10BD4400E74625 /* ui_pic.c */; };
 		441EC86F0E10BD4400E74625 /* ui_text.c in Sources */ = {isa = PBXBuildFile; fileRef = 441EC8640E10BD4400E74625 /* ui_text.c */; };
 		4436611D1F8355C8004F8871 /* StoryStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4436611C1F8355C8004F8871 /* StoryStoryboard.storyboard */; };
-		4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EAD8BC41F6D680B232D31E6E /* libPods-Frotz.a */; };
 		443A64C5114F5FA90093B4B2 /* splashes.zip in Resources */ = {isa = PBXBuildFile; fileRef = 443A64AD114F5EDB0093B4B2 /* splashes.zip */; };
 		443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 443A7C33115094E00093B4B2 /* FrotzCommonWebView.m */; };
 		443C9B4A0E46A518003A44D4 /* ui_utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 443C9B490E46A518003A44D4 /* ui_utils.m */; };
@@ -539,6 +541,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01A3C45480124D93ABB54AAD /* Pods-Frotz.distribution.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.distribution.xcconfig"; path = "Target Support Files/Pods-Frotz/Pods-Frotz.distribution.xcconfig"; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D3623240D0F684500981E51 /* FrotzAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzAppDelegate.h; sourceTree = "<group>"; };
 		1D3623250D0F684500981E51 /* FrotzAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FrotzAppDelegate.m; sourceTree = "<group>"; };
@@ -546,9 +549,12 @@
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		2892E40F0DC94CBA00A64D0F /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Frotz_Prefix.pch; sourceTree = "<group>"; };
-		2C8A091C5513E52EF8D8E7A5 /* Pods-Frotz.distribution.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.distribution.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.distribution.xcconfig"; sourceTree = "<group>"; };
 		440DAAFA125D68DE0014A8FD /* TextViewExt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TextViewExt.h; sourceTree = "<group>"; };
 		440DACE1125D8CA70014A8FD /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrotzSceneDelegate.h; sourceTree = "<group>"; };
+		44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FrotzSceneDelegate.m; sourceTree = "<group>"; };
+		44115BCD308D728E00C78775 /* FrotzAlert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FrotzAlert.h; sourceTree = "<group>"; };
+		44115BCE308D729900C78775 /* FrotzAlert.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FrotzAlert.m; sourceTree = "<group>"; };
 		4413B1611071CA2700D39E6A /* RichTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RichTextView.m; sourceTree = "<group>"; };
 		4413B1621071CA2700D39E6A /* RichTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RichTextView.h; sourceTree = "<group>"; };
 		4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FrotzWordPicker.xib; sourceTree = "<group>"; };
@@ -1194,11 +1200,11 @@
 		44FB39F90E62406C00142D85 /* ColorPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorPicker.m; sourceTree = "<group>"; };
 		44FC54D31120006400CF11E9 /* url.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = url.png; sourceTree = "<group>"; };
 		55A50A4F1B8E7EA700E70F53 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		895EA10B2340FB2642FFCE94 /* Pods-Frotz.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"; sourceTree = "<group>"; };
+		7AE75879D0560AB5C6D95D4F /* Pods-Frotz.release armv6.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release armv6.xcconfig"; path = "Target Support Files/Pods-Frotz/Pods-Frotz.release armv6.xcconfig"; sourceTree = "<group>"; };
+		8CDEB4FC1BF7712627AD154C /* Pods-Frotz.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.debug.xcconfig"; path = "Target Support Files/Pods-Frotz/Pods-Frotz.debug.xcconfig"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.info-plist"; sourceTree = SOURCE_ROOT; };
-		B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release armv6.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release armv6.xcconfig"; sourceTree = "<group>"; };
-		E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.debug.xcconfig"; sourceTree = "<group>"; };
-		EAD8BC41F6D680B232D31E6E /* libPods-Frotz.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Frotz.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6828BF8AAB28523DEEF2B73 /* Pods_Frotz.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Frotz.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE0CE6095E17956B0C5AFBB5 /* Pods-Frotz.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Frotz.release.xcconfig"; path = "Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1220,12 +1226,12 @@
 				2892E4100DC94CBA00A64D0F /* CoreGraphics.framework in Frameworks */,
 				44CA10990E3D93B0009AEF85 /* QuartzCore.framework in Frameworks */,
 				447490600E85BA4C00A5310F /* CFNetwork.framework in Frameworks */,
+				440470942BF8FBE10099B632 /* Pods_Frotz.framework in Frameworks */,
 				447DD4AC125311B500004A83 /* Security.framework in Frameworks */,
 				44D013AF1372787E00B7F616 /* SystemConfiguration.framework in Frameworks */,
 				44DA2B9D24AAB5F300B87F91 /* WebKit.framework in Frameworks */,
 				44F35FED2511B15400807420 /* AVFoundation.framework in Frameworks */,
 				44F35FEF2511DFF100807420 /* Speech.framework in Frameworks */,
-				4436E5A01F79C8E000571092 /* libPods-Frotz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1362,20 +1368,13 @@
 				443C9B490E46A518003A44D4 /* ui_utils.m */,
 				4491CCC42A0F20070054E1F6 /* SelectFiles.swift */,
 				4491CCC32A0F20050054E1F6 /* Frotz-Bridging-Header.h */,
+				44115BCA308D44C900C78775 /* FrotzSceneDelegate.h */,
+				44115BCB308D44E600C78775 /* FrotzSceneDelegate.m */,
+				44115BCD308D728E00C78775 /* FrotzAlert.h */,
+				44115BCE308D729900C78775 /* FrotzAlert.m */,
 			);
 			name = UI;
 			path = ui;
-			sourceTree = "<group>";
-		};
-		14BD0D4CD6D76DB6DB120075 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */,
-				B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */,
-				895EA10B2340FB2642FFCE94 /* Pods-Frotz.release.xcconfig */,
-				2C8A091C5513E52EF8D8E7A5 /* Pods-Frotz.distribution.xcconfig */,
-			);
-			name = Pods;
 			sourceTree = "<group>";
 		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
@@ -1411,7 +1410,7 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				44A2E7B811228B0900E35CCC /* Entitlements.plist */,
-				14BD0D4CD6D76DB6DB120075 /* Pods */,
+				D30A4277B472B4629383568F /* Pods */,
 			);
 			name = CustomTemplate;
 			sourceTree = "<group>";
@@ -1479,7 +1478,7 @@
 				1D30AB110D05D00D00671497 /* Foundation.framework */,
 				447DD4AB125311B500004A83 /* Security.framework */,
 				44DA2B9C24AAB5F200B87F91 /* WebKit.framework */,
-				EAD8BC41F6D680B232D31E6E /* libPods-Frotz.a */,
+				B6828BF8AAB28523DEEF2B73 /* Pods_Frotz.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2193,6 +2192,17 @@
 			path = resources;
 			sourceTree = "<group>";
 		};
+		D30A4277B472B4629383568F /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				8CDEB4FC1BF7712627AD154C /* Pods-Frotz.debug.xcconfig */,
+				DE0CE6095E17956B0C5AFBB5 /* Pods-Frotz.release.xcconfig */,
+				7AE75879D0560AB5C6D95D4F /* Pods-Frotz.release armv6.xcconfig */,
+				01A3C45480124D93ABB54AAD /* Pods-Frotz.distribution.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -2233,7 +2243,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "Frotz" */;
 			buildPhases = (
-				90325B71809E51711576C446 /* [CP] Check Pods Manifest.lock */,
+				857A4642D459F3B2A6890935 /* [CP] Check Pods Manifest.lock */,
 				44D42FDA1F6F3D32003406FB /* Script - Fake out CocoaPods script to be optional and  succeed if pod not installed */,
 				44A2E71F11227AA000E35CCC /* Copy bundled stories */,
 				1D60588D0D05DD3D006BFB54 /* Resources */,
@@ -2242,6 +2252,7 @@
 				4431B76C0E204F52001E5DAD /* CopyFiles */,
 				4433A76919BF54B200EC8D98 /* Script - Update Build Number in Distribution builds */,
 				44D42FD91F6ECE31003406FB /* Script - Make subsequent Pods scripts optional */,
+				8067097E184495531FBA1823 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2582,16 +2593,38 @@
 			shellPath = /bin/sh;
 			shellScript = "test -z \"${PODS_ROOT}\" && exit 0\ntest -f \"${PODS_ROOT}/Manifest.lock\" || mkdir -p \"${PODS_ROOT}\" && cp \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\"\n";
 		};
-		90325B71809E51711576C446 /* [CP] Check Pods Manifest.lock */ = {
+		8067097E184495531FBA1823 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Frotz/Pods-Frotz-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/ObjectiveDropboxOfficial/ObjectiveDropboxOfficial.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ObjectiveDropboxOfficial.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Frotz/Pods-Frotz-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		857A4642D459F3B2A6890935 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
 			);
 			inputPaths = (
 				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
 				"${PODS_ROOT}/Manifest.lock",
 			);
 			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-Frotz-checkManifestLockResult.txt",
 			);
@@ -2628,6 +2661,7 @@
 				449127E312643AA10013AD7C /* GlkView.m in Sources */,
 				44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */,
 				4440777D1235F32E0021DEE4 /* NotesViewController.m in Sources */,
+				44115BCC308D44E600C78775 /* FrotzSceneDelegate.m in Sources */,
 				44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */,
 				4413B1631071CA2700D39E6A /* RichTextView.m in Sources */,
 				449C92BE11221E7D006CCDF9 /* StatusLine.m in Sources */,
@@ -2638,6 +2672,7 @@
 				446B9EAD0E2075D1002BDD65 /* StoryMainViewController.m in Sources */,
 				449C92461122188D006CCDF9 /* StoryView.m in Sources */,
 				4488D1D30E21E81F008C6FE0 /* StoryWebBrowserController.m in Sources */,
+				44115BCF308D729900C78775 /* FrotzAlert.m in Sources */,
 				44CA12F10E41076D009AEF85 /* TransitionView.m in Sources */,
 				44C28D051238C41C00EE9FA3 /* URLPromptController.m in Sources */,
 				441EC8670E10BD4400E74625 /* ui_audio_none.c in Sources */,
@@ -3030,7 +3065,7 @@
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E44868069AE4CB27BEAEC1D9 /* Pods-Frotz.debug.xcconfig */;
+			baseConfigurationReference = 8CDEB4FC1BF7712627AD154C /* Pods-Frotz.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3053,7 +3088,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3079,7 +3114,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = iPhoneOS16.4.sdk;
+				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
@@ -3112,7 +3147,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3138,7 +3173,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = iPhoneOS16.4.sdk;
+				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
@@ -3178,7 +3213,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3212,7 +3247,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3246,7 +3281,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3280,7 +3315,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3325,7 +3360,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3375,7 +3410,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3426,7 +3461,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3477,7 +3512,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
@@ -3539,10 +3574,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					include,
+				);
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				ONLY_ACTIVE_ARCH = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=*]" = "";
@@ -3578,7 +3616,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3605,7 +3643,7 @@
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = iPhoneOS16.4.sdk;
+				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
@@ -3654,10 +3692,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					include,
+				);
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				ONLY_ACTIVE_ARCH = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;
@@ -3670,7 +3711,7 @@
 		};
 		44AD7CF616266575006E1688 /* Release armv6 */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B8083605BBE1BD669B570F5E /* Pods-Frotz.release armv6.xcconfig */;
+			baseConfigurationReference = 7AE75879D0560AB5C6D95D4F /* Pods-Frotz.release armv6.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3691,7 +3732,7 @@
 				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = "";
 				INFOPLIST_FILE = Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -3721,7 +3762,7 @@
 				PRODUCT_NAME = Frotz;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SDKROOT = iPhoneOS16.4.sdk;
+				SDKROOT = iphoneos;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "ui/Frotz-Bridging-Header.h";
@@ -3765,7 +3806,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3803,7 +3844,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3842,7 +3883,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3881,7 +3922,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3926,7 +3967,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -3964,7 +4005,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4003,7 +4044,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4042,7 +4083,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4086,7 +4127,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4123,7 +4164,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4161,7 +4202,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4199,7 +4240,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4244,7 +4285,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4282,7 +4323,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4321,7 +4362,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4360,7 +4401,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4405,7 +4446,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4443,7 +4484,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4482,7 +4523,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4521,7 +4562,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4566,7 +4607,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4604,7 +4645,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4643,7 +4684,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4682,7 +4723,7 @@
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
@@ -4733,10 +4774,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					include,
+				);
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				ONLY_ACTIVE_ARCH = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -4788,10 +4832,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					include,
+				);
 				INSTALL_PATH = /Applications;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				ONLY_ACTIVE_ARCH = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
 				SDKROOT = iphoneos;

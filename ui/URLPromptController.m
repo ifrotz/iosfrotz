@@ -34,9 +34,8 @@
 
 - (void)loadView
 {
-    // add the top-most parent view
-    CGRect appFrame = [[UIScreen mainScreen] applicationFrame];
-    CGRect frame = CGRectMake(0, 0, appFrame.size.width, kSearchBarHeight);
+    // add the top-most parent view; the presenter sets the width when it adds the view
+    CGRect frame = CGRectMake(0, 0, 0, kSearchBarHeight);
     UIView *contentView = [[UIView alloc] initWithFrame: frame];
 
     [contentView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin];
@@ -45,14 +44,12 @@
     contentView.backgroundColor = [UIColor whiteColor];
     self.view = contentView;
     
-    m_textbar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.0, 0.0, appFrame.size.width, kSearchBarHeight)];
-    
-    UIImage *img = [UIImage imageNamed: @"icon-url-srch"];
-    UIImageView *imgView = [[UIImageView alloc] initWithImage: img];
-    [m_textbar addSubview: imgView];
-    [m_textbar bringSubviewToFront:imgView];
-    CGSize isz = [img size];
-    [imgView setFrame: CGRectMake(14, 9, isz.width, isz.height)];
+    m_textbar = [[UISearchBar alloc] initWithFrame: frame];
+
+    // This is a URL field, not a search: drop the magnifying glass. It is the search text field's
+    // left view, so hiding that removes both the icon and the space it reserves. (Setting the
+    // search icon image to nil would only restore the default.)
+    m_textbar.searchTextField.leftViewMode = UITextFieldViewModeNever;
 
     m_textbar.placeholder = @"URL";
     m_textbar.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleRightMargin;
@@ -78,7 +75,7 @@
         if ([text rangeOfString:@"://"].length==0)
             text = [@"http://" stringByAppendingString: text];
         m_textbar.text = @"";
-        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text]];
+        [[UIApplication sharedApplication] openURL: [NSURL URLWithString: text] options:@{} completionHandler:nil];
         [m_delegate dismissURLPrompt];
         return;
     }

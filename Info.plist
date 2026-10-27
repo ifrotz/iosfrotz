@@ -223,7 +223,17 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 		<key>UISceneConfigurations</key>
-		<dict/>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FrotzSceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
 	</dict>
 	<key>UIApplicationShortcutItems</key>
 	<array>
@@ -245,8 +255,6 @@
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>StoryStoryboard</string>
 	<key>UIPrerenderedIcon</key>
 	<false/>
 	<key>UIStatusBarStyle</key>

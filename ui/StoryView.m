@@ -48,7 +48,7 @@
     if ([ delegate inputHelperShown] && ![[touch view] isDescendantOfView: [delegate inputHelperView]])
         [delegate hideInputHelper];
     
-    if (!gLargeScreenDevice) {
+    if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular) {
         int magnifyYThreshold = 50;
         if  ([delegate isLandscape])
             magnifyYThreshold = 20;
@@ -151,7 +151,7 @@
         || [[delegate navigationController] presentedViewController] // settings active
         || notesController && [notesController isVisible])
         ;
-    else if (!gLargeScreenDevice && pt.y < magnifyYThreshold) {
+    else if (self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular && pt.y < magnifyYThreshold) {
         m_isMagnifying = YES;
     	if ([self handleMagnifyTouchWithPhase: phase atPoint: pt])
             m_isMagnifying = NO;

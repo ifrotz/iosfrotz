@@ -139,9 +139,10 @@
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     BOOL isLandscape = [storyController isLandscape];
     CGPoint ihpt = CGPointMake(isLandscape ? 100 : 2, ypos-8);
-    if (gLargeScreenDevice)
+    BOOL regularWidth = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+    if (regularWidth)
         ihpt.x += self.frame.origin.x;
-    else if (!gLargeScreenDevice && ![storyController isKBLocked] && [self isFirstResponder]
+    else if (!regularWidth && ![storyController isKBLocked] && [self isFirstResponder]
                 && isLandscape)
         ihpt = CGPointMake(100, ypos);
     // point is bottom-LEFT of helper view; 140 is height of helper
@@ -570,7 +571,6 @@ const int kCompletionViewTag = 21;
     
 }
 
-#if __IPHONE_5_1 < __IPHONE_OS_VERSION_MAX_ALLOWED
 - (NSArray *) keyCommands
 {
     NSArray<UIKeyCommand*> *ret = nil;
@@ -628,6 +628,5 @@ const int kCompletionViewTag = 21;
 {
     iosif_feed_input(@"\x1b");
 }
-#endif
 
 @end

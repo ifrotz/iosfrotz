@@ -54,6 +54,8 @@
 @end
 
 
+#import "FrotzAlert.h"
+
 @implementation FileBrowser
 @synthesize delegate = m_delegate;
 @synthesize path = m_path;
@@ -115,21 +117,14 @@
     [m_backgroundView addSubview: m_tableView];
     if (m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback) {
         m_textField = [[UITextField alloc] initWithFrame: CGRectMake(0, 0, origFrame.size.width, 30)];
-        if (@available(iOS 11.0,*)) {
-            UIEdgeInsets insets = UIEdgeInsetsMake(m_textField.frame.size.height, 0, 0, 0);
-            self.additionalSafeAreaInsets = insets;
-        }
+        self.additionalSafeAreaInsets = UIEdgeInsetsMake(m_textField.frame.size.height, 0, 0, 0);
         [m_backgroundView addSubview: m_textField];
 
         [m_tableView setFrame: CGRectMake(0, m_textField.bounds.size.height,
                                           origFrame.size.width,
                                           origFrame.size.height-m_textField.bounds.size.height)];
         [m_textField setReturnKeyType: UIReturnKeyDone];
-        if (@available(iOS 13.0, *)) {
-            [m_textField setBackgroundColor: [UIColor systemBackgroundColor]];
-        } else {
-            [m_textField setBackgroundColor: [UIColor whiteColor]];
-        }
+        [m_textField setBackgroundColor: [UIColor systemBackgroundColor]];
         [m_textField setBorderStyle: UITextBorderStyleRoundedRect];
         [m_textField setPlaceholder: @" filename"];
         [m_textField setDelegate: self];
@@ -183,12 +178,10 @@
 
 -(void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    if (@available(iOS 11.0,*)) {
-        if (m_textField) {
-            CGRect frame = m_textField.frame;
-            frame.origin.y = m_tableView.adjustedContentInset.top;
-            m_textField.frame = frame;
-        }
+    if (m_textField) {
+        CGRect frame = m_textField.frame;
+        frame.origin.y = m_tableView.adjustedContentInset.top;
+        m_textField.frame = frame;
     }
 }
 
@@ -259,9 +252,13 @@
         }
         if (exists && m_dialogType != kFBDoShowScript) {
             if (!m_alertView) {
-                m_alertView = [[UIAlertView alloc] initWithTitle:@"Overwrite File" message:@"Do you want to save over this file?"
-                                                               delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles: @"Save", nil];
-                [m_alertView show];
+                m_alertView = FrotzShowAlert(self, @"Overwrite File", @"Do you want to save over this file?",
+                                             @"Cancel", @[@"Save"], ^(NSInteger buttonIndex) {
+                    m_alertView = nil;
+                    if (buttonIndex == 1) {
+                        [m_textField endEditing: YES];
+                    }
+                });
             }
             return;
         }
@@ -278,13 +275,6 @@
     	[m_delegate fileBrowser:self fileSelected:nil];
 }
 
--(void)viewDidLoad {
-    if (@available(iOS 11.0,*)) {
-    } else {
-        self.edgesForExtendedLayout= UIRectEdgeNone;
-    }
-}
-
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
@@ -296,13 +286,7 @@
     self.navigationItem.rightBarButtonItem = editItem;
     [editItem setEnabled: (m_rowCount > 0)];
 
-    if (@available(iOS 13.0, *)) {
-        self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor labelColor]};
-    } else {
-        [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
-        [self.navigationController.navigationBar setBarTintColor: [UIColor whiteColor]];
-        [self.navigationController.navigationBar setTintColor:  [UIColor darkGrayColor]];
-    }
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor labelColor]};
 
     self.navigationController.presentationController.delegate = self;
 }
@@ -311,7 +295,7 @@
     // since the save dialog and parent vc both have the keyboard showing and there's not much vertical space,
     // the normal dismissal animation looks stuttery.  It's better just to fade out in this case.
     [super viewWillDisappear:animated];
-    if (animated && UIInterfaceOrientationIsLandscape([self interfaceOrientation]) && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
+    if (animated && self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact && m_dialogType != kFBDoShowRestore && m_dialogType != kFBDoShowViewScripts && m_dialogType != kFBDoShowPlayback)
         [self.navigationController.view.superview setHidden: YES];
 }
 
@@ -469,15 +453,21 @@
         if( [m_delegate respondsToSelector:@selector( fileBrowser:fileSelected: )] ) {
             
             if (m_dialogType == kFBDoShowViewScripts) {
-                CGRect bounds = self.view.bounds;
-                CGFloat margin = self.view.safeAreaInsets.top;
-                bounds.origin.y += margin;
-                bounds.size.height -= margin;
-                UITextView *textView = [[UITextView alloc] initWithFrame: bounds];
+                UITextView *textView = [[UITextView alloc] initWithFrame: CGRectZero];
                 NSString *text = [[NSString alloc] initWithData: [[NSFileManager defaultManager] contentsAtPath: [self selectedFile]] encoding:NSUTF8StringEncoding];
                 textView.text = text;
                 textView.editable = NO;
+                textView.translatesAutoresizingMaskIntoConstraints = NO;
                 [self.view addSubview: textView];
+                // Pin to the safe area guide so the text keeps clear of bars and device insets
+                // as they change, instead of baking in the inset at creation time.
+                UILayoutGuide *safeArea = self.view.safeAreaLayoutGuide;
+                [NSLayoutConstraint activateConstraints: @[
+                    [textView.topAnchor constraintEqualToAnchor: safeArea.topAnchor],
+                    [textView.bottomAnchor constraintEqualToAnchor: safeArea.bottomAnchor],
+                    [textView.leadingAnchor constraintEqualToAnchor: safeArea.leadingAnchor],
+                    [textView.trailingAnchor constraintEqualToAnchor: safeArea.trailingAnchor],
+                ]];
                 self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
                     initWithBarButtonSystemItem: UIBarButtonSystemItemDone
                     target:self action:@selector(doneWithTextFile:)];
@@ -493,14 +483,6 @@
 -(void)doneWithTextFile:(id)sender {
     [m_delegate fileBrowser:self fileSelected:[self selectedFile]];
 }    
-
-// Called when a button is clicked. The view will be automatically dismissed after this call returns
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    m_alertView = nil;
-    if (buttonIndex == 1) { 
-        [m_textField endEditing: YES];
-    }
-}
 
 - (NSString *)selectedFile {
     if (m_textField && [[m_textField text] length] > 0)
