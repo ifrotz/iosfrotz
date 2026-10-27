@@ -207,8 +207,12 @@ void removeOldPngSplash(const char *filename) {
 
         m_nowPlayingButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Resume" style:UIBarButtonItemStylePlain target:self action:@selector(resumeStory)];
         
-        m_editButtonItem = [self editButtonItem];
-        [m_editButtonItem setStyle: UIBarButtonItemStylePlain];
+        // Not the system editButtonItem: that one is text-only ("Edit"/"Done"), and text-only items
+        // stay in a horizontal bar on the iPhone Duo instead of moving to the vertical bar. This
+        // one carries a symbol; setEditing:animated: swaps it between pencil and checkmark.
+        m_editButtonItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"pencil"]
+                                                            style: UIBarButtonItemStylePlain target: self action: @selector(toggleEditing)];
+        m_editButtonItem.title = NSLocalizedString(@"Edit", nil);
 
         NSString *cachesPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
         NSString *metadataPath = [appSuppPath stringByAppendingPathComponent: kMDFilename];
@@ -1045,6 +1049,22 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
         self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
     }
+}
+
+- (void)toggleEditing {
+    [self setEditing: !self.editing animated: YES];
+}
+
+// UITableViewController drives the table's editing state; this keeps the Edit item in step, in
+// place of what the system editButtonItem would do (symbols rather than its text titles).
+- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
+    [super setEditing: editing animated: animated];
+    m_editButtonItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
+    m_editButtonItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
+    if (@available(iOS 26.0, *))
+        m_editButtonItem.style = editing ? UIBarButtonItemStyleProminent : UIBarButtonItemStylePlain;
+    else
+        m_editButtonItem.style = editing ? UIBarButtonItemStyleDone : UIBarButtonItemStylePlain;
 }
 
 // The "Story List" button that returns from a pushed/presented story or browser screen. It carries

@@ -55,6 +55,7 @@
     WKWebView *m_realWebView;
     StoryBrowser *__weak m_browser;
     FrotzInfo *m_frotzInfoController;
+    UIBarButtonItem *m_editItem; // symbol-bearing stand-in for the system editButtonItem
     
     CGSize m_artSizeLandscape, m_artSizePortrait;
 }

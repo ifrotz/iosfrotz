@@ -271,11 +271,12 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
 }
 
 -(void)refresh {
-    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    // No Frotz (i) here: the story list and the story screen each have one, and on iPad or an
+    // open iPhone Duo this page is shown beside the story list, which would duplicate it.
     if (m_storyInfo != nil && [m_browser canEditStoryInfo])
-        self.navigationItem.rightBarButtonItems = infoItem ? @[[self editButtonItem], infoItem] : @[[self editButtonItem]];
+        self.navigationItem.rightBarButtonItem = [self editItem];
     else {
-        self.navigationItem.rightBarButtonItems = infoItem ? @[infoItem] : nil;
+        self.navigationItem.rightBarButtonItem = nil;
         if (self.isEditing)
             self.editing = NO;
     }
@@ -338,8 +339,31 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     [self updateSelectStoryHint];
 }
 
+// Not the system editButtonItem: that one is text-only ("Edit"/"Done"), and text-only items stay
+// in a horizontal bar on the iPhone Duo instead of moving to the vertical bar. This one carries a
+// symbol; setEditing:animated: swaps it between pencil and checkmark.
+- (UIBarButtonItem*)editItem {
+    if (!m_editItem) {
+        m_editItem = [[UIBarButtonItem alloc] initWithImage: [UIImage systemImageNamed: @"pencil"]
+                                                      style: UIBarButtonItemStylePlain target: self action: @selector(toggleEditing)];
+        m_editItem.title = NSLocalizedString(@"Edit", nil);
+    }
+    return m_editItem;
+}
+
+- (void)toggleEditing {
+    [self setEditing: !self.editing animated: YES];
+}
+
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated {
     [super setEditing: editing animated: animated];
+    UIBarButtonItem *editItem = [self editItem];
+    editItem.image = [UIImage systemImageNamed: editing ? @"checkmark" : @"pencil"];
+    editItem.title = editing ? NSLocalizedString(@"Done", nil) : NSLocalizedString(@"Edit", nil);
+    if (@available(iOS 26.0, *))
+        editItem.style = editing ? UIBarButtonItemStyleProminent : UIBarButtonItemStylePlain;
+    else
+        editItem.style = editing ? UIBarButtonItemStyleDone : UIBarButtonItemStylePlain;
     if (editing) {
         if (m_infoButton)
             [m_infoButton setEnabled:NO];
