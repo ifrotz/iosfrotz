@@ -1164,6 +1164,7 @@ static void setColorTable(RichTextView *v) {
     self = [super initWithNibName:nil bundle:nil];
     if (self)
     {
+        m_voiceKeyboardLayoutBounds = CGRectNull;
         [self resetSettingsToDefault];
         
         id fileMgr = [NSFileManager defaultManager];
@@ -1746,9 +1747,28 @@ extern void gli_ios_set_focus(window_t *winNum);
     NSString *lockTitle = m_kbLocked ? NSLocalizedString(@"Unlock Keyboard", nil)
                         : m_kbShown  ? NSLocalizedString(@"Hide and Lock Keyboard", nil)
                                      : NSLocalizedString(@"Lock Keyboard", nil);
+    UIButton *keyboardButton = [m_kbdToggleItem.customView viewWithTag:903];
+    if ([keyboardButton imageForState:UIControlStateNormal] != image)
+        [keyboardButton setImage:image forState:UIControlStateNormal];
+    if (![keyboardButton.accessibilityLabel isEqualToString:title])
+        keyboardButton.accessibilityLabel = title;
     BOOL titleChanged = ![m_kbdToggleItem.title isEqualToString: title];
     BOOL lockTitleChanged = ![[m_kbdToggleItem.menu.children.firstObject title] isEqualToString: lockTitle];
-    if (!titleChanged && !lockTitleChanged)
+    BOOL voiceOverflowAvailable = NO, hasVoiceOverflow = NO;
+    if (@available(iOS 16.0, *)) {
+        VoiceManager *voice = [VoiceManager shared];
+        voiceOverflowAvailable = m_kbdToggleItem.customView
+            && ((FROTZ_ENABLE_NARRATION && voice.narrationAvailable)
+                || (FROTZ_ENABLE_DICTATION && voice.dictationAvailable));
+        UIMenuElement *representation = m_kbdToggleItem.menuRepresentation;
+        if ([representation isKindOfClass:UIMenu.class]) {
+            for (UIMenuElement *element in ((UIMenu *)representation).children)
+                if ([element isKindOfClass:UIAction.class]
+                    && [((UIAction *)element).identifier isEqualToString:@"frotzVoiceControls"])
+                    hasVoiceOverflow = YES;
+        }
+    }
+    if (!titleChanged && !lockTitleChanged && voiceOverflowAvailable == hasVoiceOverflow)
         return;
     m_kbdToggleItem.title = title;
 
@@ -1764,6 +1784,9 @@ extern void gli_ios_set_focus(window_t *winNum);
     }];
     // Long press on the visible item: just the lock action (a tap already toggles the keyboard).
     m_kbdToggleItem.menu = [UIMenu menuWithChildren: @[lockAction]];
+    // Use the public button menu for the compact stack too; UIKit may rebuild
+    // its backing views when moving the controls to a vertical bar.
+    keyboardButton.menu = m_kbdToggleItem.menu;
 
     // When the item is folded into an overflow menu, UIKit would otherwise show it as a submenu
     // (its title, then the tap action and the lock action inside), three taps to do anything.
@@ -1773,50 +1796,19 @@ extern void gli_ios_set_focus(window_t *winNum);
                                                      image: [UIImage systemImageNamed: m_kbShown ? @"keyboard.chevron.compact.down" : @"keyboard"]
                                                 identifier: nil
                                                    handler: ^(UIAction *action) { [weakSelf toggleKeyboard]; }];
+        NSMutableArray<UIMenuElement *> *overflowActions = [@[toggleAction, lockAction] mutableCopy];
+        if (voiceOverflowAvailable) {
+            [overflowActions addObject:[UIAction actionWithTitle:NSLocalizedString(@"Voice controls", nil)
+                image:[UIImage systemImageNamed:@"waveform"] identifier:@"frotzVoiceControls"
+                handler:^(UIAction *action) {
+                    StoryMainViewController *self = weakSelf;
+                    [self showVoiceControls:self.navigationItem.rightBarButtonItem];
+                }]];
+        }
         m_kbdToggleItem.menuRepresentation = [UIMenu menuWithTitle: @"" image: nil identifier: nil
                                                           options: UIMenuOptionsDisplayInline
-                                                         children: @[toggleAction, lockAction]];
+                                                         children: overflowActions];
     }
-}
-
--(void)showKeyboardLockStateInView:(UIView*)kbdToggleItemView {
-    BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
-    NSString *imgName = (m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder])
-        ? @"icon-keyboard-locked" : @"icon-keyboard";
-
-    // Try finding kbd button by tag in the toolbar stack (iOS 13+ layout)
-    UIView *cv = self.navigationItem.rightBarButtonItem.customView;
-    UIButton *kbdBtn = [cv viewWithTag:903];
-    if (kbdBtn) {
-        [kbdBtn setImage:[UIImage imageNamed:imgName] forState:UIControlStateNormal];
-    } else {
-        [m_kbdToggleItem setImage:[UIImage imageNamed:imgName]];
-    }
-}
-
--(void)addKeyBoardLockGesture {
-    [self view];
-    // Find the keyboard button — either by tag in the stack, or via the bar button item
-    UIView *kbdToggleItemView = nil;
-    UIView *cv = self.navigationItem.rightBarButtonItem.customView;
-    UIButton *kbdBtn = [cv viewWithTag:903];
-    if (kbdBtn) {
-        kbdToggleItemView = kbdBtn;
-    } else {
-        kbdToggleItemView = [m_kbdToggleItem valueForKey:@"view"];
-    }
-    if (kbdToggleItemView) {
-        for (UIGestureRecognizer *recognizer in kbdToggleItemView.gestureRecognizers) {
-            if ([recognizer isKindOfClass:[UILongPressGestureRecognizer class]])
-                return;
-        }
-        UILongPressGestureRecognizer *longPressGesture = [[UILongPressGestureRecognizer alloc]
-                                                          initWithTarget:self
-                                                          action:@selector(toggleKeyboardLongPress:)];
-        [kbdToggleItemView addGestureRecognizer:longPressGesture];
-        [self showKeyboardLockStateInView: kbdToggleItemView];
-    }
-
 }
 
 -(void)viewDidDisappear:(BOOL)animated {
@@ -2038,6 +2030,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 - (void)setupVoiceToolbar {
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
+    [self showKeyboardLockState];
     if (!FROTZ_ENABLE_NARRATION && !FROTZ_ENABLE_DICTATION) {
         self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
         return;
@@ -2083,6 +2076,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         UIBarButtonItem *toolItem = [[UIBarButtonItem alloc] initWithCustomView:toolStack];
         m_kbdToggleItem = toolItem;
         self.navigationItem.rightBarButtonItem = toolItem;
+        [self showKeyboardLockState];
     } else {
         [self setupLegacyVoiceToolbar];
     }
@@ -2428,8 +2422,10 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 // YES when the system is placing bar items on a vertical bar along one edge (iPhone Duo, iOS 27.1
 // and later); NO everywhere else, so the layout decisions keyed on it are unchanged on other devices.
 -(BOOL)hasVerticalBar {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 270100
     if (@available(iOS 27.1, *))
         return self.traitCollection.verticalBarEdge != UIVerticalBarEdgeUnspecified;
+#endif
     return NO;
 }
 
@@ -2633,13 +2629,18 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     NSValue *value = notification.userInfo[UIKeyboardFrameEndUserInfoKey];
     if (!value) return;
     CGRect keyboard = value.CGRectValue;
-    if (m_kbShown && CGRectEqualToRect(keyboard, m_handledKbWillShowFrame)) return;
-    m_handledKbWillShowFrame = keyboard;
     UIWindow *window = self.view.window;
     if (window) {
         keyboard = [window convertRect:keyboard fromWindow:nil];
         keyboard = [self.view convertRect:keyboard fromView:window];
     }
+    // Moving input can repost the same frame, including for floating keyboards.
+    // Re-measure after a viewport or coordinate-space change, even at the same
+    // screen frame (rotation, split view or the Duo's adaptive layout).
+    if (CGRectEqualToRect(keyboard, m_handledKbWillShowFrame)
+        && CGRectEqualToRect(self.view.bounds, m_voiceKeyboardLayoutBounds)) return;
+    m_handledKbWillShowFrame = keyboard;
+    m_voiceKeyboardLayoutBounds = self.view.bounds;
     CGRect overlap = CGRectIntersection(self.view.bounds, keyboard);
     BOOL docked = !CGRectIsNull(overlap) && !CGRectIsEmpty(overlap)
         && CGRectGetMaxY(keyboard) >= CGRectGetMaxY(self.view.bounds) - 1
@@ -5630,6 +5631,7 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)updateVoiceButtonIcons {
+    [self showKeyboardLockState];
     if ([VoiceManager shared].voiceMode != VoiceModeOff && !m_voiceTapOverlay) [self setupVoiceTapOverlay];
     [self updateVoiceControlBar];
     [self updateVoiceReplayActions];

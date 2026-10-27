@@ -65,6 +65,8 @@
 - (void)updateVoiceButtonIcons;
 - (void)toggleTTS;
 - (void)keyboardDidShow:(NSNotification *)notification;
+- (void)updateKeyboardFrame:(NSNotification *)notification;
+- (void)showKeyboardLockState;
 - (CGFloat)voiceControlBarHeightForWidth:(CGFloat)width;
 - (BOOL)canAcceptVoiceInput;
 - (RichTextView *)voiceInputView;
@@ -89,6 +91,13 @@
     if (!self.submittedCommands) self.submittedCommands = [NSMutableArray array];
     [self.submittedCommands addObject:field.text ?: @""];
 }
+@end
+
+@interface TestKeyboardLayoutController : TestStoryController
+@property NSUInteger keyboardLayouts;
+@end
+@implementation TestKeyboardLayoutController
+- (void)autosize { ++self.keyboardLayouts; }
 @end
 
 // Exercise the real StoryView tap route without bringing up a system keyboard.
@@ -989,6 +998,40 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         }
     }];
 }
+- (void)testRepeatedFloatingKeyboardNotificationDoesNotRelayoutInput {
+    TestKeyboardLayoutController *controller = [TestKeyboardLayoutController new];
+    controller.view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 640)];
+    NSNotification *notification = [NSNotification notificationWithName:UIKeyboardWillChangeFrameNotification object:nil
+        userInfo:@{UIKeyboardFrameEndUserInfoKey:[NSValue valueWithCGRect:CGRectMake(70, 250, 220, 200)]}];
+    [controller updateKeyboardFrame:notification];
+    NSUInteger layouts = controller.keyboardLayouts;
+    [controller updateKeyboardFrame:notification];
+    XCTAssertEqual(controller.keyboardLayouts, layouts, @"Moving input can repost a floating-keyboard frame; stop the feedback loop");
+    controller.view.bounds = CGRectMake(0, 0, 640, 320);
+    [controller updateKeyboardFrame:notification];
+    XCTAssertGreaterThan(controller.keyboardLayouts, layouts, @"A changed viewport must still be measured, even at the same keyboard frame");
+}
+- (void)testCompactKeyboardControlKeepsSystemLockMenuAndState {
+    [self withAutomaticListeningController:^(TestStoryController *controller) {
+        [controller setupVoiceToolbar];
+        [controller setValue:@YES forKey:@"m_kbLocked"];
+        [controller showKeyboardLockState];
+        UIBarButtonItem *item = controller.navigationItem.rightBarButtonItem;
+        UIButton *keyboard = [item.customView viewWithTag:903];
+        XCTAssertNotNil(keyboard.menu);
+        XCTAssertEqualObjects(keyboard.menu.children.firstObject.title, @"Unlock Keyboard");
+        XCTAssertEqualObjects([keyboard imageForState:UIControlStateNormal], [UIImage imageNamed:@"icon-keyboard-locked"]);
+        if (@available(iOS 16.0, *)) {
+            XCTAssertTrue([[((UIMenu *)item.menuRepresentation).children valueForKey:@"title"] containsObject:@"Voice controls"], @"Overflow must preserve voice access when the inline bar cannot fit");
+            self.manager.narrationAvailable = self.manager.dictationAvailable = NO;
+            [controller updateVoiceButtonIcons];
+            XCTAssertFalse([[((UIMenu *)item.menuRepresentation).children valueForKey:@"title"] containsObject:@"Voice controls"]);
+            self.manager.dictationAvailable = YES;
+            [controller updateVoiceButtonIcons];
+            XCTAssertTrue([[((UIMenu *)item.menuRepresentation).children valueForKey:@"title"] containsObject:@"Voice controls"], @"Availability changes must refresh the overflow without a keyboard-state change");
+        }
+    }];
+}
 - (void)testNarrationHasAnIndependentReplayButtonWithTheMicrophoneDisabled {
     [self withAutomaticListeningController:^(TestStoryController *controller) {
         [self.manager setValue:[TestSynthesizer new] forKey:@"synthesizer"];
@@ -1152,23 +1195,20 @@ typedef void (^RecognitionHandler)(SFSpeechRecognitionResult *, NSError *);
         userInfo:@{UIAccessibilityAssistiveTechnologyKey:UIAccessibilityNotificationVoiceOverIdentifier,
                    UIAccessibilityFocusedElementKey:[UIButton buttonWithType:UIButtonTypeSystem]}];
 }
-- (void)testSettingsButtonRemainsHittableWhenNavigationTitleIsCompressed {
+- (void)testSettingsRemainsAnIndependentNavigationItemWhenTitleIsCompressed {
     FrotzInfo *info = [[FrotzInfo alloc] initWithSettingsController:nil navController:nil navItem:nil];
     UIView *title = info.view;
-    UIButton *settings = nil;
-    for (UIView *view in title.subviews)
-        if ([view isKindOfClass:UIButton.class] && [view.accessibilityLabel isEqual:@"Settings"])
-            settings = (UIButton *)view;
+    UIBarButtonItem *settings = info.infoBarButtonItem;
     XCTAssertNotNil(settings);
+    XCTAssertEqualObjects(settings.accessibilityIdentifier, @"frotzSettings");
+    XCTAssertEqualObjects(settings.accessibilityLabel, @"Frotz Settings");
+    XCTAssertEqual(settings.target, info);
+    XCTAssertEqual(settings.action, @selector(frotzInfo));
     for (NSNumber *width in @[@106, @64, @44]) {
         title.frame = CGRectMake(0, 0, width.doubleValue, 44);
-        [title setNeedsLayout];
         [title layoutIfNeeded];
-        XCTAssertTrue(CGRectContainsRect(title.bounds, settings.frame), @"Settings must fit the actual title width %@", width);
-        XCTAssertGreaterThanOrEqual(settings.bounds.size.width, 44);
-        XCTAssertGreaterThanOrEqual(settings.bounds.size.height, 44);
-        CGPoint center = CGPointMake(CGRectGetMidX(settings.frame), CGRectGetMidY(settings.frame));
-        XCTAssertEqual([title hitTest:center withEvent:nil], settings);
+        XCTAssertEqual(info.infoBarButtonItem, settings, @"Settings belongs to the bar, so compressing the title cannot clip its hit target");
+        XCTAssertNotNil(settings.image);
     }
 }
 - (void)testVoiceToolbarUsesCompactNonoverlappingAccessibleHitTargets {

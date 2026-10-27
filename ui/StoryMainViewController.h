@@ -129,6 +129,7 @@ extern StoryBrowser *theStoryBrowser;
     UIView *m_voiceTapOverlay;
     __weak RichTextView *m_voicePresentationOwner;
     CGRect m_voiceOwnerFrame;
+    CGRect m_voiceKeyboardLayoutBounds;
     UIStackView *m_voiceBarStack;
     UIButton *m_voiceMicButton, *m_voiceSpeechButton;
     NSString *m_voiceInputError;
@@ -175,7 +176,7 @@ extern StoryBrowser *theStoryBrowser;
 -(BOOL) isRegularWidth;
 -(BOOL) hasWidePhoneWidth;
 -(int) defaultTextViewWidth;
-// A dedicated typing row above the compact voice controls, or CGRectNull.
+// Keep voice controls attached to the active story input window.
 -(void)refreshVoicePresentationForInputWindow;
 -(BOOL)shouldActivateKeyboardForStoryTap;
 -(void) resizeStatusWindow;
