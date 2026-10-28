@@ -446,6 +446,10 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationController.toolbar.standardAppearance = toolbarAppearance;
     self.navigationController.toolbar.scrollEdgeAppearance = toolbarAppearance;
     self.navigationController.toolbar.compactAppearance = toolbarAppearance;
+    // The navigation bar's items take labelColor from the global appearance (FrotzSceneDelegate),
+    // white under the dark override above; the toolbar has no such setting and its glyphs came
+    // out system blue on the dark material before iOS 26. Match the navigation bar.
+    self.navigationController.toolbar.tintColor = [UIColor labelColor];
     [self.navigationController setToolbarHidden: NO animated: animated];
 }
 
