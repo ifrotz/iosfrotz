@@ -95,6 +95,18 @@ char SAVE_PATH[MAX_FILE_NAME], AUTOSAVE_FILE[MAX_FILE_NAME];
 
 static enum { kZStory, kGlxStory } gStoryInterp;
 
+// Choose the interpreter for a story from its file extension. The interpreter thread sets
+// gStoryInterp for itself when it starts, but screen sizing and layout happen before that, so
+// the launch and autorestore paths set it up front with this.
+static void setStoryInterpForPath(NSString *storyPath) {
+    NSString *ext = [[storyPath pathExtension] lowercaseString];
+    if ([ext isEqualToString: @"blb"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"ulx"]
+        || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"t3"])
+        gStoryInterp = kGlxStory;
+    else
+        gStoryInterp = kZStory;
+}
+
 static int numGlkViews;
 
 #define kLaunchMsgViewTag 100
@@ -3984,15 +3996,8 @@ static void setScreenDims(char *storyNameBuf) {
                     [m_notesController setText: notesText];
                 }
                 
-                if ([[m_currentStory pathExtension] isEqualToString: @"blb"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"gblorb"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"ulx"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"gam"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"t3"])
-                    gStoryInterp = kGlxStory;
-                else
-                    gStoryInterp = kZStory;
-                
+                setStoryInterpForPath(m_currentStory);
+
                 inputsSinceSaveRestore = 1;
                 int hvers = 0;
                 strcpy(storyNameBuf, [m_currentStory UTF8String]);
@@ -4058,7 +4063,13 @@ static void setScreenDims(char *storyNameBuf) {
                 [m_storyView reset];
                 [m_storyView resetMargins];
                 [self clearGlkViews];
-                
+                // Switching stories from the list comes through here; a Glk game may have left the
+                // story view (its window 0) beside other windows, so lay out for this story from
+                // the current bounds now that gStoryInterp is set for it. (reset used to put back
+                // the view's creation frame, which is empty since loadView stopped sizing from the
+                // screen.)
+                [self autosize];
+
                 iosif_flush(NO);
                 if (!statusScreenData) {
                     [fileMgr removeItemAtPath: storySIPPath error:&error];
@@ -4272,12 +4283,20 @@ static void setScreenDims(char *storyNameBuf) {
     inputsSinceSaveRestore = 0;
     finished = 0;
     
+    // The interpreter thread hasn't started yet, so the sizing below would otherwise go by the
+    // previous story's type.
+    setStoryInterpForPath(m_currentStory);
+
     setScreenDims(storyNameBuf);
     [m_statusLine reset];
     [m_storyView reset];
     [m_storyView resetMargins];
     [self clearGlkViews];
-    
+    // A Glk game may have left the story view (its window 0) positioned beside other windows;
+    // lay out for the new story from the current bounds. (reset used to put back the frame the
+    // view was created with, which is empty now that loadView no longer sizes from the screen.)
+    [self autosize];
+
     disable_complete = NO;
     
     iosif_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] lineHeight]);

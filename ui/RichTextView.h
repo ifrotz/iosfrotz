@@ -86,7 +86,6 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
     
     BOOL m_freezeDisplay;
     CGRect m_delayedFrame;
-    CGRect m_origFrame;
     RichDataGetImageCallback m_richDataGetImageCallback;
 }
 

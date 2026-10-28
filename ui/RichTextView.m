@@ -390,7 +390,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
 - (RichTextView*)initWithFrame: (CGRect)frame {
     if ((self = [super initWithFrame: frame])) {
-        m_origFrame = frame;
         hasAccessibility = [super respondsToSelector: @selector(setAccessibilityLabel:)];
         
         //	CGAffineTransform t = [self transform];
@@ -593,13 +592,10 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 }
 
 -(void)reset {
-    BOOL origLandscape = m_origFrame.size.width > m_origFrame.size.height;
-    CGSize containerSize = [[self delegate] view].bounds.size;
-    BOOL nowLandscape = containerSize.width > containerSize.height;
-    if (origLandscape ^ nowLandscape) {
-        m_origFrame = CGRectMake(m_origFrame.origin.y, m_origFrame.origin.x, m_origFrame.size.height, m_origFrame.size.width);
-    }
-    self.frame = m_origFrame;
+    // The frame is left alone: the owning controller lays this view out from its real bounds
+    // (StoryMainViewController's autosize). This used to put back the frame the view was created
+    // with, swapped for the current orientation, from when loadView sized views from the screen;
+    // views are now created with an empty frame, so that collapsed the story view on autorestore.
     m_currentTextStyle = kFTNormal;
     m_currentTextColorIndex = 0;
     m_currentBGColorIndex = 0;
