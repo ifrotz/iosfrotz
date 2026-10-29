@@ -597,7 +597,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 -(void)promptURL {
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
-        //	[self setupFade];
 
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y += kSearchBarHeight;
@@ -645,7 +644,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     UIView *urlView = [m_urlBarController view];
 
     if ([urlView superview]) {
-        //	[self setupFade];
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y -= kSearchBarHeight;
         webFrame.size.height += kSearchBarHeight;
@@ -676,7 +674,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     else {
         UIView *bmView = [m_bookmarkListController view];
         [bmView setFrame: [self bookmarkListFrame]];
-        //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];
     }
@@ -707,7 +704,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     //NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
 
-    //m_currentRequest = nil;
     NSURL *url = [request mainDocumentURL];
     NSString *urlString = [[url path] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];

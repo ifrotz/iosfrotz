@@ -639,11 +639,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         ++idx;
     }
     [m_storyNames sortUsingFunction: sortPathsByFilename context: (__bridge void *)(self)];
-
-//    NSArray *sectionTitles = [self sectionIndexTitlesForTableView: [self tableView]];
-//    for (StoryInfo *storyInfo in m_storyNames) {
-//        NSString *name = [prettyStoryName(self, storyInfo) capitalizedString];
-//    }
 }
 
 -(void)reloadData {
@@ -907,10 +902,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)removeSplashDataForStory: (NSString*)story {
-// OK to delete now, will be reextracted from zip if needed
-//    NSArray *builtinStoryNames = [self builtinStories];
-//    if ([builtinStoryNames indexOfObject: [self mapInfocom83Filename:story]] != NSNotFound)
-//        return;
+    // Built-in stories' splash data can go too: it's re-extracted from the zip if needed.
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSError *error = NULL;
     NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -1053,13 +1045,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)updateNavButton {
-//    if (gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
-//        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
-//    else
-    {
-        UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
-        self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
-    }
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
 }
 
 - (void)toggleEditing {

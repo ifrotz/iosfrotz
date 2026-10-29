@@ -353,18 +353,6 @@ enum FrotzPrefsRows
             title = @"Preferences ";
             break;
         }
-#if 0
-        case kFrotzColorsSection:
-        {
-            title = @"Colors";
-            break;
-        }
-        case kFrotzFontSection:
-        {
-            title = @"Fonts";
-            break;
-        }
-#endif
         default:
         {
             title = @" ";
@@ -508,23 +496,12 @@ enum FrotzPrefsRows
             cell.textAlignment = UITextAlignmentCenter;
             break;
         }
-#if 0
-        case kFrotzFontSection:
-        {
-            if (row == 0)
-                cell.textLabel.text = @"Main Story Font";
-            else
-                cell.textLabel.text = @"Fixed Width Font";
-            break;
-        }
-#endif
     }
 
     return cell;
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    //    NSInteger section = indexPath.section, row = indexPath.row;
     return NO;
 }
 
@@ -593,12 +570,6 @@ enum FrotzPrefsRows
         }
             break;
 
-#if 0
-        case kFrotzFontSection:
-            [m_fontPicker setFixedFontsOnly: (row==1)];
-            viewController = m_fontPicker;
-            break;
-#endif
         default:
             break;
     }

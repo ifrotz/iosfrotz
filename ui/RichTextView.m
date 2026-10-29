@@ -49,16 +49,6 @@ static BOOL hasAccessibility;
 @property(assign) NSUInteger runCount;
 @end
 
-#if 0 // unused, debugging
-static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat x2, CGFloat y2) {
-    CGContextBeginPath(context);
-    CGContextMoveToPoint(context, x1, y1);
-    CGContextAddLineToPoint(context, x2, y2);
-    CGContextClosePath(context);
-    CGContextDrawPath(context, kCGPathStroke);
-}
-#endif
-
 @implementation RichTextTile
 
 @synthesize textView = m_textView;
@@ -267,7 +257,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_fontMaxWidth = letterSize.width;
         m_fontMinWidth = [@"i" sizeWithFont: m_normalFont].width;
         [self setNiceMargins:NO];
-        //[self reflowText];
         return YES;
 	}
     return NO;
@@ -294,7 +283,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         m_fixedBoldItalicFont = boldItalicFont;
         m_fixedFontHeight  = [@"W" sizeWithFont: m_normalFont].height;
         m_fixedFontWidth = [@"i" sizeWithFont: m_fixedNormalFont].width;
-        //[self reflowText];
         return YES;
 	}
     return NO;
@@ -330,7 +318,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 - (void)setTextColor:(UIColor*)color {
     if (m_fgColor != color) {
         m_fgColor = color;
-        //	if (m_selectionView) [m_selectionView setBackgroundColor: m_fgColor];
     }
     [self reloadData];
 }
@@ -391,11 +378,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 - (RichTextView*)initWithFrame: (CGRect)frame {
     if ((self = [super initWithFrame: frame])) {
         hasAccessibility = [super respondsToSelector: @selector(setAccessibilityLabel:)];
-        
-        //	CGAffineTransform t = [self transform];
-        //	t = CGAffineTransformRotate(t, M_PI/32);
-        //	[self setTransform: t];
-        
+
         [self setAutoresizesSubviews: YES];
         [self setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
         [super setDelegate: self];
@@ -961,8 +944,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
             if (pos.x <= 0)
                 pos.x = m_tempLeftMargin;
             if (pos.x >= width) {
-                //text = nil;
-                break; //continue;
+                break;
             }
             NSInteger maxChars = (width - pos.x) / m_fontMinWidth;
             if (len < maxChars || (style & kFTFixedWidth)) {
@@ -1009,7 +991,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
                             return [self findHotText:text charOffset:charsDone pos:pos minX:minXPos hotPoint:hotPoint font:font fontHeight:fontHeight width:width];
                     }
                     //if (!doDraw) NSLog(@"short str %d %x: (%.0f,%.0f) -> (%.0f,%.0f): \"%@\"", doDraw, style, pos.x, pos.y, nextPos->x, nextPos->y, text);
-                    // text = nil;
                     pos = *nextPos;
                     break;
                 }
@@ -1473,10 +1454,7 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
         if (m_prevLineNotTerminated)
             [self updateAE];
         else {
-            //int count = [m_textRuns count];
-            //if (count <= 1 || [[m_textRuns objectAtIndex:count-2] hasSuffix: @"\n\n"])
             [self appendAE];
-            //else [self updateAE];
         }
     }
     m_prevLineNotTerminated = lineNotTerminated;
@@ -1665,12 +1643,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
 
                     BOOL retry = [self placeImage:image imageView:imageView atPoint:m_lastPt withAlignment:imageAlign
                                         prevLineY:prevY newTextPoint:&nextPoint inDraw:NO textStyle:textStyle];
-/*                    if (retry) {
-                        CGFloat oldNextLine = [[m_lineYPos objectAtIndex: m_numLines-1] floatValue];
-                        if (oldNextLine >= nextPoint.y)
-                            retry = NO;
-                    }
- */
                     if (retry) {
                         [self updateLine: m_numLines withYPos: nextPoint.y];
                         --i;
@@ -1876,7 +1848,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     m_firstVisibleRow = firstNeededRow; m_firstVisibleColumn = firstNeededCol;
     m_lastVisibleRow  = lastNeededRow;  m_lastVisibleColumn  = lastNeededCol; 
     
-    //    UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
     
 }
 
@@ -1919,7 +1890,6 @@ static void DrawViewBorder(CGContextRef context, CGFloat x1, CGFloat y1, CGFloat
     if (m_controller && [m_controller respondsToSelector: @selector(scrollViewDidScroll:)]) {
         [m_controller scrollViewDidScroll:scrollView];
     }
-    //    UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
 }
 
 
@@ -2115,30 +2085,6 @@ static NSString *kCommand = @"Command";
         [self populateAccessibilityElements];
     if (aeIndex < [m_accessibilityElements count]) {
         RichTextAE *e = m_accessibilityElements[aeIndex];
-#if 0
-        // update frame lazily when accessed, so we don't have to recalculate them all
-        // when you reorient the device
-        int startIndex = e.textIndex;
-        int runCount = e.runCount;
-        int count = [m_textRuns count];
-        CGPoint p = [[m_textPos objectAtIndex: startIndex] CGPointValue];
-        int endIndex = startIndex + runCount-1;
-        CGPoint p2 = endIndex < count-1 ? [[m_textPos objectAtIndex: endIndex+1] CGPointValue] : CGPointMake(0, m_lastPt.y);
-        if (p.x <= m_leftMargin)
-            p.x = 0;
-        CGFloat height = p2.y - p.y, width;
-        if (height == 0) {
-            height = m_fontHeight+m_extraLineSpacing;
-            width = p2.x - p.x;
-        } else {
-            p.x = 0;
-            width = self.frame.size.width;
-        }
-        CGRect r = CGRectMake(p.x, p.y + m_topMargin, width, height);
-        r = [self convertRect:r toView: self.window];
-        [e setAccessibilityFrame: r];
-        //NSLog(@"accElemAtIndex %d (%.0f,%.0f,%.0f,%.0f)", aeIndex, p.x, p.y+m_topMargin, width, height);
-#endif
         return e;
     }
     return nil;
@@ -2153,7 +2099,6 @@ static NSString *kCommand = @"Command";
     frame = [self.window convertRect: frame toView:self];
     [self scrollRectToVisible: frame animated:NO];
     //NSLog(@"accscrolltovis %d (%0.f,%0.f) (%0.f,%0.f,%0.f,%0.f)", index, self.contentOffset.x, self.contentOffset.y, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
-    //    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, nil);
 }
 
 - (NSInteger)indexOfAccessibilityElement:(id)element
@@ -2315,10 +2260,8 @@ static NSString *kCommand = @"Command";
     r = [v convertRect:r toView:window];
     r = [window convertRect:r toWindow:nil];
     
-    //    r = [v convertRect:r toView: v.window];    
     return r;
     
-    //    return [super accessibilityFrame];
 }
 
 

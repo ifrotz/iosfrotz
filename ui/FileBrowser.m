@@ -106,7 +106,7 @@
     [m_tableView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin];
     [m_tableView setDelegate: self];
     [m_tableView setDataSource: self];
-    CGRect origFrame = self.view.frame; //[[UIScreen mainScreen] applicationFrame];
+    CGRect origFrame = self.view.frame;
     m_backgroundView = [[UIView alloc] initWithFrame: origFrame];
     [m_backgroundView setBackgroundColor: [UIColor grayColor]];
     [m_backgroundView setAutoresizingMask:UIViewAutoresizingFlexibleHeight|
@@ -134,7 +134,6 @@
         
         m_textField.text = @(iosif_filename);
         
-        //	[m_tableView setBounces: NO];
         [m_textField becomeFirstResponder];
         [m_backgroundView setNeedsLayout];
     } else

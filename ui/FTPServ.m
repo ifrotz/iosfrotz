@@ -42,36 +42,6 @@ void logMessage(char *x) {
     strncpy(obuf, buf, sizeof(outbuf)-3);
     strcat(obuf, "\r\n");
     int len = strlen(obuf);
-#if 0
-    int sock = [conn fileDescriptor];
-    fd_set writefds, errorfds;
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 400000;
-    
-    FD_ZERO(&writefds);
-    FD_ZERO(&errorfds);
-    FD_SET(sock, &writefds);
-    FD_SET(sock, &errorfds);
-    
-    do {
-        int rval = select(sock + 1, NULL, &writefds, &errorfds, &tv);
-        if (rval < 0)
-            continue;
-        if (FD_ISSET(sock, &errorfds)) {
-            len = -1;
-            break;
-        }
-        if (FD_ISSET(sock, &writefds)) {
-            FD_CLR(sock, &writefds);
-            len = write(sock, obuf, len);
-        } else {
-            len = -1;
-            break;
-        }
-    } while (1);
-    select(sock + 1, NULL, &writefds, &errorfds, &tv);
-#endif
     NSData *data = [NSData dataWithBytes: obuf length:len];
     @try {
         [conn writeData: data];
@@ -80,8 +50,6 @@ void logMessage(char *x) {
         NSLog(@"caught ex in sendresp");
         len = -1;
     }
-    //usleep(250000);
-	
     //NSLog(@"sock %d: sendingResponse:%s", sock, obuf);
     return len;
 }
@@ -247,7 +215,7 @@ void logMessage(char *x) {
         NSLog(@"closeconn1 %d", [m_incomingConnection fileDescriptor]);
         [m_incomingConnection closeFile];
         [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:m_incomingConnection];
-        m_pasvSock = 0; //aaa-1;
+        m_pasvSock = 0;
         m_incomingConnection = nil;
         if (ret < 0) {
             NSLog(@"error writing response; closing command connection %d", [m_commandConnection fileDescriptor]);
@@ -255,8 +223,6 @@ void logMessage(char *x) {
             [m_commandConnection closeFile];
         }
         
-    } else {
-        //close(csock);
     }
     
     [self sendResponse: m_commandConnection buf:"226 Directory sent OK."];
@@ -287,9 +253,7 @@ void logMessage(char *x) {
     if (m_pasvSock > 0) {
         NSLog(@"closeconn2 %d", [m_incomingConnection fileDescriptor]);
         [m_incomingConnection closeFile];
-        m_pasvSock = 0; //aaa-1;
-    } else {
-        //close(csock);
+        m_pasvSock = 0;
     }
     [self sendResponse: m_commandConnection buf:  "226 Directory sent OK."];
 }
@@ -335,7 +299,6 @@ void logMessage(char *x) {
             while(bytesSent < bytes) {
                 NSData *data = [NSData dataWithBytes:filebuf+bytesSent length:bytes-bytesSent];
                 [csock writeData: data]; t = bytes-bytesSent;
-                //		t = write(csock, filebuf + bytesSent, bytes - bytesSent);
                 if(t < 0) {
                     sprintf(bufa, "retrieve: %d/%d", t, errno);
                     showExtra(bufa);
@@ -358,9 +321,7 @@ errOut:
     if (m_pasvSock > 0) {
     	NSLog(@"closeconn3 %d", [m_incomingConnection fileDescriptor]);
         [m_incomingConnection closeFile];
-        m_pasvSock = 0; //aaa-1;
-    } else {
-        //	close(csock);
+        m_pasvSock = 0;
     }
 }
 
@@ -387,24 +348,6 @@ errOut:
         m_saveFile = f;
         [self sendResponse: m_commandConnection buf:"125 Gimme the file please."];
         return;
-#if 0
-        while(1) {
-            int t = read(csock, filebuf, sizeof(filebuf));
-            if(t > 0) {
-                if (fwrite(filebuf, 1, t, f) < t) {
-                    err = YES;
-                    showExtra("store: error writing");
-                    break;
-                }
-            }
-            else {
-                showExtra("file stored successfully");
-                break;
-            }
-            
-        }
-        fclose(f);
-#endif
     } else
         err = YES;
     if (err)
@@ -414,9 +357,7 @@ errOut:
     if (m_pasvSock > 0) {
         NSLog(@"closeconn4 %d", [m_incomingConnection fileDescriptor]);
         [m_incomingConnection closeFile];
-        m_pasvSock = 0; //aaa-1;
-    } else {
-        //	close(csock);
+        m_pasvSock = 0;
     }
 }
 
@@ -501,7 +442,6 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
     [center addObserver:self selector:@selector(passiveDataConnectionReceived:) name:NSFileHandleConnectionAcceptedNotification object:listenHandle];
     [listenHandle acceptConnectionInBackgroundAndNotify];
-    //    [listenHandle release]; //???
     return fd;
 }
 
@@ -558,12 +498,10 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
     else if(m_loggedIn && isCmd(buf, "LIST")) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
         [self createListForDirectory: @(bufa)];
-        //	[self performSelector:@selector(createListForDirectory:) withObject: [NSString stringWithUTF8String: bufa] afterDelay:0.1];
     }
     else if(m_loggedIn && isCmd(buf, "NLST")) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
         [self createNListForDirectory: @(bufa)];
-        //	[self performSelector:@selector(createNListForDirectory:) withObject: [NSString stringWithUTF8String: bufa] afterDelay:0.1];
     }
     else if(m_loggedIn && isCmd(buf, "RETR")) {
         [self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:NO];
@@ -582,10 +520,6 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
         else [self sendResponse: m_commandConnection buf:"550 File could not be deleted."];
     }
     else if(m_loggedIn && isCmd(buf, "MKD")) {
-        //	int err = -1;
-        //	[self generateAbsolute:cwd suffix:param buffer:bufa userDestPath:nil isWrite:YES];
-        //	if(err == 0) [self sendResponse: m_commandConnection buf: "250 Directory created."];
-        //	else
 	    [self sendResponse: m_commandConnection buf:"550 Unable to create directory."];
     }
     else if(isCmd(buf, "QUIT")) {
@@ -657,19 +591,11 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
             NSLog(@"cmd socket %d caught except", sock);
             [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:connectionHandle];
             m_commandConnection = nil;
-            m_socket = 0; //aaa-1;
+            m_socket = 0;
         }
     }
     else {
         NSLog(@"cmd socket %d gotdata %d length, closing", m_socket, t);
-#if 0
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:connectionHandle];
-        [connectionHandle closeFile];
-        [m_commandConnection release];
-        m_commandConnection = nil;
-        m_socket = -1;
-        [self release];
-#endif
     }
 }
 
@@ -733,15 +659,15 @@ void parseHostAndPort(int sock, char *param, unsigned int *host, int *port) {
 
 -(instancetype)initWithConnection:(NSFileHandle*)incomingConnection rootPath:(NSString*)rootPath {
     if ((self = [self init])) {
-        m_socket = 0; //aaa-1;   
-        m_csocket = 0; //aaa-1;
+        m_socket = 0;
+        m_csocket = 0;
         
         m_servePort = 0;
         m_serveHost = 0;
         
         m_pasvHost = 0;
         m_pasvPort = 0;
-        m_pasvSock = 0;//aaa-1;
+        m_pasvSock = 0;
         
         m_saveFile = NULL;
         
