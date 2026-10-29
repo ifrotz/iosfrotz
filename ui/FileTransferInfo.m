@@ -190,9 +190,7 @@ BOOL isHiddenFile(NSString *file) {
     NSString *addr = [self getIPAddress:YES isIPV6:&isIPV6];
     // A host name other computers can use to reach this device, or empty. gethostname() reports just
     // "localhost" on current iOS, which means nothing from another machine, so it is only used when
-    // it is a real name (with ".local" for Bonjour). (A reverse DNS lookup of our address was tried
-    // as a fallback and dropped: it needs the Local Network permission and most routers don't
-    // register names for their DHCP clients.)
+    // it is a real name (with ".local" for Bonjour).
     char baseHostName[256] = { 0 };
     if (gethostname(baseHostName, sizeof(baseHostName)-1) == 0 && *baseHostName
         && strncasecmp(baseHostName, "localhost", 9) != 0) {

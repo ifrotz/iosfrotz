@@ -95,6 +95,18 @@ char SAVE_PATH[MAX_FILE_NAME], AUTOSAVE_FILE[MAX_FILE_NAME];
 
 static enum { kZStory, kGlxStory } gStoryInterp;
 
+// Choose the interpreter for a story from its file extension. The interpreter thread sets
+// gStoryInterp for itself when it starts, but screen sizing and layout happen before that, so
+// the launch and autorestore paths set it up front with this.
+static void setStoryInterpForPath(NSString *storyPath) {
+    NSString *ext = [[storyPath pathExtension] lowercaseString];
+    if ([ext isEqualToString: @"blb"] || [ext isEqualToString: @"gblorb"] || [ext isEqualToString: @"ulx"]
+        || [ext isEqualToString: @"gam"] || [ext isEqualToString: @"t3"])
+        gStoryInterp = kGlxStory;
+    else
+        gStoryInterp = kZStory;
+}
+
 static int numGlkViews;
 
 #define kLaunchMsgViewTag 100
@@ -238,9 +250,6 @@ void iosif_set_text_attribs(int viewNum, int style, int color, bool lock) {
     }
     if (color != -1 && color != currColor && gStoryInterp==kZStory) {
         iosif_flush(NO);
-        // Why was this here?
-    	//if (color == ((BLACK_COLOUR<<4)|WHITE_COLOUR))
-        //    color = 0;
         if (color != currColor) {
             [ipzBufferStr appendFormat: @ kOutputEscCode kZColorEscCode "%02x", color & 0xff];
             currColor = color;
@@ -693,10 +702,7 @@ int iosif_read_file_name(char *file_name, const char *default_name,	int flag) {
     
     char *basefile = strrchr(iosif_filename, '/');
     strcpy(file_name, basefile ? basefile+1 : iosif_filename);
-    
-    //    if (flag == FILE_SAVE || flag == FILE_SAVE_AUX || flag == FILE_RECORD)
-    //	; // ask before overwriting... // this is now done in the dialog itself
-    
+
     return TRUE;
 }
 
@@ -943,7 +949,6 @@ void iosif_glk_window_erase_rect(int viewNum, glsi32 left, glsi32 top, glui32 wi
 //    NSLog(@"glk_window_erase_rect %d %dx%d", viewNum, width, height);
     GlkRectDrawArgs args = { viewNum, 0, left, top, width, height };
     [theSMVC performSelectorOnMainThread:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args] waitUntilDone:YES];
-//    [theSMVC performSelector:@selector(drawGlkRect:) withObject:[NSValue valueWithPointer:&args]];
 }
 
 void iosif_glk_window_fill_rect(int viewNum, glui32 color, glsi32 left, glsi32 top, glui32 width, glui32 height) {
@@ -1081,8 +1086,8 @@ void run_glxinterp(const char *story, bool autorestore) {
 
     freeGlkImageCache();
 
-//    glk_window_close(gli_rootwin, NULL); // now done at end of glk_main so it can shutdown dispatch
-    
+    // The root Glk window is closed at the end of glk_main itself, so it can shut down dispatch.
+
     finished = -1;
 }
 
@@ -1192,9 +1197,6 @@ static void setColorTable(RichTextView *v) {
         [self loadPrefs];
         
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
-        
-//       [center addObserver:self selector:@selector(allNotif:) name:nil object:nil];
-//       [center addObserver:self selector:@selector(keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
 
         [center addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
         [center addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
@@ -1427,15 +1429,6 @@ static void setColorTable(RichTextView *v) {
     UIView *v = [theSMVC glkView: vn];
     if (v && glkViewImageCache) {
         UIView *imgView = [v viewWithTag: kGlkImageViewTag];
-#if 0
-        CGImageRef imgRef = (CGImageRef)[glkViewImageCache objectForKey: viewNum];
-        if (imgView && imgRef) {
-            NSLog(@"updateglkwin: %p %p %p", imgView, [imgView layer], imgRef);
-            imgView.frame = CGRectMake(0, 0, v.bounds.size.width, v.bounds.size.height);
-            [imgView layer].contents = (id)imgRef;
-            [glkViewImageCache removeObjectForKey: viewNum];
-        }
-#else
         CGContextRef cgctx = (CGContextRef)[glkViewImageCache[viewNum] pointerValue];
         if (imgView && cgctx) {
             //NSLog(@"updateglkwin: %p %p %p", imgView, [imgView layer], cgctx);
@@ -1445,19 +1438,7 @@ static void setColorTable(RichTextView *v) {
             
             CGImageRef imgRef = CGBitmapContextCreateImage(cgctx);
             [imgView layer].contents = (id)CFBridgingRelease(imgRef);
-            //CGImageRelease(imgRef);
-
-#if 0
-            void *data = CGBitmapContextGetData(cgctx);
-
-            CGContextRelease(cgctx);
-            // Free image data memory for the context
-            if (data)
-                free(data);
-            [glkViewImageCache removeObjectForKey: viewNum];
-#endif
         }
-#endif
     }
 }
 
@@ -1510,13 +1491,11 @@ static void setColorTable(RichTextView *v) {
         
         if (data) {
             img = scaledUIImageForBounds([UIImage imageWithData: data], 0, 0, self.view.bounds, self.traitCollection); // scales down to view size if too big, else leaves alone
-            //img = [UIImage imageWithData: data];
             glkImageCache[imgKey] = img;
         }
     }
     if (img) {
         if (glkGridArray[viewNum].win->type == wintype_TextBuffer) {
-//            [[m_glkViews objectAtIndex: viewNum] appendImage: image];
             iosif_put_image(viewNum, image, val1, NO);
 
         } else if (glkGridArray[viewNum].win->type == wintype_Graphics) {
@@ -1833,7 +1812,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 - (id)dismissKeyboard
 {
     BOOL kbdWasShown = m_kbShown;
-//    [self unlockKeyboard]; // allow staying locked if hiding by triple-tap
+    // Not unlocked here: the keyboard may stay locked when hidden by triple-tap.
     [m_inputLine resignFirstResponder];
     [self showKeyboardLockState];
     return kbdWasShown ? m_inputLine : nil;
@@ -2050,14 +2029,11 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_inputLine setDelegate: self];
     [m_storyView setDelegate: self];
     
-//    m_kbdToggleItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCompose target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
     
-    // Allocate in viewWillAppear instead
-    //m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
     
     theSMVC = self;
     theStoryView = m_storyView;
@@ -2095,7 +2071,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
             [m_inputLine setText: text];
     }
     m_ignoreWordSelection = NO;
-    //[text release];
     [m_storyView clearSelection];
 }
 
@@ -2105,7 +2080,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         // m_kbShown commented out so this still works with paired hardware keyboards
         NSString *origText = [m_inputLine text];
         //NSLog(@"textsel: %@", text);
-        //[text retain];
         [UIView beginAnimations: @"tsel" context: (void*)CFBridgingRetain(text)];
         [UIView setAnimationDelay: 0.1];
         CGRect frame = [m_inputLine frame];
@@ -2162,7 +2136,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_statusLine setAccessibilityTraits: UIAccessibilityTraitNotEnabled]; //256,128
         [m_storyView setAccessibilityLabel: NSLocalizedString(@"Story output",nil)];
         [m_storyView setAccessibilityHint: nil];
-        // [m_storyView setAccessibilityTraits: UIAccessibilityTraitNotEnabled|UIAccessibilityTraitStaticText]; //256,64
         [m_storyView setAccessibilityTraits: UIAccessibilityTraitSummaryElement];
         
 #if UseRichTextView
@@ -2313,7 +2286,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_statusLine setLeftMargin: (unsigned int)(m_storyView.frame.origin.x + [m_storyView leftMargin])];
     // Status line is fixed width and doesn't wrap so right margin isn't important,
     // and setting it might actually cause text clipping.
-    // [m_statusLine setRightMargin: (unsigned int)self.view.safeAreaInsets.right];
 }
 
 - (void)layoutStatusLine {
@@ -2356,16 +2328,6 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     frame.size.width -= leftEdge + safeInsets.right;
     return frame;
 }
-
-//-(void) allNotif:(NSNotification*)notif  {
-//    NSString *name = [notif name];
-//    if (![name hasPrefix:@"UIViewAnim"])
-//        NSLog(@"Notification %@", notif);
-//}
-
-//-(void) keyboardWillChangeFrame:(NSNotification*)notif  {
-//    NSLog(@"kb will change frame %@", notif);
-//}
 
 // The part of the keyboard that overlaps the story's window, as a zero-origin rect, derived from
 // the keyboard's end frame (reported in screen coordinates). Replaces the long-deprecated
@@ -3493,7 +3455,6 @@ static int iosif_top_win_height = 1;
                         if (uicol[j]) {
                             if (color && color != DEFAULT_COLOUR)
                                 [m_inputLine setTextColor: uicol[j]];
-                            //[self setTextColor: uicol[j] makeDefault:NO];
                         }
                         if (clearStory || gStoryInterp==kZStory)
                             [storyView setTextColorIndex: color];
@@ -3984,15 +3945,8 @@ static void setScreenDims(char *storyNameBuf) {
                     [m_notesController setText: notesText];
                 }
                 
-                if ([[m_currentStory pathExtension] isEqualToString: @"blb"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"gblorb"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"ulx"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"gam"]
-                    || [[m_currentStory pathExtension] isEqualToString: @"t3"])
-                    gStoryInterp = kGlxStory;
-                else
-                    gStoryInterp = kZStory;
-                
+                setStoryInterpForPath(m_currentStory);
+
                 inputsSinceSaveRestore = 1;
                 int hvers = 0;
                 strcpy(storyNameBuf, [m_currentStory UTF8String]);
@@ -4058,7 +4012,13 @@ static void setScreenDims(char *storyNameBuf) {
                 [m_storyView reset];
                 [m_storyView resetMargins];
                 [self clearGlkViews];
-                
+                // Switching stories from the list comes through here; a Glk game may have left the
+                // story view (its window 0) beside other windows, so lay out for this story from
+                // the current bounds now that gStoryInterp is set for it. (reset used to put back
+                // the view's creation frame, which is empty since loadView stopped sizing from the
+                // screen.)
+                [self autosize];
+
                 iosif_flush(NO);
                 if (!statusScreenData) {
                     [fileMgr removeItemAtPath: storySIPPath error:&error];
@@ -4272,12 +4232,20 @@ static void setScreenDims(char *storyNameBuf) {
     inputsSinceSaveRestore = 0;
     finished = 0;
     
+    // The interpreter thread hasn't started yet, so the sizing below would otherwise go by the
+    // previous story's type.
+    setStoryInterpForPath(m_currentStory);
+
     setScreenDims(storyNameBuf);
     [m_statusLine reset];
     [m_storyView reset];
     [m_storyView resetMargins];
     [self clearGlkViews];
-    
+    // A Glk game may have left the story view (its window 0) positioned beside other windows;
+    // lay out for the new story from the current bounds. (reset used to put back the frame the
+    // view was created with, which is empty now that loadView no longer sizes from the screen.)
+    [self autosize];
+
     disable_complete = NO;
     
     iosif_textview_height = (int)([self storyViewFullFrame].size.height / [[m_storyView font] lineHeight]);
@@ -4451,7 +4419,6 @@ static void setScreenDims(char *storyNameBuf) {
 -(void) suspendStory {
     [self autoSaveStory];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(printText:) object:nil];
-    //    [[NSRunLoop currentRunLoop] cancelPerformSelector:@selector(printText:) target:self argument:nil];
 }
 
 -(BOOL) possibleUnsavedProgress {
@@ -4583,10 +4550,6 @@ static void setScreenDims(char *storyNameBuf) {
 -(StoryInputLine*)inputLine {
     return m_inputLine;
 }
-
-//- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-//    [m_inputLine updatePosition];
-//}
 
 -(void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView { // called when setContentOffset/scrollRectVisible:animated: finishes. not called if not animating
     [m_inputLine updatePosition];

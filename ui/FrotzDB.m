@@ -64,7 +64,6 @@
 - (void)loadView
 {
     CGRect frame = CGRectMake(0, 0, 240, 200);
-    //[[UIScreen mainScreen] applicationFrame];
 
     m_tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];	
     m_tableView.delegate = self;

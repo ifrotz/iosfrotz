@@ -639,11 +639,6 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         ++idx;
     }
     [m_storyNames sortUsingFunction: sortPathsByFilename context: (__bridge void *)(self)];
-
-//    NSArray *sectionTitles = [self sectionIndexTitlesForTableView: [self tableView]];
-//    for (StoryInfo *storyInfo in m_storyNames) {
-//        NSString *name = [prettyStoryName(self, storyInfo) capitalizedString];
-//    }
 }
 
 -(void)reloadData {
@@ -907,10 +902,7 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)removeSplashDataForStory: (NSString*)story {
-// OK to delete now, will be reextracted from zip if needed
-//    NSArray *builtinStoryNames = [self builtinStories];
-//    if ([builtinStoryNames indexOfObject: [self mapInfocom83Filename:story]] != NSNotFound)
-//        return;
+    // Built-in stories' splash data can go too: it's re-extracted from the zip if needed.
     NSString *gameSplashPath = [self splashPathForStory: story];
     NSError *error = NULL;
     NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -972,9 +964,14 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
     if ([m_storyMainViewController currentStory] && [[m_storyMainViewController currentStory] length] > 0) {
         StoryInfo *si = [[StoryInfo alloc] initWithPath: [m_storyMainViewController currentStory] browser: self];
         [self setStoryDetails: si];
-        [self showMainStoryController];
-        
-        [m_storyMainViewController autoRestoreSession];
+        // Restore only once the story screen is on screen and laid out. The restore sizes the
+        // Z-machine screen (column count, status window) from the live view, which loadView no
+        // longer sizes from the screen bounds, so restoring before the first layout would set up
+        // the game for a narrower screen than the saved status data was written for.
+        StoryMainViewController *storyController = m_storyMainViewController;
+        [self showMainStoryControllerWithCompletion:^{
+            [storyController autoRestoreSession];
+        }];
     }
     m_postLaunch = YES;
 }
@@ -1048,13 +1045,8 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 - (void)updateNavButton {
-//    if (gUseSplitVC && [[m_storyMainViewController currentStory] length] > 0)
-//        self.navigationItem.rightBarButtonItem = m_nowPlayingButtonItem;
-//    else
-    {
-        UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
-        self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
-    }
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    self.navigationItem.rightBarButtonItems = infoItem ? @[m_editButtonItem, infoItem] : @[m_editButtonItem];
 }
 
 - (void)toggleEditing {
@@ -1136,6 +1128,12 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
 }
 
 -(void)showMainStoryController {
+    [self showMainStoryControllerWithCompletion: nil];
+}
+
+// The completion runs once the story screen has been presented and laid out (or at once if there
+// is no story navigation controller to present).
+-(void)showMainStoryControllerWithCompletion:(void (^)(void))completion {
     self.splitViewController.presentsWithGesture = NO;
     UINavigationController *nc = m_storyMainViewController.storyNavController;
     if (nc) {
@@ -1145,8 +1143,9 @@ static NSInteger sortPathsByFilename(id a, id b, void *context) {
         nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         if ([self.splitViewController presentedViewController]) // if we're launched from another app, we may already be presented
             [self.splitViewController dismissViewControllerAnimated:NO completion:nil];
-        [self.splitViewController presentViewController:nc animated:m_postLaunch completion:nil];
-    }
+        [self.splitViewController presentViewController:nc animated:m_postLaunch completion:completion];
+    } else if (completion)
+        completion();
 }
 
 - (void)didPressModalStoryListButton {

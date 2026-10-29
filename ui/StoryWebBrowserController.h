@@ -45,6 +45,7 @@ typedef WKWebView StoryWebView;
     NSMutableData *m_receivedData;
     SWBDownloadState m_state;
     BOOL m_backToStoryList;
+    UIView *m_barGapCover; // iPhone Duo workaround, see layoutBarGapCover
     BOOL m_storyAlreadyInstalled;
     CGRect m_laidOutBounds;           // geometry the subviews were last laid out for; see
     UIEdgeInsets m_laidOutSafeInsets; // viewWillLayoutSubviews

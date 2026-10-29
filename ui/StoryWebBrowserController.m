@@ -79,6 +79,9 @@ const NSString *kBookmarkVersionKey = @"Version";
     [m_background addSubview: m_scrollView];
 
     m_webView = [[StoryWebView alloc] initWithFrame: CGRectZero];
+    // The web view extends under the navigation bar and toolbar so the page shows through their
+    // translucent material; its scroll view keeps the page content itself clear of them.
+    m_webView.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
     [m_background setAutoresizesSubviews: YES];
 
     [m_webView setAutoresizesSubviews: YES];
@@ -91,6 +94,15 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     [self setView: m_background];
     [m_webView setNavigationDelegate: self];
+
+    // iPhone Duo workaround; sized in layoutBarGapCover, hidden everywhere it isn't needed. Plain
+    // black rather than the bar's material: a second blur never lines up with the bar's own and
+    // reads as a seam, while black against the dark material is invisible.
+    m_barGapCover = [[UIView alloc] initWithFrame: CGRectZero];
+    m_barGapCover.backgroundColor = [UIColor blackColor];
+    m_barGapCover.userInteractionEnabled = NO;
+    m_barGapCover.hidden = YES;
+    [m_background addSubview: m_barGapCover];
 
     // The browser controls are the navigation controller's toolbar items (shown in viewWillAppear)
     // rather than a UIToolbar of our own: the system places that toolbar at the bottom on most
@@ -127,8 +139,45 @@ const NSString *kBookmarkVersionKey = @"Version";
     [self setInformSearchType];
 }
 
+// Workaround for a UIKit inconsistency on the iPhone Duo (iOS 27.1). With the vertical bar present
+// the horizontal navigation bar sits 24pt below the top edge (top safe-area inset 0), and UIKit
+// extends the bar's background view upward to cover that strip - fully in landscape (background
+// y 0..82 for a bar at y 24..82), but only partly on the folded display in portrait (background
+// y 14..82), so 14pt of the page showed unblurred above the bar. Measured on the device; nothing
+// in this controller positions the bar. Rather than hard-code any of those numbers, find the bar's
+// background view and fill whatever lies between the top of our view and it with black (see
+// loadView). The cover has zero height, and is hidden, wherever the background reaches the top,
+// which is every other device and configuration seen so far.
+-(void)layoutBarGapCover {
+    UINavigationBar *bar = self.navigationController.navigationBar;
+    CGFloat gap = 0;
+    if (bar && !bar.hidden && bar.window) {
+        for (UIView *sub in bar.subviews) { // the background is a private UIKit view; match by name
+            if ([NSStringFromClass([sub class]) containsString: @"BarBackground"]) {
+                gap = CGRectGetMinY([self.view convertRect: sub.bounds fromView: sub]);
+                break;
+            }
+        }
+    }
+    m_barGapCover.hidden = gap <= 0.5;
+    m_barGapCover.frame = CGRectMake(0, 0, self.view.bounds.size.width, MAX(0, gap));
+    [m_background bringSubviewToFront: m_barGapCover];
+}
+
+-(void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize: size withTransitionCoordinator: coordinator];
+    // The bar's background is re-extended by UIKit after our layout pass when the Duo is folded
+    // or unfolded (a rotation happens to lay us out again afterwards, a fold doesn't), so measure
+    // it once more when the transition has finished.
+    [coordinator animateAlongsideTransition: nil completion: ^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        [self layoutBarGapCover];
+    }];
+}
+
 -(void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
+
+    [self layoutBarGapCover];
     // Lay the subviews out from the real bounds and safe area (this used to be done once in
     // loadView from the screen bounds and the key window's insets). Redo it whenever either
     // changes: autoresizing follows size changes but keeps the bottom gap from the inset that was
@@ -145,17 +194,12 @@ const NSString *kBookmarkVersionKey = @"Version";
     BOOL urlBarShown = [[m_urlBarController view] superview] != nil;
     BOOL bookmarksShown = [[m_bookmarkListController view] superview] != nil;
 
-    // Everything hangs below the top safe-area inset: zero when the view sits below the navigation
-    // bar, the bar's bottom edge when the view extends under it (which varies with orientation, so
-    // no fixed bar height can stand in for it). The toolbar belongs to the navigation controller,
-    // which keeps this view above it, so the bottom inset is just the home indicator, if any.
-    CGRect frame = bounds;
-    frame.origin.y = safeInsets.top;
-    frame.size.height -= safeInsets.top;
-    [m_scrollView setFrame: frame];
+    // The web view fills the whole view, under the translucent navigation bar and toolbar, and
+    // insets its own content by the safe area (contentInsetAdjustmentBehavior Always). The URL bar
+    // and bookmark list are placed below the top safe-area inset, i.e. just under the bar.
+    [m_scrollView setFrame: bounds];
 
-    frame = [m_scrollView bounds];
-    frame.size.height -= safeInsets.bottom;
+    CGRect frame = [m_scrollView bounds];
     if (urlBarShown) { // same offset promptURL applies
         frame.origin.y += kSearchBarHeight;
         frame.size.height -= kSearchBarHeight;
@@ -184,23 +228,19 @@ const NSString *kBookmarkVersionKey = @"Version";
     self.navigationItem.leftBarButtonItem = backItem;
     [self updateRightBarButtonItems];
 
-    // Before iOS 26 the bar is styled through appearance objects: the legacy barStyle and
-    // barTintColor set in viewWillAppear don't control its transparent scroll-edge state, which
-    // left the "Story Browser" title dark on the black page. Give this screen an opaque black bar
-    // with white title text in every state. (Liquid Glass bars on iOS 26 handle contrast themselves.)
-    if (@available(iOS 26.0, *)) {
-    } else {
-        UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
-        [appearance configureWithOpaqueBackground];
-        appearance.backgroundColor = [UIColor blackColor];
-        appearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
-        self.navigationItem.standardAppearance = appearance;
-        self.navigationItem.scrollEdgeAppearance = appearance;
-        self.navigationItem.compactAppearance = appearance;
-        self.navigationItem.compactScrollEdgeAppearance = appearance;
-    }
-
-    self.edgesForExtendedLayout=UIRectEdgeNone;
+    // The view extends under the navigation bar (the default), so the page scrolls behind it;
+    // viewWillLayoutSubviews places the controls below the top safe-area inset. The bar gets a
+    // dark translucent material in every state: the system default leaves the bar itself clear
+    // (only the items get a background on iOS 26), and the old opaque black only appeared after
+    // the presentation animation, briefly showing the story list's bar through this one.
+    UINavigationBarAppearance *barAppearance = [[UINavigationBarAppearance alloc] init];
+    [barAppearance configureWithDefaultBackground];
+    barAppearance.backgroundEffect = [UIBlurEffect effectWithStyle: UIBlurEffectStyleSystemChromeMaterialDark];
+    barAppearance.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    self.navigationItem.standardAppearance = barAppearance;
+    self.navigationItem.scrollEdgeAppearance = barAppearance;
+    self.navigationItem.compactAppearance = barAppearance;
+    self.navigationItem.compactScrollEdgeAppearance = barAppearance;
 }
 
 -(void)pickFilesFromZip:(NSString*)zipFile list:(NSMutableArray *)zList{
@@ -392,13 +432,24 @@ const NSString *kBookmarkVersionKey = @"Version";
     //self.navigationItem.rightBarButtonItem = [[self storyBrowser] nowPlayingNavItem];
     [m_frotzInfoController setKeyboardOwner: self];
 
-    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlack];
-    [self.navigationController.navigationBar setBarTintColor: [UIColor blackColor]];
-    [self.navigationController.navigationBar  setTintColor:  [UIColor whiteColor]];
+    // The browser keeps a dark look whatever the system setting. The bars belong to the navigation
+    // controller, so the override goes there and is cleared in viewWillDisappear: on a phone this
+    // screen is pushed onto the story list's navigation controller, which must not stay dark.
+    self.navigationController.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
     // The browser controls are this controller's toolbarItems; only this screen shows the toolbar.
-    [self.navigationController.toolbar setBarStyle: UIBarStyleBlack];
-    [self.navigationController.toolbar setTintColor: [UIColor whiteColor]];
+    // It gets the same dark translucent material as the navigation bar (toolbar appearance can't
+    // be set per navigation item, but no other screen shows this toolbar).
+    UIToolbarAppearance *toolbarAppearance = [[UIToolbarAppearance alloc] init];
+    [toolbarAppearance configureWithDefaultBackground];
+    toolbarAppearance.backgroundEffect = [UIBlurEffect effectWithStyle: UIBlurEffectStyleSystemChromeMaterialDark];
+    self.navigationController.toolbar.standardAppearance = toolbarAppearance;
+    self.navigationController.toolbar.scrollEdgeAppearance = toolbarAppearance;
+    self.navigationController.toolbar.compactAppearance = toolbarAppearance;
+    // The navigation bar's items take labelColor from the global appearance (FrotzSceneDelegate),
+    // white under the dark override above; the toolbar has no such setting and its glyphs came
+    // out system blue on the dark material before iOS 26. Match the navigation bar.
+    self.navigationController.toolbar.tintColor = [UIColor labelColor];
     [self.navigationController setToolbarHidden: NO animated: animated];
 }
 
@@ -406,6 +457,7 @@ const NSString *kBookmarkVersionKey = @"Version";
     [super viewWillDisappear:animated];
     [m_webView resignFirstResponder];
     [self.navigationController setToolbarHidden: YES animated: animated];
+    self.navigationController.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
 
     if (!m_backToStoryList) {
         CATransition *animation = [CATransition animation];
@@ -545,7 +597,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 -(void)promptURL {
     UIView *urlView = [m_urlBarController view];
     if (![urlView superview]) {
-        //	[self setupFade];
 
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y += kSearchBarHeight;
@@ -593,7 +644,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     UIView *urlView = [m_urlBarController view];
 
     if ([urlView superview]) {
-        //	[self setupFade];
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y -= kSearchBarHeight;
         webFrame.size.height += kSearchBarHeight;
@@ -624,7 +674,6 @@ const NSString *kBookmarkVersionKey = @"Version";
     else {
         UIView *bmView = [m_bookmarkListController view];
         [bmView setFrame: [self bookmarkListFrame]];
-        //	[m_webView addSubview: bmView];
         [m_background addSubview: bmView];
         [m_webView layoutSubviews];
     }
@@ -655,7 +704,6 @@ const NSString *kBookmarkVersionKey = @"Version";
 
     //NSLog(@"m_currentRequest use connDidFinishLoading %@", m_currentRequest);
 
-    //m_currentRequest = nil;
     NSURL *url = [request mainDocumentURL];
     NSString *urlString = [[url path] lastPathComponent];
     NSString *ext = [[urlString pathExtension] lowercaseString];

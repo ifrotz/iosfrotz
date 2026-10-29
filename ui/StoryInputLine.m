@@ -43,12 +43,9 @@
         [enterButton setTitleColor: [UIColor grayColor] forState: UIControlStateNormal];
         [enterButton sizeToFit];
 
-        //UIImage *enterButtonImage = [UIImage imageNamed: @"glyph-enter"];
         UIImage *clearButtonImage = [UIImage imageNamed: @"glyph-input-clear"];
         CGFloat ecHeight = [clearButtonImage size].height+4;
-        //[enterButton setImage: enterButtonImage forState: UIControlStateNormal];
         [enterButton setFrame: CGRectMake(0,1, enterButton.frame.size.width, ecHeight)];
-//        [enterButton setFrame: CGRectMake(0,0,[enterButtonImage size].width, ecHeight)];
         enterButton.backgroundColor = [UIColor clearColor];
         [enterButton addTarget:self action:@selector(enterButtonPressed:) forControlEvents: UIControlEventTouchDown];
 
@@ -470,7 +467,8 @@ const int kCompletionViewTag = 21;
         lastVisibleYPos[cwin] = sz.height;
         
         if ((ipzAllowInput & kIPZNoEcho) || cwin == 1) {// was below
-            //iosif_feed_input(text); // direct call causes odd performance issue (Bureaucracy)
+            // Not fed to the interpreter directly: a direct iosif_feed_input call causes an odd
+            // performance issue (Bureaucracy).
             [self performSelector:@selector(delayedInput:) withObject:text afterDelay:0.04];
             return NO;
         }

@@ -108,6 +108,7 @@ IBOutlet    StoryDetailsController *m_details;
 - (void)setStoryDetails:(StoryInfo*)storyInfo;
 - (void)showStoryDetails:(StoryInfo*)storyInfo;
 - (void)showMainStoryController;
+- (void)showMainStoryControllerWithCompletion:(nullable void (^)(void))completion;
 - (void)autoRestoreAndShowMainStoryController;
 - (void)didPressModalStoryListButton;
 - (void)didPressModalStoryListButtonWithCompletion:(nullable void (^)(void))completion;

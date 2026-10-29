@@ -203,7 +203,6 @@ static const int kNotesTitleHeight = 24;
     else
         text = @"Notes";
 	[m_notesTitle setTitle: text forSegmentAtIndex:0];
-    //	[m_notesTitle setText: text];
     [m_notesTitle setWidth: 0 forSegmentAtIndex:0];
     [m_notesTitle setWidth: 20 forSegmentAtIndex:1];
     [m_notesTitle sizeToFit];
@@ -211,7 +210,6 @@ static const int kNotesTitleHeight = 24;
 }
 
 -(NSString*)title {
-    //    return [m_notesTitle text];
     return [m_notesTitle titleForSegmentAtIndex:0];
 }
 
@@ -269,12 +267,6 @@ static const int kNotesTitleHeight = 24;
     [m_scrollView setContentOffset:CGPointMake(0, 0)];
 }
 
-#if 0
-- (BOOL)textViewShouldBeginEditing:(UITextView *)textView {
-//    if (m_chainResponder) return [m_chainResponder canBecomeFirstResponder];
-    return YES;
-}
-#endif
 
 -(void) keyboardWillShow:(CGRect)kbBounds {
     CGRect notesFrame = [m_notesBGView frame];

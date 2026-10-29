@@ -102,7 +102,6 @@
                 if ([touch timestamp] > lastTimestamp + 0.5) {
 #if UseRichTextView
                     [self clearSelection];
-                    //[[delegate inputLine] setText: @""];
 #endif
                     [delegate setIgnoreWordSelection:YES];
                     [delegate dismissKeyboard];

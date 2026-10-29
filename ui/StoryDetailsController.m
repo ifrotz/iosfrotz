@@ -212,11 +212,6 @@ static NSData *pasteboardWebArchiveImageData(UIPasteboard* gpBoard) {
     }
 }
 
-//-(void)setFrame:(CGRect)frame {
-//    NSLog(@"frotz image view size %f,%f +%fx%f", frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
-//    [super setFrame: frame];
-//}
-
 @end
 
 

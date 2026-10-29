@@ -86,7 +86,6 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
     
     BOOL m_freezeDisplay;
     CGRect m_delayedFrame;
-    CGRect m_origFrame;
     RichDataGetImageCallback m_richDataGetImageCallback;
 }
 
@@ -106,8 +105,6 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) BOOL fixedMargins;
 @property(nonatomic, assign) unsigned int lineSpacing;
 @property(nonatomic, assign) NSInteger lastAEIndexAccessed;
-//@property(nonatomic, assign) NSInteger selectedRun;
-//@property(nonatomic, assign) NSRange selectedColumnRange;
 @property(nonatomic, weak) id<RTSelected> selectionDelegate;
 @property(nonatomic, assign) BOOL selectionDisabled;
 @property(nonatomic, assign, getter=displayFrozen) BOOL freezeDisplay;
