@@ -1635,7 +1635,6 @@ extern void gli_ios_set_focus(window_t *winNum);
 -(void)setNavBarTint {
     [m_inputLine inputAssistantItem].leadingBarButtonGroups = @[];
     [m_inputLine inputAssistantItem].trailingBarButtonGroups = @[];
-    [self.navigationController.navigationBar setBarStyle: UIBarStyleBlackOpaque];
     CGColorRef cgColor = [m_defaultBGColor CGColor];
     CGFloat max;
     const CGFloat *components = CGColorGetComponents(cgColor);
@@ -1644,17 +1643,35 @@ extern void gli_ios_set_focus(window_t *winNum);
     for (i=1; i < nComponents-1; ++i)
         if (components[i] > max)
             max = components[i];
+    // Opaque, so the story view is laid out below the bar rather than under it.
     self.navigationController.navigationBar.translucent = NO;
-    // Not using [UINavigationBar appearance] here; we only want to set the main story's status bar specially,
-    // all others will use system light/dark default
-    if (max < 0.5) {
-        [self.navigationController.navigationBar setBackgroundColor: m_defaultBGColor];
-        [self.navigationController.navigationBar setTintColor: m_defaultFGColor];
-    }
-    else {
-        [self.navigationController.navigationBar setBackgroundColor: m_defaultFGColor];
-        [self.navigationController.navigationBar setTintColor: m_defaultBGColor];
-    }
+
+    // The bar takes the darker of the story's two colors, with the other for its items. Done with
+    // an appearance object on this screen's navigation item only (the Story List and Story
+    // Browser keep the system look): UIKit extends an appearance background up under the status
+    // bar, whereas the plain view backgroundColor used before only filled the bar's own frame,
+    // leaving a black strip above it on iOS 26 and later.
+    UIColor *barColor = (max < 0.5) ? m_defaultBGColor : m_defaultFGColor;
+    UIColor *itemColor = (max < 0.5) ? m_defaultFGColor : m_defaultBGColor;
+    // On iOS 26 the bar items sit on glass whose light/dark variant follows the bar's interface
+    // style, not the appearance colors (nor barStyle, which an appearance object overrides). A
+    // dark bar in light mode got light capsules with dark glyphs, so give the bar the interface
+    // style matching its color.
+    CGFloat barMax = 0, r = 0, g = 0, b = 0, a = 0;
+    if ([barColor getRed: &r green: &g blue: &b alpha: &a])
+        barMax = MAX(r, MAX(g, b));
+    else if ([barColor getWhite: &r alpha: &a])
+        barMax = r;
+    self.navigationController.navigationBar.overrideUserInterfaceStyle = (barMax < 0.5) ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+    UINavigationBarAppearance *appearance = [[UINavigationBarAppearance alloc] init];
+    [appearance configureWithOpaqueBackground];
+    appearance.backgroundColor = barColor;
+    appearance.titleTextAttributes = @{NSForegroundColorAttributeName: itemColor};
+    self.navigationItem.standardAppearance = appearance;
+    self.navigationItem.scrollEdgeAppearance = appearance;
+    self.navigationItem.compactAppearance = appearance;
+    self.navigationItem.compactScrollEdgeAppearance = appearance;
+    [self.navigationController.navigationBar setTintColor: itemColor]; // bar items and the title label (updateTitle)
     // let's just leave the keyboard alone, matching system light/dark mode
     //m_inputLine.keyboardAppearance = UIKeyboardAppearanceDark;
 
@@ -3997,6 +4014,12 @@ static void setScreenDims(char *storyNameBuf) {
                         oldStatusData = YES;
                 }
                 statusScreenColors = dict[@"statusWinColors"];
+                // At launch the story screen has just been presented without animation and may
+                // not have had its first layout pass yet (loadView starts from a zero frame), in
+                // which case the width-based column count below (hasWidePhoneWidth) would see a
+                // zero width and set the game up for a narrow screen. Force any pending layout
+                // of the hierarchy we're in first.
+                [(self.view.window ? self.view.window : self.view.superview) layoutIfNeeded];
                 setScreenDims(storyNameBuf);
                 h_screen_rows = kDefaultTextViewHeight; // iosif_textview_height;
                 h_screen_cols = iosif_textview_width;
