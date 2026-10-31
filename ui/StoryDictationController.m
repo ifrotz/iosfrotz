@@ -66,6 +66,8 @@
 
 // Called for all recognitions, including non-final hypothesis
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didHypothesizeTranscription:(SFTranscription *)transcription {
+    if (task != m_recognitionTask)
+        return; // a task listenForSpeech has already replaced; see didFinishSuccessfully
     NSString *text = [transcription formattedString];
     NSLog(@"speechRecognitionTask:didHypothesizeTranscription: %@", text);
     if (![text isEqualToString: m_currentTranscription]) {
@@ -99,6 +101,8 @@
 
 // Called only for final recognitions of utterances. No more about the utterance will be reported
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishRecognition:(SFSpeechRecognitionResult *)result {
+    if (task != m_recognitionTask)
+        return; // a task listenForSpeech has already replaced; see didFinishSuccessfully
     BOOL isFinal = [result isFinal];
     NSLog(@"speechRecognitionTask:didFinishRecognition final=%d", isFinal);
     NSArray<SFTranscription *> *transcriptions = [result transcriptions];
@@ -149,6 +153,12 @@
 // Called when recognition of all requested utterances is finished.
 // If successfully is false, the error property of the task will contain error information
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishSuccessfully:(BOOL)successfully {
+    // These callbacks arrive asynchronously, so one from a task that listenForSpeech has since
+    // finished and replaced can land after the new task is running. Only the current task may
+    // report results or clear m_recognitionTask; otherwise the new task's results were lost and
+    // the commit timer took the cleared task as the signal to accept whatever text it had.
+    if (task != m_recognitionTask)
+        return;
     if (!successfully) {
         NSError *error = [task error];
         if (error)
@@ -192,6 +202,18 @@
         m_recognitionTask = nil;
         m_sfRecogRequest = nil;
     }
+    // The session must be a recording session before the engine is touched.
+    [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord error: &error];
+    if (error) {
+        NSLog(@"Error AVAudioSession setCategory: %@", error);
+        error = nil;
+    }
+    [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
+    if (error) {
+        NSLog(@"Error AVAudioSession setActive: %@", error);
+        error = nil;
+    }
+
     if (![m_audioEngine isRunning]) {
         AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
         AVAudioFormat *recordingFormat = [audioInputNode outputFormatForBus: 0];
@@ -212,20 +234,7 @@
             NSLog(@"Error audioEngine:startAndReturnError: %@", error);
         }
     }
-    
-    [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord // AVAudioSessionCategoryRecord // AVAudioSessionCategoryPlayAndRecord
-//                           mode: AVAudioSessionModeDefault // AVAudioSessionModeSpokenAudio
-//                        options: //AVAudioSessionCategoryOptionDuckOthers|
-//                                AVAudioSessionCategoryOptionMixWithOthers|
-//                                AVAudioSessionCategoryOptionAllowBluetooth
-                          error: &error];
-    if (error) {
-        NSLog(@"Error AVAudioSession setCategory: %@", error);
-    }
-    [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
-    if (error) {
-        NSLog(@"Error AVAudioSession setActive: %@", error);
-    }
+
     m_sfRecogRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     m_sfRecogRequest.shouldReportPartialResults = YES;
     m_sfRecogRequest.requiresOnDeviceRecognition = YES;

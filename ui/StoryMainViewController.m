@@ -2893,7 +2893,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     refresh_savedir = -1;
     do_filebrowser = kFBHidden;
 #if EnableStoryDictation
-    [self pauseOrResumeDictation: NO];
+    // Paused in openFileBrowser:; the chooser is gone, so listen again.
+    // (activeKeyboard above will above will do it only if keyboard is not locked).
+    [self pauseOrResumeDictation: YES];
 #endif
 }
 
