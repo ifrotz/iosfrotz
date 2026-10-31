@@ -1796,6 +1796,8 @@ extern void gli_ios_set_focus(window_t *winNum);
         // keeps the Story List and keyboard toggle as real buttons.
         m_storyListItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
         m_kbdToggleItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
+        if (m_micButton)
+            m_micButton.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
         [m_frotzInfoController infoBarButtonItem].visibilityPriority = UIBarButtonItemVisibilityPriorityLow;
     }
     [self updateLeadingBarItemsForSpaceAnimated: NO];
