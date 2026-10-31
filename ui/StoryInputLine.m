@@ -158,14 +158,23 @@
     return NO;
 }
 
+// Dictation is added to whatever was typed before the utterance began rather than put in its
+// place. The typed part is captured when the utterance's first hypothesis arrives and kept for
+// the rest of it, each hypothesis replacing the previous one after it. If the line no longer
+// reads what was last shown here (typing or clearing in between), the current text becomes the
+// new base. The final result is submitted as a command, typed part included.
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal {
+    if (!m_textBeforeDictation || ![self.text isEqualToString: m_lastDictationShown])
+        m_textBeforeDictation = self.text ?: @"";
+    [self setText: m_textBeforeDictation];
+    [self inputHelperString: string]; // appends, with a separating space where one is needed
+    m_lastDictationShown = self.text;
     if (isFinal) {
-        [self setText: @""];
-        [self inputHelperString: string];
+        m_textBeforeDictation = nil;
+        m_lastDictationShown = nil;
         StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
         [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
-    } else
-        [self setText: string];
+    }
 }
 #endif
 
@@ -479,12 +488,7 @@ const int kCompletionViewTag = 21;
         return YES;
     return [super respondsToSelector: aSelector];
 }
-
--(void)dictationRecordingDidEnd {
-    NSLog(@"");
-}
 #endif
-
 
 -(BOOL)keyboardInput:(id)sender shouldInsertText:(NSString*)text isMarkedText:(BOOL)imt {
     if (!m_firstKeyPressed && self.text.length==0) {

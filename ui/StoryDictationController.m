@@ -9,6 +9,13 @@
 
 #if EnableStoryDictation
 
+// Trace output (StoryDictationDebugLogging in iosfrotz.h); errors use NSLog directly.
+#if StoryDictationDebugLogging
+#define DictationLog(...) NSLog(__VA_ARGS__)
+#else
+#define DictationLog(...) ((void)0)
+#endif
+
 @interface NSString (IFDictation)
 -(NSString*)stringWithSanitizeDictation;
 @end
@@ -24,12 +31,27 @@
 }
 @end
 
+// The recognizer reports its failures as error codes in the assistant domain, with no public
+// constants; the table in the error property's comment in SFSpeechRecognitionTask.h lists them.
+// 203, "failure occurred during speech recognition", is what a task ends with when the audio it
+// was given held nothing it could recognize (a pause with no speech, say); 1110, "failed to
+// recognize any speech", is the same outcome by its description. The task is over at that point,
+// so the reference is dropped and the commit timer starts a fresh one.
+static NSString *const kSpeechAssistantErrorDomain = @"kAFAssistantErrorDomain";
+static const NSInteger kSpeechErrorRecognitionFailed = 203;
+static const NSInteger kSpeechErrorNoSpeechRecognized = 1110;
+
+static BOOL ErrorEndsRecognitionTask(NSError *error) {
+    return (error.code == kSpeechErrorRecognitionFailed || error.code == kSpeechErrorNoSpeechRecognized)
+        && [error.domain isEqualToString: kSpeechAssistantErrorDomain];
+}
+
 @implementation StoryDictationController
 
 @synthesize delegate = m_delegate;
 
 -(instancetype)init {
-    self = [super initWithNibName:nil bundle:nil];
+    self = [super init];
     if (self) {
         m_sfrecog =  [[SFSpeechRecognizer alloc] initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]];
         m_sfrecog.delegate = self;
@@ -61,7 +83,7 @@
 
 // Called when the task first detects speech in the source audio
 - (void)speechRecognitionDidDetectSpeech:(SFSpeechRecognitionTask *)task {
-    NSLog(@"task detected speech");
+    DictationLog(@"task detected speech");
 }
 
 // Called for all recognitions, including non-final hypothesis
@@ -69,7 +91,7 @@
     if (task != m_recognitionTask)
         return; // a task listenForSpeech has already replaced; see didFinishSuccessfully
     NSString *text = [transcription formattedString];
-    NSLog(@"speechRecognitionTask:didHypothesizeTranscription: %@", text);
+    DictationLog(@"speechRecognitionTask:didHypothesizeTranscription: %@", text);
     if (![text isEqualToString: m_currentTranscription]) {
         m_currentTranscription = text;
         [self setupTimer];
@@ -90,7 +112,7 @@
     for (NSString *word in words) {
         if ([word length] > 2) {
             if ([m_delegate validateWord:word]) {
-                NSLog(@"  validated: %@", word);
+                DictationLog(@"  validated: %@", word);
                 score++;
             }
             i++;
@@ -104,15 +126,15 @@
     if (task != m_recognitionTask)
         return; // a task listenForSpeech has already replaced; see didFinishSuccessfully
     BOOL isFinal = [result isFinal];
-    NSLog(@"speechRecognitionTask:didFinishRecognition final=%d", isFinal);
+    DictationLog(@"speechRecognitionTask:didFinishRecognition final=%d", isFinal);
     NSArray<SFTranscription *> *transcriptions = [result transcriptions];
     int i = 0, bestIndex = -1;
     NSUInteger bestScore = 0;
+    //SFTranscription *transcription = [result bestTranscription];
     for (SFTranscription *transcription in transcriptions) {
-        //SFTranscription *transcription = [result bestTranscription];
         NSString *text = [transcription formattedString];
         NSUInteger score = [self dictationDictionaryScore: text];
-        NSLog(@"  Count: %d Score: %lu Recog: %@", i, score, text);
+        DictationLog(@"  Count: %d Score: %lu Recog: %@", i, score, text);
         if (score > bestScore) {
             bestScore = score;
             bestIndex = i;
@@ -126,14 +148,14 @@
         transcription = [result bestTranscription];
     NSString *text = [transcription formattedString];
     m_lastRecogDate = [NSDate date];
-    NSLog(@"Final: %d Recog: %@", isFinal, text);
+    DictationLog(@"Final: %d Recog: %@", isFinal, text);
     m_currentTranscription = [text stringWithSanitizeDictation];
 
     NSError *error = [task error];
     if (error || isFinal) {
         if (error)
             NSLog(@"recognitionTaskWithRequest error: %@", error);
-        if (isFinal || [error code] == 203)
+        if (isFinal || ErrorEndsRecognitionTask(error))
             m_recognitionTask = nil;
     }
     if ([self isListening])
@@ -142,12 +164,12 @@
 
 // Called when the task is no longer accepting new audio but may be finishing final processing
 - (void)speechRecognitionTaskFinishedReadingAudio:(SFSpeechRecognitionTask *)task {
-    NSLog(@"Task finished audio");
+    DictationLog(@"Task finished audio");
 }
 
 // Called when the task has been cancelled, either by client app, the user, or the system
 - (void)speechRecognitionTaskWasCancelled:(SFSpeechRecognitionTask *)task {
-    NSLog(@"Task canceled");
+    DictationLog(@"Task canceled");
 }
 
 // Called when recognition of all requested utterances is finished.
@@ -163,7 +185,7 @@
         NSError *error = [task error];
         if (error)
             NSLog(@"speechRecognitionTask:didFinishSuccessfully error: %@", error);
-        if ([error code] == 203)
+        if (ErrorEndsRecognitionTask(error))
             m_recognitionTask = nil;
     } else
         m_recognitionTask = nil;
@@ -183,7 +205,7 @@
     if ([m_audioEngine isRunning])
         [m_audioEngine pause];
     m_isPaused = YES;
-    NSLog(@"pauseListening");
+    DictationLog(@"pauseListening");
 }
 
 -(void)listenForSpeech {
@@ -192,7 +214,7 @@
         [m_audioEngine startAndReturnError: &error];
         m_isPaused = NO;
         if (!error && [m_audioEngine isRunning] && m_recognitionTask) {
-            NSLog(@"listenForSpeech unpaused");
+            DictationLog(@"listenForSpeech unpaused");
             return;
         }
     }
@@ -222,7 +244,6 @@
             [audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
                 if (m_sfRecogRequest)
                     [m_sfRecogRequest appendAudioPCMBuffer: buffer];
-                //NSLog(@" append audio %@", m_sfRecogRequest);
             }];
             [m_audioEngine prepare];
             [m_audioEngine startAndReturnError: &error];
@@ -249,8 +270,7 @@
     }
     typedef void (^ATimerBlock)(NSTimer * _Nonnull timer);
     __block ATimerBlock block = ^(NSTimer * _Nonnull timer) {
-        //if (m_currentTranscription)
-            NSLog(@"timer: ct:%@", m_currentTranscription);
+        if (m_currentTranscription) DictationLog(@"timer: ct:%@", m_currentTranscription);
         if (!m_recognitionTask || m_currentTranscription.length > 0) {
             NSTimeInterval interval = [[timer fireDate] timeIntervalSinceDate: m_lastRecogDate];
             if (m_recognitionTask) {
@@ -262,7 +282,7 @@
                 }
                 // If the user has stopped speaking for 1 second, commit recognition.
                 if (m_recognitionTask.state <= SFSpeechRecognitionTaskStateRunning) {
-                    NSLog(@" calling finish");
+                    DictationLog(@" calling recognitionTask finish");
                     [m_recognitionTask finish];
                     return;
                 }
@@ -271,7 +291,7 @@
             // Print the final transcription.
             [m_speechCommitTimer invalidate];
             m_speechCommitTimer = nil;
-            NSLog(@"Final xscipt: %@", m_currentTranscription);
+            DictationLog(@"Final transcript: %@", m_currentTranscription);
             if (m_delegate && [m_currentTranscription length] > 0)
                 [m_delegate acceptDictation: m_currentTranscription final:YES];
             m_currentTranscription = nil;
@@ -280,12 +300,6 @@
     };
     m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 repeats:NO block: block];
 }
-
--(void)viewDidLoad {
-    [super viewDidLoad];
-    // Do any additional setup after loading the view.
-}
-
 
 @end
 

@@ -23,6 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL m_firstKeyPressed, m_lastCharDeleted;
     BOOL m_justHidHelper;
     BOOL m_completionAmbiguous;
+#if EnableStoryDictation
+    NSString *m_textBeforeDictation; // what was typed before the current utterance began; nil between utterances
+    NSString *m_lastDictationShown;  // the full line as acceptDictation:final: last set it
+#endif
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;

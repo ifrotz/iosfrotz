@@ -15,7 +15,9 @@
 NS_ASSUME_NONNULL_BEGIN
 @class SFSpeechAudioBufferRecognitionRequest, SFSpeechRecognitionTask;
 
-@interface StoryDictationController : UIViewController <SFSpeechRecognizerDelegate, SFSpeechRecognitionTaskDelegate>
+// Runs on-device speech recognition on the microphone and hands the transcriptions to its
+// delegate (the input line). Not a view controller: it has no UI of its own.
+@interface StoryDictationController : NSObject <SFSpeechRecognizerDelegate, SFSpeechRecognitionTaskDelegate>
 {
     SFSpeechRecognizer *m_sfrecog;
     SFSpeechAudioBufferRecognitionRequest *m_sfRecogRequest;
@@ -31,8 +33,6 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 -(instancetype)init NS_DESIGNATED_INITIALIZER;
--(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
--(instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 
 -(void)listenForSpeech;
 -(void)setupTimer;
