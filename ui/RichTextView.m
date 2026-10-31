@@ -11,8 +11,10 @@
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/CALayer.h>
-#import <AVFoundation/AVFoundation.h>
 #include "RichTextView.h"
+#if EnableStoryDictation
+#import <AVFoundation/AVFoundation.h> // speech synthesis experiment in appendText:
+#endif
 
 #define NoAccessibility 0 // Set to turn off UIAccessibility support completely
 
@@ -1472,7 +1474,7 @@ static BOOL hasAccessibility;
             [self appendAE];
     }
     m_prevLineNotTerminated = lineNotTerminated;
-#if 00
+#if 00 && EnableStoryDictation
     if (m_currentTextStyle & RichTextStyleFixedWidth)
         return;
     if ([text hasPrefix: @">"])

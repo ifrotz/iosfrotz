@@ -19,7 +19,6 @@
  */
 
 #import <UIKit/UIKit.h>
-#import <Speech/Speech.h>
 
 #import "FrotzAppDelegate.h"
 #import "StoryMainViewController.h"
@@ -1689,6 +1688,12 @@ extern void gli_ios_set_focus(window_t *winNum);
 -(void)showKeyboardLockState {
     BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
 
+#if EnableStoryDictation
+    // Dictation goes to the input line, so it pauses while the notes page is up. Before the early
+    // return below: this must run on every call, not just when the toggle's titles change.
+    [self pauseOrResumeDictation: !notesVisible];
+#endif
+
     BOOL locked = m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder];
     UIImage *image = [UIImage imageNamed: locked ? @"icon-keyboard-locked" : @"icon-keyboard"];
     if (m_kbdToggleItem.image != image)
@@ -1706,8 +1711,6 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (!titleChanged && !lockTitleChanged)
         return;
     m_kbdToggleItem.title = title;
-
-    [self pauseOrResumeDictation: ![m_notesController isShown]];
 
     __weak StoryMainViewController *weakSelf = self;
     UIAction *lockAction = [UIAction actionWithTitle: lockTitle
@@ -1736,6 +1739,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     }
 }
 
+#if EnableStoryDictation
 - (void) micButtonPressed {
     [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status)
      {
@@ -1746,6 +1750,7 @@ extern void gli_ios_set_focus(window_t *winNum);
         }
     }];
 }
+#endif
 
 -(void)viewDidDisappear:(BOOL)animated {
 }
@@ -1796,8 +1801,6 @@ extern void gli_ios_set_focus(window_t *winNum);
         // keeps the Story List and keyboard toggle as real buttons.
         m_storyListItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
         m_kbdToggleItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
-        if (m_micButton)
-            m_micButton.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
         [m_frotzInfoController infoBarButtonItem].visibilityPriority = UIBarButtonItemVisibilityPriorityLow;
     }
     [self updateLeadingBarItemsForSpaceAnimated: NO];
@@ -1823,7 +1826,9 @@ extern void gli_ios_set_focus(window_t *winNum);
         [m_notesController hide];
         [m_notesController autosize];
     }
+#if EnableStoryDictation
     [self pauseOrResumeDictation: YES];
+#endif
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -1840,7 +1845,9 @@ extern void gli_ios_set_focus(window_t *winNum);
         [self hideInputHelper];
     if (m_notesController)
         [m_notesController dismissKeyboard];
+#if EnableStoryDictation
     [self pauseOrResumeDictation: NO];
+#endif
 }
 
 - (void)willMoveToParentViewController:(UIViewController *)parent
@@ -2079,9 +2086,17 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
 
+#if EnableStoryDictation
     m_micButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"mic"] style:UIBarButtonItemStylePlain target:self action:@selector(micButtonPressed)];
     m_micButton.title = NSLocalizedString(@"Start Listening", nil);
-    self.navigationItem.rightBarButtonItems = @[ m_kbdToggleItem, m_micButton ];
+
+    // Uncomment for layout test for future speech button
+    // UIBarButtonItem* extraButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"speaker"] style:UIBarButtonItemStylePlain target:self action:nil];
+    // extraButton.title = NSLocalizedString(@"Read Aloud", nil);
+    self.navigationItem.rightBarButtonItems = @[ m_kbdToggleItem, m_micButton]; // , extraButton ];
+#else
+    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+#endif
 
     theSMVC = self;
     theStoryView = m_storyView;
@@ -2396,10 +2411,13 @@ static const CGFloat kVerticalBarLiveActivityReserve = 90;
         return;
     UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
     NSInteger capacity = [self estimatedVerticalBarCapacityWithKeyboardHeight: keyboardHeight];
+    // The trailing items (keyboard toggle, plus the mic when dictation is built in) take their
+    // tiles first; what is left goes to the leading side.
+    NSInteger trailingCount = MAX(1, (NSInteger)self.navigationItem.rightBarButtonItems.count);
     NSArray<UIBarButtonItem*> *items;
-    if (infoItem && (capacity >= 4 && m_micButton || capacity >= 3 && !m_micButton))
+    if (infoItem && capacity >= trailingCount + 2)
         items = @[m_storyListItem, infoItem];
-    else if (capacity >= 3 && m_micButton || capacity >= 2 && !m_micButton)
+    else if (capacity >= trailingCount + 1)
         items = @[m_storyListItem];
     else
         items = @[];
@@ -2848,9 +2866,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 }
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
-
+#if EnableStoryDictation
     [self pauseOrResumeDictation: NO];
-
+#endif
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
 
     [fileBrowser setPath: storySavePath];
@@ -2874,7 +2892,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [self activateKeyboard];
     refresh_savedir = -1;
     do_filebrowser = kFBHidden;
+#if EnableStoryDictation
     [self pauseOrResumeDictation: NO];
+#endif
 }
 
 -(void) fileBrowser: (FileBrowser *)browser deleteFile: (NSString*)filePath {
@@ -4783,6 +4803,7 @@ static void setScreenDims(char *storyNameBuf) {
     return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
 }
 
+#if EnableStoryDictation
 -(void)toggleListenForSpeech {
     if (!m_dictationController) {
         m_dictationController = [[StoryDictationController alloc] init];
@@ -4811,6 +4832,7 @@ static void setScreenDims(char *storyNameBuf) {
             [m_dictationController pauseListening];
     }
 }
+#endif // EnableStoryDictation
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 

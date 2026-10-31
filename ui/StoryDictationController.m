@@ -7,6 +7,8 @@
 
 #import "StoryDictationController.h"
 
+#if EnableStoryDictation
+
 @interface NSString (IFDictation)
 -(NSString*)stringWithSanitizeDictation;
 @end
@@ -277,3 +279,5 @@
 
 
 @end
+
+#endif // EnableStoryDictation

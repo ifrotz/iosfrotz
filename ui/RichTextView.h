@@ -17,7 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol RTSelected <NSObject>
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
+#if EnableStoryDictation
 -(void)stopListening;
+#endif
 @end
 
 typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);

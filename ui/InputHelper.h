@@ -8,11 +8,14 @@
 
 #import <UIKit/UIKit.h>
 #import "FrotzWordPicker.h"
+#import "iosfrotz.h"
 
 @protocol FrotzInputDelegate <NSObject>
 -(void)inputHelperString:(NSString*)string;
+#if EnableStoryDictation
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
 -(BOOL)validateWord:(NSString*)word;
+#endif
 -(BOOL)isFirstResponder;
 @end
 

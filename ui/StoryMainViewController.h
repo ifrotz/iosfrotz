@@ -22,7 +22,10 @@
 #import "FrotzWordPicker.h"
 #import "FileBrowser.h"
 #import "NotesViewController.h"
+#import "iosfrotz.h"
+#if EnableStoryDictation
 #import "StoryDictationController.h"
+#endif
 
 @class StoryBrowser;
 @class FrotzView;
@@ -55,10 +58,8 @@ extern StatusLine *theStatusLine;
 extern StoryInputLine *theInputLine;
 extern StoryBrowser *theStoryBrowser;
 
-@class SFSpeechRecognizer, AVAudioEngine, AVAudioSession, AVAudioInputNode, SFSpeechRecognitionTask;
-
 @interface StoryMainViewController : UIViewController <UITextViewDelegate, UITextFieldDelegate,
-    UIActionSheetDelegate, TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
+    TransitionViewDelegate, KeyboardOwner, FrotzSettingsStoryDelegate,
     InputHelperDelegate, UIScrollViewDelegate, RTSelected, FileSelected, TextFileBrowser,
     LockableKeyboard>
 {
@@ -69,7 +70,9 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableArray *m_glkViews;
 
     UIView *m_background;
-    UIBarButtonItem *m_micButton;
+#if EnableStoryDictation
+    UIBarButtonItem *m_micButton; // second trailing item, after the keyboard toggle
+#endif
     UIBarButtonItem *m_kbdToggleItem;
     UIBarButtonItem *m_storyListItem; // leading item; created by the browser, which handles its action
 
@@ -125,8 +128,10 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableDictionary *m_dbCachedMetadata;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
-    
+
+#if EnableStoryDictation
     StoryDictationController *m_dictationController;
+#endif
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;
@@ -152,8 +157,10 @@ extern StoryBrowser *theStoryBrowser;
 -(void) toggleKeyboard;
 -(void) forceToggleKeyboard;
 @property (nonatomic, readonly, strong) id dismissKeyboard;
+#if EnableStoryDictation
 -(void) toggleListenForSpeech;
 -(void) pauseOrResumeDictation:(BOOL)inputLineIsActive;
+#endif
 -(void) setIgnoreWordSelection:(BOOL)ignore;
 -(void) abortToBrowser;
 -(void) autosize;

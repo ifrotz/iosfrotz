@@ -117,12 +117,15 @@
     if (![self isFirstResponder] && [self canBecomeFirstResponder])
         [m_inputHelper hideInputHelper];
     BOOL ret = [super becomeFirstResponder];
+#if EnableStoryDictation
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     if (ret)
         [storyController pauseOrResumeDictation: YES];
+#endif
     return ret;
 }
 
+#if EnableStoryDictation
 -(BOOL)resignFirstResponder {
     BOOL ret = [super resignFirstResponder];
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
@@ -130,6 +133,7 @@
         [storyController pauseOrResumeDictation: NO];
     return ret;
 }
+#endif
 
 -(void)inputHelperString:(NSString*)string {
     [self hideInputHelper];
@@ -142,6 +146,7 @@
     [self setText: string];
 }
 
+#if EnableStoryDictation
 -(BOOL)validateWord:(NSString*)word {
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     BOOL isAmbig = NO;
@@ -153,7 +158,7 @@
     return NO;
 }
 
--(void)acceptDictation:(NSString*)string final:(BOOL)isFinal; {
+-(void)acceptDictation:(NSString*)string final:(BOOL)isFinal {
     if (isFinal) {
         [self setText: @""];
         [self inputHelperString: string];
@@ -162,6 +167,7 @@
     } else
         [self setText: string];
 }
+#endif
 
 -(CGPoint)helperLaunchPosition {
     UIView *parentView = [m_storyView superview];

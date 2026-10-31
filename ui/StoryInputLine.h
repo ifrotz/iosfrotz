@@ -35,7 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 -(NSUInteger)addHistoryItem:(NSString*)historyItem;
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
--(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;;
+#if EnableStoryDictation
+-(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
+#endif
 @property (nonatomic, readonly, strong) UIView *inputHelperView;
 -(void)setClearButtonMode;
 -(void)maybeShowEnterKey;

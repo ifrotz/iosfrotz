@@ -6,6 +6,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "iosfrotz.h"
+
+#if EnableStoryDictation
 #import <Speech/Speech.h>
 #import "InputHelper.h"
 
@@ -42,3 +45,4 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+#endif // EnableStoryDictation
