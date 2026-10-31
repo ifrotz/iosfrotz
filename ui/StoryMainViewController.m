@@ -22,6 +22,9 @@
 
 #import "FrotzAppDelegate.h"
 #import "StoryMainViewController.h"
+#if EnableStoryDictation // defined via the header above
+#import <AVFoundation/AVFoundation.h> // microphone permission (requestMicrophonePermission:)
+#endif
 
 #import "StatusLine.h"
 #import "StoryInputLine.h"
@@ -1745,15 +1748,55 @@ extern void gli_ios_set_focus(window_t *winNum);
 }
 
 #if EnableStoryDictation
+// The mic button. Stopping needs no permission. Starting needs two, speech recognition and the
+// microphone, each with its own one-time system prompt, so both are requested here (the first
+// time) and a refusal of either is explained, with a way to Settings since the system won't ask
+// again. Whether the recognizer itself can take a request is checked in toggleListenForSpeech.
 - (void) micButtonPressed {
-    [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status)
-     {
-        if (status == SFSpeechRecognizerAuthorizationStatusAuthorized) {
-            dispatch_async(dispatch_get_main_queue(), ^{
+    if ([self dictationIsOn]) {
+        [m_dictationController stopListening];
+        return;
+    }
+    [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (status == SFSpeechRecognizerAuthorizationStatusRestricted) {
+                [self explainDictationProblem: NSLocalizedString(@"Speech recognition isn't permitted on this device.", nil) offerSettings: NO];
+                return;
+            }
+            if (status != SFSpeechRecognizerAuthorizationStatusAuthorized) {
+                [self explainDictationProblem: NSLocalizedString(@"Frotz isn't allowed to use speech recognition. You can allow it in Settings.", nil) offerSettings: YES];
+                return;
+            }
+            [self requestMicrophonePermission: ^(BOOL granted) {
+                if (!granted) {
+                    [self explainDictationProblem: NSLocalizedString(@"Frotz isn't allowed to use the microphone. You can allow it in Settings.", nil) offerSettings: YES];
+                    return;
+                }
                 [self toggleListenForSpeech];
-            });
-        }
+            }];
+        });
     }];
+}
+
+// Asks for microphone access (prompting the first time) and calls back on the main queue.
+-(void)requestMicrophonePermission:(void (^)(BOOL granted))completion {
+    void (^onMainQueue)(BOOL) = ^(BOOL granted) {
+        dispatch_async(dispatch_get_main_queue(), ^{ completion(granted); });
+    };
+    if (@available(iOS 17.0, *))
+        [AVAudioApplication requestRecordPermissionWithCompletionHandler: onMainQueue];
+    else
+        [[AVAudioSession sharedInstance] requestRecordPermission: onMainQueue];
+}
+
+// Why dictation can't run, as an alert; with a Settings button when the fix is a permission there.
+-(void)explainDictationProblem:(NSString*)message offerSettings:(BOOL)offerSettings {
+    FrotzShowAlert(self, NSLocalizedString(@"Dictation", nil), message, NSLocalizedString(@"OK", nil),
+                   offerSettings ? @[NSLocalizedString(@"Settings", nil)] : nil,
+                   ^(NSInteger buttonIndex) {
+        if (buttonIndex == 1)
+            [[UIApplication sharedApplication] openURL: [NSURL URLWithString: UIApplicationOpenSettingsURLString] options: @{} completionHandler: nil];
+    });
 }
 #endif
 
@@ -1851,9 +1894,27 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (m_notesController)
         [m_notesController dismissKeyboard];
 #if EnableStoryDictation
-    [self pauseOrResumeDictation: NO];
+    // Leaving for the Story List (the story's navigation controller is dismissed, or this is
+    // popped) ends dictation: it comes back only when the player starts it again. Anything else
+    // covering the story (settings in landscape, say) only pauses it, and viewWillAppear resumes.
+    if (self.isBeingDismissed || self.navigationController.isBeingDismissed || self.isMovingFromParentViewController)
+        [m_dictationController stopListening];
+    else
+        [self pauseOrResumeDictation: NO];
 #endif
 }
+
+#if EnableStoryDictation
+// KeyboardOwner: the settings sheet. Like the file chooser, it pauses dictation and resumes it
+// when it goes; the sheet doesn't trigger viewWillDisappear in portrait, hence these.
+-(void)settingsWillPresent {
+    [self pauseOrResumeDictation: NO];
+}
+
+-(void)settingsDidDismiss {
+    [self pauseOrResumeDictation: YES];
+}
+#endif
 
 - (void)willMoveToParentViewController:(UIViewController *)parent
 {
@@ -4823,11 +4884,26 @@ static void setScreenDims(char *storyNameBuf) {
         m_dictationController.delegate = m_inputLine;
         m_dictationController.stateDelegate = self;
     }
-    if ([self dictationIsOn])
+    if ([self dictationIsOn]) {
         [m_dictationController stopListening];
-    else
-        [m_dictationController listenForSpeech];
+        return;
+    }
+    switch ([m_dictationController availability]) {
+        case kStoryDictationRecognizerUnavailable:
+            [self explainDictationProblem: NSLocalizedString(@"Speech recognition isn't available right now. Check that Siri or Dictation is turned on in Settings.", nil) offerSettings: YES];
+            return;
+        case kStoryDictationOnDeviceUnsupported:
+            [self explainDictationProblem: NSLocalizedString(@"This device can't recognize English speech on its own, which Frotz requires so that nothing you say leaves it.", nil) offerSettings: NO];
+            return;
+        case kStoryDictationAvailable:
+            break;
+    }
+    [m_dictationController listenForSpeech];
     // The mic button follows in dictationListeningStateChanged:.
+}
+
+-(void)dictationBecameUnavailable:(StoryDictationController*)controller {
+    [self explainDictationProblem: NSLocalizedString(@"Speech recognition became unavailable, so dictation has stopped.", nil) offerSettings: NO];
 }
 
 -(void)stopListening {

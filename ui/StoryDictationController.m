@@ -55,6 +55,24 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     [m_stateDelegate dictationListeningStateChanged: self];
 }
 
+-(StoryDictationAvailability)availability {
+    if (!m_sfrecog.isAvailable)
+        return kStoryDictationRecognizerUnavailable;
+    if (!m_sfrecog.supportsOnDeviceRecognition) // requests here set requiresOnDeviceRecognition
+        return kStoryDictationOnDeviceUnsupported;
+    return kStoryDictationAvailable;
+}
+
+// SFSpeechRecognizerDelegate. The recognizer can go away mid-session (Siri and Dictation turned
+// off in Settings, say); a task in flight would just fail, so stop cleanly and say why.
+- (void)speechRecognizer:(SFSpeechRecognizer *)speechRecognizer availabilityDidChange:(BOOL)available {
+    DictationLog(@"recognizer available: %d", available);
+    if (available || !([self isListening] || m_isPaused))
+        return;
+    [self stopListening];
+    [m_stateDelegate dictationBecameUnavailable: self];
+}
+
 -(instancetype)init {
     self = [super init];
     if (self) {
@@ -63,8 +81,78 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         
         m_audioEngine = [[AVAudioEngine alloc] init];
         m_audioSession = [AVAudioSession sharedInstance];
+
+        // The system can take the audio away or reconfigure it under us; see the handlers below.
+        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        [center addObserver: self selector: @selector(audioSessionInterrupted:) name: AVAudioSessionInterruptionNotification object: m_audioSession];
+        [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
+        [center addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
     }
     return self;
+}
+
+// Leaving Frotz for another app ends dictation, like leaving the story for the Story List does:
+// the mic shouldn't stay open behind another app, and listening comes back only when the player
+// asks for it again. (Posted once every scene is in the background, so a second window on the
+// iPad or the Duo keeps listening while it is still up.)
+-(void)applicationDidEnterBackground:(NSNotification*)note {
+    if ([self isListening] || m_isPaused) {
+        DictationLog(@"app went to the background");
+        [self stopListening];
+    }
+}
+
+-(void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+// The system took the audio away (Speak Screen, VoiceOver, a phone call, Siri) and stopped the
+// engine, which nothing here would otherwise notice: no hypotheses arrive and the mic icon stays
+// lit. Listening is over as far as the user can tell, so make it so: drop the utterance in flight
+// and report "not listening", so the icon goes dark and a tap starts dictation again. If the
+// system later says the interruption has ended and audio may resume, start again by ourselves,
+// unless the user has restarted or stopped dictation meanwhile. That notice is not guaranteed
+// (system speech in particular may never send it), which is why the state can't wait for it.
+// A pause the UI already made (isListening false) is left to the UI to end.
+-(void)audioSessionInterrupted:(NSNotification*)note {
+    NSDictionary *info = note.userInfo;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        AVAudioSessionInterruptionType type = [info[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
+        if (type == AVAudioSessionInterruptionTypeBegan) {
+            if (![self isListening])
+                return;
+            DictationLog(@"audio interrupted");
+            [self abandonUtterance];
+            [m_audioEngine stop];
+            m_resumeAfterInterruption = YES;
+            [self notifyStateChanged];
+        } else if (m_resumeAfterInterruption) {
+            m_resumeAfterInterruption = NO;
+            AVAudioSessionInterruptionOptions options = [info[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
+            BOOL resume = (options & AVAudioSessionInterruptionOptionShouldResume) != 0;
+            DictationLog(@"audio interruption ended, resume %d", resume);
+            if (resume)
+                [self listenForSpeech];
+        }
+    });
+}
+
+// The engine stopped itself because the audio route or format changed (headphones in or out, a
+// Bluetooth device, VoiceOver claiming the speaker). The tap was installed for the old input
+// format and must be put back for the new one, so drop the utterance and restart from scratch;
+// if listening was paused, stay paused and let the resume do the reinstalling.
+-(void)audioEngineConfigurationChanged:(NSNotification*)note {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BOOL wasListening = m_sfRecogRequest != nil && !m_isPaused; // isListening is already NO: the engine has stopped
+        if (!wasListening && !m_isPaused)
+            return;
+        DictationLog(@"audio engine configuration changed");
+        [self pauseListening];
+        [[m_audioEngine inputNode] removeTapOnBus: 0];
+        m_tapInstalled = NO;
+        if (wasListening)
+            [self listenForSpeech];
+    });
 }
 
 -(void)stopListening {
@@ -75,9 +163,11 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(listenForSpeech) object:nil];
 
     m_isPaused = NO;
+    m_resumeAfterInterruption = NO;
     [m_audioEngine stop];
     AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
     [audioInputNode removeTapOnBus:0];
+    m_tapInstalled = NO;
     if (m_recognitionTask) {
         [m_sfRecogRequest endAudio];
         [m_recognitionTask cancel];
@@ -210,12 +300,11 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     return m_isPaused;
 }
 
-// A pause is an interruption (the notes page or the file chooser came up), not the end of a
-// command, so an utterance in progress is abandoned rather than committed: otherwise the silence
-// that follows would commit "put the brass lantern" as a command while the player was elsewhere.
-// The partial text already shown stays in the input line to be finished or cleared on return.
-// The task is dropped before it is cancelled so its cancellation callback is ignored as stale.
--(void)pauseListening {
+// Drops the utterance in progress without committing it: the silence timer, task, request and
+// text all go, and the delegate is told so that the next words follow what is already shown
+// rather than replacing it. The task is dropped before it is cancelled so its cancellation
+// callback is ignored as stale.
+-(void)abandonUtterance {
     [m_speechCommitTimer invalidate];
     m_speechCommitTimer = nil;
     SFSpeechRecognitionTask *task = m_recognitionTask;
@@ -224,7 +313,15 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     m_sfRecogRequest = nil;
     [task cancel];
     m_currentTranscription = nil;
-    [m_delegate abandonDictation]; // so the words after the pause follow the ones before it
+    [m_delegate abandonDictation];
+}
+
+// A pause is an interruption (the notes page or the file chooser came up), not the end of a
+// command, so an utterance in progress is abandoned rather than committed: otherwise the silence
+// that follows would commit "put the brass lantern" as a command while the player was elsewhere.
+// The partial text already shown stays in the input line to be finished or cleared on return.
+-(void)pauseListening {
+    [self abandonUtterance];
     if ([m_audioEngine isRunning])
         [m_audioEngine pause];
     m_isPaused = YES;
@@ -241,6 +338,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 
 -(void)startListening {
     NSError *error = nil;
+    m_resumeAfterInterruption = NO; // the user (or the UI) is starting it; the interruption's end needn't
     if (m_isPaused) {
         [m_audioEngine startAndReturnError: &error];
         m_isPaused = NO;
@@ -255,8 +353,16 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         m_recognitionTask = nil;
         m_sfRecogRequest = nil;
     }
-    // The session must be a recording session before the engine is touched.
-    [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord error: &error];
+    // The session must be a recording session before the engine is touched. Voice processing
+    // (below) routes output to the earpiece unless told otherwise, which would make VoiceOver and
+    // the story's sounds go quiet, hence DefaultToSpeaker. Play-and-record ignores Bluetooth
+    // headsets unless asked: the hands-free option admits a headset's own mic (and sends output
+    // to it), the A2DP option lets output use the music profile while the phone's mic records,
+    // and with both iOS picks what the headset supports. Wired headphones need no asking.
+    [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord mode: AVAudioSessionModeDefault
+                         options: AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetoothHFP
+                                | AVAudioSessionCategoryOptionAllowBluetoothA2DP
+                           error: &error];
     if (error) {
         NSLog(@"Error AVAudioSession setCategory: %@", error);
         error = nil;
@@ -267,15 +373,35 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         error = nil;
     }
 
-    if (![m_audioEngine isRunning]) {
+    // The tap must match the input node's current format, so it is (re)installed whenever the
+    // engine is down or a configuration change has removed it, with the engine stopped meanwhile.
+    if (![m_audioEngine isRunning] || !m_tapInstalled) {
+        if ([m_audioEngine isRunning])
+            [m_audioEngine stop];
         AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
+        // Voice processing: echo cancellation against the device's own speaker output, plus noise
+        // suppression and gain control, the same treatment FaceTime's microphone gets. Without the
+        // echo cancellation VoiceOver's speech is picked up and transcribed as if the player had said
+        // it, "VoiceOver on" included, and feeds back on every announcement after; the suppression
+        // helps anyone dictating somewhere noisy. It has to be set while the engine is stopped, it
+        // needs the output node in the graph, and it changes the input format, so the tap's format
+        // is read after it. Dictation still works without it if enabling fails.
+        if (!audioInputNode.isVoiceProcessingEnabled) {
+            (void)[m_audioEngine outputNode];
+            if (![audioInputNode setVoiceProcessingEnabled: YES error: &error]) {
+                NSLog(@"Error enabling voice processing on the audio input: %@", error);
+                error = nil;
+            }
+        }
         AVAudioFormat *recordingFormat = [audioInputNode outputFormatForBus: 0];
         [audioInputNode removeTapOnBus:0];
+        m_tapInstalled = NO;
         @try {
             [audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
                 if (m_sfRecogRequest)
                     [m_sfRecogRequest appendAudioPCMBuffer: buffer];
             }];
+            m_tapInstalled = YES;
             [m_audioEngine prepare];
             [m_audioEngine startAndReturnError: &error];
         }
