@@ -1150,7 +1150,12 @@ static void setColorTable(RichTextView *v) {
 
 #import "FrotzAlert.h"
 
-@implementation StoryMainViewController 
+#if EnableStoryDictation
+@interface StoryMainViewController () <StoryDictationStateDelegate>
+@end
+#endif
+
+@implementation StoryMainViewController
 @synthesize fontName = m_fontname;
 @synthesize fontSize = m_fontSize;
 @synthesize completionEnabled = m_completionEnabled;
@@ -4806,24 +4811,35 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 #if EnableStoryDictation
+// Dictation is "on" from the user's point of view while it is listening or merely paused by the
+// UI (notes page up, file chooser open); the mic button shows that, and a tap while on stops it.
+-(BOOL)dictationIsOn {
+    return m_dictationController.isListening || m_dictationController.isPaused;
+}
+
 -(void)toggleListenForSpeech {
     if (!m_dictationController) {
         m_dictationController = [[StoryDictationController alloc] init];
         m_dictationController.delegate = m_inputLine;
+        m_dictationController.stateDelegate = self;
     }
-    if (!m_dictationController.isListening) {
-        [m_micButton setImage: [UIImage systemImageNamed:@"mic.fill"]];
-        m_micButton.title = NSLocalizedString(@"Stop Listening", nil);
+    if ([self dictationIsOn])
+        [m_dictationController stopListening];
+    else
         [m_dictationController listenForSpeech];
-    } else {
-        [self stopListening];
-    }
+    // The mic button follows in dictationListeningStateChanged:.
 }
 
 -(void)stopListening {
-    [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
-    m_micButton.title = NSLocalizedString(@"Start Listening", nil);
     [m_dictationController stopListening];
+}
+
+// The mic button reflects what the recognizer is actually doing, not what was last asked of it:
+// it goes back to "Start Listening" when the audio engine fails to start as well as on a tap.
+-(void)dictationListeningStateChanged:(StoryDictationController*)controller {
+    BOOL on = [self dictationIsOn];
+    [m_micButton setImage: [UIImage systemImageNamed: on ? @"mic.fill" : @"mic"]];
+    m_micButton.title = on ? NSLocalizedString(@"Stop Listening", nil) : NSLocalizedString(@"Start Listening", nil);
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {

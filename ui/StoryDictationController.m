@@ -49,6 +49,11 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 @implementation StoryDictationController
 
 @synthesize delegate = m_delegate;
+@synthesize stateDelegate = m_stateDelegate;
+
+-(void)notifyStateChanged {
+    [m_stateDelegate dictationListeningStateChanged: self];
+}
 
 -(instancetype)init {
     self = [super init];
@@ -79,6 +84,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         m_sfRecogRequest = nil;
         m_recognitionTask = nil;
     }
+    [self notifyStateChanged];
 }
 
 // Called when the task first detects speech in the source audio
@@ -94,9 +100,11 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     DictationLog(@"speechRecognitionTask:didHypothesizeTranscription: %@", text);
     if (![text isEqualToString: m_currentTranscription]) {
         m_currentTranscription = text;
-        [self setupTimer];
+        if (m_delegate && text.length > 0)
+            [m_delegate acceptDictation: text final: NO];
     }
-    m_lastRecogDate = [NSDate date];
+    // Every hypothesis, changed or not, means speech is still coming in.
+    [self restartSilenceTimer];
 }
 
 -(NSUInteger)dictationDictionaryScore:(NSString *)text {
@@ -147,19 +155,16 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     else
         transcription = [result bestTranscription];
     NSString *text = [transcription formattedString];
-    m_lastRecogDate = [NSDate date];
     DictationLog(@"Final: %d Recog: %@", isFinal, text);
     m_currentTranscription = [text stringWithSanitizeDictation];
 
     NSError *error = [task error];
-    if (error || isFinal) {
-        if (error)
-            NSLog(@"recognitionTaskWithRequest error: %@", error);
-        if (isFinal || ErrorEndsRecognitionTask(error))
-            m_recognitionTask = nil;
-    }
-    if ([self isListening])
-        [self setupTimer];
+    if (error)
+        NSLog(@"recognitionTaskWithRequest error: %@", error);
+    if (isFinal || ErrorEndsRecognitionTask(error))
+        [self commitTranscription]; // the task is over; this is the utterance
+    else
+        [self restartSilenceTimer];
 }
 
 // Called when the task is no longer accepting new audio but may be finishing final processing
@@ -181,16 +186,20 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     // the commit timer took the cleared task as the signal to accept whatever text it had.
     if (task != m_recognitionTask)
         return;
+    // Normally didFinishRecognition has already committed and cleared the task, and the guard
+    // above skips this. It matters when the task ends without a final result: with nothing
+    // heard, say, which commitTranscription treats as an empty utterance and listens again.
+    BOOL taskEnded = successfully;
     if (!successfully) {
         NSError *error = [task error];
         if (error)
             NSLog(@"speechRecognitionTask:didFinishSuccessfully error: %@", error);
-        if (ErrorEndsRecognitionTask(error))
-            m_recognitionTask = nil;
-    } else
-        m_recognitionTask = nil;
-    if ([self isListening])
-        [self setupTimer];
+        taskEnded = ErrorEndsRecognitionTask(error);
+    }
+    if (taskEnded)
+        [self commitTranscription];
+    else if ([self isListening])
+        [self restartSilenceTimer];
 }
 
 -(BOOL)isListening {
@@ -201,14 +210,36 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     return m_isPaused;
 }
 
+// A pause is an interruption (the notes page or the file chooser came up), not the end of a
+// command, so an utterance in progress is abandoned rather than committed: otherwise the silence
+// that follows would commit "put the brass lantern" as a command while the player was elsewhere.
+// The partial text already shown stays in the input line to be finished or cleared on return.
+// The task is dropped before it is cancelled so its cancellation callback is ignored as stale.
 -(void)pauseListening {
+    [m_speechCommitTimer invalidate];
+    m_speechCommitTimer = nil;
+    SFSpeechRecognitionTask *task = m_recognitionTask;
+    m_recognitionTask = nil;
+    [m_sfRecogRequest endAudio];
+    m_sfRecogRequest = nil;
+    [task cancel];
+    m_currentTranscription = nil;
+    [m_delegate abandonDictation]; // so the words after the pause follow the ones before it
     if ([m_audioEngine isRunning])
         [m_audioEngine pause];
     m_isPaused = YES;
     DictationLog(@"pauseListening");
+    [self notifyStateChanged];
 }
 
+// Starts (or, when paused, resumes) listening. Every way out reports the resulting state to the
+// state delegate, since the audio engine may refuse to start and leave nothing listening.
 -(void)listenForSpeech {
+    [self startListening];
+    [self notifyStateChanged];
+}
+
+-(void)startListening {
     NSError *error = nil;
     if (m_isPaused) {
         [m_audioEngine startAndReturnError: &error];
@@ -263,42 +294,47 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest delegate: self];
 }
 
--(void)setupTimer {
-    if (m_speechCommitTimer) {
-        [m_speechCommitTimer invalidate];
-        m_speechCommitTimer = nil;
+// An utterance ends when the recognizer has sent no hypothesis for this long. Each hypothesis
+// restarts the timer, so it only ever fires once, after the speaker has stopped.
+static const NSTimeInterval kDictationSilenceInterval = 0.8;
+
+-(void)restartSilenceTimer {
+    [m_speechCommitTimer invalidate];
+    __weak StoryDictationController *weakSelf = self;
+    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval: kDictationSilenceInterval repeats: NO block: ^(NSTimer *timer) {
+        [weakSelf silenceTimerFired];
+    }];
+}
+
+// The speaker has paused. Ask the task to finish; its final result comes back through
+// didFinishRecognition, which commits. A task that is already winding down (or gone) has no
+// final result coming, so commit what there is.
+-(void)silenceTimerFired {
+    m_speechCommitTimer = nil;
+    DictationLog(@"silence: ct:%@", m_currentTranscription);
+    if (m_recognitionTask && m_recognitionTask.state <= SFSpeechRecognitionTaskStateRunning) {
+        DictationLog(@" calling recognitionTask finish");
+        [m_recognitionTask finish];
+        return;
     }
-    typedef void (^ATimerBlock)(NSTimer * _Nonnull timer);
-    __block ATimerBlock block = ^(NSTimer * _Nonnull timer) {
-        if (m_currentTranscription) DictationLog(@"timer: ct:%@", m_currentTranscription);
-        if (!m_recognitionTask || m_currentTranscription.length > 0) {
-            NSTimeInterval interval = [[timer fireDate] timeIntervalSinceDate: m_lastRecogDate];
-            if (m_recognitionTask) {
-                if (interval < 0.8) {
-                    if (m_delegate && [m_currentTranscription length] > 0)
-                        [m_delegate acceptDictation: m_currentTranscription final:NO];
-                    [self setupTimer];
-                    return;
-                }
-                // If the user has stopped speaking for 1 second, commit recognition.
-                if (m_recognitionTask.state <= SFSpeechRecognitionTaskStateRunning) {
-                    DictationLog(@" calling recognitionTask finish");
-                    [m_recognitionTask finish];
-                    return;
-                }
-            }
-            m_recognitionTask = nil;
-            // Print the final transcription.
-            [m_speechCommitTimer invalidate];
-            m_speechCommitTimer = nil;
-            DictationLog(@"Final transcript: %@", m_currentTranscription);
-            if (m_delegate && [m_currentTranscription length] > 0)
-                [m_delegate acceptDictation: m_currentTranscription final:YES];
-            m_currentTranscription = nil;
-            [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
-        }
-    };
-    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 repeats:NO block: block];
+    [self commitTranscription];
+}
+
+// Hands the utterance to the delegate as a command (if there was one) and starts listening for
+// the next; the current task, if any, is done with.
+-(void)commitTranscription {
+    [m_speechCommitTimer invalidate];
+    m_speechCommitTimer = nil;
+    m_recognitionTask = nil;
+    DictationLog(@"Final transcript: %@", m_currentTranscription);
+    if (m_delegate && [m_currentTranscription length] > 0)
+        [m_delegate acceptDictation: m_currentTranscription final:YES];
+    m_currentTranscription = nil;
+    // Not while paused: the pause stops the hypotheses, so the silence timer fires soon after
+    // and lands here, and listening again would undo the pause behind the UI's back. The
+    // resume (listenForSpeech with m_isPaused set) finds no task and starts a fresh one.
+    if (!m_isPaused)
+        [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
 }
 
 @end

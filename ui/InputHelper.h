@@ -14,6 +14,9 @@
 -(void)inputHelperString:(NSString*)string;
 #if EnableStoryDictation
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
+// The utterance in progress ended without a final result (listening was paused). Whatever was
+// shown for it stays; the next hypothesis begins a new utterance after it rather than revising it.
+-(void)abandonDictation;
 -(BOOL)validateWord:(NSString*)word;
 #endif
 -(BOOL)isFirstResponder;

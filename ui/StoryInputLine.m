@@ -176,6 +176,14 @@
         [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
     }
 }
+
+// Forget the utterance's base: the line as it stands, partial included, is what the next
+// utterance's words follow. Without this a pause mid-command ("put the brass lantern", off to
+// the notes page and back) had the resumed words replace the first half instead of continuing it.
+-(void)abandonDictation {
+    m_textBeforeDictation = nil;
+    m_lastDictationShown = nil;
+}
 #endif
 
 -(CGPoint)helperLaunchPosition {
