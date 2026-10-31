@@ -226,9 +226,7 @@
     }
     m_sfRecogRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     m_sfRecogRequest.shouldReportPartialResults = YES;
-    if (@available(iOS 13.0,*)) {
-        m_sfRecogRequest.requiresOnDeviceRecognition = YES;
-    }
+    m_sfRecogRequest.requiresOnDeviceRecognition = YES;
     m_sfRecogRequest.contextualStrings = @[ @"look", @"grue", @"i", @"frotz", @"nitfol", @"aimfiz", @"filfre", @"gnusto", @"rezrov" ];
     m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest delegate: self];
 }

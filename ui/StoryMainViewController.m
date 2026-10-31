@@ -4782,27 +4782,23 @@ static void setScreenDims(char *storyNameBuf) {
 }
 
 -(void)toggleListenForSpeech {
-    if (@available(iOS 13.0,*)) {
-        if (!m_dictationController) {
-            m_dictationController = [[StoryDictationController alloc] init];
-            m_dictationController.delegate = m_inputLine;
-        }
-        if (!m_dictationController.isListening) {
-            [m_micButton setImage: [UIImage systemImageNamed:@"mic.fill"]];
-            [m_dictationController listenForSpeech];
-        } else {
-            [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
-            [m_dictationController stopListening];
-        }
+    if (!m_dictationController) {
+        m_dictationController = [[StoryDictationController alloc] init];
+        m_dictationController.delegate = m_inputLine;
+    }
+    if (!m_dictationController.isListening) {
+        [m_micButton setImage: [UIImage systemImageNamed:@"mic.fill"]];
+        m_micButton.title = NSLocalizedString(@"Stop Listening", nil);
+        [m_dictationController listenForSpeech];
+    } else {
+        [self stopListening];
     }
 }
 
 -(void)stopListening {
-    if (@available(iOS 13.0,*)) {
-        [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
-        if (m_dictationController)
-            [m_dictationController stopListening];
-    }
+    [m_micButton setImage: [UIImage systemImageNamed:@"mic"]];
+    m_micButton.title = NSLocalizedString(@"Start Listening", nil);
+    [m_dictationController stopListening];
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
