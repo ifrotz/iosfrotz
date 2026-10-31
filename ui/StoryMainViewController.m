@@ -2397,9 +2397,9 @@ static const CGFloat kVerticalBarLiveActivityReserve = 90;
     UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
     NSInteger capacity = [self estimatedVerticalBarCapacityWithKeyboardHeight: keyboardHeight];
     NSArray<UIBarButtonItem*> *items;
-    if (capacity >= 3 && infoItem)
+    if (infoItem && (capacity >= 4 && m_micButton || capacity >= 3 && !m_micButton))
         items = @[m_storyListItem, infoItem];
-    else if (capacity >= 2)
+    else if (capacity >= 3 && m_micButton || capacity >= 2 && !m_micButton)
         items = @[m_storyListItem];
     else
         items = @[];
