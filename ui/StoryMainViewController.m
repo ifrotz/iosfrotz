@@ -1680,7 +1680,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 // Keeps the keyboard toggle item in step with the keyboard state: its icon (locked/unlocked), the
 // title the system shows when the item is folded into an overflow menu (which happens on the
-// iPhone Duo's vertical bar when the keyboard leaves little room), and its long-press menu, which
+// iPhone Duo's vertical bar when the keyboard leaves little space), and its long-press menu, which
 // carries the lock/unlock action. The menu replaces a UILongPressGestureRecognizer that used to be
 // attached to the item's private backing view and was lost whenever UIKit rebuilt that view.
 // Only assign what actually changed, since each change makes UIKit rebuild the item.
@@ -1756,10 +1756,11 @@ extern void gli_ios_set_focus(window_t *winNum);
     [self updateTitleViewForVerticalBar];
     
     [self autosize];
-    
+
     if (m_kbShown)
         [m_inputLine becomeFirstResponder];
-
+    else
+        [self scheduleVerticalBarMeasurement]; // the keyboard's did-show handles the other case
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -1769,13 +1770,20 @@ extern void gli_ios_set_focus(window_t *winNum);
         m_frotzInfoController = [[FrotzInfo alloc] initWithSettingsController:[m_storyBrowser settings] navController:[self navigationController] navItem:self.navigationItem];
 
     [self updateTitleViewForVerticalBar];
-    // Trailing: the keyboard toggle on its own (showKeyboardLockState and the accessibility setup
-    // read rightBarButtonItem). Leading: the Story List button, created by the browser which also
-    // handles its action, with the Frotz (i) beside it.
-    self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+    // Trailing: set once in loadView, the keyboard toggle first (checkAccessibility and
+    // viewWillDisappear read rightBarButtonItem, which is the first of them) and the mic after it.
+    // Leading: the Story List button, created by the browser which also handles its action, with
+    // the Frotz (i) beside it when there's space (updateLeadingBarItemsForSpaceAnimated:).
     if (!m_storyListItem)
         m_storyListItem = [m_storyBrowser storyListBarButtonItem];
-    self.navigationItem.leftBarButtonItems = @[m_storyListItem, [m_frotzInfoController infoBarButtonItem]];
+    if (@available(iOS 27.0, *)) {
+        // Should UIKit still have to fold items into its overflow menu, it drops the (i) first and
+        // keeps the Story List and keyboard toggle as real buttons.
+        m_storyListItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
+        m_kbdToggleItem.visibilityPriority = UIBarButtonItemVisibilityPriorityHigh;
+        [m_frotzInfoController infoBarButtonItem].visibilityPriority = UIBarButtonItemVisibilityPriorityLow;
+    }
+    [self updateLeadingBarItemsForSpaceAnimated: NO];
     [self setNavBarTint];
 
     [m_frotzInfoController setKeyboardOwner: self];
@@ -2050,13 +2058,12 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
-    
-    
+
     theSMVC = self;
     theStoryView = m_storyView;
     theStatusLine = m_statusLine;
     theInputLine = m_inputLine;
-    
+
     m_storyView.richDataGetImageCallback = GlkGetImageCallback;
     [self setBackgroundColor: m_defaultBGColor makeDefault: NO];
     [self setTextColor: m_defaultFGColor makeDefault: NO];
@@ -2213,9 +2220,240 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     return NO;
 }
 
+// Geometry the vertical bar capacity estimate below is built on. The bar has no API for its size or
+// for what it managed to fit, but UIKit hosts it in the app's window, so this was measured off the
+// button frames on a folded iPhone Duo (iOS 27.1, 466x678pt; barViewsDescriptionForCalibration dumps
+// them). The bar runs down the camera edge. Items are 48pt glass tiles stacked from the top: the
+// leading items as one group 4pt apart, a 12pt gap, then the trailing item; the first tile's top
+// edge sits at 24pt on a bare bar, 82 when the Dynamic Island (the camera hole, in the corner that
+// is top-right in portrait) is at that end, 174 in portrait where the status indicators follow the
+// island, and 264 when a Live Activity is showing as well. The keyboard takes the bottom. When the
+// items don't fit UIKit folds a group into a single "..." tile rather than dropping one item; the
+// leading and trailing groups are handled separately, so one may fold while the other stays, but
+// with the sets used here (two leading, one trailing) a shortfall has always folded everything.
+// The bottom clearance is bracketed, not measured: three items (160pt) didn't fit above a 230pt
+// keyboard with 154pt to spare, while two (108pt) did. updateLeadingBarItemsForSpaceAnimated: logs
+// the numbers it decided on.
+static const CGFloat kVerticalBarItemLength = 48;       // one tile, along the bar
+static const CGFloat kVerticalBarItemGap = 4;           // between tiles within a group
+static const CGFloat kVerticalBarGroupGap = 12;         // between the leading group and the trailing item
+static const CGFloat kVerticalBarTopInset = 24;         // first tile's top on a bare bar
+static const CGFloat kVerticalBarBottomInset = 12;      // clearance above the keyboard or home indicator (assumed, see above)
+static const CGFloat kVerticalBarIslandReserve = 58;    // added at the top when the island is at that end
+static const CGFloat kVerticalBarStatusReserve = 92;    // the status indicators below the island (portrait)
+// A Live Activity in the indicators adds another 90pt (measured), which nothing here can detect up
+// front; measureVerticalBarAndUpdateItems reads the first tile's real top back after layout instead.
+static const CGFloat kVerticalBarLiveActivityReserve = 90;
+
+// YES when the Dynamic Island is at the top of the vertical bar's edge, taking bar space: portrait
+// (island top-right, bar down the right), and landscape with the hinge at the bottom (island
+// top-left, bar down the left). Landscape with the hinge at the top puts it bottom-right, under the
+// keyboard's corner, where it costs nothing. Interface landscape-right is the device turned so the
+// camera edge is on the left. When the orientation isn't known yet (view not in a window), assume
+// it does take space: underestimating hides the (i) for a moment, overestimating shows a "...".
+-(BOOL)dynamicIslandIsAtTopOfVerticalBar {
+    CGSize size = self.view.bounds.size;
+    if (size.height > size.width)
+        return YES;
+    UIInterfaceOrientation orientation = self.view.window.windowScene.interfaceOrientation;
+    return orientation != UIInterfaceOrientationLandscapeLeft;
+}
+
+// Where the first tile's top edge is expected, in window coordinates, from the constants above
+// (the island and the status indicators push it down when they are at the bar's end) plus whatever
+// measureVerticalBarAndUpdateItems last found above that, a Live Activity in practice.
+-(CGFloat)estimatedVerticalBarFirstItemTop {
+    return [self estimatedVerticalBarFirstItemTopWithoutMeasuredExtra] + m_verticalBarExtraTop;
+}
+
+-(CGFloat)estimatedVerticalBarFirstItemTopWithoutMeasuredExtra {
+    CGFloat top = kVerticalBarTopInset;
+    if ([self dynamicIslandIsAtTopOfVerticalBar])
+        top += kVerticalBarIslandReserve;
+    if (![self prefersStatusBarHidden])
+        top += kVerticalBarStatusReserve;
+    return top;
+}
+
+// How many bar items the vertical bar has space for, estimated from the view's geometry; "as many
+// as you like" when there is no vertical bar. Deliberately conservative: overestimating makes UIKit
+// fold items into its "..." menu, which is what this is meant to avoid.
+-(NSInteger)estimatedVerticalBarCapacity {
+    return [self estimatedVerticalBarCapacityWithKeyboardHeight: m_kbShown ? m_kbdSize.height : 0];
+}
+
+// The same for a keyboard of the given height (0: hidden), so the keyboard's will-show notification
+// can plan for the keyboard that is about to appear rather than the state m_kbShown still records.
+// Counts a layout of one trailing item with the rest in the leading group, which is how the items
+// here are arranged: n tiles need 48n + 4(n-2) + 12 points for n >= 2 (160 for three, 108 for two).
+-(NSInteger)estimatedVerticalBarCapacityWithKeyboardHeight:(CGFloat)keyboardHeight {
+    if (![self hasVerticalBar])
+        return NSIntegerMax;
+    CGFloat bottom = self.view.bounds.size.height;
+    // The keyboard reaches the bottom of the screen, so the home indicator inset is already in it.
+    bottom -= keyboardHeight > 0 ? keyboardHeight : self.view.safeAreaInsets.bottom;
+    CGFloat space = bottom - kVerticalBarBottomInset - [self estimatedVerticalBarFirstItemTop];
+    if (space < kVerticalBarItemLength)
+        return 0;
+    if (space < 2 * kVerticalBarItemLength + kVerticalBarGroupGap)
+        return 1;
+    CGFloat pitch = kVerticalBarItemLength + kVerticalBarItemGap;
+    return (NSInteger)floor((space - kVerticalBarGroupGap + 2 * kVerticalBarItemGap) / pitch);
+}
+
+// Leading items, by how many items the vertical bar has space for: the Story List with the Frotz
+// (i) beside it given three, the Story List alone given two, and nothing given less, leaving the
+// keyboard toggle on its own. Whenever the items don't all fit UIKit shows a single "..." menu in
+// their place (holding Story List, Settings, Hide Keyboard and the lock action), and real buttons
+// are more useful in that little space: with two slots the Story List and the keyboard toggle (lock
+// via long press), with one just the toggle, so the keyboard can be put away to get the others back.
+// On other phones the whole bar is hidden in landscape anyway, so a bar with only the keyboard
+// toggle is familiar. Called wherever the space can change: appearance, trait and size changes,
+// keyboard show/hide, and after measureVerticalBarAndUpdateItems reads the bar back. Only assigns
+// when the set changes, with UIKit's item transition when asked (not for the initial set in
+// viewWillAppear).
+-(void)updateLeadingBarItemsForSpaceAnimated:(BOOL)animated {
+    [self updateLeadingBarItemsForKeyboardHeight: m_kbShown ? m_kbdSize.height : 0 animated: animated];
+}
+
+// Calibration aid for the vertical bar constants above. UIKit hosts the vertical bar inside the
+// app's own window, in a floating bar container that spans the window with a pocket view along the
+// bar's edge, so its layout can be read back. This looks through every window in the scene and
+// lists, in screen coordinates and indented by depth, every view inside a floating or vertical bar
+// container plus any other view whose class name mentions a bar; hidden views are marked, and
+// controls carry their accessibility label so the Story List, keyboard toggle and UIKit's "More"
+// overflow button can be told apart. The button frames are all zero until the bar has laid out,
+// so call this after layout has settled (from measureVerticalBarAndUpdateItems, say), not from
+// viewWillAppear or a keyboard notification. Read-only, for NSLog; compiled out until the bar's
+// layout needs measuring again (a new iOS, a new device), when an NSLog of its result from
+// measureVerticalBarAndUpdateItems is the way back in.
+#if 0
+-(NSString*)barViewsDescriptionForCalibration {
+    NSMutableString *description = [NSMutableString string];
+    UIWindowScene *scene = self.view.window.windowScene;
+    for (UIWindow *window in scene.windows)
+        [self appendBarViewsIn: window ofWindow: window depth: 0 insideBar: NO to: description];
+    return description.length ? description : @"\n  (no bar views found in the scene's windows)";
+}
+
+-(void)appendBarViewsIn:(UIView*)view ofWindow:(UIWindow*)window depth:(NSInteger)depth insideBar:(BOOL)insideBar to:(NSMutableString*)description {
+    if (depth > 24)
+        return;
+    NSString *className = NSStringFromClass([view class]);
+    BOOL isBarContainer = [className rangeOfString: @"FloatingBar"].location != NSNotFound
+                       || [className rangeOfString: @"VerticalBar"].location != NSNotFound;
+    insideBar = insideBar || isBarContainer;
+    if (insideBar || [className rangeOfString: @"Bar" options: NSCaseInsensitiveSearch].location != NSNotFound) {
+        CGRect frame = [view convertRect: view.bounds toCoordinateSpace: window.screen.coordinateSpace];
+        NSString *indent = [@"" stringByPaddingToLength: 2 + 2 * depth withString: @" " startingAtIndex: 0];
+        NSString *label = [view isKindOfClass: [UIControl class]] ? view.accessibilityLabel : nil;
+        [description appendFormat: @"\n%@%@ (%.0f,%.0f %.0fx%.0f)%s%@%@%@", indent, className,
+         frame.origin.x, frame.origin.y, frame.size.width, frame.size.height, view.hidden ? " hidden" : "",
+         view.alpha < 1 ? [NSString stringWithFormat: @" alpha %.2f", view.alpha] : @"",
+         label.length ? [NSString stringWithFormat: @" \"%@\"", label] : @"",
+         depth == 0 ? [NSString stringWithFormat: @" [%@]", NSStringFromClass([window class])] : @""];
+    }
+    for (UIView *subview in view.subviews)
+        [self appendBarViewsIn: subview ofWindow: window depth: depth + 1 insideBar: insideBar to: description];
+}
+#endif
+
+// As above, planning for a keyboard of the given height (0: hidden). The keyboard notifications
+// call this before their animation starts: the bar re-lays itself out as the keyboard shortens it,
+// and if it still held three items at that point UIKit would fold two into a "..." for the duration
+// of the slide, only to unfold them when the (i) went away afterwards.
+-(void)updateLeadingBarItemsForKeyboardHeight:(CGFloat)keyboardHeight animated:(BOOL)animated {
+    if (!m_storyListItem)
+        return;
+    UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
+    NSInteger capacity = [self estimatedVerticalBarCapacityWithKeyboardHeight: keyboardHeight];
+    NSArray<UIBarButtonItem*> *items;
+    if (capacity >= 3 && infoItem)
+        items = @[m_storyListItem, infoItem];
+    else if (capacity >= 2)
+        items = @[m_storyListItem];
+    else
+        items = @[];
+    if ([self hasVerticalBar] && capacity != m_lastVerticalBarCapacity) {
+        // The inputs to the estimate, for checking the constants above against the device.
+        m_lastVerticalBarCapacity = capacity;
+        UIEdgeInsets safe = self.view.safeAreaInsets;
+        NSLog(@"vertical bar: height %.0f, island at top %d, status hidden %d, keyboard %.0f, safe insets (t %.0f l %.0f b %.0f r %.0f), first tile top %.0f (measured extra %.0f) -> capacity %ld, %lu leading item(s)",
+              self.view.bounds.size.height, [self dynamicIslandIsAtTopOfVerticalBar], [self prefersStatusBarHidden],
+              keyboardHeight, safe.top, safe.left, safe.bottom, safe.right,
+              [self estimatedVerticalBarFirstItemTop], m_verticalBarExtraTop, (long)capacity, (unsigned long)items.count);
+    }
+    if (![self.navigationItem.leftBarButtonItems isEqualToArray: items])
+        [self.navigationItem setLeftBarButtonItems: items animated: animated];
+}
+
+// Reads the vertical bar back once it has laid out, to catch what the estimate can't see: a Live
+// Activity in the status indicators pushes the first item down about 90pt, and nothing tells the
+// app it is there. Schedule this after a keyboard show or hide or a size change has finished; the
+// bar is SwiftUI-hosted and settles a moment after UIKit's own layout, hence the short delay.
+-(void)scheduleVerticalBarMeasurement {
+    if (![self hasVerticalBar])
+        return;
+    [self scheduleVerticalBarMeasurementAfter: 0.3 retrying: YES];
+}
+
+-(void)scheduleVerticalBarMeasurementAfter:(NSTimeInterval)delay retrying:(BOOL)retrying {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (![self measureVerticalBarAndUpdateItems] && retrying)
+            [self scheduleVerticalBarMeasurementAfter: 0.5 retrying: NO];
+    });
+}
+
+// The topmost item's frame is UIKit's own answer for where the items start. Every leading and
+// trailing item is asked and the highest taken, so the order UIKit stacks the trailing items in
+// (keyboard toggle and mic) needn't be known; when the items have been folded into the "..." menu
+// they all report that button's frame, which is at the same place. The 38pt button sits
+// centred in its 48pt tile. Whatever the tile's top is above the estimate from the constants is
+// remembered as m_verticalBarExtraTop and the items are updated for it, so a Live Activity's space
+// is accounted for from then on (a "..." may show briefly the first time); when it goes away the
+// measurement returns to the estimate and the space comes back. Small differences are noise.
+// Returns NO when no usable frame could be read, so the caller can try again shortly: the frame is
+// zero before the bar has laid out, and right after the leading items are removed the toggle has
+// been seen to report its old position, down where the keyboard now is, so a tile that wouldn't
+// fit above the keyboard (or the home indicator) is rejected as stale.
+-(BOOL)measureVerticalBarAndUpdateItems {
+    if (![self hasVerticalBar] || !self.view.window)
+        return YES; // nothing to measure
+    CGRect frame = CGRectNull;
+    if (@available(iOS 17.0, *)) {
+        NSMutableArray<UIBarButtonItem*> *items = [NSMutableArray array];
+        [items addObjectsFromArray: self.navigationItem.leftBarButtonItems ?: @[]];
+        [items addObjectsFromArray: self.navigationItem.rightBarButtonItems ?: @[]];
+        for (UIBarButtonItem *item in items) {
+            CGRect itemFrame = [item frameInView: self.view.window];
+            if (!CGRectIsEmpty(itemFrame) && (CGRectIsNull(frame) || itemFrame.origin.y < frame.origin.y))
+                frame = itemFrame;
+        }
+    }
+    if (CGRectIsNull(frame))
+        return NO; // not laid out yet
+    CGFloat measuredTop = frame.origin.y - (kVerticalBarItemLength - frame.size.height) / 2;
+    CGFloat bottom = self.view.bounds.size.height - (m_kbShown ? m_kbdSize.height : self.view.safeAreaInsets.bottom);
+    if (measuredTop + kVerticalBarItemLength > bottom) {
+        NSLog(@"vertical bar measured: first tile top %.0f doesn't fit above %.0f, ignoring as stale", measuredTop, bottom);
+        return NO;
+    }
+    CGFloat extra = measuredTop - [self estimatedVerticalBarFirstItemTopWithoutMeasuredExtra];
+    if (extra < 8)
+        extra = 0;
+    if (fabs(extra - m_verticalBarExtraTop) < 8)
+        return YES;
+    NSLog(@"vertical bar measured: first tile top %.0f, %.0f beyond the estimate (was %.0f)%s", measuredTop, extra, m_verticalBarExtraTop,
+          fabs(extra - kVerticalBarLiveActivityReserve) < 8 ? ", a Live Activity" : "");
+    m_verticalBarExtraTop = extra;
+    [self updateLeadingBarItemsForSpaceAnimated: YES];
+    return YES;
+}
+
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
     [self updateTitleViewForVerticalBar];
+    [self updateLeadingBarItemsForSpaceAnimated: YES];
     iosif_regular_width = [self isRegularWidth];
     if (m_storyView)
         [self hideInputHelper];
@@ -2257,6 +2495,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // The status bar follows prefersStatusBarHidden (view-controller-based appearance), which
     // reads m_landscape; tell UIKit it may have changed.
     [self setNeedsStatusBarAppearanceUpdate];
+    // Rotation, fold/unfold and window resizes all change the space on the vertical bar.
+    [self updateLeadingBarItemsForSpaceAnimated: YES];
 
     CGRect frame = [self storyViewFullFrame];
 
@@ -2322,6 +2562,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     } completion:^(id context) {
         [self setNavBarTint];
         [self autosize];
+        [self scheduleVerticalBarMeasurement];
     } ];
 }
 
@@ -2402,6 +2643,8 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
     CGRect frame = [self storyViewFullFrame];
     m_kbdSize = bounds.size;
+    [self updateLeadingBarItemsForSpaceAnimated: YES]; // the keyboard shortens the vertical bar
+    [self scheduleVerticalBarMeasurement];
 
     [m_storyView setBottomMargin: 8];
     frame.size.height -= bounds.size.height;
@@ -2427,6 +2670,8 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     m_kbShown = NO;
     m_kbdSize = CGSizeZero;
     [self showKeyboardLockState]; // keep the toggle's title ("Show Keyboard") in step
+    [self updateLeadingBarItemsForSpaceAnimated: YES]; // normally already done in keyboardWillHide
+    [self scheduleVerticalBarMeasurement];
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
     if (gStoryInterp == kGlxStory) {
         iosif_recompute_screensize();
@@ -2449,6 +2694,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
     CGRect bounds = KeyboardBoundsInWindow(userInfo, m_storyView.window);
     CGRect frame = [self storyViewFullFrame];
+
+    // Make space on the vertical bar for the keyboard that is coming, before the bar animates.
+    [self updateLeadingBarItemsForKeyboardHeight: bounds.size.height animated: YES];
 
 #if UseRichTextView
     [m_storyView prepareForKeyboardShowHide];
@@ -2498,6 +2746,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [UIView commitAnimations];
     m_kbShown = NO;
     m_handledKbWillShowFrame = m_handledKbDidShowFrame = CGRectNull;
+    // Bring the (i) back while the keyboard is still animating away, so the two move together;
+    // waiting for keyboardDidHide made it pop in after the bar had already grown.
+    [self updateLeadingBarItemsForSpaceAnimated: YES];
 }
 
 -(BOOL) isKBShown {

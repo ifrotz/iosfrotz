@@ -111,6 +111,8 @@ extern StoryBrowser *theStoryBrowser;
     NSInteger m_statusFixedFontPixelHeight;
     CGPoint m_cursorOffset;
     CGSize m_kbdSize;
+    NSInteger m_lastVerticalBarCapacity; // last estimate logged by updateLeadingBarItemsForSpaceAnimated:
+    CGFloat m_verticalBarExtraTop; // bar space above the first item beyond the estimate (a Live Activity), measured after layout
     CGRect m_handledKbWillShowFrame, m_handledKbDidShowFrame; // keyboard end frames already laid out for
     NSTimeInterval m_animDuration;
     NSString *m_launchMessage;
