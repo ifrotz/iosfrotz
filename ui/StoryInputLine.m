@@ -116,24 +116,8 @@
 -(BOOL)becomeFirstResponder {
     if (![self isFirstResponder] && [self canBecomeFirstResponder])
         [m_inputHelper hideInputHelper];
-    BOOL ret = [super becomeFirstResponder];
-#if EnableStoryDictation
-    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    if (ret)
-        [storyController pauseOrResumeDictation: YES];
-#endif
-    return ret;
+    return [super becomeFirstResponder];
 }
-
-#if EnableStoryDictation
--(BOOL)resignFirstResponder {
-    BOOL ret = [super resignFirstResponder];
-    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    if (ret)
-        [storyController pauseOrResumeDictation: NO];
-    return ret;
-}
-#endif
 
 -(void)inputHelperString:(NSString*)string {
     [self hideInputHelper];

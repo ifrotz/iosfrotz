@@ -87,6 +87,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         [center addObserver: self selector: @selector(audioSessionInterrupted:) name: AVAudioSessionInterruptionNotification object: m_audioSession];
         [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
         [center addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
+        [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilityVoiceOverStatusDidChangeNotification object: nil];
     }
     return self;
 }
@@ -143,16 +144,32 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 // if listening was paused, stay paused and let the resume do the reinstalling.
 -(void)audioEngineConfigurationChanged:(NSNotification*)note {
     dispatch_async(dispatch_get_main_queue(), ^{
-        BOOL wasListening = m_sfRecogRequest != nil && !m_isPaused; // isListening is already NO: the engine has stopped
-        if (!wasListening && !m_isPaused)
-            return;
         DictationLog(@"audio engine configuration changed");
-        [self pauseListening];
-        [[m_audioEngine inputNode] removeTapOnBus: 0];
-        m_tapInstalled = NO;
-        if (wasListening)
-            [self listenForSpeech];
+        [self restartAudioForChangedConfiguration];
     });
+}
+
+// VoiceOver decides whether voice processing is wanted (see startListening), so a change while
+// dictation is on means tearing the engine down and setting it up again the other way.
+-(void)voiceOverStatusChanged:(NSNotification*)note {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        DictationLog(@"VoiceOver running: %d", UIAccessibilityIsVoiceOverRunning());
+        [self restartAudioForChangedConfiguration];
+    });
+}
+
+// Drops the utterance and sets the engine up again from scratch (startListening reinstalls the
+// tap, and decides voice processing afresh). Paused dictation stays paused; the resume does it.
+-(void)restartAudioForChangedConfiguration {
+    BOOL wasListening = m_sfRecogRequest != nil && !m_isPaused; // not isListening: the engine may already have stopped
+    if (!wasListening && !m_isPaused)
+        return;
+    [self pauseListening];
+    [m_audioEngine stop];
+    [[m_audioEngine inputNode] removeTapOnBus: 0];
+    m_tapInstalled = NO;
+    if (wasListening)
+        [self listenForSpeech];
 }
 
 -(void)stopListening {
@@ -174,6 +191,11 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         m_sfRecogRequest = nil;
         m_recognitionTask = nil;
     }
+    // Give the audio system back: the mic indicator goes off, and other apps are told they may
+    // resume anything the session's activation had interrupted. Failure here is only worth a log.
+    NSError *error = nil;
+    if (![m_audioSession setActive: NO withOptions: AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error])
+        NSLog(@"Error AVAudioSession setActive:NO: %@", error);
     [self notifyStateChanged];
 }
 
@@ -338,6 +360,9 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 
 -(void)startListening {
     NSError *error = nil;
+    // Read before the session is touched below: whether someone else is playing decides voice
+    // processing, and the answer must not be coloured by our own activation.
+    BOOL otherAudioPlaying = m_audioSession.isOtherAudioPlaying;
     m_resumeAfterInterruption = NO; // the user (or the UI) is starting it; the interruption's end needn't
     if (m_isPaused) {
         [m_audioEngine startAndReturnError: &error];
@@ -353,44 +378,70 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         m_recognitionTask = nil;
         m_sfRecogRequest = nil;
     }
-    // The session must be a recording session before the engine is touched. Voice processing
-    // (below) routes output to the earpiece unless told otherwise, which would make VoiceOver and
-    // the story's sounds go quiet, hence DefaultToSpeaker. Play-and-record ignores Bluetooth
-    // headsets unless asked: the hands-free option admits a headset's own mic (and sends output
-    // to it), the A2DP option lets output use the music profile while the phone's mic records,
-    // and with both iOS picks what the headset supports. Wired headphones need no asking.
-    [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord mode: AVAudioSessionModeDefault
-                         options: AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetoothHFP
-                                | AVAudioSessionCategoryOptionAllowBluetoothA2DP
-                           error: &error];
-    if (error) {
-        NSLog(@"Error AVAudioSession setCategory: %@", error);
-        error = nil;
-    }
-    [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
-    if (error) {
-        NSLog(@"Error AVAudioSession setActive: %@", error);
-        error = nil;
-    }
-
     // The tap must match the input node's current format, so it is (re)installed whenever the
     // engine is down or a configuration change has removed it, with the engine stopped meanwhile.
+    // The session is configured here too, and only here: this method also runs after every
+    // committed command to start the next task, and reconfiguring and reactivating a live session
+    // each time is wasted work at best (and was a suspect for the player's music pausing).
     if (![m_audioEngine isRunning] || !m_tapInstalled) {
         if ([m_audioEngine isRunning])
             [m_audioEngine stop];
+
+        // The session must be a recording session before the engine is touched. Voice processing
+        // (below) routes output to the earpiece unless told otherwise, which would make VoiceOver
+        // and the story's sounds go quiet, hence DefaultToSpeaker. Play-and-record ignores
+        // Bluetooth headsets unless asked: the hands-free option admits a headset's own mic (and
+        // sends output to it), the A2DP option lets output use the music profile while the phone's
+        // mic records, and with both iOS picks what the headset supports. Wired headphones need
+        // no asking. MixWithOthers keeps the player's music or podcast going: Frotz plays nothing
+        // itself, so there is no reason to silence anyone. Record-only can't mix, nor host voice
+        // processing, which is why the category is play-and-record at all.
+        [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord mode: AVAudioSessionModeDefault
+                             options: AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetoothHFP
+                                    | AVAudioSessionCategoryOptionAllowBluetoothA2DP | AVAudioSessionCategoryOptionMixWithOthers
+                               error: &error];
+        if (error) {
+            NSLog(@"Error AVAudioSession setCategory: %@", error);
+            error = nil;
+        }
+        [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
+        if (error) {
+            NSLog(@"Error AVAudioSession setActive: %@", error);
+            error = nil;
+        }
+        DictationLog(@"audio session: category %@, mode %@, options 0x%lx, other audio playing %d, route %@",
+                     m_audioSession.category, m_audioSession.mode, (unsigned long)m_audioSession.categoryOptions,
+                     m_audioSession.isOtherAudioPlaying, m_audioSession.currentRoute);
+
         AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
         // Voice processing: echo cancellation against the device's own speaker output, plus noise
         // suppression and gain control, the same treatment FaceTime's microphone gets. Without the
         // echo cancellation VoiceOver's speech is picked up and transcribed as if the player had said
         // it, "VoiceOver on" included, and feeds back on every announcement after; the suppression
-        // helps anyone dictating somewhere noisy. It has to be set while the engine is stopped, it
-        // needs the output node in the graph, and it changes the input format, so the tap's format
-        // is read after it. Dictation still works without it if enabling fails.
-        if (!audioInputNode.isVoiceProcessingEnabled) {
+        // helps anyone dictating somewhere noisy. But the voice-processing unit interrupts other
+        // apps' audio when it starts, whatever the session's mixing options say (measured: the
+        // options took, the music still paused when the engine started), so it is a choice between
+        // it and the player's music. Taken when VoiceOver is on, which needs it, or when nothing
+        // else is playing, where it costs nothing; a VoiceOver change restarts the engine to redo
+        // it. It has to be set while the engine is stopped, it needs the output node in the graph,
+        // and it changes the input format, so the tap's format is read after it. Dictation still
+        // works without it if enabling fails.
+        BOOL wantVoiceProcessing = UIAccessibilityIsVoiceOverRunning() || !otherAudioPlaying;
+        DictationLog(@"voice processing %s (VoiceOver %d, other audio before setup %d, now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
+                     UIAccessibilityIsVoiceOverRunning(), otherAudioPlaying, m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
+        if (audioInputNode.isVoiceProcessingEnabled != wantVoiceProcessing) {
             (void)[m_audioEngine outputNode];
-            if (![audioInputNode setVoiceProcessingEnabled: YES error: &error]) {
-                NSLog(@"Error enabling voice processing on the audio input: %@", error);
+            if (![audioInputNode setVoiceProcessingEnabled: wantVoiceProcessing error: &error]) {
+                NSLog(@"Error %s voice processing on the audio input: %@", wantVoiceProcessing ? "enabling" : "disabling", error);
                 error = nil;
+            }
+        }
+        // While voice processing runs it also ducks any other audio that does start; iOS 17 can
+        // limit that to moments speech is detected, and to the shallowest level.
+        if (wantVoiceProcessing) {
+            if (@available(iOS 17.0, *)) {
+                AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = YES, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
+                audioInputNode.voiceProcessingOtherAudioDuckingConfiguration = ducking;
             }
         }
         AVAudioFormat *recordingFormat = [audioInputNode outputFormatForBus: 0];
@@ -418,6 +469,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     m_sfRecogRequest.requiresOnDeviceRecognition = YES;
     m_sfRecogRequest.contextualStrings = @[ @"look", @"grue", @"i", @"frotz", @"nitfol", @"aimfiz", @"filfre", @"gnusto", @"rezrov" ];
     m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest delegate: self];
+    DictationLog(@"recognition task started, other audio playing %d", m_audioSession.isOtherAudioPlaying);
 }
 
 // An utterance ends when the recognizer has sent no hypothesis for this long. Each hypothesis
