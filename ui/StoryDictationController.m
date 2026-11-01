@@ -177,6 +177,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         [m_speechCommitTimer invalidate];
         m_speechCommitTimer = nil;
     }
+    [self cancelLongIdleTimer];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(listenForSpeech) object:nil];
 
     m_isPaused = NO;
@@ -217,6 +218,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
     }
     // Every hypothesis, changed or not, means speech is still coming in.
     [self restartSilenceTimer];
+    [self restartLongIdleTimer];
 }
 
 -(NSUInteger)dictationDictionaryScore:(NSString *)text {
@@ -344,6 +346,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 // The partial text already shown stays in the input line to be finished or cleared on return.
 -(void)pauseListening {
     [self abandonUtterance];
+    [self cancelLongIdleTimer]; // nothing can be heard while paused; the clock restarts with the resume
     if ([m_audioEngine isRunning])
         [m_audioEngine pause];
     m_isPaused = YES;
@@ -355,7 +358,33 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 // state delegate, since the audio engine may refuse to start and leave nothing listening.
 -(void)listenForSpeech {
     [self startListening];
+    if ([self isListening])
+        [self restartLongIdleTimer];
     [self notifyStateChanged];
+}
+
+// The mic doesn't stay open indefinitely: with no speech heard for this long, dictation switches
+// itself off (mic icon and all), as if the player had tapped it. Reading, or a break, shouldn't
+// leave the recording indicator lit and the battery draining. Each hypothesis restarts the clock.
+static const NSTimeInterval kDictationLongIdleTimeout = 90;
+
+-(void)restartLongIdleTimer {
+    [m_longIdleTimer invalidate];
+    __weak StoryDictationController *weakSelf = self;
+    m_longIdleTimer = [NSTimer scheduledTimerWithTimeInterval: kDictationLongIdleTimeout repeats: NO block: ^(NSTimer *timer) {
+        [weakSelf longIdleTimerFired];
+    }];
+}
+
+-(void)cancelLongIdleTimer {
+    [m_longIdleTimer invalidate];
+    m_longIdleTimer = nil;
+}
+
+-(void)longIdleTimerFired {
+    m_longIdleTimer = nil;
+    DictationLog(@"idle for %.0fs, stopping", kDictationLongIdleTimeout);
+    [self stopListening];
 }
 
 -(void)startListening {

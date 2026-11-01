@@ -43,6 +43,7 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
     
     NSString *m_currentTranscription;
     NSTimer *m_speechCommitTimer; // fires after a stretch of silence; see restartSilenceTimer
+    NSTimer *m_longIdleTimer;     // stops listening after a long stretch with no speech at all; see restartLongIdleTimer
     BOOL m_isPaused;
     BOOL m_resumeAfterInterruption; // an audio interruption stopped listening; start again if told it has ended
     BOOL m_tapInstalled;   // the input node has our tap, in the format current when it was installed
