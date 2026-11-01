@@ -1156,6 +1156,13 @@ static void setColorTable(RichTextView *v) {
 #if EnableStoryDictation
 @interface StoryMainViewController () <StoryDictationStateDelegate>
 @end
+static const NSTimeInterval kDefaultDictationCommitDelay = 0.8; // seconds of quiet before speech becomes a command
+
+// Keeps a delay within the settings slider's range, whether it came from the slider or from a
+// preference written by some other build (or by hand).
+static NSTimeInterval PinnedDictationCommitDelay(NSTimeInterval delay) {
+    return MIN(MAX(delay, kDictationDelayMin), kDictationDelayMax);
+}
 #endif
 
 @implementation StoryMainViewController
@@ -2159,7 +2166,7 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     // Uncomment for layout test for future speech button
     // UIBarButtonItem* extraButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"speaker"] style:UIBarButtonItemStylePlain target:self action:nil];
     // extraButton.title = NSLocalizedString(@"Read Aloud", nil);
-    self.navigationItem.rightBarButtonItems = @[ m_kbdToggleItem, m_micButton]; // , extraButton ];
+    [self updateTrailingBarItems]; // the mic only when the "Story Voice Dictation" setting (loaded above) is on
 #else
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
 #endif
@@ -4029,6 +4036,10 @@ static int iosif_top_win_height = 1;
     [dict setObject: bgColorStr forKey: @"backgroundColor"];
     [dict setObject: [NSNumber numberWithBool: !m_completionEnabled] forKey: @"completionDisabled"];
     [dict setObject: @(m_canEditStoryInfo) forKey: @"canEditStoryInfo"];
+#if EnableStoryDictation
+    [dict setObject: @(m_dictationEnabled) forKey: @"dictationEnabled"];
+    [dict setObject: @(m_dictationCommitDelay) forKey: @"dictationCommitDelay"];
+#endif
     [dict setObject: @(iosif_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
     
@@ -4088,6 +4099,11 @@ static UIColor *scanColor(NSString *colorStr) {
         }
         m_completionEnabled = ![[dict objectForKey: @"completionDisabled"] boolValue];
         m_canEditStoryInfo = [[dict objectForKey: @"canEditStoryInfo"] boolValue];
+#if EnableStoryDictation
+        m_dictationEnabled = [[dict objectForKey: @"dictationEnabled"] boolValue]; // off until asked for
+        id delay = [dict objectForKey: @"dictationCommitDelay"];
+        m_dictationCommitDelay = delay ? PinnedDictationCommitDelay([delay doubleValue]) : kDefaultDictationCommitDelay;
+#endif
         id arp = [dict objectForKey: @"autorestore_preference"];
         if (arp)
             m_autoRestoreEnabled = [arp boolValue];
@@ -4878,11 +4894,47 @@ static void setScreenDims(char *storyNameBuf) {
     return m_dictationController.isListening || m_dictationController.isPaused;
 }
 
+// Settings: "Story Voice Dictation". Off by default; the mic bar button appears only while on, and
+// turning it off stops any dictation in progress.
+-(BOOL)isDictationEnabled {
+    return m_dictationEnabled;
+}
+
+-(void)setDictationEnabled:(BOOL)enabled {
+    if (enabled == m_dictationEnabled)
+        return;
+    m_dictationEnabled = enabled;
+    if (!enabled)
+        [m_dictationController stopListening];
+    [self updateTrailingBarItems];
+}
+
+// Settings: "Dictation Delay", the quiet time after which what was said becomes a command.
+-(NSTimeInterval)dictationCommitDelay {
+    return m_dictationCommitDelay;
+}
+
+-(void)setDictationCommitDelay:(NSTimeInterval)delay {
+    m_dictationCommitDelay = PinnedDictationCommitDelay(delay);
+    m_dictationController.silenceInterval = m_dictationCommitDelay;
+}
+
+// The trailing bar items: the keyboard toggle, with the mic after it while voice dictation is
+// enabled. The count feeds the vertical bar's capacity estimate, so the leading items follow.
+-(void)updateTrailingBarItems {
+    NSArray<UIBarButtonItem*> *items = m_dictationEnabled ? @[m_kbdToggleItem, m_micButton] : @[m_kbdToggleItem];
+    if (![self.navigationItem.rightBarButtonItems isEqualToArray: items]) {
+        self.navigationItem.rightBarButtonItems = items;
+        [self updateLeadingBarItemsForSpaceAnimated: NO];
+    }
+}
+
 -(void)toggleListenForSpeech {
     if (!m_dictationController) {
         m_dictationController = [[StoryDictationController alloc] init];
         m_dictationController.delegate = m_inputLine;
         m_dictationController.stateDelegate = self;
+        m_dictationController.silenceInterval = m_dictationCommitDelay;
     }
     if ([self dictationIsOn]) {
         [m_dictationController stopListening];
@@ -5060,6 +5112,10 @@ static void setScreenDims(char *storyNameBuf) {
     [self setFont: [UIFont fontWithName:kVariableWidthFontName size:m_fontSize]];
     m_completionEnabled = YES;
     m_canEditStoryInfo = NO;
+#if EnableStoryDictation
+    self.dictationEnabled = NO;
+    self.dictationCommitDelay = kDefaultDictationCommitDelay;
+#endif
     [m_storyBrowser unHideAll];
 }
 

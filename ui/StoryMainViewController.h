@@ -109,6 +109,10 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_completionEnabled;
     BOOL m_canEditStoryInfo;
     BOOL m_autoRestoreEnabled;
+#if EnableStoryDictation
+    BOOL m_dictationEnabled;              // settings: "Story Voice Dictation"; the mic bar button shows only when on
+    NSTimeInterval m_dictationCommitDelay; // settings: "Dictation Delay"; quiet time before speech becomes a command
+#endif
     BOOL m_kbLocked;
     BOOL m_ignoreWordSelection;
 
@@ -153,6 +157,10 @@ extern StoryBrowser *theStoryBrowser;
 -(void) hideNotes;
 @property (nonatomic, getter=isCompletionEnabled) BOOL completionEnabled;
 @property (nonatomic) BOOL canEditStoryInfo;
+#if EnableStoryDictation
+@property (nonatomic, getter=isDictationEnabled) BOOL dictationEnabled;
+@property (nonatomic) NSTimeInterval dictationCommitDelay;
+#endif
 -(void) activateKeyboard;
 -(void) toggleKeyboard;
 -(void) forceToggleKeyboard;

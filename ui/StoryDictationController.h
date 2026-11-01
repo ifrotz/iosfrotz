@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
     NSString *m_currentTranscription;
     NSTimer *m_speechCommitTimer; // fires after a stretch of silence; see restartSilenceTimer
     NSTimer *m_longIdleTimer;     // stops listening after a long stretch with no speech at all; see restartLongIdleTimer
+    NSTimeInterval m_silenceInterval;
     BOOL m_isPaused;
     BOOL m_resumeAfterInterruption; // an audio interruption stopped listening; start again if told it has ended
     BOOL m_tapInstalled;   // the input node has our tap, in the format current when it was installed
@@ -63,6 +64,9 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 
 @property (nonatomic, weak) id<FrotzInputDelegate> delegate;
 @property (nonatomic, weak) id<StoryDictationStateDelegate> stateDelegate;
+// How long the speaker must be quiet before what was said is accepted as a command. The settings
+// page's "Dictation Delay"; 0.8s unless set. Takes effect from the next utterance.
+@property (nonatomic) NSTimeInterval silenceInterval;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -35,6 +35,9 @@
 
 #define kFontSizeStr "Story Font Size (%d)"
 #define kNotesSizeStr "Notes Font Size (%d)"
+#if EnableStoryDictation
+#define kDictationDelayStr "Dictation Delay (%.1fs)"
+#endif
 
 #import "FrotzAlert.h"
 
@@ -74,6 +77,10 @@ typedef NS_ENUM(NSInteger, FrotzSettingsRow)
     kFrotzPrefsNotesFontSize,
     kFrotzPrefsWordCompletion,
     kFrotzPrefsStoryInfoEditing,
+#if EnableStoryDictation
+    kFrotzPrefsStoryVoiceDictation,
+    kFrotzPrefsDictationDelay,
+#endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
 #endif
@@ -88,7 +95,11 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             @[ @(kFrotzInfoAbout), @(kFrotzInfoGettingStarted), @(kFrotzInfoReleaseNotes), @(kFrotzInfoFileTransfer) ],
             @[ @(kFrotzPrefsTextColor), @(kFrotzPrefsBGColor), @(kFrotzPrefsStoryFont), @(kFrotzPrefsStoryFontSize) ],
             @[ @(kFrotzPrefsNotesFont), @(kFrotzPrefsNotesFontSize) ],
-            @[ @(kFrotzPrefsWordCompletion) ],
+            @[ @(kFrotzPrefsWordCompletion),
+#if EnableStoryDictation
+               @(kFrotzPrefsStoryVoiceDictation), @(kFrotzPrefsDictationDelay),
+#endif
+            ],
             @[ @(kFrotzPrefsStoryInfoEditing),
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
                @(kFrotzPrefsDropbox),
@@ -235,6 +246,13 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
     // in case the parent view draws with a custom color or gradient, use a transparent color
     m_switchCtl2.backgroundColor = [UIColor clearColor];
     [m_switchCtl2 setOn: [m_storyDelegate canEditStoryInfo]];
+
+#if EnableStoryDictation
+    m_dictationSwitchCtl = [[UISwitch alloc] initWithFrame:frame];
+    [m_dictationSwitchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_dictationSwitchCtl.backgroundColor = [UIColor clearColor];
+    [m_dictationSwitchCtl setOn: [m_storyDelegate isDictationEnabled]];
+#endif
 }
 
 - (void)switchAction:(id)sender
@@ -243,7 +261,23 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         [m_storyDelegate setCompletionEnabled: [sender isOn]];
     else if (sender == m_switchCtl2)
         [m_storyDelegate setCanEditStoryInfo: [sender isOn]];
+#if EnableStoryDictation
+    else if (sender == m_dictationSwitchCtl)
+        [m_storyDelegate setDictationEnabled: [sender isOn]];
+#endif
 }
+
+#if EnableStoryDictation
+// Applied as the slider moves; the label shows the value to a tenth of a second.
+- (void)dictationDelaySliderAction:(UISlider*)sender
+{
+    NSTimeInterval value = round([sender value] * 10) / 10;
+    if (value != [m_storyDelegate dictationCommitDelay]) {
+        m_dictationDelayCell.textLabel.text = [NSString stringWithFormat: @kDictationDelayStr, value];
+        [m_storyDelegate setDictationCommitDelay: value];
+    }
+}
+#endif
 
 - (void)storyFontSliderAction:(UISlider*)sender
 {
@@ -315,6 +349,15 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
     m_origNotesFontSize = (int)[m_notesDelegate fontSize];
     m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
 
+#if EnableStoryDictation
+    m_dictationDelaySliderCtl = [[UISlider alloc] initWithFrame:sframe];
+    [m_dictationDelaySliderCtl addTarget:self action:@selector(dictationDelaySliderAction:) forControlEvents:UIControlEventValueChanged];
+    m_dictationDelaySliderCtl.backgroundColor = [UIColor clearColor];
+    m_dictationDelaySliderCtl.minimumValue = kDictationDelayMin;
+    m_dictationDelaySliderCtl.maximumValue = kDictationDelayMax;
+    m_dictationDelaySliderCtl.continuous = YES;
+    m_dictationDelaySliderCtl.value = (float)[m_storyDelegate dictationCommitDelay];
+#endif
 }
 
 -(void)colorPicker:(ColorPicker*)picker selectedColor:(UIColor*)color {
@@ -397,6 +440,15 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         case kFrotzLibrarySection:  return NSLocalizedString(@"Library", @"");
         default:                    return nil; // the reset button stands alone
     }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
+{
+#if EnableStoryDictation
+    if (section == kFrotzInputSection)
+        return NSLocalizedString(@"Dictation Delay is how long Frotz waits after you stop speaking before sending what you said as a command.", @"");
+#endif
+    return nil;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -496,6 +548,17 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             cell.textLabel.text = @"Story Info Editing";
             cell.accessoryView = m_switchCtl2;
             break;
+#if EnableStoryDictation
+        case kFrotzPrefsStoryVoiceDictation:
+            cell.textLabel.text = @"Story Voice Dictation";
+            cell.accessoryView = m_dictationSwitchCtl;
+            break;
+        case kFrotzPrefsDictationDelay:
+            m_dictationDelayCell = cell;
+            cell.textLabel.text = [NSString stringWithFormat: @kDictationDelayStr, [m_storyDelegate dictationCommitDelay]];
+            cell.accessoryView = m_dictationDelaySliderCtl;
+            break;
+#endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
         case kFrotzPrefsDropbox:
             cell.textLabel.text = @"Dropbox Settings";
@@ -569,6 +632,10 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
                     m_storyFontSliderCtl.value = (float)m_origStoryFontSize;
                     m_notesFontSliderCtl.value = (float)m_origNotesFontSize;
                     [m_switchCtl setOn: [m_storyDelegate isCompletionEnabled]];
+#if EnableStoryDictation
+                    [m_dictationSwitchCtl setOn: [m_storyDelegate isDictationEnabled]];
+                    m_dictationDelaySliderCtl.value = (float)[m_storyDelegate dictationCommitDelay];
+#endif
                     [[self tableView] reloadData];
                 }
             });

@@ -46,10 +46,13 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         && [error.domain isEqualToString: kSpeechAssistantErrorDomain];
 }
 
+static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
+
 @implementation StoryDictationController
 
 @synthesize delegate = m_delegate;
 @synthesize stateDelegate = m_stateDelegate;
+@synthesize silenceInterval = m_silenceInterval;
 
 -(void)notifyStateChanged {
     [m_stateDelegate dictationListeningStateChanged: self];
@@ -81,6 +84,7 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
         
         m_audioEngine = [[AVAudioEngine alloc] init];
         m_audioSession = [AVAudioSession sharedInstance];
+        m_silenceInterval = kDictationDefaultSilenceInterval;
 
         // The system can take the audio away or reconfigure it under us; see the handlers below.
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
@@ -501,14 +505,12 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     DictationLog(@"recognition task started, other audio playing %d", m_audioSession.isOtherAudioPlaying);
 }
 
-// An utterance ends when the recognizer has sent no hypothesis for this long. Each hypothesis
-// restarts the timer, so it only ever fires once, after the speaker has stopped.
-static const NSTimeInterval kDictationSilenceInterval = 0.8;
-
+// An utterance ends when the recognizer has sent no hypothesis for silenceInterval. Each
+// hypothesis restarts the timer, so it only ever fires once, after the speaker has stopped.
 -(void)restartSilenceTimer {
     [m_speechCommitTimer invalidate];
     __weak StoryDictationController *weakSelf = self;
-    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval: kDictationSilenceInterval repeats: NO block: ^(NSTimer *timer) {
+    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval: m_silenceInterval repeats: NO block: ^(NSTimer *timer) {
         [weakSelf silenceTimerFired];
     }];
 }
