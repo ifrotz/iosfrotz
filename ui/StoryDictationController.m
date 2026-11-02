@@ -167,16 +167,23 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
 
 // Drops the utterance and sets the engine up again from scratch (startListening reinstalls the
 // tap, and decides voice processing afresh). Paused dictation stays paused; the resume does it.
+//
+// The engine is replaced rather than reused, and the audio session is left active throughout.
+// Toggling voice processing on an engine that has already run is what Apple warns against, and
+// doing it when VoiceOver came on mid-dictation left VoiceOver's speech choppy with pops behind
+// it, where starting dictation with VoiceOver already on (a fresh engine, processing set before
+// its first start) was clean; a new engine makes the two paths the same. Keeping the session
+// active spares VoiceOver, which is speaking "VoiceOver on" at that moment, the interruption a
+// deactivate-and-reactivate would be.
 -(void)restartAudioForChangedConfiguration {
     BOOL wasListening = m_sfRecogRequest != nil && !m_isPaused; // not isListening: the engine may already have stopped
     if (!wasListening && !m_isPaused)
         return;
-    [self pauseListening];
-    [m_audioEngine stop];
-    [[m_audioEngine inputNode] removeTapOnBus: 0];
-    m_tapInstalled = NO;
+    [self abandonUtterance];
+    [self cancelLongIdleTimer];
+    [self rebuildAudioEngine];
     if (wasListening)
-        [self listenForSpeech];
+        [self listenForSpeech]; // the same full setup a fresh start gets; the session is already active
 }
 
 -(void)stopListening {
@@ -477,11 +484,15 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
             error = nil;
         }
     }
-    // While voice processing runs it also ducks any other audio that does start; iOS 17 can
-    // limit that to moments speech is detected, and to the shallowest level.
+    // While voice processing runs it also ducks any other audio that does start. iOS 17 lets the
+    // ducking be set to the shallowest level, and that is all that is asked: a steady slight dip.
+    // "Advanced" ducking, which ducks only while the unit hears local speech, was tried and made
+    // VoiceOver choppy: the echo canceller never removes all of VoiceOver's own voice from the
+    // mic, so the unit took the remainder for speech and ducked VoiceOver in and out in time
+    // with itself, most noticeably as it began reading a response.
     if (wantVoiceProcessing) {
         if (@available(iOS 17.0, *)) {
-            AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = YES, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
+            AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = NO, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
             audioInputNode.voiceProcessingOtherAudioDuckingConfiguration = ducking;
         }
     }
