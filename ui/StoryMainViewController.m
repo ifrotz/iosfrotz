@@ -2051,6 +2051,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     [m_background bringSubviewToFront: m_inputLine];
     
     [m_inputLine setAutocorrectionType: UITextAutocorrectionTypeNo];
+    if (@available(iOS 18.0, *)) // no Writing Tools entry (the Apple Intelligence glyph) in the edit menu: nothing to proofread on a command line
+        m_inputLine.writingToolsBehavior = UIWritingToolsBehaviorNone;
     [m_inputLine setDelegate: self];
     [m_storyView setDelegate: self];
     
@@ -4701,12 +4703,13 @@ static void setScreenDims(char *storyNameBuf) {
     return inputsSinceSaveRestore != 0;
 }
 
-// Drop the system AutoFill group (contacts, passwords, ...) from the input line's edit menu; it is
-// never useful for a parser command line. Paste and the other suggested actions are kept.
-- (UIMenu *)textField:(UITextField *)textField editMenuForCharactersInRange:(NSRange)range
-     suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(16.0)) {
-    NSMutableArray<UIMenuElement *> *actions = [NSMutableArray arrayWithCapacity: [suggestedActions count]];
-    for (UIMenuElement *element in suggestedActions) {
+// The system's suggested edit-menu elements minus the AutoFill group (contacts, passwords, ...),
+// which is never useful for a parser command line, wherever it sits in the hierarchy. Paste and
+// the other suggestions are kept.
+- (NSArray<UIMenuElement *> *)menuElementsWithoutAutoFill:(NSArray<UIMenuElement *> *)elements API_AVAILABLE(ios(16.0)) {
+    NSMutableArray<UIMenuElement *> *kept = [NSMutableArray arrayWithCapacity: [elements count]];
+    for (UIMenuElement *element in elements) {
+        UIMenuElement *keep = element;
         if ([element isKindOfClass: [UIMenu class]]) {
             UIMenu *menu = (UIMenu *)element;
             BOOL isAutoFill;
@@ -4716,10 +4719,31 @@ static void setScreenDims(char *storyNameBuf) {
                 isAutoFill = [menu.title isEqualToString: @"AutoFill"];
             if (isAutoFill)
                 continue;
+            keep = [menu menuByReplacingChildren: [self menuElementsWithoutAutoFill: menu.children]];
         }
-        [actions addObject: element];
+        [kept addObject: keep];
     }
-    return [UIMenu menuWithChildren: actions];
+    return kept;
+}
+
+// The input line's edit menu. None at all while the input helper is up: the tap that brought the
+// helper up was not a request for a menu, and the two fought for the same spot. iOS 26 asks
+// through the ranges variant below and not the older single-range one, which is why the AutoFill
+// filter stopped applying there; both variants come here.
+- (UIMenu *)inputLineEditMenuWithSuggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(16.0)) {
+    if ([self inputHelperShown])
+        return [UIMenu menuWithChildren: @[]];
+    return [UIMenu menuWithChildren: [self menuElementsWithoutAutoFill: suggestedActions]];
+}
+
+- (UIMenu *)textField:(UITextField *)textField editMenuForCharactersInRange:(NSRange)range
+     suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(16.0)) {
+    return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
+}
+
+- (UIMenu *)textField:(UITextField *)textField editMenuForCharactersInRanges:(NSArray<NSValue *> *)ranges
+     suggestedActions:(NSArray<UIMenuElement *> *)suggestedActions API_AVAILABLE(ios(26.0)) {
+    return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
