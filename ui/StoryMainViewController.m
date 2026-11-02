@@ -1705,8 +1705,10 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 #if EnableStoryDictation
     // Dictation goes to the input line, so it pauses while the notes page is up. Before the early
-    // return below: this must run on every call, not just when the toggle's titles change.
-    [self pauseOrResumeDictation: !notesVisible];
+    // return below: this must run on every call, not just when the toggle's titles change. A
+    // dialog over the input (file chooser, settings sheet) also keeps it paused: presenting one
+    // hides the keyboard, which lands here, and this used to resume dictation under the dialog.
+    [self pauseOrResumeDictation: !notesVisible && !m_dialogCoversInput];
 #endif
 
     BOOL locked = m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder];
@@ -1915,10 +1917,12 @@ extern void gli_ios_set_focus(window_t *winNum);
 // KeyboardOwner: the settings sheet. Like the file chooser, it pauses dictation and resumes it
 // when it goes; the sheet doesn't trigger viewWillDisappear in portrait, hence these.
 -(void)settingsWillPresent {
+    m_dialogCoversInput = YES; // see showKeyboardLockState
     [self pauseOrResumeDictation: NO];
 }
 
 -(void)settingsDidDismiss {
+    m_dialogCoversInput = NO;
     [self pauseOrResumeDictation: YES];
 }
 #endif
@@ -2949,6 +2953,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
 #if EnableStoryDictation
+    m_dialogCoversInput = YES; // see showKeyboardLockState
     [self pauseOrResumeDictation: NO];
 #endif
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
@@ -2977,6 +2982,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 #if EnableStoryDictation
     // Paused in openFileBrowser:; the chooser is gone, so listen again.
     // (activeKeyboard above will above will do it only if keyboard is not locked).
+    m_dialogCoversInput = NO;
     [self pauseOrResumeDictation: YES];
 #endif
 }

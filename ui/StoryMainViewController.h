@@ -138,6 +138,7 @@ extern StoryBrowser *theStoryBrowser;
     StoryDictationCuePlayer *m_dictationCuePlayer; // made on first use
     NSInteger m_dictationCuedState;   // the state the last cue announced; see cueDictationStateChange
     BOOL m_dictationStartedByUser;    // the mic button asked for the start now in progress
+    BOOL m_dialogCoversInput;         // the file chooser or settings sheet is up; dictation stays paused however the keyboard moves
 #endif
 }
 
