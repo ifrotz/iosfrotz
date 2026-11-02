@@ -18,6 +18,15 @@
 // shown for it stays; the next hypothesis begins a new utterance after it rather than revising it.
 -(void)abandonDictation;
 -(BOOL)validateWord:(NSString*)word;
+// Whether the story is waiting for a single key rather than a line, so the recognizer can be
+// primed for letter names and the few words that stand for keys. Asked when a task starts.
+-(BOOL)dictationExpectsSingleKey;
+// How directly text names a key, for choosing among the recognizer's alternative transcriptions
+// at a key prompt: 2 for a bare letter or digit ("Q"), 1 for a word that stands for a key or
+// spells a letter's name ("yes", "space", "cue", "you"), 0 for anything else, which would only
+// lend its first letter. Bare letters rank above names because a name can be a mishearing of a
+// different letter ("you" for Q), while a bare letter is the recognizer's own reading of one.
+-(NSUInteger)dictationKeyScore:(NSString*)text;
 #endif
 -(BOOL)isFirstResponder;
 @end

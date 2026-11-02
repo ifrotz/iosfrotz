@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
     NSString *m_lastDictationShown;  // typed part and transcript as acceptDictation:final: last set them
     NSString *m_dictationSuffix;     // what followed the transcript at the last hypothesis (tapped or typed words)
     BOOL m_dictationHold;            // the player opened the input helper since the last words: don't submit the final result
+    BOOL m_lastInputRequestWasKey;   // the story's most recent input request was for a single key; see dictationExpectsSingleKey
 #endif
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;

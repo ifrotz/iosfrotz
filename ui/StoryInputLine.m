@@ -142,6 +142,102 @@
     return NO;
 }
 
+// Between one key read and the next the interpreter disables input for a moment, so a hypothesis
+// arriving then would see neither mode; the last mode the story asked for is remembered across
+// that gap. Otherwise a letter dictated at a menu was shown as line text by one hypothesis and
+// sent as a key by the final result.
+-(BOOL)dictationExpectsSingleKey {
+    if (ipzAllowInput & kIPZRequestInput)
+        m_lastInputRequestWasKey = (ipzAllowInput & kIPZNoEcho) || cwin == 1;
+    return m_lastInputRequestWasKey;
+}
+
+static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score);
+
+-(NSUInteger)dictationKeyScore:(NSString*)text {
+    NSUInteger score = 0;
+    KeyForSpokenText(text, &score);
+    return score;
+}
+
+// The key for what was said at a single-key prompt ("press any key", a yes/no question, a menu).
+// Words a player would naturally say for a key map to it; anything else gives its first letter,
+// so "Q" or "quit" is 'q' (and so does the NATO alphabet: "november" is 'n'). Letter names the
+// recognizer renders as words ("bee", "why", "are", "in") map to their letter; a leading "letter"
+// or "the letter" is dropped. The recognizer is primed with the letters themselves for these
+// prompts (StoryDictationController), so this is the backstop. Case is dropped: key prompts in IF
+// take either, and menus list lower-case letters. `score`, if asked for, is how directly the text
+// named its key: 2 a bare letter or digit, 1 a word for a key or a letter's name, 0 a first letter
+// borrowed (see dictationKeyScore: in InputHelper.h).
+static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
+    if (score)
+        *score = 0;
+    NSString *word = [[spoken stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
+    word = [word stringByTrimmingCharactersInSet: [NSCharacterSet punctuationCharacterSet]];
+    for (NSString *prefix in @[ @"the letter ", @"letter " ])
+        if ([word hasPrefix: prefix])
+            word = [word substringFromIndex: [prefix length]];
+    if (![word length])
+        return @"";
+    static NSDictionary<NSString*, NSString*> *keys;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        keys = @{ @"yes": @"y", @"yeah": @"y", @"yep": @"y", @"yup": @"y",
+                  @"no": @"n", @"nope": @"n",
+                  // letter names as the recognizer tends to spell them
+                  @"be": @"b", @"bee": @"b", @"see": @"c", @"sea": @"c", @"dee": @"d", @"gee": @"g",
+                  @"jay": @"j", @"kay": @"k", @"el": @"l", @"em": @"m", @"en": @"n", @"in": @"n",
+                  @"oh": @"o", @"pee": @"p", @"pea": @"p", @"queue": @"q", @"cue": @"q", @"are": @"r",
+                  @"ess": @"s", @"tee": @"t", @"tea": @"t", @"you": @"u", @"vee": @"v",
+                  @"double you": @"w", @"ex": @"x", @"why": @"y", @"zee": @"z", @"zed": @"z",
+                  @"space": @" ", @"continue": @" ", @"any key": @" ", @"more": @" ",
+                  @"enter": @"\n", @"return": @"\n",
+                  @"escape": @"\x1b", @"cancel": @"\x1b",
+                  @"backspace": @"\b", @"delete": @"\b",
+                  @"up": @ZC_IPS_ARROW_UP, @"down": @ZC_IPS_ARROW_DOWN,
+                  @"left": @ZC_IPS_ARROW_LEFT, @"right": @ZC_IPS_ARROW_RIGHT,
+                  @"zero": @"0", @"one": @"1", @"two": @"2", @"three": @"3", @"four": @"4",
+                  @"five": @"5", @"six": @"6", @"seven": @"7", @"eight": @"8", @"nine": @"9" };
+    });
+    NSString *key = keys[word];
+    if (key) {
+        if (score)
+            *score = 1;
+        return key;
+    }
+    if ([word length] == 1) { // a letter or digit as such
+        if (score)
+            *score = 2;
+        return word;
+    }
+    return [word substringWithRange: [word rangeOfComposedCharacterSequenceAtIndex: 0]];
+}
+
+// The story is waiting for a single key. Nothing is shown in the line, for partial results or the
+// final one: the story's own reaction to the key is the feedback, as when a key is typed. (Showing
+// the key was tried: partial results gave the recognizer's first guess, so "P" appeared as H and
+// then changed; and a key shown after sending was blanked and redrawn by the caret-resize trick
+// the controller applies when the story's next key prompt arrives, then sat in the line when a key
+// ended a menu.) The final result's key (KeyForSpokenText, the controller having picked the
+// alternative that best names a key) is fed as a typed key is, by the same delayed path
+// keyboardInput:shouldInsertText: uses. It is not submitted as a line: that would feed the whole
+// utterance a character at a time, the prompt taking the first and the story's next line input
+// starting with the rest. None of the line dictation state applies, so it is reset.
+-(void)acceptDictationAsKey:(NSString*)string final:(BOOL)isFinal {
+    m_textBeforeDictation = nil;
+    m_lastDictationShown = nil;
+    m_dictationSuffix = nil;
+    m_dictationHold = NO;
+    if (!isFinal)
+        return;
+    NSString *key = KeyForSpokenText(string, NULL);
+#if StoryDictationDebugLogging
+    NSLog(@"key for \"%@\": %@", string, key);
+#endif
+    if ([key length])
+        [self performSelector: @selector(delayedInput:) withObject: key afterDelay: 0.04];
+}
+
 // Dictation is added to whatever was typed before the utterance began rather than put in its
 // place. The typed part is captured when the utterance's first hypothesis arrives and kept for
 // the rest of it, each hypothesis replacing the previous one after it. Anything added after the
@@ -161,7 +257,14 @@
 // unchanged since the one before means the last thing the player did was speak. Opening the input
 // helper counts as an edit too (holdDictationCommit), though it changes no text: the player has
 // gone to pick a word, and speech again re-arms in the same way.
+//
+// When the story is waiting for a single key instead of a line, the utterance becomes one key;
+// see acceptDictationAsKey:final:.
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal {
+    if ([self dictationExpectsSingleKey]) {
+        [self acceptDictationAsKey: string final: isFinal];
+        return;
+    }
     NSString *current = self.text ?: @"";
     NSString *suffix = @"";
     BOOL rebased = NO;

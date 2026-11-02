@@ -267,9 +267,24 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
     NSArray<SFTranscription *> *transcriptions = [result transcriptions];
     int i = 0, bestIndex = -1;
     NSUInteger bestScore = 0;
+    BOOL wantKey = [m_delegate dictationExpectsSingleKey];
     //SFTranscription *transcription = [result bestTranscription];
     for (SFTranscription *transcription in transcriptions) {
         NSString *text = [transcription formattedString];
+        if (wantKey) {
+            // A key prompt: the recognizer's first choice for a spoken letter is often a common
+            // word ("in" for N, "you" for Q), with the letter itself further down its list. The
+            // alternative that names a key most directly wins, a bare letter over a word for one,
+            // the earlier of equals; the game's dictionary is no guide here.
+            NSUInteger score = [m_delegate dictationKeyScore: text];
+            DictationLog(@"  Count: %d Key score: %lu Recog: %@", i, (unsigned long)score, text);
+            if (score > bestScore) {
+                bestScore = score;
+                bestIndex = i;
+            }
+            ++i;
+            continue;
+        }
         NSUInteger score = [self dictationDictionaryScore: text];
         DictationLog(@"  Count: %d Score: %lu Recog: %@", i, score, text);
         if (score > bestScore) {
@@ -576,13 +591,39 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     m_sfRecogRequest = [[SFSpeechAudioBufferRecognitionRequest alloc] init];
     m_sfRecogRequest.shouldReportPartialResults = YES;
     m_sfRecogRequest.requiresOnDeviceRecognition = YES;
-    m_sfRecogRequest.contextualStrings = @[ @"look", @"grue", @"i", @"frotz", @"nitfol", @"aimfiz", @"filfre", @"gnusto", @"rezrov" ];
+    if ([m_delegate dictationExpectsSingleKey]) {
+        // A key prompt: the player will say a letter's name, "yes" or "no", or a key's name. Left
+        // to itself the recognizer hears common words instead ("in" for N, "the" for P), so the
+        // letters and key words are offered as context, and the task is told to expect a short
+        // confirmation-style reply. Decided per task, so a prompt that arrives mid-task is
+        // primed from the next utterance on.
+        m_sfRecogRequest.contextualStrings = [self singleKeyContextualStrings];
+        m_sfRecogRequest.taskHint = SFSpeechRecognitionTaskHintConfirmation;
+    } else
+        m_sfRecogRequest.contextualStrings = @[ @"look", @"grue", @"i", @"frotz", @"nitfol", @"aimfiz", @"filfre", @"gnusto", @"rezrov" ];
     m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest delegate: self];
     DictationLog(@"recognition task started, other audio playing %d", m_audioSession.isOtherAudioPlaying);
 }
 
 // An utterance ends when the recognizer has sent no hypothesis for silenceInterval. Each
 // hypothesis restarts the timer, so it only ever fires once, after the speaker has stopped.
+// The letters A to Z, the digits, and the words KeyForSpokenText (StoryInputLine) understands.
+-(NSArray<NSString*>*)singleKeyContextualStrings {
+    static NSArray<NSString*> *strings;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSMutableArray *s = [NSMutableArray arrayWithCapacity: 60];
+        for (unichar c = 'A'; c <= 'Z'; c++)
+            [s addObject: [NSString stringWithCharacters: &c length: 1]];
+        for (unichar c = '0'; c <= '9'; c++)
+            [s addObject: [NSString stringWithCharacters: &c length: 1]];
+        [s addObjectsFromArray: @[ @"yes", @"no", @"space", @"continue", @"more", @"any key", @"enter", @"return",
+                                   @"escape", @"cancel", @"backspace", @"delete", @"up", @"down", @"left", @"right" ]];
+        strings = s;
+    });
+    return strings;
+}
+
 -(void)deferCommit {
     if (m_speechCommitTimer) {
         DictationLog(@"commit deferred");
@@ -590,10 +631,16 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     }
 }
 
+// At a key prompt the utterance is one word, or "the letter" and one, so the quiet time before it
+// is taken as finished can be much shorter than the Settings value meant for whole commands: long
+// enough for the recognizer to settle on a letter and for the gap between words, no longer.
+static const NSTimeInterval kDictationKeySilenceInterval = 0.4;
+
 -(void)restartSilenceTimer {
     [m_speechCommitTimer invalidate];
+    NSTimeInterval interval = [m_delegate dictationExpectsSingleKey] ? MIN(kDictationKeySilenceInterval, m_silenceInterval) : m_silenceInterval;
     __weak StoryDictationController *weakSelf = self;
-    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval: m_silenceInterval repeats: NO block: ^(NSTimer *timer) {
+    m_speechCommitTimer = [NSTimer scheduledTimerWithTimeInterval: interval repeats: NO block: ^(NSTimer *timer) {
         [weakSelf silenceTimerFired];
     }];
 }
