@@ -25,10 +25,12 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 // Told whenever listening starts, pauses, resumes or stops, whether asked to or on its own (the
 // audio engine failing to start, say); read isListening and isPaused for the new state. Lets the
 // mic button show what the recognizer is actually doing. Also told when the system recognizer
-// goes away while dictation is on, after listening has been stopped, so the user can be told.
+// goes away while dictation is on, after listening has been stopped, so the user can be told;
+// and when the microphone couldn't be started at all, so a tap on the mic never fails silently.
 @protocol StoryDictationStateDelegate <NSObject>
 -(void)dictationListeningStateChanged:(StoryDictationController*)controller;
 -(void)dictationBecameUnavailable:(StoryDictationController*)controller;
+-(void)dictationFailedToStart:(StoryDictationController*)controller;
 @end
 
 // Runs on-device speech recognition on the microphone and hands the transcriptions to its
@@ -60,6 +62,9 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 -(void)pauseListening;
 -(BOOL)isListening;
 -(BOOL)isPaused;
+// Listening is off but due back without the player asking: paused by the UI, or taken by an audio
+// interruption that may hand it back. Distinguishes a pause from a stop for the cues.
+-(BOOL)willResume;
 -(void)stopListening;
 
 @property (nonatomic, weak) id<FrotzInputDelegate> delegate;
@@ -67,6 +72,25 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 // How long the speaker must be quiet before what was said is accepted as a command. The settings
 // page's "Dictation Delay"; 0.8s unless set. Takes effect from the next utterance.
 @property (nonatomic) NSTimeInterval silenceInterval;
+@end
+
+// Audible and felt cues for the state changes the mic button shows; the main view controller
+// decides which to play from the state delegate's callbacks.
+typedef NS_ENUM(NSInteger, StoryDictationCue) {
+    kStoryDictationCueStarted,  // the player started listening: two quick high notes
+    kStoryDictationCueResumed,  // listening came back by itself (notes page closed, a call ended): one high note
+    kStoryDictationCuePaused,   // listening is off but will come back by itself: one low note
+    kStoryDictationCueStopped,  // listening is over until the player starts it again: two quick low notes
+    kStoryDictationCueCount
+};
+
+// Plays each cue as a short tone and a haptic together. The tones are WAV files in the app bundle
+// played through System Sound Services, so they need no audio session of ours and don't light the
+// mic indicator when played after dictation has stopped; the haptic covers a phone in silent mode
+// (iOS gives no way to ask about the ring/silent switch, and tones through the recording session
+// ignore it anyway).
+@interface StoryDictationCuePlayer : NSObject
+-(void)playCue:(StoryDictationCue)cue;
 @end
 
 NS_ASSUME_NONNULL_END

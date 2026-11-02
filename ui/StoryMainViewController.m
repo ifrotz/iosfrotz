@@ -2162,6 +2162,9 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #if EnableStoryDictation
     m_micButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"mic"] style:UIBarButtonItemStylePlain target:self action:@selector(micButtonPressed)];
     m_micButton.title = NSLocalizedString(@"Start Listening", nil);
+    // Tells VoiceOver to stay quiet after the tap rather than announce the button's new state,
+    // which would otherwise be the first thing the recognizer hears when listening starts.
+    m_micButton.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
 
     // Uncomment for layout test for future speech button
     // UIBarButtonItem* extraButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"speaker"] style:UIBarButtonItemStylePlain target:self action:nil];
@@ -4950,12 +4953,18 @@ static void setScreenDims(char *storyNameBuf) {
         case kStoryDictationAvailable:
             break;
     }
+    m_dictationStartedByUser = YES; // so the cue is the full start, not a resume
     [m_dictationController listenForSpeech];
-    // The mic button follows in dictationListeningStateChanged:.
+    // The mic button and the cue follow in dictationListeningStateChanged:.
 }
 
 -(void)dictationBecameUnavailable:(StoryDictationController*)controller {
     [self explainDictationProblem: NSLocalizedString(@"Speech recognition became unavailable, so dictation has stopped.", nil) offerSettings: NO];
+}
+
+// The audio engine couldn't be started even after being rebuilt; the console has the reason.
+-(void)dictationFailedToStart:(StoryDictationController*)controller {
+    [self explainDictationProblem: NSLocalizedString(@"The microphone couldn't be started. Try again in a moment; if it keeps happening, restart Frotz.", nil) offerSettings: NO];
 }
 
 -(void)stopListening {
@@ -4965,12 +4974,73 @@ static void setScreenDims(char *storyNameBuf) {
 // The mic button reflects what the recognizer is actually doing, not what was last asked of it:
 // it goes back to "Start Listening" when the audio engine fails to start as well as on a tap.
 -(void)dictationListeningStateChanged:(StoryDictationController*)controller {
+    [self updateMicButton];
+    // The cue waits for the run loop so that a pause and resume made in one go (the engine
+    // restarting for a route or VoiceOver change) compare as no change and sound as nothing.
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(cueDictationStateChange) object: nil];
+    [self performSelector: @selector(cueDictationStateChange) withObject: nil afterDelay: 0 inModes: @[NSRunLoopCommonModes]];
+}
+
+// The mic shows what the recognizer is doing: filled while on (listening, or paused by the UI
+// and due to resume; the pause also disables the button, see pauseOrResumeDictation:), the
+// outline when off.
+-(void)updateMicButton {
     BOOL on = [self dictationIsOn];
+    BOOL paused = on && [m_dictationController isPaused];
     [m_micButton setImage: [UIImage systemImageNamed: on ? @"mic.fill" : @"mic"]];
     m_micButton.title = on ? NSLocalizedString(@"Stop Listening", nil) : NSLocalizedString(@"Start Listening", nil);
+    m_micButton.accessibilityValue = paused ? NSLocalizedString(@"Paused", nil) : nil;
+}
+
+// Dictation as the cues see it: listening, off but due to resume by itself (paused for the notes
+// page or settings, or taken by an audio interruption that may give it back), or off for good.
+typedef NS_ENUM(NSInteger, DictationCueState) {
+    kDictationCueStateOff,
+    kDictationCueStatePaused,
+    kDictationCueStateListening,
+};
+
+-(DictationCueState)dictationCueState {
+    if ([m_dictationController isListening])
+        return kDictationCueStateListening;
+    if ([m_dictationController willResume])
+        return kDictationCueStatePaused;
+    return kDictationCueStateOff;
+}
+
+// Plays the cue for the change since the last one; the four are symmetrical. Listening beginning
+// is the double start cue if the mic button asked for it, else the single resume cue (back from
+// the notes page or settings, an audio interruption over). Listening going away is the single
+// pause cue if it will come back by itself, else the double stop cue (the mic button, leaving for
+// the Story List, the idle timeout, the app going to the background). A pause that becomes a stop
+// (leaving for the Story List with the notes page up) sounds the stop cue too: the player heard
+// only a pause. A start that failed leaves the state as it was, and nothing sounds; the button
+// shows it.
+-(void)cueDictationStateChange {
+    DictationCueState state = [self dictationCueState];
+    DictationCueState was = (DictationCueState)m_dictationCuedState;
+    BOOL byUser = m_dictationStartedByUser;
+    m_dictationStartedByUser = NO;
+    m_dictationCuedState = state;
+    if (state == was)
+        return;
+    StoryDictationCue cue;
+    if (state == kDictationCueStateListening)
+        cue = byUser ? kStoryDictationCueStarted : kStoryDictationCueResumed;
+    else if (state == kDictationCueStatePaused)
+        cue = kStoryDictationCuePaused;
+    else
+        cue = kStoryDictationCueStopped;
+    if (!m_dictationCuePlayer)
+        m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
+    [m_dictationCuePlayer playCue: cue];
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
+    // While the input line is covered (the notes page, say) there is nothing to dictate into, so
+    // the mic button is disabled rather than hidden: it stays in place, dimmed by UIKit, and
+    // shows whether dictation will resume (filled) or not (outline) when the page goes.
+    m_micButton.enabled = inputLineIsActive;
     if (m_dictationController) {
         if (inputLineIsActive && [m_dictationController isPaused])
             [m_dictationController listenForSpeech];

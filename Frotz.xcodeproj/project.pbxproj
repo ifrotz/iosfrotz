@@ -344,6 +344,7 @@
 		44DA422315E987A2007F61DA /* zcode-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA421515E987A2007F61DA /* zcode-640.png */; };
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
 		44E0CC5A30956B4D00A5EA81 /* StoryDictationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */; };
+		44E0CC5D309819FA00A5EA81 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 44E0CC5C309819FA00A5EA81 /* Sounds */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
 		44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */; };
 		44F2F5B811447AE0001AE868 /* CompletionLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 44F2F5B711447AE0001AE868 /* CompletionLabel.m */; };
@@ -1186,6 +1187,7 @@
 		44E0660B0FE76FEC0003A36B /* InputHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InputHelper.m; sourceTree = "<group>"; };
 		44E0CC5830956B4D00A5EA81 /* StoryDictationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StoryDictationController.h; sourceTree = "<group>"; };
 		44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StoryDictationController.m; sourceTree = "<group>"; };
+		44E0CC5C309819FA00A5EA81 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = "<group>"; };
 		44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReleaseNotes.h; sourceTree = "<group>"; };
 		44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReleaseNotes.m; sourceTree = "<group>"; };
 		44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
@@ -1445,6 +1447,7 @@
 				447DF3B9123C136500689076 /* StoryDetailsController.xib */,
 				4414E2D8104CDA0B008C3F56 /* FrotzWordPicker.xib */,
 				445484C71B1D04C200E8EE7B /* Images.xcassets */,
+				44E0CC5C309819FA00A5EA81 /* Sounds */,
 				44AF586A19491BB900E3EF8A /* locale */,
 				446B9D960E2059E3002BDD65 /* Games */,
 				8D1107310486CEB800E47090 /* Info.plist */,
@@ -2516,6 +2519,7 @@
 				44DA421F15E987A2007F61DA /* glulx-640.png in Resources */,
 				44A45D6A1D7E56A000C073D9 /* tads-320.png in Resources */,
 				44DA422015E987A2007F61DA /* zcode-64.png in Resources */,
+				44E0CC5D309819FA00A5EA81 /* Sounds in Resources */,
 				44DA422115E987A2007F61DA /* zcode-128.png in Resources */,
 				44DA422215E987A2007F61DA /* zcode-320.png in Resources */,
 				44DA422315E987A2007F61DA /* zcode-640.png in Resources */,

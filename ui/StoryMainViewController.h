@@ -135,6 +135,9 @@ extern StoryBrowser *theStoryBrowser;
 
 #if EnableStoryDictation
     StoryDictationController *m_dictationController;
+    StoryDictationCuePlayer *m_dictationCuePlayer; // made on first use
+    NSInteger m_dictationCuedState;   // the state the last cue announced; see cueDictationStateChange
+    BOOL m_dictationStartedByUser;    // the mic button asked for the start now in progress
 #endif
 }
 

@@ -9,6 +9,8 @@
 
 #if EnableStoryDictation
 
+#import <AudioToolbox/AudioToolbox.h>
+
 // Trace output (StoryDictationDebugLogging in iosfrotz.h); errors use NSLog directly.
 #if StoryDictationDebugLogging
 #define DictationLog(...) NSLog(__VA_ARGS__)
@@ -89,6 +91,7 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
         // The system can take the audio away or reconfigure it under us; see the handlers below.
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
         [center addObserver: self selector: @selector(audioSessionInterrupted:) name: AVAudioSessionInterruptionNotification object: m_audioSession];
+        [center addObserver: self selector: @selector(mediaServicesWereReset:) name: AVAudioSessionMediaServicesWereResetNotification object: m_audioSession];
         [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
         [center addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
         [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilityVoiceOverStatusDidChangeNotification object: nil];
@@ -186,22 +189,30 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
 
     m_isPaused = NO;
     m_resumeAfterInterruption = NO;
-    [m_audioEngine stop];
-    AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
-    [audioInputNode removeTapOnBus:0];
-    m_tapInstalled = NO;
     if (m_recognitionTask) {
         [m_sfRecogRequest endAudio];
         [m_recognitionTask cancel];
         m_sfRecogRequest = nil;
         m_recognitionTask = nil;
     }
-    // Give the audio system back: the mic indicator goes off, and other apps are told they may
-    // resume anything the session's activation had interrupted. Failure here is only worth a log.
+    [self releaseAudio];
+    [self notifyStateChanged];
+}
+
+// Stops the engine, removes the tap and gives the audio system back: the mic indicator goes off,
+// and other apps are told they may resume anything the session's activation had interrupted.
+// Shared by stopping and pausing, so that the two leave the audio in the same state and the next
+// start, from either, is the same full setup (see startListening). An engine merely paused, or
+// stopped with the session left active, was resumed with a bare restart, and after one such
+// resume the stop cue came out loud and thunking on every pause until a full stop and start.
+// Failure to deactivate is only worth a log.
+-(void)releaseAudio {
+    [m_audioEngine stop];
+    [[m_audioEngine inputNode] removeTapOnBus: 0];
+    m_tapInstalled = NO;
     NSError *error = nil;
     if (![m_audioSession setActive: NO withOptions: AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error])
         NSLog(@"Error AVAudioSession setActive:NO: %@", error);
-    [self notifyStateChanged];
 }
 
 // Called when the task first detects speech in the source audio
@@ -328,6 +339,10 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
     return m_isPaused;
 }
 
+-(BOOL)willResume {
+    return m_isPaused || m_resumeAfterInterruption;
+}
+
 // Drops the utterance in progress without committing it: the silence timer, task, request and
 // text all go, and the delegate is told so that the next words follow what is already shown
 // rather than replacing it. The task is dropped before it is cancelled so its cancellation
@@ -351,8 +366,9 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
 -(void)pauseListening {
     [self abandonUtterance];
     [self cancelLongIdleTimer]; // nothing can be heard while paused; the clock restarts with the resume
-    if ([m_audioEngine isRunning])
-        [m_audioEngine pause];
+    // The audio is released exactly as a stop releases it (see releaseAudio); only the dictation
+    // state differs, so that the UI's resume brings listening back without the player asking.
+    [self releaseAudio];
     m_isPaused = YES;
     DictationLog(@"pauseListening");
     [self notifyStateChanged];
@@ -391,19 +407,108 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     [self stopListening];
 }
 
+// The system's audio daemon was restarted (it happens after a long idle, under memory pressure,
+// or when it crashes). Every audio object from before is dead: the engine can't be started again,
+// its input node reports no format, and installing a tap throws. Apple's instruction is to
+// recreate them, so the engine is rebuilt here; listening, if it was on, is over, and the mic
+// button shows it. Without this a tap on the mic failed silently from then until the app was
+// relaunched.
+-(void)mediaServicesWereReset:(NSNotification*)note {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BOOL wasOn = [self isListening] || m_isPaused;
+        NSLog(@"Media services were reset; rebuilding the dictation audio engine");
+        [self stopListening];
+        [self rebuildAudioEngine];
+        if (wasOn)
+            [m_stateDelegate dictationBecameUnavailable: self];
+    });
+}
+
+// A fresh engine in place of one that can't be started. The configuration-change observer is
+// bound to the engine object, so it moves to the new one.
+-(void)rebuildAudioEngine {
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+    [center removeObserver: self name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
+    [m_audioEngine stop];
+    m_audioEngine = [[AVAudioEngine alloc] init];
+    m_tapInstalled = NO;
+    [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
+}
+
+// Sets up the input node and starts the engine, with the tap installed for the node's current
+// format. Returns whether the engine is running with the tap in place; every failure is logged
+// and returns NO rather than leaving a half-started engine for a task to wait on in silence.
+-(BOOL)startAudioEngineWithVoiceProcessing:(BOOL)wantVoiceProcessing {
+    NSError *error = nil;
+    AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
+    // Voice processing: echo cancellation against the device's own speaker output, plus noise
+    // suppression and gain control, the same treatment FaceTime's microphone gets. Without the
+    // echo cancellation VoiceOver's speech is picked up and transcribed as if the player had said
+    // it, "VoiceOver on" included, and feeds back on every announcement after; the suppression
+    // helps anyone dictating somewhere noisy. But the voice-processing unit interrupts other
+    // apps' audio when it starts, whatever the session's mixing options say (measured: the
+    // options took, the music still paused when the engine started), so it is a choice between
+    // it and the player's music. Taken when VoiceOver is on, which needs it, or when nothing
+    // else is playing, where it costs nothing; a VoiceOver change restarts the engine to redo
+    // it. It has to be set while the engine is stopped, it needs the output node in the graph,
+    // and it changes the input format, so the tap's format is read after it. Dictation still
+    // works without it if enabling fails.
+    DictationLog(@"voice processing %s (VoiceOver %d, other audio now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
+                 UIAccessibilityIsVoiceOverRunning(), m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
+    if (audioInputNode.isVoiceProcessingEnabled != wantVoiceProcessing) {
+        (void)[m_audioEngine outputNode];
+        if (![audioInputNode setVoiceProcessingEnabled: wantVoiceProcessing error: &error]) {
+            NSLog(@"Error %s voice processing on the audio input: %@", wantVoiceProcessing ? "enabling" : "disabling", error);
+            error = nil;
+        }
+    }
+    // While voice processing runs it also ducks any other audio that does start; iOS 17 can
+    // limit that to moments speech is detected, and to the shallowest level.
+    if (wantVoiceProcessing) {
+        if (@available(iOS 17.0, *)) {
+            AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = YES, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
+            audioInputNode.voiceProcessingOtherAudioDuckingConfiguration = ducking;
+        }
+    }
+    AVAudioFormat *recordingFormat = [audioInputNode outputFormatForBus: 0];
+    [audioInputNode removeTapOnBus:0];
+    m_tapInstalled = NO;
+    // A node with no usable format is the sign of a dead engine (see mediaServicesWereReset:);
+    // installing a tap for it throws, so it is checked first and the @try is the backstop.
+    if (recordingFormat.sampleRate <= 0 || recordingFormat.channelCount == 0) {
+        NSLog(@"Audio input has no usable format (%@); the engine can't be started", recordingFormat);
+        return NO;
+    }
+    @try {
+        [audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
+            if (m_sfRecogRequest)
+                [m_sfRecogRequest appendAudioPCMBuffer: buffer];
+        }];
+        m_tapInstalled = YES;
+        [m_audioEngine prepare];
+        if (![m_audioEngine startAndReturnError: &error]) {
+            NSLog(@"Error audioEngine:startAndReturnError: %@", error);
+            return NO;
+        }
+    }
+    @catch (NSException *exception) {
+        NSLog(@"Exception starting the audio engine: %@", exception);
+        return NO;
+    }
+    return [m_audioEngine isRunning];
+}
+
 -(void)startListening {
     NSError *error = nil;
     // Read before the session is touched below: whether someone else is playing decides voice
     // processing, and the answer must not be coloured by our own activation.
     BOOL otherAudioPlaying = m_audioSession.isOtherAudioPlaying;
     m_resumeAfterInterruption = NO; // the user (or the UI) is starting it; the interruption's end needn't
+    // A resume from a pause is a start like any other: the pause released the audio (releaseAudio),
+    // so the full setup below runs. Nothing is restarted in place.
     if (m_isPaused) {
-        [m_audioEngine startAndReturnError: &error];
+        DictationLog(@"listenForSpeech resuming from pause");
         m_isPaused = NO;
-        if (!error && [m_audioEngine isRunning] && m_recognitionTask) {
-            DictationLog(@"listenForSpeech unpaused");
-            return;
-        }
     }
     // Cancel the previous task if it's running.
     if (m_recognitionTask) {
@@ -437,6 +542,12 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
             NSLog(@"Error AVAudioSession setCategory: %@", error);
             error = nil;
         }
+        // iOS mutes haptics and system sounds while the mic is live unless told otherwise, and the
+        // started and resumed cues (StoryDictationCuePlayer) play once the engine is running.
+        if (![m_audioSession setAllowHapticsAndSystemSoundsDuringRecording: YES error: &error]) {
+            NSLog(@"Error AVAudioSession setAllowHapticsAndSystemSoundsDuringRecording: %@", error);
+            error = nil;
+        }
         [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
         if (error) {
             NSLog(@"Error AVAudioSession setActive: %@", error);
@@ -446,54 +557,19 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
                      m_audioSession.category, m_audioSession.mode, (unsigned long)m_audioSession.categoryOptions,
                      m_audioSession.isOtherAudioPlaying, m_audioSession.currentRoute);
 
-        AVAudioInputNode *audioInputNode = [m_audioEngine inputNode];
-        // Voice processing: echo cancellation against the device's own speaker output, plus noise
-        // suppression and gain control, the same treatment FaceTime's microphone gets. Without the
-        // echo cancellation VoiceOver's speech is picked up and transcribed as if the player had said
-        // it, "VoiceOver on" included, and feeds back on every announcement after; the suppression
-        // helps anyone dictating somewhere noisy. But the voice-processing unit interrupts other
-        // apps' audio when it starts, whatever the session's mixing options say (measured: the
-        // options took, the music still paused when the engine started), so it is a choice between
-        // it and the player's music. Taken when VoiceOver is on, which needs it, or when nothing
-        // else is playing, where it costs nothing; a VoiceOver change restarts the engine to redo
-        // it. It has to be set while the engine is stopped, it needs the output node in the graph,
-        // and it changes the input format, so the tap's format is read after it. Dictation still
-        // works without it if enabling fails.
+        // If the engine won't start, it is most likely dead from a media services reset that
+        // went unannounced (the notification isn't guaranteed), so it is rebuilt and tried once
+        // more; the mic button shouldn't fail silently in any case, hence the delegate call. No
+        // task is started against an engine that isn't running: it would wait forever for audio.
         BOOL wantVoiceProcessing = UIAccessibilityIsVoiceOverRunning() || !otherAudioPlaying;
-        DictationLog(@"voice processing %s (VoiceOver %d, other audio before setup %d, now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
-                     UIAccessibilityIsVoiceOverRunning(), otherAudioPlaying, m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
-        if (audioInputNode.isVoiceProcessingEnabled != wantVoiceProcessing) {
-            (void)[m_audioEngine outputNode];
-            if (![audioInputNode setVoiceProcessingEnabled: wantVoiceProcessing error: &error]) {
-                NSLog(@"Error %s voice processing on the audio input: %@", wantVoiceProcessing ? "enabling" : "disabling", error);
-                error = nil;
+        if (![self startAudioEngineWithVoiceProcessing: wantVoiceProcessing]) {
+            NSLog(@"The dictation audio engine failed to start; rebuilding it and trying again");
+            [self rebuildAudioEngine];
+            if (![self startAudioEngineWithVoiceProcessing: wantVoiceProcessing]) {
+                [self stopListening];
+                [m_stateDelegate dictationFailedToStart: self];
+                return;
             }
-        }
-        // While voice processing runs it also ducks any other audio that does start; iOS 17 can
-        // limit that to moments speech is detected, and to the shallowest level.
-        if (wantVoiceProcessing) {
-            if (@available(iOS 17.0, *)) {
-                AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = YES, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
-                audioInputNode.voiceProcessingOtherAudioDuckingConfiguration = ducking;
-            }
-        }
-        AVAudioFormat *recordingFormat = [audioInputNode outputFormatForBus: 0];
-        [audioInputNode removeTapOnBus:0];
-        m_tapInstalled = NO;
-        @try {
-            [audioInputNode installTapOnBus:0 bufferSize:1024 format:recordingFormat block:^(AVAudioPCMBuffer * _Nonnull buffer, AVAudioTime * _Nonnull when) {
-                if (m_sfRecogRequest)
-                    [m_sfRecogRequest appendAudioPCMBuffer: buffer];
-            }];
-            m_tapInstalled = YES;
-            [m_audioEngine prepare];
-            [m_audioEngine startAndReturnError: &error];
-        }
-        @catch (NSException *exception) {
-            return;
-        }
-        if (error) {
-            NSLog(@"Error audioEngine:startAndReturnError: %@", error);
         }
     }
 
@@ -544,6 +620,78 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     // resume (listenForSpeech with m_isPaused set) finds no task and starts a fresh one.
     if (!m_isPaused)
         [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
+}
+
+@end
+
+#pragma mark - Cues
+
+// The sounds are WAV files in the app bundle's Sounds folder (resources/Sounds, a folder
+// reference; made by meta/make_dictation_cues.py): two quick strikes of A4 for a start, one for a
+// resume, and the same an octave down, one strike of A3 for a pause and two for a stop. The second
+// strike of a double cue begins this long in, and the second haptic tap goes with it.
+static NSString *const kCueFileNames[kStoryDictationCueCount] = { @"DictationStarted", @"DictationResumed", @"DictationPaused", @"DictationStopped" };
+static NSString *const kCueSoundsFolder = @"Sounds";
+static const NSTimeInterval kCueSecondNoteOffset = 0.08; // SECOND_STRIKE in the script
+
+@implementation StoryDictationCuePlayer
+{
+    SystemSoundID m_sounds[kStoryDictationCueCount]; // indexed by StoryDictationCue; 0 until first played
+    UIImpactFeedbackGenerator *m_startHaptic;   // light taps for started and resumed
+    UIImpactFeedbackGenerator *m_stopHaptic;    // firmer taps for paused and stopped
+}
+
+-(instancetype)init {
+    self = [super init];
+    if (self) {
+        m_startHaptic = [[UIImpactFeedbackGenerator alloc] initWithStyle: UIImpactFeedbackStyleLight];
+        m_stopHaptic = [[UIImpactFeedbackGenerator alloc] initWithStyle: UIImpactFeedbackStyleMedium];
+    }
+    return self;
+}
+
+-(void)dealloc {
+    for (NSUInteger i = 0; i < kStoryDictationCueCount; i++)
+        if (m_sounds[i])
+            AudioServicesDisposeSystemSoundID(m_sounds[i]);
+}
+
+// Each cue's sound is registered with System Sound Services from its bundle file the first time
+// it is needed.
+-(SystemSoundID)soundForCue:(StoryDictationCue)cue {
+    if (m_sounds[cue])
+        return m_sounds[cue];
+    NSString *name = kCueFileNames[cue];
+    NSURL *url = [[NSBundle mainBundle] URLForResource: name withExtension: @"wav" subdirectory: kCueSoundsFolder];
+    if (!url) {
+        NSLog(@"Dictation cue sound %@/%@.wav is missing from the app bundle", kCueSoundsFolder, name);
+        return 0;
+    }
+    OSStatus status = AudioServicesCreateSystemSoundID((__bridge CFURLRef)url, &m_sounds[cue]);
+    if (status != noErr) {
+        NSLog(@"Error creating dictation cue sound %@: %d", name, (int)status);
+        m_sounds[cue] = 0;
+    }
+    return m_sounds[cue];
+}
+
+-(void)playCue:(StoryDictationCue)cue {
+    SystemSoundID sound = [self soundForCue: cue];
+    if (sound)
+        AudioServicesPlaySystemSound(sound);
+
+    // The haptic mirrors the tone: light for the high cues, firmer for the low ones, and two taps
+    // timed with the double notes. Devices without a haptic engine (most iPads) ignore these.
+    BOOL high = (cue == kStoryDictationCueStarted || cue == kStoryDictationCueResumed);
+    BOOL doubled = (cue == kStoryDictationCueStarted || cue == kStoryDictationCueStopped);
+    UIImpactFeedbackGenerator *haptic = high ? m_startHaptic : m_stopHaptic;
+    [haptic impactOccurred];
+    if (doubled) {
+        [haptic prepare];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kCueSecondNoteOffset * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [haptic impactOccurred];
+        });
+    }
 }
 
 @end
