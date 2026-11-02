@@ -1451,11 +1451,25 @@ static BOOL hasAccessibility;
         [self performSelector: @selector(setNeedsLayout) withObject:nil afterDelay:0.03];
     }
     if (m_accessibilityElements) {
-        if (m_prevLineNotTerminated)
+        // Elements are paragraphs, as populateAccessibilityElements makes them: text joins the
+        // last element until that element ends with a blank line, and a prompt (">") always
+        // begins a new one. Appending one element per run, as this used to, left text printed
+        // while VoiceOver was on navigable a line at a time while older text went by the paragraph.
+        // But markWaitForInput reads only elements added since it last ran, so text must never
+        // join an element that has already been read: after a prompt has been announced, the
+        // echoed command starts a new element and the response joins it, so the player hears the
+        // command read back (with a full stop after it; see updateAE) and then the response. The
+        // one exception is a run merged into the last run because that line was unterminated,
+        // whose element has to follow the run's text whether or not it has been read; the
+        // announcement clears that flag, so it only arises when a story continues a line after input.
+        RichTextAE *last = [m_accessibilityElements lastObject];
+        BOOL lastAnnounced = [m_accessibilityElements count] <= m_lastAEIndexAnnounced;
+        BOOL continuesParagraph = last && (m_prevLineNotTerminated
+                                           || (!lastAnnounced && ![[last accessibilityValue] hasSuffix: @"\n\n"] && ![text hasPrefix: @">"]));
+        if (continuesParagraph)
             [self updateAE];
-        else {
+        else
             [self appendAE];
-        }
     }
     m_prevLineNotTerminated = lineNotTerminated;
     
@@ -1943,7 +1957,91 @@ static BOOL hasAccessibility;
 {
     return NO;
 }
-static NSString *kCommand = @"Command";
+static NSString *kCommandPrompt = @"Command prompt:";
+
+// Whether VoiceOver already pauses after text ending like this.
+static BOOL EndsWithSentenceBreak(NSString *text) {
+    NSString *trimmed = [text stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
+    if (![trimmed length])
+        return YES;
+    unichar c = [trimmed characterAtIndex: [trimmed length]-1];
+    return c == '.' || c == '!' || c == '?' || c == ':' || c == ';' || c == ',';
+}
+
+// What VoiceOver speaks for the runs startIndex..startIndex+runCount-1: their text joined, with
+// two changes. A prompt (">") is spoken as "Command prompt:", whether it begins the text (the
+// prompt's own run, with the typed command after it once that is echoed) or ends it (a story that
+// prints the prompt at the tail of its response); read literally it is "greater than". And a room
+// name gets a full stop: a line that begins in bold and ends with the game's own newline, as
+// opposed to wrapping. Without it VoiceOver runs the name straight into the description.
+-(NSString*)spokenTextForRunsFrom:(NSInteger)startIndex count:(NSInteger)runCount {
+    NSMutableString *text = [NSMutableString string];
+    NSInteger total = [m_textRuns count], end = MIN(startIndex + runCount, total);
+    for (NSInteger i = startIndex; i < end; i++) {
+        NSString *run = m_textRuns[i];
+        BOOL bold = i < [m_textStyles count] && ([m_textStyles[i] intValue] & kFTBold);
+        BOOL startsLine = i == 0 || [m_textRuns[i-1] hasSuffix: @"\n"];
+        if (bold && startsLine) {
+            NSRange newline = [run rangeOfString: @"\n"];
+            if (newline.location != NSNotFound) { // the bold run holds the line's end itself
+                NSString *line = [run substringToIndex: newline.location];
+                if (!EndsWithSentenceBreak(line))
+                    run = [NSString stringWithFormat: @"%@.%@", line, [run substringFromIndex: newline.location]];
+            } else if (i+1 < total && [m_textRuns[i+1] hasPrefix: @"\n"] && !EndsWithSentenceBreak(run)) {
+                run = [run stringByAppendingString: @"."]; // the newline begins the next run
+            }
+        }
+        [text appendString: run];
+    }
+    // Text that follows the prompt begins with the echoed command. A full stop after that line
+    // makes VoiceOver pause before the story's response, which a newline alone barely does.
+    // Judged by what ends the run before, since the prompt may share its run with the end of
+    // the previous response ("...\n\n>") rather than stand alone.
+    if (startIndex > 0 && startIndex <= total && ![text hasPrefix: @">"]) {
+        NSString *before = [m_textRuns[startIndex-1] stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if ([before hasSuffix: @">"]) {
+            NSRange newline = [text rangeOfString: @"\n"];
+            NSString *command = newline.location == NSNotFound ? text : [text substringToIndex: newline.location];
+            NSString *bare = [[command stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]]
+                              stringByTrimmingCharactersInSet: [NSCharacterSet punctuationCharacterSet]];
+            if ([bare length] == 1 && [[NSCharacterSet letterCharacterSet] characterIsMember: [bare characterAtIndex: 0]]) {
+                // A single letter and a full stop ("i.", for inventory) is read as an initial,
+                // with no pause at all, even when the player typed the stop. A semicolon isn't.
+                [text replaceCharactersInRange: NSMakeRange(0, [command length]) withString: [bare stringByAppendingString: @";"]];
+            } else if (!EndsWithSentenceBreak(command))
+                [text insertString: @"." atIndex: [command length]];
+        }
+    }
+    if ([text hasPrefix: @">"]) {
+        [text deleteCharactersInRange: NSMakeRange(0, 1)];
+        while ([text length] && [text characterAtIndex: 0] == ' ')
+            [text deleteCharactersInRange: NSMakeRange(0, 1)];
+        [text insertString: [text length] ? [kCommandPrompt stringByAppendingString: @" "] : kCommandPrompt atIndex: 0];
+    } else {
+        NSRange last = [text rangeOfCharacterFromSet: [[NSCharacterSet whitespaceAndNewlineCharacterSet] invertedSet] options: NSBackwardsSearch];
+        if (last.location != NSNotFound && [text characterAtIndex: last.location] == '>')
+            [text replaceCharactersInRange: last withString: kCommandPrompt];
+    }
+    // Lists (an inventory, the contents of a container) are items indented by two or more spaces,
+    // one to a line, with no punctuation; spoken, they run into one another. A semicolon after
+    // each item gives it a beat. Only lines the game ended itself qualify, so a wrapped line of
+    // prose is left alone, as is any item already punctuated.
+    NSArray *lines = [text componentsSeparatedByString: @"\n"];
+    if ([lines count] > 1) {
+        NSMutableArray *out = [NSMutableArray arrayWithCapacity: [lines count]];
+        NSCharacterSet *whitespace = [NSCharacterSet whitespaceCharacterSet];
+        for (NSUInteger i = 0; i < [lines count]; i++) {
+            NSString *line = lines[i];
+            BOOL endsWithNewline = i + 1 < [lines count];
+            if (endsWithNewline && ([line hasPrefix: @"  "] || [line hasPrefix: @"\t"])
+                && [[line stringByTrimmingCharactersInSet: whitespace] length] && !EndsWithSentenceBreak(line))
+                line = [line stringByAppendingString: @";"];
+            [out addObject: line];
+        }
+        text = [[out componentsJoinedByString: @"\n"] mutableCopy];
+    }
+    return text;
+}
 
 - (void)populateAccessibilityElements {
     if (!m_textRuns) return;
@@ -1961,12 +2059,8 @@ static NSString *kCommand = @"Command";
             runCount = i - startIndex + 1;
             RichTextAE *e = [[RichTextAE alloc] initWithAccessibilityContainer: self];
             [e setAccessibilityHint: self.accessibilityHint];
-            [e setAccessibilityTraits: self.accessibilityTraits];
-            NSString *text = @"";
-            if ([m_textRuns[startIndex] hasPrefix: @">"])
-                text = kCommand;
-            text = [text stringByAppendingString:[[m_textRuns subarrayWithRange: NSMakeRange(startIndex, runCount)] componentsJoinedByString: @""]];
-            [e setAccessibilityValue: text];
+            [e setAccessibilityTraits: self.accessibilityTraits | UIAccessibilityTraitStaticText];
+            [e setAccessibilityValue: [self spokenTextForRunsFrom: startIndex count: runCount]];
             [e setAeIndex: aeIndex++];
             [e setTextIndex: startIndex];
             [e setRunCount: runCount];
@@ -1995,25 +2089,7 @@ static NSString *kCommand = @"Command";
     if (startIndex+ e.runCount <= count) {
         NSInteger runCount = count - startIndex;
         e.runCount = runCount;
-        NSString *text = @"";
-        NSString *firstText = m_textRuns[startIndex];
-        if ([firstText hasPrefix: @">"])
-            text = kCommand;
-        else if (startIndex > 1 && [m_textRuns[startIndex-1] isEqualToString: @">"]) {
-            NSRange r = [firstText rangeOfString: @"\n"];
-            ++startIndex;
-            --runCount;
-            if (r.length == 0)
-                text = [firstText stringByAppendingString: @"."];
-            else {
-                text = [firstText substringToIndex: r.location];
-                text = [text stringByAppendingString: @"."];
-                text = [text stringByAppendingString: [firstText substringFromIndex: r.location]];
-            }
-        }
-        if (runCount > 0)
-            text = [text stringByAppendingString: [[m_textRuns subarrayWithRange: NSMakeRange(startIndex, runCount)] componentsJoinedByString: @""]];
-        [e setAccessibilityValue: text];
+        [e setAccessibilityValue: [self spokenTextForRunsFrom: startIndex count: runCount]];
     }  
     return e;  
 }
@@ -2025,21 +2101,23 @@ static NSString *kCommand = @"Command";
     RichTextAE *e = [[RichTextAE alloc] initWithAccessibilityContainer: self];
     NSUInteger count = [m_textRuns count];
     [e setAccessibilityHint: self.accessibilityHint];
-    [e setAccessibilityTraits: self.accessibilityTraits];
-    NSString *text = m_textRuns[count-1];
-    if ([text hasPrefix: @">"])
-        text = [kCommand stringByAppendingString: text];
-    [e setAccessibilityValue: text];
+    [e setAccessibilityTraits: self.accessibilityTraits | UIAccessibilityTraitStaticText];
+    [e setAccessibilityValue: [self spokenTextForRunsFrom: count-1 count: 1]];
     [e setAeIndex: [m_accessibilityElements count]];
     [e setTextIndex: count-1];
     [e setRunCount: 1];
     [m_accessibilityElements addObject: e];
 }
 
+// The story has stopped for input: read the player everything printed since the last time. The
+// announcement is queued rather than interrupting, so it waits for whatever VoiceOver is saying
+// (the input line it just focused, say) instead of being cut off by it. No layout-changed
+// notification is posted alongside: VoiceOver reacted to that by re-speaking the focused element,
+// which cancelled the announcement of the story's response, and the new elements are found when
+// the player swipes to them without it.
 - (void)markWaitForInput {
 #if !NoAccessibility
     if (hasAccessibility && m_numLines > 1 && m_lastAEIndexAnnounced >= 0) {
-        UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, nil);
         NSMutableString *text = [NSMutableString stringWithCapacity: 2048];
         NSUInteger count = [m_accessibilityElements count];
         if (m_lastAEIndexAnnounced < count) {
@@ -2047,12 +2125,14 @@ static NSString *kCommand = @"Command";
                 [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
             m_lastAEIndexAnnounced = count;
-            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, text);
+            NSAttributedString *announcement = [[NSAttributedString alloc] initWithString: text
+                                                attributes: @{UIAccessibilitySpeechAttributeQueueAnnouncement: @YES}];
+            UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, announcement);
             m_prevLineNotTerminated = NO;
         }
     }
 #endif
-    
+
 }
 
 /* The following methods are implementations of UIAccessibilityContainer protocol methods. */
@@ -2083,7 +2163,7 @@ static NSString *kCommand = @"Command";
     
     if (!m_accessibilityElements)
         [self populateAccessibilityElements];
-    if (aeIndex < [m_accessibilityElements count]) {
+    if (aeIndex >= 0 && aeIndex < [m_accessibilityElements count]) {
         RichTextAE *e = m_accessibilityElements[aeIndex];
         return e;
     }
@@ -2094,6 +2174,8 @@ static NSString *kCommand = @"Command";
     if (!hasAccessibility)
         return;
     NSInteger index = m_lastAEIndexAccessed;
+    if (index < 0 || index >= [m_accessibilityElements count])
+        return; // the elements were cleared since it was accessed
     RichTextAE *e = m_accessibilityElements[index];
     CGRect frame = e.accessibilityFrame;
     frame = [self.window convertRect: frame toView:self];
@@ -2101,11 +2183,17 @@ static NSString *kCommand = @"Command";
     //NSLog(@"accscrolltovis %d (%0.f,%0.f) (%0.f,%0.f,%0.f,%0.f)", index, self.contentOffset.x, self.contentOffset.y, frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
 }
 
+// The element's position among this container's elements, which is what VoiceOver moves by when
+// the player swipes. This used to return the element's text-run index, which matches only for
+// the first element once elements span several runs, so swipes skipped or repeated paragraphs.
+// UIKit also asks about objects that aren't ours (the scroll indicators), hence not found for those.
 - (NSInteger)indexOfAccessibilityElement:(id)element
 {
-    RichTextAE *e = element;
-    //NSLog(@"index of ae: %d %@", [e textIndex], e);
-    return [e textIndex];
+    if (!element || !hasAccessibility)
+        return NSNotFound;
+    if (!m_accessibilityElements)
+        [self populateAccessibilityElements];
+    return [m_accessibilityElements indexOfObjectIdenticalTo: element];
 }
 
 - (NSArray*)getTextPos {

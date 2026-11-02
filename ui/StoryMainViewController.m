@@ -2157,12 +2157,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         return;
     hasAccessibility = [m_inputLine respondsToSelector: @selector(setAccessibilityLabel:)];
     if (hasAccessibility) {
+        // Text that changes as the game runs, not a disabled control: the status line used to carry
+        // the not-enabled trait, so VoiceOver called it "dimmed". The story view's traits are
+        // inherited by each paragraph element (RichTextView populates them), so it mustn't carry
+        // the summary-element trait, which marks the one element VoiceOver reads at launch.
         [m_statusLine setAccessibilityLabel: NSLocalizedString(@"Status line",nil)];
         [m_statusLine setAccessibilityHint: nil];
-        [m_statusLine setAccessibilityTraits: UIAccessibilityTraitNotEnabled]; //256,128
+        [m_statusLine setAccessibilityTraits: UIAccessibilityTraitStaticText | UIAccessibilityTraitUpdatesFrequently];
         [m_storyView setAccessibilityLabel: NSLocalizedString(@"Story output",nil)];
         [m_storyView setAccessibilityHint: nil];
-        [m_storyView setAccessibilityTraits: UIAccessibilityTraitSummaryElement];
+        [m_storyView setAccessibilityTraits: UIAccessibilityTraitStaticText];
         
 #if UseRichTextView
         [m_statusLine setIsAccessibilityElement: YES];
@@ -2170,7 +2174,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
 #endif
         [m_inputLine setAccessibilityLabel: NSLocalizedString(@"Input command",nil)];
         [m_inputLine setAccessibilityHint: nil];
-        [m_inputLine setAccessibilityTraits: UIAccessibilityTraitStaticText]; //64
+        // Its traits are left as UIKit's for a text field: the static-text trait set here before
+        // replaced them, so VoiceOver didn't present it as editable.
         
         UIBarButtonItem *shkb = self.navigationItem.rightBarButtonItem;
         if ([shkb respondsToSelector: @selector(view)])
