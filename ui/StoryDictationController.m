@@ -50,6 +50,14 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 
 static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
 
+// A screen reader that will speak through the device's own speaker while the mic is open:
+// VoiceOver, or Spoken Content's Speak Screen or Speak Selection when enabled in Settings (there
+// is no way to ask whether they are speaking at this moment, only whether they are turned on).
+// Without echo cancellation their speech is transcribed as if the player had said it.
+static BOOL ScreenReaderInUse(void) {
+    return UIAccessibilityIsVoiceOverRunning() || UIAccessibilityIsSpeakScreenEnabled() || UIAccessibilityIsSpeakSelectionEnabled();
+}
+
 @implementation StoryDictationController
 
 @synthesize delegate = m_delegate;
@@ -95,6 +103,8 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
         [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
         [center addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
         [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilityVoiceOverStatusDidChangeNotification object: nil];
+        [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilitySpeakScreenStatusDidChangeNotification object: nil];
+        [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilitySpeakSelectionStatusDidChangeNotification object: nil];
     }
     return self;
 }
@@ -156,11 +166,12 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
     });
 }
 
-// VoiceOver decides whether voice processing is wanted (see startListening), so a change while
-// dictation is on means tearing the engine down and setting it up again the other way.
+// Whether a screen reader is in use decides whether voice processing is wanted (see
+// startListening), so a change while dictation is on means tearing the engine down and setting
+// it up again the other way. VoiceOver, Speak Screen and Speak Selection all come here.
 -(void)voiceOverStatusChanged:(NSNotification*)note {
     dispatch_async(dispatch_get_main_queue(), ^{
-        DictationLog(@"VoiceOver running: %d", UIAccessibilityIsVoiceOverRunning());
+        DictationLog(@"screen reader: %d", ScreenReaderInUse());
         [self restartAudioForChangedConfiguration];
     });
 }
@@ -475,8 +486,8 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     // it. It has to be set while the engine is stopped, it needs the output node in the graph,
     // and it changes the input format, so the tap's format is read after it. Dictation still
     // works without it if enabling fails.
-    DictationLog(@"voice processing %s (VoiceOver %d, other audio now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
-                 UIAccessibilityIsVoiceOverRunning(), m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
+    DictationLog(@"voice processing %s (screen reader %d, other audio now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
+                 ScreenReaderInUse(), m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
     if (audioInputNode.isVoiceProcessingEnabled != wantVoiceProcessing) {
         (void)[m_audioEngine outputNode];
         if (![audioInputNode setVoiceProcessingEnabled: wantVoiceProcessing error: &error]) {
@@ -587,7 +598,7 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
         // went unannounced (the notification isn't guaranteed), so it is rebuilt and tried once
         // more; the mic button shouldn't fail silently in any case, hence the delegate call. No
         // task is started against an engine that isn't running: it would wait forever for audio.
-        BOOL wantVoiceProcessing = UIAccessibilityIsVoiceOverRunning() || !otherAudioPlaying;
+        BOOL wantVoiceProcessing = ScreenReaderInUse() || !otherAudioPlaying;
         if (![self startAudioEngineWithVoiceProcessing: wantVoiceProcessing]) {
             NSLog(@"The dictation audio engine failed to start; rebuilding it and trying again");
             [self rebuildAudioEngine];

@@ -446,7 +446,7 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 {
 #if EnableStoryDictation
     if (section == kFrotzInputSection)
-        return NSLocalizedString(@"Dictation Delay is how long Frotz waits after you stop speaking before sending what you said as a command.", @"");
+        return NSLocalizedString(@"Dictation Delay is how long Frotz waits after you stop speaking before entering what you said as a command.", @"");
 #endif
     return nil;
 }
