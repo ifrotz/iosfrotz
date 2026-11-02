@@ -25,7 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL m_completionAmbiguous;
 #if EnableStoryDictation
     NSString *m_textBeforeDictation; // what was typed before the current utterance began; nil between utterances
-    NSString *m_lastDictationShown;  // the full line as acceptDictation:final: last set it
+    NSString *m_lastDictationShown;  // typed part and transcript as acceptDictation:final: last set them
+    NSString *m_dictationSuffix;     // what followed the transcript at the last hypothesis (tapped or typed words)
 #endif
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;

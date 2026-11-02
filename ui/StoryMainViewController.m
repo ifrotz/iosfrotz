@@ -2211,10 +2211,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     m_ignoreWordSelection = NO;
     [m_storyView clearSelection];
+#if EnableStoryDictation
+    [self deferDictationCommit]; // the word has landed; give the player a moment before the utterance commits
+#endif
 }
 
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
     m_ignoreWordSelection = NO;
+#if EnableStoryDictation
+    [self deferDictationCommit]; // so the word's flight to the input line finishes before the utterance commits
+#endif
     if (/*m_kbShown && */!(ipzAllowInput & kIPZNoEcho)) {
         // m_kbShown commented out so this still works with paired hardware keyboards
         NSString *origText = [m_inputLine text];
@@ -3994,6 +4000,10 @@ static int iosif_top_win_height = 1;
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {               // any offset changes
     [m_inputLine updatePosition];
+#if EnableStoryDictation
+    if (scrollView.isDragging || scrollView.isDecelerating) // the player scrolling, not output arriving
+        [self deferDictationCommit];
+#endif
     CGFloat contentOffset = scrollView.contentOffset.y;
     CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
     // m_kbShown lags the keyboard (set in keyboardDidShow, cleared in keyboardWillHide), and
@@ -5034,6 +5044,10 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
     if (!m_dictationCuePlayer)
         m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
     [m_dictationCuePlayer playCue: cue];
+}
+
+-(void)deferDictationCommit {
+    [m_dictationController deferCommit];
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {

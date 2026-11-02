@@ -59,6 +59,10 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 // Check before listenForSpeech; a request made while the recognizer is unavailable just fails.
 -(StoryDictationAvailability)availability;
 -(void)listenForSpeech;
+// The player is doing something with the story (scrolling, a touch that may become a double tap
+// on a word): an utterance waiting out the silence gets the full interval again, so the word has
+// time to land in the input line before the final result looks for edits.
+-(void)deferCommit;
 -(void)pauseListening;
 -(BOOL)isListening;
 -(BOOL)isPaused;

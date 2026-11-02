@@ -51,6 +51,10 @@
         return YES;
     
     if (phase == UITouchPhaseBegan || phase == UITouchPhaseMoved || phase == UITouchPhaseCancelled) {
+#if EnableStoryDictation
+        if (phase == UITouchPhaseBegan)
+            [delegate deferDictationCommit]; // a touch that may become a double tap on a word
+#endif
         if ([touch tapCount] <= 1) {
             if (self.autoresizingMask != 0) // only graphics windows have no resizing mask
                 return [self handleMagnifyTouchWithPhase: phase atPoint:superPt];

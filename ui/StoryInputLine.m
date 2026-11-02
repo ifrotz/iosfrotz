@@ -144,20 +144,48 @@
 
 // Dictation is added to whatever was typed before the utterance began rather than put in its
 // place. The typed part is captured when the utterance's first hypothesis arrives and kept for
-// the rest of it, each hypothesis replacing the previous one after it. If the line no longer
-// reads what was last shown here (typing or clearing in between), the current text becomes the
-// new base. The final result is submitted as a command, typed part included.
+// the rest of it, each hypothesis replacing the previous one after it. Anything added after the
+// transcript meanwhile (a word double-tapped in the story, say "examine" then tap "book") is kept
+// after it: the line is rebuilt as typed part, new transcript, added words, so the final result
+// gives "examine book". Without that the line no longer matched what was last shown here, the
+// whole of it became the new base, and the final transcript was appended again: "examine book
+// examine". If the line has changed in some other way (typing in the middle, clearing), the
+// current text becomes the new base.
+//
+// The final result is submitted as a command, all parts included, unless the player has edited
+// the line (tapped or typed) since the last words were heard: then they are still composing, and
+// the silence that produced the final result was them working, not them finishing. The line is
+// left for them to finish with Return or by speaking again (the next utterance takes the line as
+// its base and its own final result submits). Speech after an edit, within the same utterance,
+// re-arms the submit: hypotheses only arrive with speech, so a hypothesis that finds the suffix
+// unchanged since the one before means the last thing the player did was speak.
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal {
-    if (!m_textBeforeDictation || ![self.text isEqualToString: m_lastDictationShown])
-        m_textBeforeDictation = self.text ?: @"";
+    NSString *current = self.text ?: @"";
+    NSString *suffix = @"";
+    BOOL rebased = NO;
+    if (!m_textBeforeDictation || !m_lastDictationShown)
+        m_textBeforeDictation = current;
+    else if ([current hasPrefix: m_lastDictationShown])
+        suffix = [current substringFromIndex: [m_lastDictationShown length]]; // empty when unchanged
+    else {
+        m_textBeforeDictation = current;
+        rebased = YES;
+    }
+    BOOL editedSinceLastSpeech = rebased || ![suffix isEqualToString: m_dictationSuffix ?: @""];
+    m_dictationSuffix = suffix;
     [self setText: m_textBeforeDictation];
     [self inputHelperString: string]; // appends, with a separating space where one is needed
-    m_lastDictationShown = self.text;
+    m_lastDictationShown = self.text; // typed part and transcript, without the suffix, so it is found again next time
+    if ([suffix length])
+        [self setText: [self.text stringByAppendingString: suffix]];
     if (isFinal) {
         m_textBeforeDictation = nil;
         m_lastDictationShown = nil;
-        StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-        [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
+        m_dictationSuffix = nil;
+        if (!editedSinceLastSpeech) {
+            StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+            [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
+        }
     }
 }
 
@@ -167,6 +195,7 @@
 -(void)abandonDictation {
     m_textBeforeDictation = nil;
     m_lastDictationShown = nil;
+    m_dictationSuffix = nil;
 }
 #endif
 

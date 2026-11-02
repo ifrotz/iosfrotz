@@ -583,6 +583,13 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
 
 // An utterance ends when the recognizer has sent no hypothesis for silenceInterval. Each
 // hypothesis restarts the timer, so it only ever fires once, after the speaker has stopped.
+-(void)deferCommit {
+    if (m_speechCommitTimer) {
+        DictationLog(@"commit deferred");
+        [self restartSilenceTimer];
+    }
+}
+
 -(void)restartSilenceTimer {
     [m_speechCommitTimer invalidate];
     __weak StoryDictationController *weakSelf = self;

@@ -171,6 +171,7 @@ extern StoryBrowser *theStoryBrowser;
 #if EnableStoryDictation
 -(void) toggleListenForSpeech;
 -(void) pauseOrResumeDictation:(BOOL)inputLineIsActive;
+-(void) deferDictationCommit; // the player is scrolling or touching the story; see StoryDictationController deferCommit
 #endif
 -(void) setIgnoreWordSelection:(BOOL)ignore;
 -(void) abortToBrowser;
