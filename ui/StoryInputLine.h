@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
     NSString *m_textBeforeDictation; // what was typed before the current utterance began; nil between utterances
     NSString *m_lastDictationShown;  // typed part and transcript as acceptDictation:final: last set them
     NSString *m_dictationSuffix;     // what followed the transcript at the last hypothesis (tapped or typed words)
+    BOOL m_dictationHold;            // the player opened the input helper since the last words: don't submit the final result
 #endif
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
@@ -40,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(NSUInteger)addHistoryItem:(NSString*)historyItem;
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
+-(void)holdDictationCommit; // the player is composing by other means; a dictated utterance's final result won't submit until they speak again
 #if EnableStoryDictation
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
 #endif

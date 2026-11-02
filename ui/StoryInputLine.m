@@ -158,11 +158,16 @@
 // left for them to finish with Return or by speaking again (the next utterance takes the line as
 // its base and its own final result submits). Speech after an edit, within the same utterance,
 // re-arms the submit: hypotheses only arrive with speech, so a hypothesis that finds the suffix
-// unchanged since the one before means the last thing the player did was speak.
+// unchanged since the one before means the last thing the player did was speak. Opening the input
+// helper counts as an edit too (holdDictationCommit), though it changes no text: the player has
+// gone to pick a word, and speech again re-arms in the same way.
 -(void)acceptDictation:(NSString*)string final:(BOOL)isFinal {
     NSString *current = self.text ?: @"";
     NSString *suffix = @"";
     BOOL rebased = NO;
+    BOOL held = m_dictationHold;
+    if (!isFinal)
+        m_dictationHold = NO; // speech since the helper was opened
     if (!m_textBeforeDictation || !m_lastDictationShown)
         m_textBeforeDictation = current;
     else if ([current hasPrefix: m_lastDictationShown])
@@ -182,7 +187,8 @@
         m_textBeforeDictation = nil;
         m_lastDictationShown = nil;
         m_dictationSuffix = nil;
-        if (!editedSinceLastSpeech) {
+        m_dictationHold = NO;
+        if (!editedSinceLastSpeech && !held) {
             StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
             [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
         }
@@ -196,8 +202,15 @@
     m_textBeforeDictation = nil;
     m_lastDictationShown = nil;
     m_dictationSuffix = nil;
+    m_dictationHold = NO;
 }
 #endif
+
+// See acceptDictation:final:. Harmless when no utterance is in progress: the flag is cleared by
+// the next hypothesis or final result, and only read when a final result arrives.
+-(void)holdDictationCommit {
+    m_dictationHold = YES;
+}
 
 -(CGPoint)helperLaunchPosition {
     UIView *parentView = [m_storyView superview];
@@ -221,6 +234,7 @@
     CGPoint ihpt = [self helperLaunchPosition];
     if (m_completionLabel)
         [m_completionLabel removeFromSuperview];
+    [self holdDictationCommit];
     [m_inputHelper showInputHelperInView:parentView atPoint: ihpt withMode: FrotzInputHelperModeWords];
 }
 
@@ -286,6 +300,7 @@
         else if (tapCount == 2 && isInputHelperTouch &&  mode != FrotzInputHelperModeWords) {
             ihpt.y -= 10;
             ihpt.x += 20;
+            [self holdDictationCommit];
             [m_inputHelper showInputHelperInView:parentView atPoint: ihpt withMode: FrotzInputHelperModeHistory];
         } else if (mode != FrotzInputHelperModeNone && tapCount) {
             [self hideInputHelper];
