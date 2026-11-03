@@ -43,25 +43,29 @@
 @synthesize infoDelegate = m_infoDelegate;
 @synthesize notesDelegate = m_notesDelegate;
 
+// The table's sections. Preferences used to be one long section mixing colors, fonts, notes,
+// input behaviour and the library; grouping them (inset grouped style, so each is a card) is what
+// separates them visually.
 enum ControlTableSections
 {
     kFrotzInfoSection,
-    kFrotzPrefsSection,
+    kFrotzStorySection,     // "Story Appearance": colors and the story font
+    kFrotzNotesSection,
+    kFrotzInputSection,
+    kFrotzLibrarySection,
     kFrotzResetSection,
     kFrotzNumSections
 };
 
-enum FrotzInfoRows
+// Every row, whichever section it is in; SettingsSectionRows() says which rows each section shows
+// and in what order, so adding a row is one enum case, one entry there, and cases in
+// cellForRowAtIndexPath: and didSelectRowAtIndexPath:.
+typedef NS_ENUM(NSInteger, FrotzSettingsRow)
 {
     kFrotzInfoAbout,
     kFrotzInfoGettingStarted,
     kFrotzInfoReleaseNotes,
     kFrotzInfoFileTransfer,
-    kFrotzInfoNumRows
-};
-
-enum FrotzPrefsRows
-{
     kFrotzPrefsTextColor,
     kFrotzPrefsBGColor,
     kFrotzPrefsStoryFont,
@@ -73,8 +77,52 @@ enum FrotzPrefsRows
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
 #endif
-    kFrotzPrefsNumRows
+    kFrotzResetRow
 };
+
+static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
+    static NSArray<NSArray<NSNumber*>*> *rows;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        rows = @[
+            @[ @(kFrotzInfoAbout), @(kFrotzInfoGettingStarted), @(kFrotzInfoReleaseNotes), @(kFrotzInfoFileTransfer) ],
+            @[ @(kFrotzPrefsTextColor), @(kFrotzPrefsBGColor), @(kFrotzPrefsStoryFont), @(kFrotzPrefsStoryFontSize) ],
+            @[ @(kFrotzPrefsNotesFont), @(kFrotzPrefsNotesFontSize) ],
+            @[ @(kFrotzPrefsWordCompletion) ],
+            @[ @(kFrotzPrefsStoryInfoEditing),
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+               @(kFrotzPrefsDropbox),
+#endif
+            ],
+            @[ @(kFrotzResetRow) ],
+        ];
+    });
+    return rows;
+}
+
+-(FrotzSettingsRow)rowAtIndexPath:(NSIndexPath*)indexPath {
+    return [SettingsSectionRows()[indexPath.section][indexPath.row] integerValue];
+}
+
+// Rows that open another screen show a disclosure chevron; the rest carry their own control.
+-(BOOL)rowOpensScreen:(FrotzSettingsRow)row {
+    switch (row) {
+        case kFrotzInfoAbout:
+        case kFrotzInfoGettingStarted:
+        case kFrotzInfoReleaseNotes:
+        case kFrotzInfoFileTransfer:
+        case kFrotzPrefsTextColor:
+        case kFrotzPrefsBGColor:
+        case kFrotzPrefsStoryFont:
+        case kFrotzPrefsNotesFont:
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+        case kFrotzPrefsDropbox:
+#endif
+            return YES;
+        default:
+            return NO;
+    }
+}
 
 -(void)setupFade {
     [UIView beginAnimations:nil context:NULL];
@@ -230,7 +278,7 @@ enum FrotzPrefsRows
     CGRect frame = CGRectMake(0, 0, 240, 200);
 
 
-    m_tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleGrouped];
+    m_tableView = [[UITableView alloc] initWithFrame:frame style:UITableViewStyleInsetGrouped];
     m_tableView.delegate = self;
     m_tableView.dataSource = self;
     m_tableView.autoresizesSubviews = YES;
@@ -340,35 +388,20 @@ enum FrotzPrefsRows
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    NSString *title;
     switch (section)
     {
-        case kFrotzInfoSection:
-        {
-            title = @"Info";
-            break;
-        }
-        case kFrotzPrefsSection:
-        {
-            title = @"Preferences ";
-            break;
-        }
-        default:
-        {
-            title = @" ";
-            break;
-        }
+        case kFrotzInfoSection:     return NSLocalizedString(@"Info", @"");
+        case kFrotzStorySection:    return NSLocalizedString(@"Story Appearance", @"");
+        case kFrotzNotesSection:    return NSLocalizedString(@"Notes", @"");
+        case kFrotzInputSection:    return NSLocalizedString(@"Input", @"");
+        case kFrotzLibrarySection:  return NSLocalizedString(@"Library", @"");
+        default:                    return nil; // the reset button stands alone
     }
-    return title;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if (section == kFrotzInfoSection) {
-        return kFrotzInfoNumRows;
-    } else if (section == kFrotzResetSection)
-        return 1;
-    return kFrotzPrefsNumRows;
+    return [SettingsSectionRows()[section] count];
 }
 
 // to determine specific row height for each cell, override this.  In this example, each row is determined
@@ -399,7 +432,7 @@ enum FrotzPrefsRows
     if (cell == nil) {
         cell = [[UITableViewCell alloc] initWithStyle: UITableViewCellStyleValue1 reuseIdentifier: kReuseIdentifier];
     }
-    cell.textAlignment = UITextAlignmentLeft;
+    cell.textAlignment = NSTextAlignmentLeft;
     cell.textLabel.text = nil;
     cell.detailTextLabel.text = nil;
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
@@ -411,91 +444,68 @@ enum FrotzPrefsRows
 //
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSInteger row = [indexPath row];
-    UITableViewCell *cell = [self obtainTableCellForRow:row];
-    if (indexPath.section == kFrotzPrefsSection && indexPath.row >= kFrotzPrefsStoryFontSize
-        && indexPath.row != kFrotzPrefsNotesFont
-#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-        && indexPath.row != kFrotzPrefsDropbox
-#endif
-        || indexPath.section == kFrotzResetSection)
-        cell.accessoryType = UITableViewCellAccessoryNone;
-    else
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    FrotzSettingsRow row = [self rowAtIndexPath: indexPath];
+    UITableViewCell *cell = [self obtainTableCellForRow: indexPath.row];
+    cell.accessoryType = [self rowOpensScreen: row] ? UITableViewCellAccessoryDisclosureIndicator : UITableViewCellAccessoryNone;
     cell.accessoryView = nil;
 
-    switch (indexPath.section)
-    {
-        case kFrotzInfoSection:
-        {
-            switch (row) {
-                case kFrotzInfoAbout:
-                    cell.textLabel.text = @"About Frotz";
-                    break;
-                case kFrotzInfoGettingStarted:
-                    cell.textLabel.text = @"Getting Started";
-                    break;
-                case kFrotzInfoReleaseNotes:
-                    cell.textLabel.text = @"What's New?";
-                    break;
-                case kFrotzInfoFileTransfer:
-                    cell.textLabel.text = @"File Transfer";
-                    break;
-            }
+    switch (row) {
+        case kFrotzInfoAbout:
+            cell.textLabel.text = @"About Frotz";
             break;
-        }
-        case kFrotzPrefsSection:
-        {
-            switch (row) {
-                case kFrotzPrefsTextColor:
-                    cell.textLabel.text = @"Text Color";
-                    break;
-                case kFrotzPrefsBGColor:
-                    cell.textLabel.text = @"Background Color";
-                    break;
-                case kFrotzPrefsStoryFont:
-                    m_storyFontCell = cell;
-                    cell.textLabel.text = @"Story Font";
-                    cell.detailTextLabel.text = [[m_storyDelegate font] familyName];
-                    break;
-                case kFrotzPrefsNotesFont:
-                    m_notesFontCell = cell;
-                    cell.textLabel.text = @"Notes Font";
-                    cell.detailTextLabel.text = [[m_notesDelegate font] familyName];
-                    break;
-                case kFrotzPrefsStoryFontSize:
-                    m_storyFontSizeCell = cell;
-                    cell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_storyFontSliderCtl value]];
-                    cell.accessoryView = m_storyFontSliderCtl;
-                    break;
-                case kFrotzPrefsNotesFontSize:
-                    m_notesFontSizeCell = cell;
-                    cell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, (int)[m_notesFontSliderCtl value]];
-                    cell.accessoryView = m_notesFontSliderCtl;
-                    break;
-                case kFrotzPrefsWordCompletion:
-                    cell.textLabel.text = @"Word Completion";
-                    cell.accessoryView = m_switchCtl;
-                    break;
-                case kFrotzPrefsStoryInfoEditing:
-                    cell.textLabel.text = @"Story Info Editing";
-                    cell.accessoryView = m_switchCtl2;
-                    break;
+        case kFrotzInfoGettingStarted:
+            cell.textLabel.text = @"Getting Started";
+            break;
+        case kFrotzInfoReleaseNotes:
+            cell.textLabel.text = @"What's New?";
+            break;
+        case kFrotzInfoFileTransfer:
+            cell.textLabel.text = @"File Transfer";
+            break;
+        case kFrotzPrefsTextColor:
+            cell.textLabel.text = @"Text Color";
+            break;
+        case kFrotzPrefsBGColor:
+            cell.textLabel.text = @"Background Color";
+            break;
+        case kFrotzPrefsStoryFont:
+            m_storyFontCell = cell;
+            cell.textLabel.text = @"Story Font";
+            cell.detailTextLabel.text = [[m_storyDelegate font] familyName];
+            break;
+        case kFrotzPrefsNotesFont:
+            m_notesFontCell = cell;
+            cell.textLabel.text = @"Notes Font";
+            cell.detailTextLabel.text = [[m_notesDelegate font] familyName];
+            break;
+        case kFrotzPrefsStoryFontSize:
+            m_storyFontSizeCell = cell;
+            cell.textLabel.text = [NSString stringWithFormat: @kFontSizeStr, (int)[m_storyFontSliderCtl value]];
+            cell.accessoryView = m_storyFontSliderCtl;
+            break;
+        case kFrotzPrefsNotesFontSize:
+            m_notesFontSizeCell = cell;
+            cell.textLabel.text = [NSString stringWithFormat: @kNotesSizeStr, (int)[m_notesFontSliderCtl value]];
+            cell.accessoryView = m_notesFontSliderCtl;
+            break;
+        case kFrotzPrefsWordCompletion:
+            cell.textLabel.text = @"Word Completion";
+            cell.accessoryView = m_switchCtl;
+            break;
+        case kFrotzPrefsStoryInfoEditing:
+            cell.textLabel.text = @"Story Info Editing";
+            cell.accessoryView = m_switchCtl2;
+            break;
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-                case kFrotzPrefsDropbox:
-                    cell.textLabel.text = @"Dropbox Settings";
-                    break;
-#endif
-            }
+        case kFrotzPrefsDropbox:
+            cell.textLabel.text = @"Dropbox Settings";
             break;
-        }
-        case kFrotzResetSection:
-        {
+#endif
+        case kFrotzResetRow:
             cell.selectionStyle = UITableViewCellSelectionStyleBlue;
             cell.textLabel.text = @"Reset Preferences to Default";
-            cell.textAlignment = UITextAlignmentCenter;
+            cell.textAlignment = NSTextAlignmentCenter;
             break;
-        }
     }
 
     return cell;
@@ -507,49 +517,44 @@ enum FrotzPrefsRows
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {   
-    NSInteger section = indexPath.section, row = indexPath.row;
-    m_selectedSection = section;
-    m_selectedRow = row;
+    m_selectedSection = indexPath.section;
+    m_selectedRow = indexPath.row;
     UIViewController *viewController = nil;
-    switch (section)  {
-        case kFrotzInfoSection: {
-            switch (row) {
-                case kFrotzInfoAbout:
-                    viewController = m_aboutFrotz;
-                    break;
-                case kFrotzInfoGettingStarted:
-                    viewController = m_gettingStarted;
-                    break;
-                case kFrotzInfoReleaseNotes:
-                    viewController = m_releaseNotes;
-                    break;
-                case kFrotzInfoFileTransfer:
-                    viewController = m_fileTransferInfo;
-                    break;
-            }
+    switch ([self rowAtIndexPath: indexPath]) {
+        case kFrotzInfoAbout:
+            viewController = m_aboutFrotz;
             break;
-        }
-        case kFrotzPrefsSection:
-            //	case kFrotzColorsSection:
-            if (row==kFrotzPrefsTextColor) {
-                [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
-                m_colorPicker.title = NSLocalizedString(@"Text Color \u29C9", @"");
-                viewController = m_colorPicker;
-            } else if (row==kFrotzPrefsBGColor) {
-                [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
-                m_colorPicker.title = NSLocalizedString(@"Background Color \u29C9", @"");
-                viewController = m_colorPicker;
-            } else if (row==kFrotzPrefsStoryFont) {
-                viewController = m_storyFontPicker;
-            } else if (row==kFrotzPrefsNotesFont)
-                viewController = m_notesFontPicker;
+        case kFrotzInfoGettingStarted:
+            viewController = m_gettingStarted;
+            break;
+        case kFrotzInfoReleaseNotes:
+            viewController = m_releaseNotes;
+            break;
+        case kFrotzInfoFileTransfer:
+            viewController = m_fileTransferInfo;
+            break;
+        case kFrotzPrefsTextColor:
+            [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
+            m_colorPicker.title = NSLocalizedString(@"Text Color \u29C9", @"");
+            viewController = m_colorPicker;
+            break;
+        case kFrotzPrefsBGColor:
+            [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
+            m_colorPicker.title = NSLocalizedString(@"Background Color \u29C9", @"");
+            viewController = m_colorPicker;
+            break;
+        case kFrotzPrefsStoryFont:
+            viewController = m_storyFontPicker;
+            break;
+        case kFrotzPrefsNotesFont:
+            viewController = m_notesFontPicker;
+            break;
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-            else if (row==kFrotzPrefsDropbox) {
-                viewController = m_frotzDB;
-            }
-#endif
+        case kFrotzPrefsDropbox:
+            viewController = m_frotzDB;
             break;
-        case kFrotzResetSection: {
+#endif
+        case kFrotzResetRow: {
             m_resetting = YES;
             FrotzShowAlert(self, @"Reset Preferences", @"Do you want to reset all color and font settings to their defaults?",
                            @"Cancel", @[@"OK"], ^(NSInteger buttonIndex) {
