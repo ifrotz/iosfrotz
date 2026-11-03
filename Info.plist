@@ -198,7 +198,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<string>YES</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

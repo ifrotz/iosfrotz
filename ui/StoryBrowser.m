@@ -419,6 +419,10 @@ void removeOldPngSplash(const char *filename) {
 }
 
 - (void)setLaunchPath:(NSString*)path {
+    [self setLaunchPath: path keepOriginal: NO];
+}
+
+- (void)setLaunchPath:(NSString*)path keepOriginal:(BOOL)keepOriginal {
     NSFileManager *defaultManager = [NSFileManager defaultManager];
     NSString *alertTitle = nil, *alertMessage = nil;
     if (m_launchPath) {
@@ -428,9 +432,14 @@ void removeOldPngSplash(const char *filename) {
         NSError *error = nil;
         NSString *destPath = [m_storyMainViewController storyGamePath];
         destPath = [destPath stringByAppendingPathComponent:[path lastPathComponent]];
+        if ([[path stringByStandardizingPath] isEqualToString: [destPath stringByStandardizingPath]]) {
+            m_launchPath = destPath; // one of our own, opened from the Files app: nothing to copy
+            return;
+        }
         [defaultManager removeItemAtPath:destPath error:&error];
         if ([defaultManager copyItemAtPath:path toPath:destPath error:&error]) {
-            [defaultManager removeItemAtPath:path error:&error]; // remove Inbox copy so future invocations won't auto-number
+            if (!keepOriginal)
+                [defaultManager removeItemAtPath:path error:&error]; // remove Inbox copy so future invocations won't auto-number
             m_launchPath = destPath;
         } else {
             NSLog(@"Frotz couldn't read launch URL path: %@", path);

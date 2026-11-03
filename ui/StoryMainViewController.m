@@ -4637,9 +4637,14 @@ static void setScreenDims(char *storyNameBuf) {
 
 -(void) autoSaveStory {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(autoSaveCallback) object:nil];
-    
+
     [self updateAutosavePaths];
-    
+
+    // The Saves folder is in the Files app, so the story's save directory (or Saves itself) may
+    // have been deleted since the story started; put it back rather than lose the autosave.
+    if (storySavePath && ![[NSFileManager defaultManager] fileExistsAtPath: storySavePath])
+        [[NSFileManager defaultManager] createDirectoryAtPath: storySavePath withIntermediateDirectories: YES attributes: nil error: NULL];
+
     iosif_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
     
     if (m_currentStory && ([m_currentStory length] > 0)) {

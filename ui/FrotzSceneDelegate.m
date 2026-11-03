@@ -111,7 +111,7 @@
     m_browser.splitViewController.preferredDisplayMode = UISplitViewControllerDisplayModeAutomatic;
 
     for (UIOpenURLContext *context in connectionOptions.URLContexts)
-        [self handleOpenURL: context.URL];
+        [self handleOpenURLContext: context];
 
     [window makeKeyAndVisible];
 }
@@ -127,6 +127,9 @@
     // story view has been loaded; avoid forcing the view to load just to resize it.
     if ([storyMainViewController isViewLoaded])
         [storyMainViewController autosize];
+    // The Games folder is in the Files app, so stories may have been added or removed meanwhile.
+    if ([m_browser isViewLoaded])
+        [m_browser reloadData];
 }
 
 - (void)windowScene:(UIWindowScene *)windowScene performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL))completionHandler {
@@ -143,11 +146,18 @@
 
 - (void)scene:(UIScene *)scene openURLContexts:(NSSet<UIOpenURLContext *> *)URLContexts {
     for (UIOpenURLContext *context in URLContexts)
-        [self handleOpenURL: context.URL];
+        [self handleOpenURLContext: context];
 }
 
-- (BOOL)handleOpenURL:(NSURL *)launchURL {
-    NSLog(@"openURL %@", launchURL);
+// A file handed to Frotz comes one of two ways. From a share sheet or an "Open in" it is copied
+// into the app's Inbox first, and the copy is ours to move into Games and delete. From the Files
+// app (the Documents folder being published there, see LSSupportsOpeningDocumentsInPlace) it is
+// opened in place: the URL points at the user's own file, possibly outside the sandbox, readable
+// only while security-scoped access is held, and never to be deleted.
+- (BOOL)handleOpenURLContext:(UIOpenURLContext *)context {
+    NSURL *launchURL = context.URL;
+    BOOL inPlace = context.options.openInPlace;
+    NSLog(@"openURL %@%@", launchURL, inPlace ? @" (in place)" : @"");
 #if UseDropBoxSDK
     DBOAuthCompletion completion = ^(DBOAuthResult *authResult) {
         if (authResult != nil) {
@@ -169,7 +179,10 @@
     if (launchURL && [launchURL isFileURL]) {
         NSString *launchPath = [launchURL path];
 
-        [m_browser setLaunchPath: launchPath];
+        BOOL scoped = inPlace && [launchURL startAccessingSecurityScopedResource];
+        [m_browser setLaunchPath: launchPath keepOriginal: inPlace]; // copies into Games while access is held
+        if (scoped)
+            [launchURL stopAccessingSecurityScopedResource];
         if ((launchPath = [m_browser launchPath])) { // nil if file couldn't be accessed
             [m_browser addRecentStory: launchPath];
             StoryInfo *si = [[StoryInfo alloc] initWithPath: launchPath browser:m_browser];

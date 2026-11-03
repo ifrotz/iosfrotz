@@ -85,6 +85,10 @@ IBOutlet    StoryDetailsController *m_details;
 }
 - (instancetype)init;
 @property (nonatomic, copy) NSString *launchPath;
+// Brings a story file handed to Frotz into Games and makes it the launch path. keepOriginal says
+// the file is the user's own (opened in place from the Files app) rather than an Inbox copy to be
+// removed; a file already in Games is simply used where it is.
+- (void)setLaunchPath:(NSString*)path keepOriginal:(BOOL)keepOriginal;
 @property (nonatomic, readonly, strong) UIView *navTitleView;
 @property (nonatomic, readonly, copy) NSArray *storyNames;
 - (BOOL)storyIsInstalled:(NSString*)story;
