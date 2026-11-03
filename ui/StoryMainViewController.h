@@ -139,6 +139,7 @@ extern StoryBrowser *theStoryBrowser;
     NSInteger m_dictationCuedState;   // the state the last cue announced; see cueDictationStateChange
     BOOL m_dictationStartedByUser;    // the mic button asked for the start now in progress
     BOOL m_dialogCoversInput;         // the file chooser or settings sheet is up; dictation stays paused however the keyboard moves
+    StoryVocabulary *m_storyVocabulary; // the words the current story has printed; see noteStoryOutput:
 #endif
 }
 
@@ -173,6 +174,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) toggleListenForSpeech;
 -(void) pauseOrResumeDictation:(BOOL)inputLineIsActive;
 -(void) deferDictationCommit; // the player is scrolling or touching the story; see StoryDictationController deferCommit
+@property (nonatomic, readonly) StoryVocabulary *storyVocabulary; // see StoryDictationController.h
 #endif
 -(void) setIgnoreWordSelection:(BOOL)ignore;
 -(void) abortToBrowser;
@@ -253,6 +255,7 @@ extern StoryBrowser *theStoryBrowser;
 -(void) displayLaunchMessageWithDelay: (CGFloat)delay duration:(CGFloat)duration alpha:(CGFloat)alpha;
 @property (nonatomic, readonly) CGPoint cursorOffset;
 -(NSString*) completeWord:(NSString*)word prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
+-(BOOL) dictionaryHasWord:(NSString*)word; // the game's dictionary has this word, or a longer one it begins
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
 // Dropbox API

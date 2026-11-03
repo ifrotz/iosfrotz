@@ -133,13 +133,98 @@
 #if EnableStoryDictation
 -(BOOL)validateWord:(NSString*)word {
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    BOOL isAmbig = NO;
-    if (word && [word length] > 0) {
-        NSString *match = [storyController completeWord: word prevString: nil isAmbiguous:&isAmbig];
-        if (match) // && !isAmbig)
-            return YES;
+    return [storyController dictionaryHasWord: word];
+}
+
+// What the player is likely to say, for the recognizer to favor (see dictationContextWords in
+// InputHelper.h). The recognizer's own vocabulary is everyday English; a parser game's is the
+// nouns of its rooms and the verbs of the form, so without this "take the lantern" came back as
+// "take the lantern" only by luck and "xyzzy" never did. Drawing the hints from three sources,
+// recent commands, the text on screen and a stock of common verbs, is Anand M.'s idea (anandman
+// on GitHub), from his own independent voice-mode branch of Frotz. Most useful first:
+//  - the player's recent commands, whole, since commands repeat ("examine lamp", "take lamp");
+//  - the words the story has printed that the game's dictionary knows, most recent and most
+//    repeated first (StoryVocabulary), since what a command refers to is almost always something
+//    the player has read (and this leaks no spoilers: it is only what has been printed, unlike
+//    the game's dictionary as a whole would be);
+//  - the ordinary verbs and directions of the form, which the output may not contain.
+// Capped: Apple gives no limit for contextual strings, but the hint is per utterance and a few
+// hundred strings is plenty.
+static const NSUInteger kDictationContextMaxCommands = 20;
+static const NSUInteger kDictationContextMaxWords = 200;
+
+// Whether the game's dictionary knows a word, for StoryVocabulary's queries.
+-(BOOL (^)(NSString*))gameKnowsWord {
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    return ^BOOL(NSString *word) { return [storyController dictionaryHasWord: word]; };
+}
+
+-(NSArray<NSString*>*)dictationContextWords {
+    NSMutableOrderedSet<NSString*> *context = [NSMutableOrderedSet orderedSet];
+    NSArray<NSString*> *history = [m_inputHelper historyItems];
+    for (NSString *command in [history reverseObjectEnumerator]) {
+        NSString *trimmed = [[command stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]] lowercaseString];
+        if ([trimmed length] > 1)
+            [context addObject: trimmed];
+        if ([context count] >= kDictationContextMaxCommands)
+            break;
     }
-    return NO;
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    [context addObjectsFromArray: [storyController.storyVocabulary recentWords: kDictationContextMaxWords known: [self gameKnowsWord]]];
+    static NSArray<NSString*> *ordinary;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        ordinary = @[ @"look", @"examine", @"take", @"get", @"drop", @"put", @"open", @"close", @"read", @"search",
+                      @"inventory", @"wait", @"again", @"go", @"enter", @"exit", @"climb", @"push", @"pull", @"turn",
+                      @"give", @"ask", @"tell", @"say", @"wear", @"remove", @"unlock", @"lock", @"light", @"attack",
+                      @"north", @"south", @"east", @"west", @"northeast", @"northwest", @"southeast", @"southwest",
+                      @"up", @"down", @"in", @"out", @"save", @"restore", @"undo", @"quit", @"xyzzy" ];
+    });
+    [context addObjectsFromArray: ordinary];
+    return [context array];
+}
+
+// The recognizer knows everyday English, not a game's invented words ("yomin") or its spellings
+// ("driver's"), so for those it lands on the nearest real word. The game's dictionary says which
+// transcript words it won't understand; for each, the nearest word the story has printed that the
+// game does understand replaces it, if it is near enough (StoryVocabulary nearestKnownWordTo:;
+// "yemen" to "yomin" is two substitutions in five letters, the case this exists for). Only words
+// the game would have rejected anyway are touched, and only words the player has already seen
+// are candidates, so a miss costs one parser error for another and nothing is revealed.
+// Two kinds of unknown word are deliberately left alone: one in capitals, which the recognizer
+// produces when the player spells a word letter by letter, and one the recognizer was confident
+// of (confidentRanges), where a careful speaker most likely said exactly that and the parser's
+// own complaint is more useful than a guess ("pet horse" turned into "path horse" is not).
+-(NSString*)dictationCorrectedText:(NSString*)text confidentRanges:(NSIndexSet*)confidentRanges {
+    NSArray<NSString*> *words = [text componentsSeparatedByString: @" "];
+    NSMutableArray<NSString*> *out = [NSMutableArray arrayWithCapacity: [words count]];
+    NSCharacterSet *punctuation = [NSCharacterSet punctuationCharacterSet];
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    BOOL (^known)(NSString*) = [self gameKnowsWord];
+    BOOL changed = NO;
+    NSUInteger wordStart = 0; // offset of `word` within text; the words are split on single spaces
+    for (NSString *word in words) {
+        NSRange coreRange = [word rangeOfCharacterFromSet: [punctuation invertedSet]];
+        NSString *core = [word stringByTrimmingCharactersInSet: punctuation];
+        NSString *lower = [core lowercaseString];
+        BOOL spelledOut = [core isEqualToString: [core uppercaseString]];
+        BOOL confident = coreRange.location != NSNotFound
+            && [confidentRanges intersectsIndexesInRange: NSMakeRange(wordStart + coreRange.location, [core length])];
+        wordStart += [word length] + 1;
+        if ([lower length] < 3 || [lower rangeOfCharacterFromSet: [NSCharacterSet letterCharacterSet]].location == NSNotFound
+            || spelledOut || confident || known(lower)) {
+            [out addObject: word];
+            continue;
+        }
+        NSString *best = [storyController.storyVocabulary nearestKnownWordTo: lower known: known];
+        if (best) {
+            // Keep whatever punctuation surrounded the word in the transcript.
+            [out addObject: [word stringByReplacingCharactersInRange: NSMakeRange(coreRange.location, [core length]) withString: best]];
+            changed = YES;
+        } else
+            [out addObject: word];
+    }
+    return changed ? [out componentsJoinedByString: @" "] : text;
 }
 
 // Between one key read and the next the interpreter disables input for a moment, so a hypothesis

@@ -177,6 +177,10 @@ extern int iosif_ifrotz_verbose_debug;
 // Trace logging for the above: every hypothesis, timer fire and scored word. Errors are logged
 // regardless.
 #define StoryDictationDebugLogging 0
+// Note the words a story prints (StoryVocabulary, which primes and corrects the recognizer) even
+// while dictation is off, so that text the game has since cleared is still known when dictation
+// is turned on. When 0, tracking starts with the text on screen at that moment.
+#define AlwaysTrackStoryVocabulary 1
 
 #include "ifrotzdefs.h"
 

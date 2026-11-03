@@ -3278,6 +3278,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 -(void) setCurrentStory: (NSString*)storyPath {
     id fileMgr = [NSFileManager defaultManager];
     if (m_currentStory != storyPath) {
+#if EnableStoryDictation
+        [m_storyVocabulary reset]; // a different story's words
+#endif
         m_currentStory = nil;
         BOOL isDir = NO;
         if (storyPath && [storyPath length] > 0) {
@@ -3662,8 +3665,13 @@ static int iosif_top_win_height = 1;
 #if UseRichTextView
             NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             while (escCodeRange.length > 0 && !discard_output_until_prompt) {
-                if (escCodeRange.location > 0)
-                    [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
+                if (escCodeRange.location > 0) {
+                    NSString *chunk = [inputBufferStr substringToIndex: escCodeRange.location];
+#if EnableStoryDictation
+                    [self noteStoryOutput: chunk];
+#endif
+                    [storyView appendText: chunk];
+                }
                 NSString *subEscCode = [inputBufferStr substringFromIndex: escCodeRange.location+1];
                 if ([subEscCode hasPrefix: @kStyleEscCode]) {
                     RichTextStyle style = kFTNormal;
@@ -3774,6 +3782,10 @@ static int iosif_top_win_height = 1;
             }
 #endif
             NSUInteger iBufLen = [inputBufferStr length];
+#if EnableStoryDictation
+            if (!discard_output_until_prompt)
+                [self noteStoryOutput: inputBufferStr]; // whole, however it is appended below
+#endif
             if (discard_output_until_prompt)
                 ; // do nothing
             else if (iBufLen < 256)
@@ -4510,6 +4522,9 @@ static void setScreenDims(char *storyNameBuf) {
 #else
                 [m_storyView setText: [dict objectForKey: @"storyWinContents"]];
 #endif
+#if EnableStoryDictation
+                [self rebuildStoryVocabulary]; // from the restored text
+#endif
                 NSNumber *hFlagsNum = dict[@"hflags"];
                 if (hFlagsNum) {
                     hflagsRestore =  [hFlagsNum integerValue] & FIXED_FONT_FLAG;
@@ -4925,6 +4940,10 @@ static void setScreenDims(char *storyNameBuf) {
     m_dictationEnabled = enabled;
     if (!enabled)
         [m_dictationController stopListening];
+#if !AlwaysTrackStoryVocabulary
+    else
+        [self rebuildStoryVocabulary]; // nothing was being noted while it was off
+#endif
     [self updateTrailingBarItems];
 }
 
@@ -5054,6 +5073,29 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
 
 -(void)deferDictationCommit {
     [m_dictationController deferCommit];
+}
+
+-(StoryVocabulary*)storyVocabulary {
+    if (!m_storyVocabulary)
+        m_storyVocabulary = [[StoryVocabulary alloc] init];
+    return m_storyVocabulary;
+}
+
+// Called with each chunk of text the story prints to a text window (not a grid window: the status
+// line and Glk grids hold truncated text, maps and the like, and nothing the text windows don't).
+// Whether words are noted while dictation is off is AlwaysTrackStoryVocabulary's call (iosfrotz.h):
+// if not, enabling dictation later starts from the text then on screen (rebuildStoryVocabulary).
+-(void)noteStoryOutput:(NSString*)text {
+    if (AlwaysTrackStoryVocabulary || m_dictationEnabled)
+        [self.storyVocabulary noteOutput: text];
+}
+
+// After an autorestore, or when dictation is enabled mid-story without AlwaysTrackStoryVocabulary:
+// the words on screen are what there is to go on.
+-(void)rebuildStoryVocabulary {
+    [self.storyVocabulary reset];
+    if (AlwaysTrackStoryVocabulary || m_dictationEnabled)
+        [self.storyVocabulary noteOutput: [m_storyView text]];
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
@@ -5231,6 +5273,26 @@ static int matchWord(NSString *str, NSString __strong *wordArray[]) {
 extern int completion (const zchar *buffer, zchar *result);
 extern int glulxCompleteWord(const char *word, char *result);
 
+
+// Whether the game's dictionary has a word beginning with `word` (so the word itself, or a longer
+// one; parsers accept words down to the dictionary's resolution anyway). completeWord: can't be
+// used for this: for an exact match that is a prefix of nothing else, the completers return
+// success with nothing to add, and completeWord: turns that into nil.
+-(BOOL)dictionaryHasWord:(NSString*)word {
+    if (![word length])
+        return NO;
+    char resultbuf[256] = { 0, 0 };
+    int status;
+    if (gStoryInterp == kZStory) {
+#if USE_UTF8
+        status = completion((const zchar*)[word cStringUsingEncoding: NSUTF16StringEncoding], (zchar*)resultbuf);
+#else
+        status = completion((const zchar*)[word UTF8String], (zchar*)resultbuf);
+#endif
+    } else
+        status = glulxCompleteWord([word UTF8String], resultbuf);
+    return status != 2;
+}
 
 -(NSString*)completeWord:(NSString*)str prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
     *isAmbiguous = NO;

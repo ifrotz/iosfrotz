@@ -33,6 +33,10 @@
 }
 @end
 
+// A transcript segment at or above this confidence (0 to 1, final results only) is taken as
+// heard even if the game doesn't know the word; see didFinishRecognition.
+static const float kDictationConfidentWord = 0.9f;
+
 // The recognizer reports its failures as error codes in the assistant domain, with no public
 // constants; the table in the error property's comment in SFSpeechRecognitionTask.h lists them.
 // 203, "failure occurred during speech recognition", is what a task ends with when the audio it
@@ -317,6 +321,23 @@ static BOOL ScreenReaderInUse(void) {
     else
         transcription = [result bestTranscription];
     NSString *text = [transcription formattedString];
+    if (isFinal && !wantKey) {
+        // Words the game won't know, swapped for near matches it will (see dictationCorrectedText:
+        // in InputHelper.h). Final results only: a partial is still changing, and only a final
+        // result carries per-word confidence; words the recognizer was sure of are left as heard,
+        // since a careful speaker saying a verb the game lacks is better told so by the parser.
+        NSMutableIndexSet *confident = [NSMutableIndexSet indexSet];
+        for (SFTranscriptionSegment *segment in [transcription segments]) {
+            DictationLog(@"  segment \"%@\" confidence %.2f", [segment substring], [segment confidence]);
+            if ([segment confidence] >= kDictationConfidentWord)
+                [confident addIndexesInRange: [segment substringRange]];
+        }
+        NSString *corrected = [m_delegate dictationCorrectedText: text confidentRanges: confident];
+        if (corrected && ![corrected isEqualToString: text]) {
+            DictationLog(@"corrected \"%@\" to \"%@\"", text, corrected);
+            text = corrected;
+        }
+    }
     DictationLog(@"Final: %d Recog: %@", isFinal, text);
     m_currentTranscription = [text stringWithSanitizeDictation];
 
@@ -621,8 +642,11 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
         // primed from the next utterance on.
         m_sfRecogRequest.contextualStrings = [self singleKeyContextualStrings];
         m_sfRecogRequest.taskHint = SFSpeechRecognitionTaskHintConfirmation;
-    } else
-        m_sfRecogRequest.contextualStrings = @[ @"look", @"grue", @"i", @"frotz", @"nitfol", @"aimfiz", @"filfre", @"gnusto", @"rezrov" ];
+    } else {
+        // A command: favour the words of the story on screen, the player's recent commands and
+        // the form's ordinary verbs (see dictationContextWords in InputHelper.h).
+        m_sfRecogRequest.contextualStrings = [m_delegate dictationContextWords] ?: @[];
+    }
     m_recognitionTask = [m_sfrecog recognitionTaskWithRequest: m_sfRecogRequest delegate: self];
     DictationLog(@"recognition task started, other audio playing %d", m_audioSession.isOtherAudioPlaying);
 }
@@ -768,6 +792,210 @@ static const NSTimeInterval kCueSecondNoteOffset = 0.08; // SECOND_STRIKE in the
             [haptic impactOccurred];
         });
     }
+}
+
+@end
+
+#pragma mark - Vocabulary
+
+// Levenshtein distance between two short strings.
+static NSUInteger EditDistance(NSString *a, NSString *b) {
+    NSUInteger la = [a length], lb = [b length];
+    if (la > 32 || lb > 32)
+        return NSUIntegerMax;
+    NSUInteger prev[33], curr[33];
+    for (NSUInteger j = 0; j <= lb; j++)
+        prev[j] = j;
+    for (NSUInteger i = 1; i <= la; i++) {
+        curr[0] = i;
+        unichar ca = [a characterAtIndex: i-1];
+        for (NSUInteger j = 1; j <= lb; j++) {
+            NSUInteger cost = (ca == [b characterAtIndex: j-1]) ? 0 : 1;
+            NSUInteger best = MIN(prev[j] + 1, curr[j-1] + 1);
+            curr[j] = MIN(best, prev[j-1] + cost);
+        }
+        memcpy(prev, curr, sizeof(curr));
+    }
+    return prev[lb];
+}
+
+// A word with its apostrophes and hyphens removed, for comparing against a transcript, which
+// never has them ("drivers" for "driver's").
+static NSString *BareWord(NSString *word) {
+    static NSCharacterSet *joiners;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ joiners = [NSCharacterSet characterSetWithCharactersInString: @"'-"]; });
+    return [[word componentsSeparatedByCharactersInSet: joiners] componentsJoinedByString: @""];
+}
+
+// American Soundex of a bare word: the first letter, then codes for the consonants that follow,
+// vowels (and h, w, y) dropped, repeats merged, padded to four. Words that sound alike share a
+// code whatever their spelling: "rezrov" and the recognizer's "reserv" are both R261.
+static NSString *Soundex(NSString *word) {
+    if (![word length])
+        return @"";
+    static const char codes[26] = { 0,1,2,3,0,1,2,0,0,2,2,4,5,5,0,1,2,6,2,3,0,1,0,2,0,2 }; // a..z
+    unichar first = [word characterAtIndex: 0];
+    NSMutableString *key = [NSMutableString stringWithFormat: @"%C", (unichar)toupper(first)];
+    char last = (first >= 'a' && first <= 'z') ? codes[first - 'a'] : 0;
+    for (NSUInteger i = 1; i < [word length] && [key length] < 4; i++) {
+        unichar c = [word characterAtIndex: i];
+        if (c < 'a' || c > 'z')
+            continue;
+        char code = codes[c - 'a'];
+        if (c == 'h' || c == 'w')
+            continue; // don't separate two consonants with the same code
+        if (code && code != last)
+            [key appendFormat: @"%d", code];
+        last = code;
+    }
+    while ([key length] < 4)
+        [key appendString: @"0"];
+    return key;
+}
+
+static const NSUInteger kVocabularyCapacity = 5000; // more distinct words than most games print; insurance only
+static const NSUInteger kVocabularyCountBonus = 25;   // in words of recency, per appearance, up to kVocabularyCountBonusLimit
+static const NSUInteger kVocabularyCountBonusLimit = 40;
+
+@implementation StoryVocabulary
+{
+    NSMutableDictionary<NSString*, NSNumber*> *m_lastSeen; // word -> sequence number of its latest appearance
+    NSMutableDictionary<NSString*, NSNumber*> *m_counts;   // word -> appearances
+    NSUInteger m_sequence;
+    NSCharacterSet *m_nonWordChars;
+}
+
+-(instancetype)init {
+    self = [super init];
+    if (self) {
+        m_lastSeen = [NSMutableDictionary dictionary];
+        m_counts = [NSMutableDictionary dictionary];
+        NSMutableCharacterSet *wordChars = [NSMutableCharacterSet letterCharacterSet];
+        [wordChars addCharactersInString: @"'-"];
+        m_nonWordChars = [wordChars invertedSet];
+    }
+    return self;
+}
+
+-(void)reset {
+    [m_lastSeen removeAllObjects];
+    [m_counts removeAllObjects];
+    m_sequence = 0;
+}
+
+-(NSUInteger)count {
+    return [m_lastSeen count];
+}
+
+// What a word is worth when ranking: its recency, plus a bonus for how often it has appeared.
+-(NSUInteger)scoreOf:(NSString*)word {
+    return [m_lastSeen[word] unsignedIntegerValue] + kVocabularyCountBonus * MIN([m_counts[word] unsignedIntegerValue], kVocabularyCountBonusLimit);
+}
+
+-(void)noteOutput:(NSString*)text {
+    if (![text length])
+        return;
+    static NSCharacterSet *joiners;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ joiners = [NSCharacterSet characterSetWithCharactersInString: @"'-"]; });
+    for (NSString *token in [[text lowercaseString] componentsSeparatedByCharactersInSet: m_nonWordChars]) {
+        NSString *word = [token stringByTrimmingCharactersInSet: joiners];
+        if ([word length] < 2)
+            continue;
+        m_lastSeen[word] = @(++m_sequence);
+        m_counts[word] = @([m_counts[word] unsignedIntegerValue] + 1);
+    }
+    if ([m_lastSeen count] > kVocabularyCapacity)
+        [self evict];
+}
+
+// Drops the lowest-scoring tenth: the words seen least often and longest ago. Rarely runs; a long
+// game played right through might get here, at which point theYeah early, once-seen words go first.
+-(void)evict {
+    NSArray<NSString*> *ranked = [[m_lastSeen allKeys] sortedArrayUsingComparator: ^NSComparisonResult(NSString *a, NSString *b) {
+        NSUInteger sa = [self scoreOf: a], sb = [self scoreOf: b];
+        return sa < sb ? NSOrderedAscending : (sa > sb ? NSOrderedDescending : NSOrderedSame);
+    }];
+    NSUInteger dropping = [ranked count] / 10;
+    DictationLog(@"Vocabulary at %lu words; evicting %lu, lowest-scoring: %@, highest kept: %@",
+                 (unsigned long)[ranked count], (unsigned long)dropping,
+                 [[ranked subarrayWithRange: NSMakeRange(0, MIN(dropping, 20))] componentsJoinedByString: @" "],
+                 [[ranked subarrayWithRange: NSMakeRange([ranked count] - MIN([ranked count], 10), MIN([ranked count], 10))] componentsJoinedByString: @" "]);
+    for (NSUInteger i = 0; i < dropping; i++) {
+        [m_lastSeen removeObjectForKey: ranked[i]];
+        [m_counts removeObjectForKey: ranked[i]];
+    }
+}
+
+-(NSArray<NSString*>*)recentWords:(NSUInteger)max known:(BOOL (^)(NSString *word))known {
+    NSArray<NSString*> *ranked = [[m_lastSeen allKeys] sortedArrayUsingComparator: ^NSComparisonResult(NSString *a, NSString *b) {
+        NSUInteger sa = [self scoreOf: a], sb = [self scoreOf: b];
+        return sa > sb ? NSOrderedAscending : (sa < sb ? NSOrderedDescending : NSOrderedSame);
+    }];
+    NSMutableArray<NSString*> *words = [NSMutableArray arrayWithCapacity: max];
+    for (NSString *word in ranked) {
+        if (known(word))
+            [words addObject: word];
+        if ([words count] >= max)
+            break;
+    }
+    return words;
+}
+
+-(NSString*)nearestKnownWordTo:(NSString*)word known:(BOOL (^)(NSString *word))known {
+    NSString *lower = [word lowercaseString];
+    if ([lower length] < 3)
+        return nil;
+    NSString *bare = BareWord(lower);
+    NSUInteger allowed = [bare length] <= 4 ? 1 : 2;
+    unichar initial = [lower characterAtIndex: 0];
+    NSString *best = nil;
+    NSUInteger bestDistance = allowed + 1, bestSeen = 0;
+    for (NSString *candidate in m_lastSeen) {
+        if ([candidate characterAtIndex: 0] != initial)
+            continue;
+        NSString *bareCandidate = BareWord(candidate);
+        NSInteger lengthGap = (NSInteger)[bareCandidate length] - (NSInteger)[bare length];
+        if (lengthGap > (NSInteger)allowed || lengthGap < -(NSInteger)allowed)
+            continue;
+        NSUInteger distance = EditDistance(bare, bareCandidate);
+        if (distance > allowed)
+            continue;
+        NSUInteger seen = [m_lastSeen[candidate] unsignedIntegerValue];
+        if (distance < bestDistance || (distance == bestDistance && seen > bestSeen)) {
+            if (!known(candidate))
+                continue;
+            best = candidate;
+            bestDistance = distance;
+            bestSeen = seen;
+        }
+    }
+    if (best)
+        return best;
+    // Nothing near in spelling: try sound. The recognizer spells what it hears, so an invented
+    // word can come back further from its spelling than from its sound ("reserv" for "rezrov"
+    // is three edits). Among printed words with the same Soundex code, the closest in spelling,
+    // then the most recent.
+    NSString *sound = Soundex(bare);
+    bestDistance = NSUIntegerMax;
+    for (NSString *candidate in m_lastSeen) {
+        if ([candidate characterAtIndex: 0] != initial)
+            continue;
+        NSString *bareCandidate = BareWord(candidate);
+        if (![Soundex(bareCandidate) isEqualToString: sound])
+            continue;
+        NSUInteger distance = EditDistance(bare, bareCandidate);
+        NSUInteger seen = [m_lastSeen[candidate] unsignedIntegerValue];
+        if (distance < bestDistance || (distance == bestDistance && seen > bestSeen)) {
+            if (!known(candidate))
+                continue;
+            best = candidate;
+            bestDistance = distance;
+            bestSeen = seen;
+        }
+    }
+    return best;
 }
 
 @end

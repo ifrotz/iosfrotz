@@ -97,5 +97,27 @@ typedef NS_ENUM(NSInteger, StoryDictationCue) {
 -(void)playCue:(StoryDictationCue)cue;
 @end
 
+// The words a story has printed, for priming the recognizer with what the player is likely to say
+// and for correcting what it hears. Every word of every chunk of story output is noted, with how
+// often and how recently; nothing is forgotten when the story clears its window, because a game's
+// vocabulary only grows. The owner (StoryMainViewController) resets it when a different story
+// starts and rebuilds it from the restored text after an autorestore. Words are lower-cased.
+// Whether the game actually knows a word (its dictionary) is decided by the caller's block, at
+// use: dictionary lookups go through the interpreter's buffers and are only safe while it waits
+// for input, which is when these are asked.
+@interface StoryVocabulary : NSObject
+-(void)noteOutput:(NSString*)text;
+-(void)reset;
+@property (nonatomic, readonly) NSUInteger count;
+// The most recently printed words that `known` accepts, most recent first, up to max. A word
+// printed often ranks somewhat above where its last appearance alone would put it.
+-(NSArray<NSString*>*)recentWords:(NSUInteger)max known:(BOOL (^)(NSString *word))known;
+// The printed word nearest to `word` that `known` accepts: same first letter, apostrophes and
+// hyphens ignored, within one edit for words of up to four letters or two beyond; failing that,
+// one that sounds the same (equal Soundex code), closest in spelling. Ties go to the more
+// recently printed. nil when nothing is near enough.
+-(nullable NSString*)nearestKnownWordTo:(NSString*)word known:(BOOL (^)(NSString *word))known;
+@end
+
 NS_ASSUME_NONNULL_END
 #endif // EnableStoryDictation

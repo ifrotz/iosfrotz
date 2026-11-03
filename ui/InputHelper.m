@@ -164,6 +164,10 @@ const CGFloat kHistoryLineHeight = 20.0;
     return [m_history count];
 }
 
+- (NSArray<NSString*>*)historyItems {
+    return [m_history copy];
+}
+
 - (NSUInteger)menuCount {
     return m_mode == FrotzInputHelperModeMoreWords ? [m_commonCommands count] : [m_history count];
 }
