@@ -140,6 +140,7 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_dictationStartedByUser;    // the mic button asked for the start now in progress
     BOOL m_dialogCoversInput;         // the file chooser or settings sheet is up; dictation stays paused however the keyboard moves
     StoryVocabulary *m_storyVocabulary; // the words the current story has printed; see noteStoryOutput:
+    NSString *m_dictationLanguage;      // the current story's language once decided; see updateDictationLanguage
 #endif
 }
 

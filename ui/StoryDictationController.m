@@ -10,6 +10,7 @@
 #if EnableStoryDictation
 
 #import <AudioToolbox/AudioToolbox.h>
+#import <NaturalLanguage/NaturalLanguage.h>
 
 // Trace output (StoryDictationDebugLogging in iosfrotz.h); errors use NSLog directly.
 #if StoryDictationDebugLogging
@@ -37,6 +38,9 @@
 // heard even if the game doesn't know the word; see didFinishRecognition.
 static const float kDictationConfidentWord = 0.9f;
 
+// The recognizer locale until a story's language says otherwise; see storyLanguage.
+static NSString *const kDictationDefaultLocale = @"en-US";
+
 // The recognizer reports its failures as error codes in the assistant domain, with no public
 // constants; the table in the error property's comment in SFSpeechRecognitionTask.h lists them.
 // 203, "failure occurred during speech recognition", is what a task ends with when the audio it
@@ -60,6 +64,38 @@ static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
 // Without echo cancellation their speech is transcribed as if the player had said it.
 static BOOL ScreenReaderInUse(void) {
     return UIAccessibilityIsVoiceOverRunning() || UIAccessibilityIsSpeakScreenEnabled() || UIAccessibilityIsSpeakSelectionEnabled();
+}
+
+// Reads the <language> of an iFiction record's bibliographic section and nothing else; see
+// languageFromBlorbAtPath:.
+@interface StoryLanguageParser : NSObject <NSXMLParserDelegate>
+@property (nonatomic, strong) NSMutableArray<NSString*> *elements;
+@property (nonatomic, strong) NSMutableString *text;
+@property (nonatomic, copy) NSString *language;
+@end
+
+@implementation StoryLanguageParser
+-(void)parser:(NSXMLParser*)parser didStartElement:(NSString*)element namespaceURI:(NSString*)uri qualifiedName:(NSString*)name attributes:(NSDictionary*)attributes {
+    [self.elements addObject: element];
+    if ([self.elements isEqualToArray: @[@"ifindex", @"story", @"bibliographic", @"language"]])
+        self.text = [NSMutableString string];
+}
+-(void)parser:(NSXMLParser*)parser foundCharacters:(NSString*)string {
+    if (self.text)
+        [self.text appendString: string];
+}
+-(void)parser:(NSXMLParser*)parser didEndElement:(NSString*)element namespaceURI:(NSString*)uri qualifiedName:(NSString*)name {
+    if ([element isEqualToString: @"language"] && self.text) {
+        if (!self.language)
+            self.language = [self.text stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        self.text = nil;
+    }
+    [self.elements removeLastObject];
+}
+@end
+
+static uint32_t BlorbWord(const unsigned char *bytes) {
+    return ((uint32_t)bytes[0] << 24) | ((uint32_t)bytes[1] << 16) | ((uint32_t)bytes[2] << 8) | bytes[3];
 }
 
 @implementation StoryDictationController
@@ -93,9 +129,8 @@ static BOOL ScreenReaderInUse(void) {
 -(instancetype)init {
     self = [super init];
     if (self) {
-        m_sfrecog =  [[SFSpeechRecognizer alloc] initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]];
-        m_sfrecog.delegate = self;
-        
+        [self createRecognizerForLocale: kDictationDefaultLocale];
+
         m_audioEngine = [[AVAudioEngine alloc] init];
         m_audioSession = [AVAudioSession sharedInstance];
         m_silenceInterval = kDictationDefaultSilenceInterval;
@@ -126,6 +161,134 @@ static BOOL ScreenReaderInUse(void) {
 
 -(void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+}
+
+#pragma mark - Language
+
+-(void)createRecognizerForLocale:(NSString*)identifier {
+    m_sfrecog.delegate = nil;
+    m_recognitionLocaleIdentifier = identifier;
+    m_sfrecog = [[SFSpeechRecognizer alloc] initWithLocale: [NSLocale localeWithLocaleIdentifier: identifier]];
+    m_sfrecog.delegate = self;
+}
+
+-(NSString*)storyLanguage {
+    return m_storyLanguage;
+}
+
+-(void)setStoryLanguage:(NSString*)language {
+    m_storyLanguage = [language copy];
+    NSString *identifier = ([language length] ? [[self class] recognitionLocaleForLanguage: language] : nil) ?: kDictationDefaultLocale;
+    if ([identifier isEqualToString: m_recognitionLocaleIdentifier])
+        return;
+    DictationLog(@"story language %@: recognizer locale %@ (was %@)", language, identifier, m_recognitionLocaleIdentifier);
+    if ([self isListening] || m_isPaused)
+        [self stopListening]; // the task in flight belongs to the old recognizer
+    [self createRecognizerForLocale: identifier];
+}
+
+-(NSString*)recognitionLocaleIdentifier {
+    return m_recognitionLocaleIdentifier;
+}
+
+-(NSString*)recognitionLanguageName {
+    NSString *base = [[m_recognitionLocaleIdentifier componentsSeparatedByCharactersInSet: [NSCharacterSet characterSetWithCharactersInString: @"-_"]] firstObject];
+    return [[NSLocale currentLocale] localizedStringForLanguageCode: base] ?: m_recognitionLocaleIdentifier;
+}
+
+// The recognizer locale for a language tag: an exact match among the supported locales if there
+// is one; else, for a bare language ("fr", which is all text detection gives), the device's own
+// regional variant when it is among them ("en" on a British phone is en-GB), else the language's
+// home region (fr-FR, de-DE: the variants best supported on device, and alphabetical order
+// would give fr-BE and de-AT), else the first supported variant; nil for an unsupported
+// language. This is Anand M.'s (anandman on GitHub) matching from his voice-mode branch, with
+// the home-region rule added and the device language read from NSLocale.
++(NSString*)recognitionLocaleForLanguage:(NSString*)language {
+    NSString *normalized = [[[NSLocale canonicalLanguageIdentifierFromString: language] stringByReplacingOccurrencesOfString: @"_" withString: @"-"] lowercaseString];
+    NSString *base = [[normalized componentsSeparatedByString: @"-"] firstObject];
+    if (![base length])
+        return nil;
+    NSArray<NSLocale*> *locales = [[[SFSpeechRecognizer supportedLocales] allObjects] sortedArrayUsingComparator: ^NSComparisonResult(NSLocale *a, NSLocale *b) {
+        return [a.localeIdentifier compare: b.localeIdentifier];
+    }];
+    NSString *deviceLanguage = [[[NSLocale preferredLanguages] firstObject] stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
+    NSString *homeRegion = [NSString stringWithFormat: @"%@-%@", base, [base uppercaseString]];
+    NSString *deviceMatch = nil, *homeMatch = nil, *firstMatch = nil;
+    for (NSLocale *locale in locales) {
+        NSString *candidate = [locale.localeIdentifier stringByReplacingOccurrencesOfString: @"_" withString: @"-"];
+        if ([[candidate lowercaseString] isEqualToString: normalized])
+            return candidate;
+        if (![[[[candidate lowercaseString] componentsSeparatedByString: @"-"] firstObject] isEqualToString: base])
+            continue;
+        if ([candidate isEqualToString: deviceLanguage])
+            deviceMatch = candidate;
+        else if ([candidate isEqualToString: homeRegion])
+            homeMatch = candidate;
+        else if (!firstMatch)
+            firstMatch = candidate;
+    }
+    return deviceMatch ?: homeMatch ?: firstMatch;
+}
+
+// Walks the Blorb's chunks to the IFmd (iFiction metadata) chunk, if any, and parses it for the
+// language. Bounded: a malformed file or an outsized chunk gives nil, never a crash. Only the
+// bibliographic language is used; the story's text is never read here. The parser above and
+// this walk are Anand M.'s (anandman on GitHub), from his voice-mode branch of Frotz.
++(NSString*)languageFromBlorbAtPath:(NSString*)path {
+    NSData *data = [path length] ? [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil] : nil;
+    if ([data length] < 12)
+        return nil;
+    const unsigned char *bytes = [data bytes];
+    if (memcmp(bytes, "FORM", 4) || memcmp(bytes + 8, "IFRS", 4))
+        return nil;
+    uint64_t end = (uint64_t)BlorbWord(bytes + 4) + 8;
+    if (end > [data length] || end < 12)
+        return nil;
+    for (uint64_t offset = 12; offset + 8 <= end;) {
+        uint32_t size = BlorbWord(bytes + offset + 4);
+        uint64_t next = offset + 8 + size + (size & 1);
+        if (next > end)
+            return nil;
+        if (!memcmp(bytes + offset, "IFmd", 4)) {
+            if (size > 1024 * 1024)
+                return nil;
+            NSXMLParser *parser = [[NSXMLParser alloc] initWithData: [data subdataWithRange: NSMakeRange((NSUInteger)offset + 8, size)]];
+            StoryLanguageParser *reader = [StoryLanguageParser new];
+            reader.elements = [NSMutableArray array];
+            parser.delegate = reader;
+            parser.shouldProcessNamespaces = YES;
+            parser.shouldResolveExternalEntities = NO;
+            if (![parser parse])
+                return nil;
+            NSString *language = reader.language;
+            NSRange valid = [language rangeOfString: @"^[A-Za-z]{2,3}(-[A-Za-z]{2})?$" options: NSRegularExpressionSearch];
+            return [language length] && valid.location != NSNotFound ? language : nil;
+        }
+        offset = next;
+    }
+    return nil;
+}
+
+// On-device language identification of the text. The judgement is only trusted on a fair amount
+// of text and when the recognizer is fairly sure: a short banner, or one with an English
+// copyright line under a French title, must not set the language. The most recent text is used,
+// since the top of a transcript is the interpreter's banner.
+static const NSUInteger kLanguageDetectionMinimumLength = 200;
+static const NSUInteger kLanguageDetectionSampleLength = 4000;
+static const double kLanguageDetectionMinimumConfidence = 0.6;
+
++(NSString*)languageOfText:(NSString*)text {
+    if ([text length] < kLanguageDetectionMinimumLength)
+        return nil;
+    NSString *sample = [text length] > kLanguageDetectionSampleLength ? [text substringFromIndex: [text length] - kLanguageDetectionSampleLength] : text;
+    NLLanguageRecognizer *recognizer = [[NLLanguageRecognizer alloc] init];
+    [recognizer processString: sample];
+    NSDictionary<NLLanguage, NSNumber*> *hypotheses = [recognizer languageHypothesesWithMaximum: 1];
+    NLLanguage best = [[hypotheses allKeys] firstObject];
+    DictationLog(@"text language %@ (%.2f) from %lu chars", best, [hypotheses[best] doubleValue], (unsigned long)[sample length]);
+    if (!best || [hypotheses[best] doubleValue] < kLanguageDetectionMinimumConfidence)
+        return nil;
+    return best;
 }
 
 // The system took the audio away (Speak Screen, VoiceOver, a phone call, Siri) and stopped the

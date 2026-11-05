@@ -43,6 +43,8 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
     AVAudioSession *m_audioSession;
     SFSpeechRecognitionTask *m_recognitionTask;
     
+    NSString *m_storyLanguage;
+    NSString *m_recognitionLocaleIdentifier; // the locale m_sfrecog was made for; see setStoryLanguage:
     NSString *m_currentTranscription;
     NSTimer *m_speechCommitTimer; // fires after a stretch of silence; see restartSilenceTimer
     NSTimer *m_longIdleTimer;     // stops listening after a long stretch with no speech at all; see restartLongIdleTimer
@@ -73,9 +75,33 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 
 @property (nonatomic, weak) id<FrotzInputDelegate> delegate;
 @property (nonatomic, weak) id<StoryDictationStateDelegate> stateDelegate;
+
 // How long the speaker must be quiet before what was said is accepted as a command. The settings
 // page's "Dictation Delay"; 0.8s unless set. Takes effect from the next utterance.
 @property (nonatomic) NSTimeInterval silenceInterval;
+
+// The language the story is written in, as a language tag ("fr", "de-DE"), or nil for unknown.
+// The player must speak the story's language, whatever the device is set to, so this and not the
+// device locale picks the recognizer's locale: the supported locale matching the tag, the
+// device's regional variant of it when the tag names no region, or US English when nothing
+// matches or nothing is known. Setting a language that changes the locale stops listening.
+// The owner finds the language with languageFromBlorbAtPath: and languageOfText:.
+@property (nonatomic, copy, nullable) NSString *storyLanguage;
+
+// The recognizer's current locale, and the name of its language in the user's language
+// ("English", "Français"), for messages about it.
+@property (nonatomic, readonly) NSString *recognitionLocaleIdentifier;
+@property (nonatomic, readonly) NSString *recognitionLanguageName;
+
+// The language named in the iFiction record of a Blorb story file (the IFmd chunk), or nil when
+// the file isn't a Blorb or carries none. Most story files have none.
++(nullable NSString*)languageFromBlorbAtPath:(nullable NSString*)path;
+// The language a stretch of story text is written in, judged on device, or nil when there is too
+// little text to say or the verdict is doubtful. A page of output is plenty.
++(nullable NSString*)languageOfText:(nullable NSString*)text;
+// The identifier of the recognizer locale to use for a language tag, as storyLanguage picks it,
+// or nil when speech recognition doesn't support the language.
++(nullable NSString*)recognitionLocaleForLanguage:(NSString*)language;
 @end
 
 // Audible and felt cues for the state changes the mic button shows; the main view controller

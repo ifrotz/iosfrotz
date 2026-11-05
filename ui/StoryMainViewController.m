@@ -3280,6 +3280,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     if (m_currentStory != storyPath) {
 #if EnableStoryDictation
         [m_storyVocabulary reset]; // a different story's words
+        m_dictationLanguage = nil; // and maybe a different language
 #endif
         m_currentStory = nil;
         BOOL isDir = NO;
@@ -4978,12 +4979,17 @@ static void setScreenDims(char *storyNameBuf) {
         [m_dictationController stopListening];
         return;
     }
+    [self updateDictationLanguage];
     switch ([m_dictationController availability]) {
         case kStoryDictationRecognizerUnavailable:
             [self explainDictationProblem: NSLocalizedString(@"Speech recognition isn't available right now. Check that Siri or Dictation is turned on in Settings.", nil) offerSettings: YES];
             return;
         case kStoryDictationOnDeviceUnsupported:
-            [self explainDictationProblem: NSLocalizedString(@"This device can't recognize English speech on its own, which Frotz requires so that nothing you say leaves it.", nil) offerSettings: NO];
+            // iOS downloads a language's offline speech assets when it is added as a dictation
+            // language; the alert says how. The Settings button can only open Frotz's own page,
+            // so the text gives the path and the button is left off.
+            [self explainDictationProblem: [NSString stringWithFormat: NSLocalizedString(@"This story appears to be in %1$@, but your device doesn't have %1$@ on-device dictation support installed. Frotz only uses on-device recognition, so nothing you say leaves your device.\n\nTo add it, go to Settings > General > Keyboard > Dictation Languages, and turn on %1$@. Wait for the support to download, then return to Frotz and tap the mic again.", nil),
+                                            m_dictationController.recognitionLanguageName] offerSettings: NO];
             return;
         case kStoryDictationAvailable:
             break;
@@ -5096,6 +5102,24 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
     [self.storyVocabulary reset];
     if (AlwaysTrackStoryVocabulary || m_dictationEnabled)
         [self.storyVocabulary noteOutput: [m_storyView text]];
+}
+
+// The story's language, for the recognizer (StoryDictationController storyLanguage): from the
+// iFiction record if the story is a Blorb with one, else judged from the text on screen once
+// there is a page of it. Most story files have no record, so the text usually decides. Decided
+// once per story, at the first mic tap with enough text to go on; until then the recognizer
+// stays on US English, and a tap with too little text just tries again next time. Not saved:
+// cheap enough to redo each launch.
+-(void)updateDictationLanguage {
+    if (m_dictationLanguage)
+        return;
+    NSString *language = [StoryDictationController languageFromBlorbAtPath: m_currentStory];
+    if (!language)
+        language = [StoryDictationController languageOfText: [m_storyView text]];
+    if (!language)
+        return;
+    m_dictationLanguage = language;
+    m_dictationController.storyLanguage = language;
 }
 
 -(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
