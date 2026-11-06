@@ -1787,6 +1787,24 @@ extern void gli_ios_set_focus(window_t *winNum);
     }];
 }
 
+// VoiceOver's Magic Tap (a two-finger double tap) is the gesture for an app's main activity, and
+// here that is talking to the story: it does what the mic button does, from wherever VoiceOver's
+// focus happens to be. Only while the story is the screen in front and the mic button would take
+// a tap; otherwise NO lets the system have the gesture (play/pause). Returns YES even when the
+// story is between inputs, so the gesture never falls through to media control mid-game. After
+// Anand M.'s (anandman on GitHub) voice-mode branch, which also forwards the gesture from the app
+// delegate (see FrotzAppDelegate), since navigation bar items aren't in this controller's
+// responder chain.
+-(BOOL)accessibilityPerformMagicTap {
+    if (!m_dictationEnabled || !m_micButton.enabled
+        || self.presentedViewController || self.navigationController.presentedViewController
+        || (self.navigationController && self.navigationController.topViewController != self)
+        || [UIApplication sharedApplication].applicationState != UIApplicationStateActive)
+        return NO;
+    [self micButtonPressed];
+    return YES;
+}
+
 // Asks for microphone access (prompting the first time) and calls back on the main queue.
 -(void)requestMicrophonePermission:(void (^)(BOOL granted))completion {
     void (^onMainQueue)(BOOL) = ^(BOOL granted) {

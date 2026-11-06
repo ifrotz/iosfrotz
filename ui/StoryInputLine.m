@@ -131,6 +131,15 @@
 }
 
 #if EnableStoryDictation
+// While the input line is editing, VoiceOver gives its Magic Tap to the first responder before
+// anyone else, and a text field's default is to start the system keyboard dictation. The gesture
+// means Frotz's own dictation here, so it goes to the story controller (see its
+// accessibilityPerformMagicTap), which answers as the mic button would.
+-(BOOL)accessibilityPerformMagicTap {
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    return [storyController accessibilityPerformMagicTap];
+}
+
 -(BOOL)validateWord:(NSString*)word {
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     return [storyController dictionaryHasWord: word];

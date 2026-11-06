@@ -2309,9 +2309,25 @@ static BOOL EndsWithSentenceBreak(NSString *text) {
 #endif
     [super touchesEnded: touches withEvent: event];
 }
+
+#if EnableStoryDictation
+// VoiceOver's Magic Tap with focus in the story text (this view or one of its paragraph
+// elements) belongs to the story controller, which starts or stops dictation; see its
+// accessibilityPerformMagicTap. Answered here because when the keyboard is up VoiceOver
+// otherwise prefers keyboard dictation to anything further up the responder chain.
+-(BOOL)accessibilityPerformMagicTap {
+    return [m_controller accessibilityPerformMagicTap];
+}
+#endif
 @end
 
 @implementation RichTextAE
+
+#if EnableStoryDictation
+-(BOOL)accessibilityPerformMagicTap {
+    return [[self accessibilityContainer] accessibilityPerformMagicTap];
+}
+#endif
 
 @synthesize textIndex = m_textIndex;
 @synthesize aeIndex = m_aeIndex;

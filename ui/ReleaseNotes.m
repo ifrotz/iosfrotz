@@ -146,7 +146,7 @@
         "<li>Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.</li>\n"
         "<li>Settings is now organized into cleanly grouped sections.</li>\n"
         "<li>Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.</li>\n"
-        "<li>VoiceOver reads story text more naturally and no longer cuts off new output.</li>\n"
+        "<li>VoiceOver reads story text more naturally and no longer cuts off new output. VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap) when dictation is enabled in Settings.</li>\n"
         "<li>Other minor bug fixes and UI polish.</li>\n"
         "</ul></p>\n"
         "<p>New in <b>Frotz 1.8.9</b>:</p>\n"
