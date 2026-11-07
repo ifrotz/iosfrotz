@@ -14,17 +14,20 @@
 
 
 @interface NSString (IFDictation)
--(NSString*)stringWithSanitizeDictation;
+-(NSString*)stringWithSanitizedDictation;
 @end
 
 @implementation NSString (IFDictation)
--(NSString*)stringWithSanitizeDictation {
+-(NSString*)stringWithSanitizedDictation {
     // Counterfeit Monkey helper.  Convert en dashes and em dashes to hyphens, remove surrounding spaces, so
     // "Wave x-remover at ..." dictates better.
     NSString *str = [self stringByReplacingOccurrencesOfString:@"–" withString:@"-"];
     str = [str stringByReplacingOccurrencesOfString:@"—" withString:@"-"];
     str = [str stringByReplacingOccurrencesOfString:@" - " withString:@"-"];
-    return str;
+    // The recognizer writes sentences: a capital first word, capitals on whatever it takes for a
+    // name. Commands are typed in lower case and parsers ignore case, so the line shows it that
+    // way. Done here, after the correction pass, which reads all capitals as a word spelled out.
+    return [str lowercaseString];
 }
 @end
 
@@ -459,7 +462,7 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didHypothesizeTranscription:(SFTranscription *)transcription {
     if (task != m_recognitionTask)
         return; // a task listenForSpeech has already replaced; see didFinishSuccessfully
-    NSString *text = [transcription formattedString];
+    NSString *text = [[transcription formattedString] stringWithSanitizedDictation]; // as the final will be shown
     DictationLog(@"speechRecognitionTask:didHypothesizeTranscription: %@", text);
     if (![text isEqualToString: m_currentTranscription]) {
         m_currentTranscription = text;
@@ -492,8 +495,8 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
     }
     // A command begins with a verb: among alternatives that differ by a sound ("book" for "look"),
     // the one that does wins. Worth more than one known word, so it outweighs a printed noun.
-    if ([m_delegate dictationStartsWithVerb: text])
-        score += kDictationVerbFirstBonus;
+    // Counted for each command when several are chained ("take lamp then look").
+    score += kDictationVerbFirstBonus * [m_delegate dictationCommandsStartingWithVerb: text];
     return score;
 }
 
@@ -556,7 +559,7 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
         }
     }
     DictationLog(@"Final: %d Recog: %@", isFinal, text);
-    m_currentTranscription = [text stringWithSanitizeDictation];
+    m_currentTranscription = [text stringWithSanitizedDictation];
 
     NSError *error = [task error];
     if (error)

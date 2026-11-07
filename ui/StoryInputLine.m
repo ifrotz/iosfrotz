@@ -204,17 +204,36 @@ static NSArray<NSString*> *OrdinaryCommandWords(void) {
 // The game's dictionary says which words are verbs when it is an Inform story (game-specific
 // verbs included, though not every game flags its odd command words: Balances' spell names are
 // nouns to its dictionary); the ordinary verbs and directions count for any game.
--(BOOL)dictationStartsWithVerb:(NSString*)text {
-    NSCharacterSet *separators = [NSCharacterSet whitespaceAndNewlineCharacterSet];
-    NSString *first = [[[[text stringByTrimmingCharactersInSet: separators] componentsSeparatedByCharactersInSet: separators] firstObject]
-                       stringByTrimmingCharactersInSet: [NSCharacterSet punctuationCharacterSet]];
-    first = [first lowercaseString];
-    if (![first length])
-        return NO;
-    if ([OrdinaryCommandWords() containsObject: first])
-        return YES;
+//
+// Every command in the utterance counts, not just the first: parsers take several at once ("take
+// lamp then look", "take lamp. look"), so a new command starts after "then", a full stop, a
+// semicolon or a question or exclamation mark. A comma starts one only after a single word, the
+// form for addressing someone ("robot, give me the ball"); "take sword, lamp and book" is one.
+-(NSUInteger)dictationCommandsStartingWithVerb:(NSString*)text {
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    return [storyController dictionaryWordIsVerb: first] == 1;
+    NSCharacterSet *punctuation = [NSCharacterSet punctuationCharacterSet];
+    NSUInteger count = 0, wordsInCommand = 0;
+    BOOL commandStart = YES;
+    for (NSString *token in [text componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]]) {
+        NSString *word = [[token stringByTrimmingCharactersInSet: punctuation] lowercaseString];
+        if ([word isEqualToString: @"then"]) {
+            commandStart = YES;
+            wordsInCommand = 0;
+            continue;
+        }
+        if ([word length]) {
+            if (commandStart && ([OrdinaryCommandWords() containsObject: word] || [storyController dictionaryWordIsVerb: word] == 1))
+                count++;
+            commandStart = NO;
+            wordsInCommand++;
+        }
+        unichar last = [token length] ? [token characterAtIndex: [token length] - 1] : 0;
+        if (last == '.' || last == ';' || last == '?' || last == '!' || (last == ',' && wordsInCommand == 1)) {
+            commandStart = YES;
+            wordsInCommand = 0;
+        }
+    }
+    return count;
 }
 
 // The recognizer knows everyday English, not a game's invented words ("yomin") or its spellings

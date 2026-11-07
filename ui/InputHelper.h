@@ -18,9 +18,10 @@
 // shown for it stays; the next hypothesis begins a new utterance after it rather than revising it.
 -(void)abandonDictation;
 -(BOOL)validateWord:(NSString*)word;
-// Whether a transcript begins as a command does: with a verb (the game's dictionary's word for it
-// in an Inform story, or an ordinary verb) or a direction. Weighs the recognizer's alternatives.
--(BOOL)dictationStartsWithVerb:(NSString*)text;
+// How many of the commands in a transcript begin as a command does: with a verb (per the game's
+// dictionary, or an ordinary verb) or a direction. Several commands can be chained ("take lamp
+// then look"). Weighs the recognizer's alternatives.
+-(NSUInteger)dictationCommandsStartingWithVerb:(NSString*)text;
 // Whether the story is waiting for a single key rather than a line, so the recognizer can be
 // primed for letter names and the few words that stand for keys. Asked when a task starts.
 -(BOOL)dictationExpectsSingleKey;
