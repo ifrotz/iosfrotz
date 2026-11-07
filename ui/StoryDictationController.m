@@ -32,6 +32,9 @@
 // heard even if the game doesn't know the word; see didFinishRecognition.
 static const float kDictationConfidentWord = 0.9f;
 
+// Added to an alternative transcript's score when it begins with a verb; see dictationDictionaryScore:.
+static const NSUInteger kDictationVerbFirstBonus = 2;
+
 // The recognizer locale until a story's language says otherwise; see storyLanguage.
 static NSString *const kDictationDefaultLocale = @"en-US";
 
@@ -487,6 +490,10 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
             i++;
         }
     }
+    // A command begins with a verb: among alternatives that differ by a sound ("book" for "look"),
+    // the one that does wins. Worth more than one known word, so it outweighs a printed noun.
+    if ([m_delegate dictationStartsWithVerb: text])
+        score += kDictationVerbFirstBonus;
     return score;
 }
 

@@ -1112,5 +1112,44 @@ int completion (const zchar *buffer, zchar *result)
     /* Search was ambiguous or successful */
     
     return (minaddr == maxaddr) ? 0 : 1;
-    
+
 }/* completion */
+
+/*
+ * dictionary_word_is_verb
+ *
+ * For dictation (iOS Frotz): 1 if the word's dictionary entry carries the compiler's verb flag
+ * in the first byte after the encoded text, 0 if the entry exists without it, -1 if the word
+ * isn't in the dictionary or the flag layout isn't known. Inform stories (compiler version in
+ * header bytes $3C-$3F, "6.36") use bit 0 (#dict_par1). Infocom's stories through version 5
+ * use bit 6 (0x40, the ZIL parser's verb part of speech), checked across every Infocom game
+ * from Zork I to Beyond Zork; version 6 Infocom stories use a later parser laid out
+ * differently and answer -1. Only safe while the interpreter waits for input.
+ *
+ */
+
+int dictionary_word_is_verb (const zchar *word)
+{
+    zbyte flags, verbBit;
+    zword addr;
+    int len = 0;
+    zchar c;
+
+    if (!word || !*word || !zmp)
+        return -1;
+    if (zmp[0x3C] >= '0' && zmp[0x3C] <= '9' && zmp[0x3D] == '.')
+        verbBit = 0x01;  /* Inform */
+    else if (h_version <= V5)
+        verbBit = 0x40;  /* Infocom */
+    else
+        return -1;
+    while ((c = *word++) != 0 && len < 9)
+        decoded[len++] = c;
+    decoded[len] = 0;
+    addr = lookup_text (0x05, h_dictionary);
+    if (addr == 0)
+        return -1;
+    LOW_BYTE (addr + ((h_version <= V3) ? 4 : 6), flags)
+    return (flags & verbBit) ? 1 : 0;
+
+}/* dictionary_word_is_verb */

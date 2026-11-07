@@ -5378,6 +5378,24 @@ static int matchWord(NSString *str, NSString __strong *wordArray[]) {
 
 extern int completion (const zchar *buffer, zchar *result);
 extern int glulxCompleteWord(const char *word, char *result);
+extern int dictionary_word_is_verb (const zchar *word);
+extern int glulxDictionaryWordIsVerb(const char *word);
+
+// Whether the game's dictionary marks `word` as a verb: 1 yes, 0 no, -1 can't tell (not in the
+// dictionary, or a story not compiled by Inform, whose verb flag is the only one known). For
+// dictation's choice among the recognizer's alternatives; see dictationDictionaryScore:.
+-(NSInteger)dictionaryWordIsVerb:(NSString*)word {
+    if (![word length])
+        return -1;
+    if (gStoryInterp == kZStory) {
+#if USE_UTF8
+        return dictionary_word_is_verb((const zchar*)[word cStringUsingEncoding: NSUTF16StringEncoding]);
+#else
+        return dictionary_word_is_verb((const zchar*)[word UTF8String]);
+#endif
+    }
+    return glulxDictionaryWordIsVerb([word UTF8String]);
+}
 
 
 // Whether the game's dictionary has a word beginning with `word` (so the word itself, or a longer

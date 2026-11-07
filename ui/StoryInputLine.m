@@ -161,6 +161,7 @@
 // hundred strings is plenty.
 static const NSUInteger kDictationContextMaxCommands = 20;
 static const NSUInteger kDictationContextMaxWords = 200;
+static NSArray<NSString*> *OrdinaryCommandWords(void);
 
 // Whether the game's dictionary knows a word, for StoryVocabulary's queries.
 -(BOOL (^)(NSString*))gameKnowsWord {
@@ -180,6 +181,12 @@ static const NSUInteger kDictationContextMaxWords = 200;
     }
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
     [context addObjectsFromArray: [storyController.storyVocabulary recentWords: kDictationContextMaxWords known: [self gameKnowsWord]]];
+    [context addObjectsFromArray: OrdinaryCommandWords()];
+    return [context array];
+}
+
+// The ordinary verbs and directions of the form, which may begin a command whatever the game.
+static NSArray<NSString*> *OrdinaryCommandWords(void) {
     static NSArray<NSString*> *ordinary;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
@@ -189,8 +196,25 @@ static const NSUInteger kDictationContextMaxWords = 200;
                       @"north", @"south", @"east", @"west", @"northeast", @"northwest", @"southeast", @"southwest",
                       @"up", @"down", @"in", @"out", @"save", @"restore", @"undo", @"quit", @"xyzzy" ];
     });
-    [context addObjectsFromArray: ordinary];
-    return [context array];
+    return ordinary;
+}
+
+// A command starts with a verb (or is a bare direction), and a transcript that doesn't is likely a
+// near-miss: after the story prints "book" a dozen times, "look" said quickly comes back as "book".
+// The game's dictionary says which words are verbs when it is an Inform story (game-specific
+// verbs included, though not every game flags its odd command words: Balances' spell names are
+// nouns to its dictionary); the ordinary verbs and directions count for any game.
+-(BOOL)dictationStartsWithVerb:(NSString*)text {
+    NSCharacterSet *separators = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+    NSString *first = [[[[text stringByTrimmingCharactersInSet: separators] componentsSeparatedByCharactersInSet: separators] firstObject]
+                       stringByTrimmingCharactersInSet: [NSCharacterSet punctuationCharacterSet]];
+    first = [first lowercaseString];
+    if (![first length])
+        return NO;
+    if ([OrdinaryCommandWords() containsObject: first])
+        return YES;
+    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+    return [storyController dictionaryWordIsVerb: first] == 1;
 }
 
 // The recognizer knows everyday English, not a game's invented words ("yomin") or its spellings
@@ -221,11 +245,21 @@ static const NSUInteger kDictationContextMaxWords = 200;
             && [confidentRanges intersectsIndexesInRange: NSMakeRange(wordStart + coreRange.location, [core length])];
         wordStart += [word length] + 1;
         if ([lower length] < 3 || [lower rangeOfCharacterFromSet: [NSCharacterSet letterCharacterSet]].location == NSNotFound
-            || spelledOut || confident || known(lower)) {
+            || spelledOut || known(lower)) {
             [out addObject: word];
             continue;
         }
         NSString *best = [storyController.storyVocabulary nearestKnownWordTo: lower known: known];
+        // A word the recognizer was sure of is only respelled, never replaced: "drivers" becomes
+        // the printed "driver's" (the same word once apostrophes and hyphens are ignored, which
+        // the recognizer never writes), but "pet" does not become "path".
+        if (best && confident) {
+            NSCharacterSet *joiners = [NSCharacterSet characterSetWithCharactersInString: @"'-"];
+            NSString *bareBest = [[best componentsSeparatedByCharactersInSet: joiners] componentsJoinedByString: @""];
+            NSString *bareHeard = [[lower componentsSeparatedByCharactersInSet: joiners] componentsJoinedByString: @""];
+            if (![bareBest isEqualToString: bareHeard])
+                best = nil;
+        }
         if (best) {
             // Keep whatever punctuation surrounded the word in the transcript.
             [out addObject: [word stringByReplacingCharactersInRange: NSMakeRange(coreRange.location, [core length]) withString: best]];
