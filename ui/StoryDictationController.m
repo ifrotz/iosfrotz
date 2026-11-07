@@ -363,6 +363,14 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 
 -(void)voiceOverStatusChanged:(NSNotification*)note {
     dispatch_async(dispatch_get_main_queue(), ^{
+        // VoiceOver going off during a reading hold: its finish notice will never come, so the
+        // mic reopens now.
+        if (m_quietForReply && !UIAccessibilityIsVoiceOverRunning()) {
+            DictationLog(@"VoiceOver off during a reading hold; mic reopens");
+            [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(listenForSpeech) object: nil];
+            [self listenForSpeech];
+            return;
+        }
         // Only if the change would alter voice processing. Usually it wouldn't: dictation started
         // with nothing else playing already has it on (see startAudioEngineWithVoiceProcessing:),
         // and the restart would be nothing but a needless tear-down and rebuild of the engine
@@ -945,7 +953,11 @@ static const NSTimeInterval kDictationKeySilenceInterval = 0.4;
     // VoiceOver next falls silent (confirmed by the crackle vanishing with VoiceOver's Audio
     // Ducking turned off). Nothing else about the engine, session or recognizer mattered. The
     // UI isn't told: the player is still, as far as they are concerned, dictating.
-    if (ScreenReaderInUse() && !m_listensWhileScreenReaderSpeaks) {
+    // VoiceOver specifically, not ScreenReaderInUse(): the reading is a VoiceOver announcement and
+    // only VoiceOver sends the finish notice that reopens the mic. With Speak Screen enabled but
+    // VoiceOver off, the hold waited the whole reading limit for a notice that never came, and
+    // dictation seemed to stop after every command.
+    if (UIAccessibilityIsVoiceOverRunning() && !m_listensWhileScreenReaderSpeaks) {
         [self releaseAudio];
         [self cancelLongIdleTimer]; // nothing can be heard during the hold; the clock restarts with the reopening
         m_quietForReply = YES;
