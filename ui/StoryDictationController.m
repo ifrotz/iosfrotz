@@ -12,12 +12,6 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <NaturalLanguage/NaturalLanguage.h>
 
-// Trace output (StoryDictationDebugLogging in iosfrotz.h); errors use NSLog directly.
-#if StoryDictationDebugLogging
-#define DictationLog(...) NSLog(__VA_ARGS__)
-#else
-#define DictationLog(...) ((void)0)
-#endif
 
 @interface NSString (IFDictation)
 -(NSString*)stringWithSanitizeDictation;
@@ -57,6 +51,13 @@ static BOOL ErrorEndsRecognitionTask(NSError *error) {
 }
 
 static const NSTimeInterval kDictationDefaultSilenceInterval = 0.8;
+
+// After a command, how long to wait for the reply to be posted as an announcement before taking
+// it that none is coming (a key prompt that printed nothing, Speak Screen rather than VoiceOver)
+// and reopening the mic; and, once one is posted, the longest to wait for its finish notice. See
+// commitTranscription and replyAnnouncementPosted.
+static const NSTimeInterval kDictationReplyAnnouncementWait = 1.5;
+static const NSTimeInterval kDictationReplyReadingLimit = 60;
 
 // A screen reader that will speak through the device's own speaker while the mic is open:
 // VoiceOver, or Spoken Content's Speak Screen or Speak Selection when enabled in Settings (there
@@ -103,6 +104,7 @@ static uint32_t BlorbWord(const unsigned char *bytes) {
 @synthesize delegate = m_delegate;
 @synthesize stateDelegate = m_stateDelegate;
 @synthesize silenceInterval = m_silenceInterval;
+@synthesize listensWhileScreenReaderSpeaks = m_listensWhileScreenReaderSpeaks;
 
 -(void)notifyStateChanged {
     [m_stateDelegate dictationListeningStateChanged: self];
@@ -142,6 +144,7 @@ static uint32_t BlorbWord(const unsigned char *bytes) {
         [center addObserver: self selector: @selector(audioEngineConfigurationChanged:) name: AVAudioEngineConfigurationChangeNotification object: m_audioEngine];
         [center addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
         [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilityVoiceOverStatusDidChangeNotification object: nil];
+        [center addObserver: self selector: @selector(announcementDidFinish:) name: UIAccessibilityAnnouncementDidFinishNotification object: nil];
         [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilitySpeakScreenStatusDidChangeNotification object: nil];
         [center addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilitySpeakSelectionStatusDidChangeNotification object: nil];
     }
@@ -336,9 +339,41 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 // Whether a screen reader is in use decides whether voice processing is wanted (see
 // startListening), so a change while dictation is on means tearing the engine down and setting
 // it up again the other way. VoiceOver, Speak Screen and Speak Selection all come here.
+// VoiceOver has finished reading an announcement, or the player silenced it (a two-finger tap,
+// the usual way to interrupt VoiceOver, which is how a reply is spoken over when the mic is
+// closed for it): the story's reply, if the mic was closed for it (see commitTranscription).
+// Listening starts again now rather than at the reading limit.
+-(void)announcementDidFinish:(NSNotification*)note {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (!m_quietForReply || m_isPaused)
+            return;
+        // A reply read in several announcements reopens the mic after the last; an interruption
+        // cuts the whole queue short, so an unsuccessful finish reopens it at once.
+        BOOL completed = [note.userInfo[UIAccessibilityAnnouncementKeyWasSuccessful] boolValue];
+        if (m_replyAnnouncementsPending > 0)
+            m_replyAnnouncementsPending--;
+        if (completed && m_replyAnnouncementsPending > 0)
+            return;
+        DictationLog(@"reading finished (completed %d); mic reopens", completed);
+        [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(listenForSpeech) object: nil];
+        m_reopenedAfterReadingAt = [NSDate timeIntervalSinceReferenceDate];
+        [self listenForSpeech];
+    });
+}
+
 -(void)voiceOverStatusChanged:(NSNotification*)note {
     dispatch_async(dispatch_get_main_queue(), ^{
-        DictationLog(@"screen reader: %d", ScreenReaderInUse());
+        // Only if the change would alter voice processing. Usually it wouldn't: dictation started
+        // with nothing else playing already has it on (see startAudioEngineWithVoiceProcessing:),
+        // and the restart would be nothing but a needless tear-down and rebuild of the engine
+        // under VoiceOver's own "VoiceOver on". (It was suspected of the crackle in VoiceOver's
+        // speech; that proved to be VoiceOver's ducking, see commitTranscription.) A paused
+        // engine is left to the resume, which sets everything up afresh anyway.
+        BOOL wantVoiceProcessing = ScreenReaderInUse() || !m_audioSession.isOtherAudioPlaying;
+        BOOL haveVoiceProcessing = [m_audioEngine inputNode].isVoiceProcessingEnabled;
+        DictationLog(@"screen reader: %d; voice processing wanted %d, have %d", ScreenReaderInUse(), wantVoiceProcessing, haveVoiceProcessing);
+        if (m_isPaused || ![m_audioEngine isRunning] || wantVoiceProcessing == haveVoiceProcessing)
+            return;
         [self restartAudioForChangedConfiguration];
     });
 }
@@ -365,12 +400,14 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 }
 
 -(void)stopListening {
+    DictationLog(@"stopListening (held for reply %d)", m_quietForReply);
     if (m_speechCommitTimer) {
         [m_speechCommitTimer invalidate];
         m_speechCommitTimer = nil;
     }
     [self cancelLongIdleTimer];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(listenForSpeech) object:nil];
+    m_quietForReply = NO;
 
     m_isPaused = NO;
     m_resumeAfterInterruption = NO;
@@ -549,7 +586,7 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 }
 
 -(BOOL)isListening {
-    return m_sfRecogRequest != nil && [m_audioEngine isRunning];
+    return (m_sfRecogRequest != nil && [m_audioEngine isRunning]) || m_quietForReply;
 }
 
 -(BOOL)isPaused {
@@ -583,6 +620,8 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 -(void)pauseListening {
     [self abandonUtterance];
     [self cancelLongIdleTimer]; // nothing can be heard while paused; the clock restarts with the resume
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(listenForSpeech) object:nil]; // a reopening after a reply
+    m_quietForReply = NO;
     // The audio is released exactly as a stop releases it (see releaseAudio); only the dictation
     // state differs, so that the UI's resume brings listening back without the player asking.
     [self releaseAudio];
@@ -672,19 +711,28 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
     // works without it if enabling fails.
     DictationLog(@"voice processing %s (screen reader %d, other audio now %d, was enabled %d)", wantVoiceProcessing ? "on" : "off",
                  ScreenReaderInUse(), m_audioSession.isOtherAudioPlaying, audioInputNode.isVoiceProcessingEnabled);
+    // The voice-processing unit is full duplex: besides capturing it renders the engine's output
+    // every cycle, pulling from the output node, and with nothing connected to that node the
+    // pull fails, which the unit logs as "auou/vpio/appl, render err: -1" on every cycle (no
+    // audible effect was found; VoiceOver's crackle turned out to be its own ducking of this
+    // session, see commitTranscription). Asking for the main mixer creates it connected to the
+    // output node, so the output render has a (silent) source and the log stays quiet. Frotz
+    // plays nothing through the engine, hence the volume.
+    AVAudioMixerNode *mixer = [m_audioEngine mainMixerNode];
+    mixer.outputVolume = 0;
     if (audioInputNode.isVoiceProcessingEnabled != wantVoiceProcessing) {
-        (void)[m_audioEngine outputNode];
         if (![audioInputNode setVoiceProcessingEnabled: wantVoiceProcessing error: &error]) {
             NSLog(@"Error %s voice processing on the audio input: %@", wantVoiceProcessing ? "enabling" : "disabling", error);
             error = nil;
         }
     }
     // While voice processing runs it also ducks any other audio that does start. iOS 17 lets the
-    // ducking be set to the shallowest level, and that is all that is asked: a steady slight dip.
-    // "Advanced" ducking, which ducks only while the unit hears local speech, was tried and made
-    // VoiceOver choppy: the echo canceller never removes all of VoiceOver's own voice from the
-    // mic, so the unit took the remainder for speech and ducked VoiceOver in and out in time
-    // with itself, most noticeably as it began reading a response.
+    // ducking be set to the shallowest level, and that is all that is asked: a steady slight dip,
+    // so VoiceOver stays audible. "Advanced" ducking, which ducks only while the unit hears local
+    // speech, was tried and made VoiceOver choppy: the echo canceller never removes all of
+    // VoiceOver's own voice from the mic, so the unit took the remainder for speech and ducked
+    // VoiceOver in and out in time with itself. (VoiceOver's crackle turned out to be VoiceOver's
+    // own ducking of us, not this; see commitTranscription.)
     if (wantVoiceProcessing) {
         if (@available(iOS 17.0, *)) {
             AVAudioVoiceProcessingOtherAudioDuckingConfiguration ducking = { .enableAdvancedDucking = NO, .duckingLevel = AVAudioVoiceProcessingOtherAudioDuckingLevelMin };
@@ -721,6 +769,7 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
 
 -(void)startListening {
     NSError *error = nil;
+    m_quietForReply = NO; // whether this is the reopening after a reply or any other start
     // Read before the session is touched below: whether someone else is playing decides voice
     // processing, and the answer must not be coloured by our own activation.
     BOOL otherAudioPlaying = m_audioSession.isOtherAudioPlaying;
@@ -755,6 +804,10 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
         // no asking. MixWithOthers keeps the player's music or podcast going: Frotz plays nothing
         // itself, so there is no reason to silence anyone. Record-only can't mix, nor host voice
         // processing, which is why the category is play-and-record at all.
+        // The mode stays Default: voice-chat mode, with and without mixing, was tried for the
+        // voice-processing unit's sake and changed nothing, and it would force Bluetooth headsets
+        // onto the hands-free profile.
+        BOOL wantVoiceProcessing = ScreenReaderInUse() || !otherAudioPlaying;
         [m_audioSession setCategory: AVAudioSessionCategoryPlayAndRecord mode: AVAudioSessionModeDefault
                              options: AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetoothHFP
                                     | AVAudioSessionCategoryOptionAllowBluetoothA2DP | AVAudioSessionCategoryOptionMixWithOthers
@@ -774,15 +827,15 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
             NSLog(@"Error AVAudioSession setActive: %@", error);
             error = nil;
         }
-        DictationLog(@"audio session: category %@, mode %@, options 0x%lx, other audio playing %d, route %@",
+        DictationLog(@"audio session: category %@, mode %@, options 0x%lx, rate %.0f, IO buffer %.1f ms, other audio playing %d, route %@",
                      m_audioSession.category, m_audioSession.mode, (unsigned long)m_audioSession.categoryOptions,
+                     m_audioSession.sampleRate, m_audioSession.IOBufferDuration * 1000,
                      m_audioSession.isOtherAudioPlaying, m_audioSession.currentRoute);
 
         // If the engine won't start, it is most likely dead from a media services reset that
         // went unannounced (the notification isn't guaranteed), so it is rebuilt and tried once
         // more; the mic button shouldn't fail silently in any case, hence the delegate call. No
         // task is started against an engine that isn't running: it would wait forever for audio.
-        BOOL wantVoiceProcessing = ScreenReaderInUse() || !otherAudioPlaying;
         if (![self startAudioEngineWithVoiceProcessing: wantVoiceProcessing]) {
             NSLog(@"The dictation audio engine failed to start; rebuilding it and trying again");
             [self rebuildAudioEngine];
@@ -881,8 +934,56 @@ static const NSTimeInterval kDictationKeySilenceInterval = 0.4;
     // Not while paused: the pause stops the hypotheses, so the silence timer fires soon after
     // and lands here, and listening again would undo the pause behind the UI's back. The
     // resume (listenForSpeech with m_isPaused set) finds no task and starts a fresh one.
-    if (!m_isPaused)
-        [self performSelector: @selector(listenForSpeech) withObject:nil afterDelay:0];
+    if (m_isPaused)
+        return;
+    // With a screen reader on, and unless asked to listen through it (listensWhileScreenReaderSpeaks),
+    // the mic closes completely, engine and session as a stop would, while the reply is read, and
+    // reopens when the reading ends (announcementDidFinish:), or soon if no reading is posted
+    // (replyAnnouncementPosted). VoiceOver ducks other audio while it speaks and an active
+    // play-and-record session counts, even one playing silence; the ducking ramp racing the start
+    // of VoiceOver's speech leaves whole utterances loud and crackling, at random, until
+    // VoiceOver next falls silent (confirmed by the crackle vanishing with VoiceOver's Audio
+    // Ducking turned off). Nothing else about the engine, session or recognizer mattered. The
+    // UI isn't told: the player is still, as far as they are concerned, dictating.
+    if (ScreenReaderInUse() && !m_listensWhileScreenReaderSpeaks) {
+        [self releaseAudio];
+        [self cancelLongIdleTimer]; // nothing can be heard during the hold; the clock restarts with the reopening
+        m_quietForReply = YES;
+        m_replyAnnouncementsPending = 0;
+        [self performSelector: @selector(listenForSpeech) withObject: nil afterDelay: kDictationReplyAnnouncementWait];
+    } else
+        [self performSelector: @selector(listenForSpeech) withObject: nil afterDelay: 0];
+}
+
+-(BOOL)isHoldingForReply {
+    return m_quietForReply;
+}
+
+static const NSTimeInterval kDictationReopenGrace = 1.0;
+
+-(BOOL)justReopenedAfterReading {
+    return [self isListening] && [NSDate timeIntervalSinceReferenceDate] - m_reopenedAfterReadingAt < kDictationReopenGrace;
+}
+
+// Reached from the mic button or a Magic Tap while the mic is closed for a reading. (A Magic
+// Tap usually makes VoiceOver discard the reading first, whose finish notice reopens the mic
+// before the tap arrives, see justReopenedAfterReading; this is the path when it doesn't.) The
+// mic simply reopens; the owner sounds the resume cue.
+-(void)interruptReplyAndListen {
+    if (!m_quietForReply)
+        return;
+    DictationLog(@"reading interrupted by the player; mic reopens");
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(listenForSpeech) object: nil];
+    [self listenForSpeech];
+}
+
+-(void)replyAnnouncementPosted {
+    if (!m_quietForReply)
+        return;
+    m_replyAnnouncementsPending++;
+    DictationLog(@"reply announced (%ld pending); mic stays closed for the reading", (long)m_replyAnnouncementsPending);
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(listenForSpeech) object: nil];
+    [self performSelector: @selector(listenForSpeech) withObject: nil afterDelay: kDictationReplyReadingLimit];
 }
 
 @end

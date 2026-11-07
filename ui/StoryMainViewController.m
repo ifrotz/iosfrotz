@@ -1763,7 +1763,18 @@ extern void gli_ios_set_focus(window_t *winNum);
 // again. Whether the recognizer itself can take a request is checked in toggleListenForSpeech.
 - (void) micButtonPressed {
     if ([self dictationIsOn]) {
-        [m_dictationController stopListening];
+        // While the mic is closed for VoiceOver's reading of a reply, the button means "stop
+        // reading, I want to speak" rather than "stop listening"; so does Magic Tap. The same
+        // if the reading ended a moment ago: a Magic Tap on a paused VoiceOver ends the reading
+        // first, reopening the mic, and then arrives here; it meant "let me speak", so the mic
+        // stays open and the resume chime says so.
+        if ([m_dictationController isHoldingForReply] || [m_dictationController justReopenedAfterReading]) {
+            [m_dictationController interruptReplyAndListen]; // nothing to do if the reading has already ended
+            if (!m_dictationCuePlayer)
+                m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
+            [m_dictationCuePlayer playCue: kStoryDictationCueResumed];
+        } else
+            [m_dictationController stopListening];
         return;
     }
     [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status) {
@@ -1796,12 +1807,23 @@ extern void gli_ios_set_focus(window_t *winNum);
 // delegate (see FrotzAppDelegate), since navigation bar items aren't in this controller's
 // responder chain.
 -(BOOL)accessibilityPerformMagicTap {
-    if (!m_dictationEnabled || !m_micButton.enabled
-        || self.presentedViewController || self.navigationController.presentedViewController
-        || (self.navigationController && self.navigationController.topViewController != self)
-        || [UIApplication sharedApplication].applicationState != UIApplicationStateActive)
+    // Each refusal is logged (tracing on) because a declined Magic Tap looks to the player like
+    // one that never arrived. No application-state check: VoiceOver only delivers the gesture to
+    // the app in front, and the state can lag during launch.
+    const char *why = NULL;
+    if (!m_dictationEnabled)
+        why = "dictation is off in Settings";
+    else if (!m_micButton.enabled)
+        why = "the mic button is disabled (input line covered)";
+    else if (self.presentedViewController || self.navigationController.presentedViewController)
+        why = "something is presented over the story";
+    else if (self.navigationController && self.navigationController.topViewController != self)
+        why = "the story is not the front screen";
+    if (why) {
+        DictationLog(@"Magic Tap declined: %s", why);
         return NO;
-    [self micButtonPressed];
+    }
+    [self micButtonPressed]; // which, during VoiceOver's reading of a reply, cuts the reading short instead
     return YES;
 }
 
@@ -3992,6 +4014,10 @@ static int iosif_top_win_height = 1;
                 NSString *t = m_inputLine.text; [m_inputLine setTextKeepCompletion: @" "]; [m_inputLine setTextKeepCompletion: t]; // *sigh* needed to force cursor to resize
                 lastInputWindow = cwin;
             }
+#if EnableStoryDictation
+            storyView.interruptNextAnnouncement = m_interruptReadingForNextReply;
+            m_interruptReadingForNextReply = NO;
+#endif
             [storyView markWaitForInput];
             discard_output_until_prompt = 0;
             [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.08];
@@ -4089,6 +4115,7 @@ static int iosif_top_win_height = 1;
 #if EnableStoryDictation
     [dict setObject: @(m_dictationEnabled) forKey: @"dictationEnabled"];
     [dict setObject: @(m_dictationCommitDelay) forKey: @"dictationCommitDelay"];
+    [dict setObject: @(m_dictationListensDuringVoiceOver) forKey: @"dictationListensDuringVoiceOver"];
 #endif
     [dict setObject: @(iosif_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
@@ -4153,6 +4180,7 @@ static UIColor *scanColor(NSString *colorStr) {
         m_dictationEnabled = [[dict objectForKey: @"dictationEnabled"] boolValue]; // off until asked for
         id delay = [dict objectForKey: @"dictationCommitDelay"];
         m_dictationCommitDelay = delay ? PinnedDictationCommitDelay([delay doubleValue]) : kDefaultDictationCommitDelay;
+        m_dictationListensDuringVoiceOver = [[dict objectForKey: @"dictationListensDuringVoiceOver"] boolValue]; // off unless asked for
 #endif
         id arp = [dict objectForKey: @"autorestore_preference"];
         if (arp)
@@ -4976,6 +5004,28 @@ static void setScreenDims(char *storyNameBuf) {
     m_dictationController.silenceInterval = m_dictationCommitDelay;
 }
 
+// Settings: "Listen During VoiceOver" (shown only while VoiceOver runs). Off by default; see
+// StoryDictationController listensWhileScreenReaderSpeaks for what each way costs.
+-(BOOL)dictationListensDuringVoiceOver {
+    return m_dictationListensDuringVoiceOver;
+}
+
+-(void)setDictationListensDuringVoiceOver:(BOOL)listens {
+    m_dictationListensDuringVoiceOver = listens;
+    m_dictationController.listensWhileScreenReaderSpeaks = listens;
+}
+
+-(void)dictationReplyAnnouncementPosted {
+    [m_dictationController replyAnnouncementPosted];
+}
+
+// A player who dictates a command while VoiceOver is still reading the last reply has heard
+// enough of it: the new reply is announced in its place rather than after it (see
+// RichTextView interruptNextAnnouncement, applied where the game next waits for input).
+-(void)dictatedCommandSubmitted {
+    m_interruptReadingForNextReply = YES;
+}
+
 // The trailing bar items: the keyboard toggle, with the mic after it while voice dictation is
 // enabled. The count feeds the vertical bar's capacity estimate, so the leading items follow.
 -(void)updateTrailingBarItems {
@@ -4992,6 +5042,7 @@ static void setScreenDims(char *storyNameBuf) {
         m_dictationController.delegate = m_inputLine;
         m_dictationController.stateDelegate = self;
         m_dictationController.silenceInterval = m_dictationCommitDelay;
+        m_dictationController.listensWhileScreenReaderSpeaks = m_dictationListensDuringVoiceOver;
     }
     if ([self dictationIsOn]) {
         [m_dictationController stopListening];
@@ -5289,6 +5340,7 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
 #if EnableStoryDictation
     self.dictationEnabled = NO;
     self.dictationCommitDelay = kDefaultDictationCommitDelay;
+    self.dictationListensDuringVoiceOver = NO;
 #endif
     [m_storyBrowser unHideAll];
 }

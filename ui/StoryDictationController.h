@@ -12,6 +12,14 @@
 #import <Speech/Speech.h>
 #import "InputHelper.h"
 
+// Trace output for dictation (StoryDictationDebugLogging in iosfrotz.h), here and in the owning
+// view controller; errors use NSLog directly.
+#if StoryDictationDebugLogging
+#define DictationLog(...) NSLog(__VA_ARGS__)
+#else
+#define DictationLog(...) ((void)0)
+#endif
+
 NS_ASSUME_NONNULL_BEGIN
 @class SFSpeechAudioBufferRecognitionRequest, SFSpeechRecognitionTask, StoryDictationController;
 
@@ -50,6 +58,10 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
     NSTimer *m_longIdleTimer;     // stops listening after a long stretch with no speech at all; see restartLongIdleTimer
     NSTimeInterval m_silenceInterval;
     BOOL m_isPaused;
+    BOOL m_quietForReply;  // the mic is closed while a screen reader reads the reply, listening as far as the UI knows; see commitTranscription
+    NSInteger m_replyAnnouncementsPending; // announcements posted for the reply and not yet finished
+    NSTimeInterval m_reopenedAfterReadingAt; // when the mic last reopened because a reading ended; see justReopenedAfterReading
+    BOOL m_listensWhileScreenReaderSpeaks;
     BOOL m_resumeAfterInterruption; // an audio interruption stopped listening; start again if told it has ended
     BOOL m_tapInstalled;   // the input node has our tap, in the format current when it was installed
     id<FrotzInputDelegate> __weak m_delegate;
@@ -79,6 +91,30 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 // How long the speaker must be quiet before what was said is accepted as a command. The settings
 // page's "Dictation Delay"; 0.8s unless set. Takes effect from the next utterance.
 @property (nonatomic) NSTimeInterval silenceInterval;
+// Whether the microphone stays open while VoiceOver (or Speak Screen) reads the story's reply to
+// a command. Off, the default, closes it for the reading and reopens it when the reading ends or
+// is interrupted: VoiceOver ducks other audio while it speaks, an open play-and-record session
+// counts, and the ducking ramp racing VoiceOver's speech left VoiceOver loud and crackling for
+// whole utterances at random. On lets the player speak over the reading, which is only clean if
+// VoiceOver's Audio Ducking is turned off, something the app can't see. The settings page's
+// "Listen During VoiceOver", shown only while VoiceOver runs.
+@property (nonatomic) BOOL listensWhileScreenReaderSpeaks;
+// The story view has posted the reply as a VoiceOver announcement (RichTextView markWaitForInput),
+// so the reading has begun and will end with UIAccessibilityAnnouncementDidFinishNotification;
+// until it does, the mic stays closed. Without this call soon after a command, no reading is
+// coming and the mic reopens by itself.
+-(void)replyAnnouncementPosted;
+// Whether the mic is closed for a reading right now (listening as far as the UI knows).
+-(BOOL)isHoldingForReply;
+// Whether the mic reopened a moment ago because a reading ended. A Magic Tap on a paused
+// VoiceOver makes VoiceOver discard the paused reading, whose finish notice reopens the mic just
+// before the tap itself arrives; the tap meant "let me speak", not "stop", so the owner leaves
+// the mic open when this is true.
+-(BOOL)justReopenedAfterReading;
+// The player wants to speak now (Magic Tap or the mic button during a reading): the mic reopens
+// at once. VoiceOver's own two-finger tap only pauses a reading, which posts no finish notice,
+// so it can't serve by itself.
+-(void)interruptReplyAndListen;
 
 // The language the story is written in, as a language tag ("fr", "de-DE"), or nil for unknown.
 // The player must speak the story's language, whatever the device is set to, so this and not the

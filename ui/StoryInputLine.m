@@ -328,8 +328,10 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
 #if StoryDictationDebugLogging
     NSLog(@"key for \"%@\": %@", string, key);
 #endif
-    if ([key length])
+    if ([key length]) {
+        [(StoryMainViewController*)[m_storyView delegate] dictatedCommandSubmitted]; // what follows the key is announced over any reading still going
         [self performSelector: @selector(delayedInput:) withObject: key afterDelay: 0.04];
+    }
 }
 
 // Dictation is added to whatever was typed before the utterance began rather than put in its
@@ -387,6 +389,7 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
         m_dictationHold = NO;
         if (!editedSinceLastSpeech && !held) {
             StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
+            [storyController dictatedCommandSubmitted]; // its reply is announced over any reading still going
             [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
         }
     }

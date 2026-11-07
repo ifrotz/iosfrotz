@@ -80,6 +80,7 @@ typedef NS_ENUM(NSInteger, FrotzSettingsRow)
 #if EnableStoryDictation
     kFrotzPrefsStoryVoiceDictation,
     kFrotzPrefsDictationDelay,
+    kFrotzPrefsDictationDuringVoiceOver, // only while VoiceOver runs; see SettingsSectionRows
 #endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
     kFrotzPrefsDropbox,
@@ -87,28 +88,27 @@ typedef NS_ENUM(NSInteger, FrotzSettingsRow)
     kFrotzResetRow
 };
 
+// Built on each call: the Input section has a row that is there only while VoiceOver runs, and
+// VoiceOver can be turned on or off while the settings page is open.
 static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
-    static NSArray<NSArray<NSNumber*>*> *rows;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        rows = @[
-            @[ @(kFrotzInfoAbout), @(kFrotzInfoGettingStarted), @(kFrotzInfoReleaseNotes), @(kFrotzInfoFileTransfer) ],
-            @[ @(kFrotzPrefsTextColor), @(kFrotzPrefsBGColor), @(kFrotzPrefsStoryFont), @(kFrotzPrefsStoryFontSize) ],
-            @[ @(kFrotzPrefsNotesFont), @(kFrotzPrefsNotesFontSize) ],
-            @[ @(kFrotzPrefsWordCompletion),
+    NSMutableArray<NSNumber*> *input = [NSMutableArray arrayWithObject: @(kFrotzPrefsWordCompletion)];
 #if EnableStoryDictation
-               @(kFrotzPrefsStoryVoiceDictation), @(kFrotzPrefsDictationDelay),
+    [input addObjectsFromArray: @[ @(kFrotzPrefsStoryVoiceDictation), @(kFrotzPrefsDictationDelay) ]];
+    if (UIAccessibilityIsVoiceOverRunning())
+        [input addObject: @(kFrotzPrefsDictationDuringVoiceOver)];
 #endif
-            ],
-            @[ @(kFrotzPrefsStoryInfoEditing),
+    return @[
+        @[ @(kFrotzInfoAbout), @(kFrotzInfoGettingStarted), @(kFrotzInfoReleaseNotes), @(kFrotzInfoFileTransfer) ],
+        @[ @(kFrotzPrefsTextColor), @(kFrotzPrefsBGColor), @(kFrotzPrefsStoryFont), @(kFrotzPrefsStoryFontSize) ],
+        @[ @(kFrotzPrefsNotesFont), @(kFrotzPrefsNotesFontSize) ],
+        input,
+        @[ @(kFrotzPrefsStoryInfoEditing),
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-               @(kFrotzPrefsDropbox),
+           @(kFrotzPrefsDropbox),
 #endif
-            ],
-            @[ @(kFrotzResetRow) ],
-        ];
-    });
-    return rows;
+        ],
+        @[ @(kFrotzResetRow) ],
+    ];
 }
 
 -(FrotzSettingsRow)rowAtIndexPath:(NSIndexPath*)indexPath {
@@ -252,6 +252,11 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
     [m_dictationSwitchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
     m_dictationSwitchCtl.backgroundColor = [UIColor clearColor];
     [m_dictationSwitchCtl setOn: [m_storyDelegate isDictationEnabled]];
+
+    m_dictationVoiceOverSwitchCtl = [[UISwitch alloc] initWithFrame:frame];
+    [m_dictationVoiceOverSwitchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_dictationVoiceOverSwitchCtl.backgroundColor = [UIColor clearColor];
+    [m_dictationVoiceOverSwitchCtl setOn: [m_storyDelegate dictationListensDuringVoiceOver]];
 #endif
 }
 
@@ -264,6 +269,8 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 #if EnableStoryDictation
     else if (sender == m_dictationSwitchCtl)
         [m_storyDelegate setDictationEnabled: [sender isOn]];
+    else if (sender == m_dictationVoiceOverSwitchCtl)
+        [m_storyDelegate setDictationListensDuringVoiceOver: [sender isOn]];
 #endif
 }
 
@@ -445,8 +452,12 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section
 {
 #if EnableStoryDictation
-    if (section == kFrotzInputSection)
-        return NSLocalizedString(@"Dictation Delay is how long Frotz waits after you stop speaking before entering what you said as a command.", @"");
+    if (section == kFrotzInputSection) {
+        NSString *footer = NSLocalizedString(@"Dictation Delay is how long Frotz waits after you stop speaking before entering what you said as a command.", @"");
+        if (UIAccessibilityIsVoiceOverRunning())
+            footer = [footer stringByAppendingString: NSLocalizedString(@" Listen During VoiceOver keeps the microphone open while VoiceOver reads the story, so you can speak over it; VoiceOver's speech may crackle while this is on unless Audio Ducking is turned off in VoiceOver's settings. When it is off, pause the reading with a two-finger tap, then Magic Tap (a two-finger double tap) to speak.", @"")];
+        return footer;
+    }
 #endif
     return nil;
 }
@@ -558,6 +569,10 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             cell.textLabel.text = [NSString stringWithFormat: @kDictationDelayStr, [m_storyDelegate dictationCommitDelay]];
             cell.accessoryView = m_dictationDelaySliderCtl;
             break;
+        case kFrotzPrefsDictationDuringVoiceOver:
+            cell.textLabel.text = @"Listen During VoiceOver";
+            cell.accessoryView = m_dictationVoiceOverSwitchCtl;
+            break;
 #endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
         case kFrotzPrefsDropbox:
@@ -635,6 +650,7 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 #if EnableStoryDictation
                     [m_dictationSwitchCtl setOn: [m_storyDelegate isDictationEnabled]];
                     m_dictationDelaySliderCtl.value = (float)[m_storyDelegate dictationCommitDelay];
+                    [m_dictationVoiceOverSwitchCtl setOn: [m_storyDelegate dictationListensDuringVoiceOver]];
 #endif
                     [[self tableView] reloadData];
                 }

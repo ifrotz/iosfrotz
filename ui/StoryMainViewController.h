@@ -112,6 +112,8 @@ extern StoryBrowser *theStoryBrowser;
 #if EnableStoryDictation
     BOOL m_dictationEnabled;              // settings: "Story Voice Dictation"; the mic bar button shows only when on
     NSTimeInterval m_dictationCommitDelay; // settings: "Dictation Delay"; quiet time before speech becomes a command
+    BOOL m_dictationListensDuringVoiceOver; // settings: "Listen During VoiceOver"; mic open while VoiceOver reads a reply
+    BOOL m_interruptReadingForNextReply;    // a command was dictated; its reply's announcement displaces any reading in progress
 #endif
     BOOL m_kbLocked;
     BOOL m_ignoreWordSelection;
@@ -166,6 +168,9 @@ extern StoryBrowser *theStoryBrowser;
 #if EnableStoryDictation
 @property (nonatomic, getter=isDictationEnabled) BOOL dictationEnabled;
 @property (nonatomic) NSTimeInterval dictationCommitDelay;
+@property (nonatomic) BOOL dictationListensDuringVoiceOver;
+-(void)dictationReplyAnnouncementPosted; // from RichTextView markWaitForInput; see StoryDictationController replyAnnouncementPosted
+-(void)dictatedCommandSubmitted; // from StoryInputLine: the reply to this command should cut short any reading VoiceOver is in the middle of
 #endif
 -(void) activateKeyboard;
 -(void) toggleKeyboard;

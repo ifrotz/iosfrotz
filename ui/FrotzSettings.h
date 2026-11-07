@@ -34,6 +34,7 @@
 #if EnableStoryDictation
 @property (nonatomic, readwrite, getter=isDictationEnabled) BOOL dictationEnabled;
 @property (nonatomic, readwrite) NSTimeInterval dictationCommitDelay; // seconds, within kDictationDelayMin...Max
+@property (nonatomic, readwrite) BOOL dictationListensDuringVoiceOver; // "Listen During VoiceOver"; row shown only while VoiceOver runs
 #endif
 -(void)savePrefs;
 -(StoryBrowser*)storyBrowser;
@@ -68,7 +69,7 @@
     UITableViewCell     *m_storyFontCell, *m_notesFontCell;
     UITableViewCell	    *m_storyFontSizeCell, *m_notesFontSizeCell;
 #if EnableStoryDictation
-    UISwitch            *m_dictationSwitchCtl;
+    UISwitch            *m_dictationSwitchCtl, *m_dictationVoiceOverSwitchCtl;
     UISlider            *m_dictationDelaySliderCtl;
     UITableViewCell     *m_dictationDelayCell;
 #endif

@@ -2126,10 +2126,18 @@ static BOOL EndsWithSentenceBreak(NSString *text) {
                 [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
             m_lastAEIndexAnnounced = count;
+            // Queued, so that it follows whatever VoiceOver is saying rather than cutting it off;
+            // except when the owner has asked for the opposite (interruptNextAnnouncement).
             NSAttributedString *announcement = [[NSAttributedString alloc] initWithString: text
-                                                attributes: @{UIAccessibilitySpeechAttributeQueueAnnouncement: @YES}];
+                                                attributes: @{UIAccessibilitySpeechAttributeQueueAnnouncement: @(!self.interruptNextAnnouncement)}];
+            self.interruptNextAnnouncement = NO;
             UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, announcement);
             m_prevLineNotTerminated = NO;
+#if EnableStoryDictation
+            // Dictation closes the mic while VoiceOver reads this; see StoryDictationController.
+            if ([m_controller respondsToSelector: @selector(dictationReplyAnnouncementPosted)])
+                [m_controller performSelector: @selector(dictationReplyAnnouncementPosted)];
+#endif
         }
     }
 #endif
