@@ -369,7 +369,7 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
         m_dictationHold = NO; // speech since the helper was opened
     if (!m_textBeforeDictation || !m_lastDictationShown)
         m_textBeforeDictation = current;
-    else if ([current hasPrefix: m_lastDictationShown])
+    else if (![m_lastDictationShown length] || [current hasPrefix: m_lastDictationShown]) // hasPrefix: is NO for an empty prefix
         suffix = [current substringFromIndex: [m_lastDictationShown length]]; // empty when unchanged
     else {
         m_textBeforeDictation = current;
@@ -377,11 +377,24 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     }
     BOOL editedSinceLastSpeech = rebased || ![suffix isEqualToString: m_dictationSuffix ?: @""];
     m_dictationSuffix = suffix;
-    [self setText: m_textBeforeDictation];
-    [self inputHelperString: string]; // appends, with a separating space where one is needed
-    m_lastDictationShown = self.text; // typed part and transcript, without the suffix, so it is found again next time
-    if ([suffix length])
-        [self setText: [self.text stringByAppendingString: suffix]];
+    // With VoiceOver on and the keyboard up (this field editing), VoiceOver echoes every change
+    // made to the field's text in its typing voice, so the running transcript came back once per
+    // hypothesis and again on the final, on top of the story's own echo of the command. In that
+    // case the hypotheses aren't shown at all (the player can't see them), the final text is set
+    // once, and the command is submitted at once so the field is cleared before VoiceOver reads
+    // it; the story's announcement then echoes the command the one time.
+    BOOL silentField = UIAccessibilityIsVoiceOverRunning() && [self isFirstResponder];
+    if (silentField && !isFinal) {
+        m_lastDictationShown = m_textBeforeDictation; // what is actually shown, so the suffix is still found next time
+        return;
+    }
+    NSString *shown = m_textBeforeDictation;
+    if ([shown length] && [shown characterAtIndex: [shown length] - 1] != ' ' && !ispunct([shown characterAtIndex: [shown length] - 1]))
+        shown = [shown stringByAppendingString: @" "];
+    shown = [shown stringByAppendingString: string];
+    [self hideInputHelper];
+    m_lastDictationShown = shown; // typed part and transcript, without the suffix, so it is found again next time
+    [self setText: [shown stringByAppendingString: suffix]];
     if (isFinal) {
         m_textBeforeDictation = nil;
         m_lastDictationShown = nil;
@@ -390,7 +403,10 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
         if (!editedSinceLastSpeech && !held) {
             StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
             [storyController dictatedCommandSubmitted]; // its reply is announced over any reading still going
-            [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
+            if (silentField)
+                [storyController textFieldFakeDidEndEditing: self];
+            else
+                [storyController performSelector: @selector(textFieldFakeDidEndEditing:) withObject: self afterDelay: 0.1];
         }
     }
 }
