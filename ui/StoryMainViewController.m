@@ -1770,9 +1770,7 @@ extern void gli_ios_set_focus(window_t *winNum);
         // stays open and the resume chime says so.
         if ([m_dictationController isHoldingForReply] || [m_dictationController justReopenedAfterReading]) {
             [m_dictationController interruptReplyAndListen]; // nothing to do if the reading has already ended
-            if (!m_dictationCuePlayer)
-                m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
-            [m_dictationCuePlayer playCue: kStoryDictationCueResumed];
+            [self playDictationCue: kStoryDictationCueResumed];
         } else
             [m_dictationController stopListening];
         return;
@@ -5118,6 +5116,12 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
     return kDictationCueStateOff;
 }
 
+-(void)playDictationCue:(StoryDictationCue)cue {
+    if (!m_dictationCuePlayer)
+        m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
+    [m_dictationCuePlayer playCue: cue];
+}
+
 // Plays the cue for the change since the last one; the four are symmetrical. Listening beginning
 // is the double start cue if the mic button asked for it, else the single resume cue (back from
 // the notes page or settings, an audio interruption over). Listening going away is the single
@@ -5125,7 +5129,9 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
 // the Story List, the idle timeout, the app going to the background). A pause that becomes a stop
 // (leaving for the Story List with the notes page up) sounds the stop cue too: the player heard
 // only a pause. A start that failed leaves the state as it was, and nothing sounds; the button
-// shows it.
+// shows it. The start and resume cues play through the live recording session's route and come
+// out quieter than the other two (the cue files are levelled to compensate); sounding them
+// before the session went live was tried, and its activation cut them off mid-play.
 -(void)cueDictationStateChange {
     DictationCueState state = [self dictationCueState];
     DictationCueState was = (DictationCueState)m_dictationCuedState;
@@ -5141,9 +5147,7 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
         cue = kStoryDictationCuePaused;
     else
         cue = kStoryDictationCueStopped;
-    if (!m_dictationCuePlayer)
-        m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
-    [m_dictationCuePlayer playCue: cue];
+    [self playDictationCue: cue];
 }
 
 -(void)deferDictationCommit {
