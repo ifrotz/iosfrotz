@@ -1767,11 +1767,13 @@ extern void gli_ios_set_focus(window_t *winNum);
         // reading, I want to speak" rather than "stop listening"; so does Magic Tap. The same
         // if the reading ended a moment ago: a Magic Tap on a paused VoiceOver ends the reading
         // first, reopening the mic, and then arrives here; it meant "let me speak", so the mic
-        // stays open and the resume chime says so.
-        if ([m_dictationController isHoldingForReply] || [m_dictationController justReopenedAfterReading]) {
-            [m_dictationController interruptReplyAndListen]; // nothing to do if the reading has already ended
+        // stays open (the resume chime has already sounded, see dictationReopenedAfterReading:).
+        if ([m_dictationController isHoldingForReply]) {
+            [m_dictationController interruptReplyAndListen];
             [self playDictationCue: kStoryDictationCueResumed];
-        } else
+        } else if ([m_dictationController justReopenedAfterReading])
+            ; // already reopened and cued
+        else
             [m_dictationController stopListening];
         return;
     }
@@ -5114,6 +5116,12 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
     if ([m_dictationController willResume])
         return kDictationCueStatePaused;
     return kDictationCueStateOff;
+}
+
+// VoiceOver has finished reading the reply and the mic is open again: the resume chime tells the
+// player they can speak, since nothing else marks the moment.
+-(void)dictationReopenedAfterReading:(StoryDictationController*)controller {
+    [self playDictationCue: kStoryDictationCueResumed];
 }
 
 -(void)playDictationCue:(StoryDictationCue)cue {

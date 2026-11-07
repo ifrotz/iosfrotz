@@ -37,6 +37,9 @@ typedef NS_ENUM(NSInteger, StoryDictationAvailability) {
 // and when the microphone couldn't be started at all, so a tap on the mic never fails silently.
 @protocol StoryDictationStateDelegate <NSObject>
 -(void)dictationListeningStateChanged:(StoryDictationController*)controller;
+// The mic reopened because VoiceOver finished (or was stopped) reading the story's reply; the
+// player can speak now. Not sent when no reading was posted (the mic reopens quietly then).
+-(void)dictationReopenedAfterReading:(StoryDictationController*)controller;
 -(void)dictationBecameUnavailable:(StoryDictationController*)controller;
 -(void)dictationFailedToStart:(StoryDictationController*)controller;
 @end

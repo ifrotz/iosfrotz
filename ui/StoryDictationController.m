@@ -358,6 +358,8 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
         [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(listenForSpeech) object: nil];
         m_reopenedAfterReadingAt = [NSDate timeIntervalSinceReferenceDate];
         [self listenForSpeech];
+        if ([self isListening])
+            [m_stateDelegate dictationReopenedAfterReading: self];
     });
 }
 
