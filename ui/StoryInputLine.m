@@ -141,8 +141,20 @@
 }
 
 -(BOOL)validateWord:(NSString*)word {
-    StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    return [storyController dictionaryHasWord: word];
+    return [self gameKnowsWord](word);
+}
+
+// Whether the game knows a word, counting a hyphenated word as known when its last part is:
+// Counterfeit Monkey's "s-remover" (any letter) is parsed by the game as such though only
+// "remover" is in its dictionary. Otherwise the correction pass would replace it and the choice
+// among alternatives would prefer one without the "s-".
+static BOOL GameKnowsWord(StoryMainViewController *storyController, NSString *word) {
+    if ([storyController dictionaryHasWord: word])
+        return YES;
+    NSRange hyphen = [word rangeOfString: @"-" options: NSBackwardsSearch];
+    if (hyphen.location == NSNotFound || hyphen.location + 1 >= [word length])
+        return NO;
+    return [storyController dictionaryHasWord: [word substringFromIndex: hyphen.location + 1]];
 }
 
 // What the player is likely to say, for the recognizer to favor (see dictationContextWords in
@@ -166,7 +178,7 @@ static NSArray<NSString*> *OrdinaryCommandWords(void);
 // Whether the game's dictionary knows a word, for StoryVocabulary's queries.
 -(BOOL (^)(NSString*))gameKnowsWord {
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    return ^BOOL(NSString *word) { return [storyController dictionaryHasWord: word]; };
+    return ^BOOL(NSString *word) { return GameKnowsWord(storyController, word); };
 }
 
 -(NSArray<NSString*>*)dictationContextWords {

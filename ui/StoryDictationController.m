@@ -14,15 +14,23 @@
 
 
 @interface NSString (IFDictation)
+-(NSString*)stringWithHyphenatedDashes;
 -(NSString*)stringWithSanitizedDictation;
 @end
 
 @implementation NSString (IFDictation)
+// En and em dashes as hyphens, one character for one so positions in the text still hold (the
+// recognizer's confidence ranges are character ranges). Applied before the alternatives are
+// scored and corrected, so "s–remover" is the hyphenated word the game knows as "s-remover".
+-(NSString*)stringWithHyphenatedDashes {
+    NSString *str = [self stringByReplacingOccurrencesOfString:@"–" withString:@"-"];
+    return [str stringByReplacingOccurrencesOfString:@"—" withString:@"-"];
+}
+
 -(NSString*)stringWithSanitizedDictation {
     // Counterfeit Monkey helper.  Convert en dashes and em dashes to hyphens, remove surrounding spaces, so
     // "Wave x-remover at ..." dictates better.
-    NSString *str = [self stringByReplacingOccurrencesOfString:@"–" withString:@"-"];
-    str = [str stringByReplacingOccurrencesOfString:@"—" withString:@"-"];
+    NSString *str = [self stringWithHyphenatedDashes];
     str = [str stringByReplacingOccurrencesOfString:@" - " withString:@"-"];
     // The recognizer writes sentences: a capital first word, capitals on whatever it takes for a
     // name. Commands are typed in lower case and parsers ignore case, so the line shows it that
@@ -478,8 +486,13 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
     NSUInteger score = 0;
     NSMutableCharacterSet *separatorSet = [NSMutableCharacterSet whitespaceAndNewlineCharacterSet];
     [separatorSet formUnionWithCharacterSet: [NSCharacterSet punctuationCharacterSet]];
-    [separatorSet removeCharactersInString: @"'"];
-    NSArray *words = [text componentsSeparatedByCharactersInSet:separatorSet];
+    // Apostrophes and hyphens are inside words. Splitting "s-remover" made it two words, and the
+    // fewer-words term below then preferred the alternative "remover" alone, dropping the "s-".
+    [separatorSet removeCharactersInString: @"'-"];
+    // "S - remover" is shown as "s-remover" (stringWithSanitizedDictation), so it is scored as one word.
+    NSString *joined = [text stringByReplacingOccurrencesOfString: @" - " withString: @"-"];
+    NSArray *words = [[joined componentsSeparatedByCharactersInSet:separatorSet]
+                      filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"length > 0"]];
     int i = 0;
     NSUInteger count = [words count];
     NSUInteger wordCountScore = count >= 10 ? 0 : 10 - count;
@@ -512,7 +525,7 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
     BOOL wantKey = [m_delegate dictationExpectsSingleKey];
     //SFTranscription *transcription = [result bestTranscription];
     for (SFTranscription *transcription in transcriptions) {
-        NSString *text = [transcription formattedString];
+        NSString *text = [[transcription formattedString] stringWithHyphenatedDashes];
         if (wantKey) {
             // A key prompt: the recognizer's first choice for a spoken letter is often a common
             // word ("in" for N, "you" for Q), with the letter itself further down its list. The
@@ -540,7 +553,7 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
         transcription = transcriptions[bestIndex];
     else
         transcription = [result bestTranscription];
-    NSString *text = [transcription formattedString];
+    NSString *text = [[transcription formattedString] stringWithHyphenatedDashes];
     if (isFinal && !wantKey) {
         // Words the game won't know, swapped for near matches it will (see dictationCorrectedText:
         // in InputHelper.h). Final results only: a partial is still changing, and only a final
