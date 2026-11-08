@@ -5487,10 +5487,8 @@ extern int tads2_word_is_verb(const char *word);
         status = completion((const zchar*)"examine", (zchar*)resultbuf);
 #endif
     }
-    else if ([self dictionaryIsReadable])
-        status = glulxCompleteWord("examine", resultbuf);
     else
-        status = 2; // no readable dictionary; see dictionaryIsReadable
+        status = glulxCompleteWord("examine", resultbuf);
     if (status != 0)
         ; // don't match built-ins, game is non-English
     else if ([str isEqualToString: @"x"])  // 1-letter shortcuts
