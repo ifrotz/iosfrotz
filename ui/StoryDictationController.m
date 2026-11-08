@@ -491,6 +491,9 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
     [separatorSet removeCharactersInString: @"'-"];
     // "S - remover" is shown as "s-remover" (stringWithSanitizedDictation), so it is scored as one word.
     NSString *joined = [text stringByReplacingOccurrencesOfString: @" - " withString: @"-"];
+    // Quoted phrases aren't scored, so the recognizer's first choice stands; see dictationCorrectedText:.
+    joined = [joined stringByReplacingOccurrencesOfString: @"[\"“„«][^\"”»]*([\"”»]|$)" withString: @" "
+                                                  options: NSRegularExpressionSearch range: NSMakeRange(0, [joined length])];
     NSArray *words = [[joined componentsSeparatedByCharactersInSet:separatorSet]
                       filteredArrayUsingPredicate: [NSPredicate predicateWithFormat: @"length > 0"]];
     int i = 0;

@@ -267,7 +267,24 @@ static NSArray<NSString*> *OrdinaryCommandWords(void) {
     BOOL (^known)(NSString*) = [self gameKnowsWord];
     BOOL changed = NO;
     NSUInteger wordStart = 0; // offset of `word` within text; the words are split on single spaces
+    NSCharacterSet *quotes = [NSCharacterSet characterSetWithCharactersInString: @"\"“”„«»"];
+    BOOL inQuote = NO;
     for (NSString *word in words) {
+        // Words in a quoted phrase (a password, something said to a character, a name written on
+        // a featureless white cube) are left as heard; apostrophes aren't quotation marks here.
+        // An unclosed quotation runs to the end.
+        BOOL quoted = inQuote;
+        for (NSUInteger q = 0; q < [word length]; q++) {
+            if ([quotes characterIsMember: [word characterAtIndex: q]]) {
+                quoted = YES;
+                inQuote = !inQuote;
+            }
+        }
+        if (quoted) {
+            [out addObject: word];
+            wordStart += [word length] + 1;
+            continue;
+        }
         NSRange coreRange = [word rangeOfCharacterFromSet: [punctuation invertedSet]];
         NSString *core = [word stringByTrimmingCharactersInSet: punctuation];
         NSString *lower = [core lowercaseString];
