@@ -98,6 +98,8 @@ static int main_t2(int argc, char **argv)
 /*
  *   Invoke the T3 VM with the given command-line arguments
  */
+extern "C" void tads3_set_running(int running);
+
 static int main_t3(int argc, char **argv)
 {
     CVmMainClientConsole clientifc;
@@ -120,9 +122,12 @@ static int main_t3(int argc, char **argv)
      */
     os_init(&argc, argv, 0, 0, 0);
 
-    /* invoke the basic entrypoint */
+    /* invoke the basic entrypoint; iOS Frotz: word completion reads the game's
+       dictionaries only while it runs (see tads3_complete_word in vmdict.cpp) */
+    tads3_set_running(1);
     stat = vm_run_image_main(&clientifc, "t3run", argc, argv,
                              TRUE, FALSE, hostifc);
+    tads3_set_running(0);
 
     /* uninitialize the OS layer */
     os_uninit();

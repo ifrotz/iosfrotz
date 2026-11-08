@@ -314,10 +314,14 @@ int glulxDictionaryWordIsVerb(const char *word) {
 }
 
 int glulxCompleteWord(const char *word, char *result) {
-    // TADS 2 games run through the same Glk path as Glulx and ask here; their vocabulary is the
-    // TADS engine's, which answers while one is running (tads/tads2/vocab.c), and -1 otherwise.
+    // TADS games run through the same Glk path as Glulx and ask here; their vocabulary is the
+    // TADS engine's, which answers while one is running (tads/tads2/vocab.c,
+    // tads/tads3/vmdict.cpp), and -1 otherwise.
     extern int tads2_complete_word(const char *word, char *result);
+    extern int tads3_complete_word(const char *word, char *result);
     int tadsStatus = tads2_complete_word(word, result);
+    if (tadsStatus < 0)
+        tadsStatus = tads3_complete_word(word, result);
     if (tadsStatus >= 0)
         return tadsStatus;
 

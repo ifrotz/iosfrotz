@@ -42,6 +42,38 @@ Modified
 #include "vmrun.h"
 #include "vmstrcmp.h"
 #include "vmpredef.h"
+#include <ctype.h>
+
+/*
+ *   iOS Frotz: a registry of the live Dictionary objects, for word
+ *   completion against the running game's vocabulary (see
+ *   tads3_complete_word at the end of this file).  Games built on adv3 or
+ *   adv3Lite have one (cmdDict); a few more are tolerated.  Objects stay
+ *   at the same address for their lifetime, so the pointers are good until
+ *   notify_delete, and the registry is emptied when the VM stops.
+ */
+#define IOS_MAX_DICTS 16
+static CVmObjDict *ios_dicts[IOS_MAX_DICTS];
+static int ios_dict_count = 0;
+static int ios_t3_running = 0;
+
+static void ios_dict_register(CVmObjDict *d)
+{
+    if (ios_dict_count < IOS_MAX_DICTS)
+        ios_dicts[ios_dict_count++] = d;
+}
+
+static void ios_dict_unregister(CVmObjDict *d)
+{
+    for (int i = 0 ; i < ios_dict_count ; ++i)
+    {
+        if (ios_dicts[i] == d)
+        {
+            ios_dicts[i] = ios_dicts[--ios_dict_count];
+            return;
+        }
+    }
+}
 
 
 /* ------------------------------------------------------------------------ */
@@ -251,6 +283,9 @@ CVmObjDict::CVmObjDict(VMG0_)
     /* no comparator yet */
     get_ext()->comparator_ = VM_INVALID_OBJ;
     set_comparator_type(vmg_ VM_INVALID_OBJ);
+
+    /* iOS Frotz: remember the dictionary for word completion */
+    ios_dict_register(this);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -259,6 +294,9 @@ CVmObjDict::CVmObjDict(VMG0_)
  */
 void CVmObjDict::notify_delete(VMG_ int /*in_root_set*/)
 {
+    /* iOS Frotz: forget the dictionary for word completion */
+    ios_dict_unregister(this);
+
     /* free our additional data */
     if (ext_ != 0)
     {
@@ -2738,3 +2776,112 @@ void CVmObjDict::enum_word_props(VMG_
     get_ext()->hashtab_->enum_hash_matches(hash, &enum_word_props_cb, &ctx);
 }
 
+
+/* ------------------------------------------------------------------------ */
+/*
+ *   iOS Frotz: word completion against the running TADS 3 game's
+ *   dictionaries, with the same conventions as glulxCompleteWord
+ *   (git/memory.c), which defers to this.  Returns -1 if no TADS 3 game is
+ *   running, else 2 if no word begins with 'word', 0 if exactly one does
+ *   (its full text in 'result'), or 1 if several do (their common prefix).
+ *   'result' holds up to 63 bytes plus the terminator.  Words are compared
+ *   as UTF-8 bytes, ASCII letters without regard to case.  Only reads the
+ *   hash tables, and only while the game waits for input, when they aren't
+ *   changing; they are read afresh each time because restore and restart
+ *   rebuild them.
+ */
+struct ios_complete_ctx
+{
+    char key[64];
+    size_t len;
+    char first[64];
+    size_t first_len;
+    size_t common_len;
+    int found;
+    int distinct;
+};
+
+static void ios_complete_cb(void *ctx0, CVmHashEntry *entry0)
+{
+    ios_complete_ctx *ctx = (ios_complete_ctx *)ctx0;
+    CVmHashEntryDict *entry = (CVmHashEntryDict *)entry0;
+    const char *str = entry->getstr();
+    size_t len = entry->getlen();
+    size_t i;
+
+    /* skip words with nothing left in them (all deleted) */
+    if (entry->get_head() == 0 || len < ctx->len)
+        return;
+    for (i = 0 ; i < ctx->len ; ++i)
+        if (tolower((unsigned char)str[i]) != ctx->key[i])
+            return;
+
+    if (len > sizeof(ctx->first) - 1)
+        len = sizeof(ctx->first) - 1;
+    if (ctx->found++ == 0)
+    {
+        for (i = 0 ; i < len ; ++i)
+            ctx->first[i] = (char)tolower((unsigned char)str[i]);
+        ctx->first[len] = '\0';
+        ctx->first_len = ctx->common_len = len;
+        return;
+    }
+
+    /* another word, or the same word in another dictionary */
+    if (len != ctx->first_len)
+        ctx->distinct = TRUE;
+    for (i = 0 ; i < ctx->common_len && i < len
+                && ctx->first[i] == tolower((unsigned char)str[i]) ; ++i)
+        ;
+    if (i < ctx->first_len)
+        ctx->distinct = TRUE;
+    ctx->common_len = i;
+}
+
+extern "C" void tads3_set_running(int running)
+{
+    ios_t3_running = running;
+    if (!running)
+        ios_dict_count = 0;
+}
+
+extern "C" int tads3_complete_word(const char *word, char *result)
+{
+    ios_complete_ctx ctx;
+    int d;
+
+    if (!ios_t3_running)
+        return -1;
+    *result = '\0';
+    if (word == 0)
+        return 2;
+
+    /* the parser folds case */
+    for (ctx.len = 0 ; word[ctx.len] != '\0' && ctx.len < sizeof(ctx.key) - 1 ; ++ctx.len)
+        ctx.key[ctx.len] = (char)tolower((unsigned char)word[ctx.len]);
+    ctx.key[ctx.len] = '\0';
+    if (ctx.len < 2)
+        return 2;
+    ctx.found = 0;
+    ctx.distinct = FALSE;
+    ctx.first_len = ctx.common_len = 0;
+
+    for (d = 0 ; d < ios_dict_count ; ++d)
+    {
+        CVmHashTable *tab = ios_dicts[d]->ios_hashtab();
+        if (tab != 0)
+            tab->enum_entries(ios_complete_cb, &ctx);
+    }
+
+    if (ctx.found == 0)
+        return 2;
+    if (!ctx.distinct)
+    {
+        memcpy(result, ctx.first, ctx.first_len);
+        result[ctx.first_len] = '\0';
+        return 0;
+    }
+    memcpy(result, ctx.first, ctx.common_len);
+    result[ctx.common_len] = '\0';
+    return 1;
+}

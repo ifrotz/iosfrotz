@@ -350,6 +350,10 @@ public:
     void del_word(VMG_ vm_obj_id_t self, const char *str, size_t len,
                   vm_obj_id_t obj, vm_prop_id_t voc_prop);
 
+    /* iOS Frotz: the current hash table (rebuilt on restore), for word completion */
+    class CVmHashTable *ios_hashtab() const
+        { return ext_ != 0 ? get_ext()->hashtab_ : 0; }
+
 protected:
     CVmObjDict(VMG0_);
 
