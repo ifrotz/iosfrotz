@@ -5386,15 +5386,18 @@ extern int completion (const zchar *buffer, zchar *result);
 extern int glulxCompleteWord(const char *word, char *result);
 extern int dictionary_word_is_verb (const zchar *word);
 extern int glulxDictionaryWordIsVerb(const char *word);
+extern int tads2_is_running(void);
+extern int tads2_word_is_verb(const char *word);
 
-// Whether the running story's dictionary can be read at all: Z-code and Glulx, not TADS (yet).
-// Without it every word reads as unknown, so callers that filter by it should not filter.
+// Whether the running story's dictionary can be read at all: Z-code, Glulx and TADS 2, not
+// TADS 3 (yet). Without it every word reads as unknown, so callers that filter by it should not
+// filter. TADS 2 answers through glulxCompleteWord, which defers to its vocabulary.
 -(BOOL)dictionaryIsReadable {
-    return !gStoryIsTADS;
+    return !gStoryIsTADS || tads2_is_running();
 }
 
 // Whether the game's dictionary marks `word` as a verb: 1 yes, 0 no, -1 can't tell (not in the
-// dictionary, or a story not compiled by Inform, whose verb flag is the only one known). For
+// dictionary, or a story whose verb marking isn't known: Infocom's version 6, TADS 3). For
 // dictation's choice among the recognizer's alternatives; see dictationDictionaryScore:.
 -(NSInteger)dictionaryWordIsVerb:(NSString*)word {
     if (![word length] || ![self dictionaryIsReadable])
@@ -5406,6 +5409,8 @@ extern int glulxDictionaryWordIsVerb(const char *word);
         return dictionary_word_is_verb((const zchar*)[word UTF8String]);
 #endif
     }
+    if (gStoryIsTADS)
+        return tads2_word_is_verb([word UTF8String]);
     return glulxDictionaryWordIsVerb([word UTF8String]);
 }
 
@@ -5482,7 +5487,7 @@ extern int glulxDictionaryWordIsVerb(const char *word);
         status = completion((const zchar*)"examine", (zchar*)resultbuf);
 #endif
     }
-    else if (!gStoryIsTADS)
+    else if ([self dictionaryIsReadable])
         status = glulxCompleteWord("examine", resultbuf);
     else
         status = 2; // no readable dictionary; see dictionaryIsReadable
