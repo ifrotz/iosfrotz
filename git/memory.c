@@ -314,6 +314,13 @@ int glulxDictionaryWordIsVerb(const char *word) {
 }
 
 int glulxCompleteWord(const char *word, char *result) {
+    // TADS 2 games run through the same Glk path as Glulx and ask here; their vocabulary is the
+    // TADS engine's, which answers while one is running (tads/tads2/vocab.c), and -1 otherwise.
+    extern int tads2_complete_word(const char *word, char *result);
+    int tadsStatus = tads2_complete_word(word, result);
+    if (tadsStatus >= 0)
+        return tadsStatus;
+
     int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
     *result = '\0';
     const unsigned char *p;

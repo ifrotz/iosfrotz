@@ -8184,3 +8184,92 @@ void *voc_stk_alo(voccxdef *ctx, uint siz)
     return ret;
 }
 
+
+/*
+ *   iOS Frotz: word completion against the running game's vocabulary,
+ *   with the same conventions as glulxCompleteWord (git/memory.c), which
+ *   defers to this while a TADS 2 game runs.  Returns -1 if no TADS 2
+ *   game is running, else 2 if no vocabulary word begins with 'word', 0
+ *   if exactly one does (its full text in 'result'), or 1 if several do
+ *   (their common prefix in 'result').  'result' holds up to 63
+ *   characters plus the terminator.  Only safe while the game waits for
+ *   input, when its vocabulary isn't changing.
+ */
+int tads2_complete_word(const char *word, char *result)
+{
+    extern voccxdef *main_voc_ctx;
+    voccxdef *ctx = main_voc_ctx;
+    char      key[64];
+    char      first[64];
+    size_t    len, i, commonLen = 0;
+    int       found = 0, distinct = FALSE;
+    uint      h;
+    vocdef   *v;
+
+    if (ctx == 0)
+        return -1;
+    *result = '\0';
+    if (word == 0)
+        return 2;
+
+    /* the parser sees input in lower case */
+    for (len = 0 ; word[len] != '\0' && len < sizeof(key) - 1 ; ++len)
+        key[len] = (char)tolower((unsigned char)word[len]);
+    key[len] = '\0';
+    if (len < 2)
+        return 2;
+
+    for (h = 0 ; h < VOCHASHSIZ ; ++h)
+    {
+        for (v = ctx->voccxhsh[h] ; v != 0 ; v = v->vocnxt)
+        {
+            vocwdef *vw;
+            int      live = FALSE;
+            size_t   wlen = v->voclen;
+
+            if (wlen < len || memcmp(v->voctxt, key, len) != 0)
+                continue;
+
+            /* skip words whose every meaning has been deleted */
+            for (vw = vocwget(ctx, v->vocwlst) ; vw ;
+                 vw = vocwget(ctx, vw->vocwnxt))
+            {
+                if (!(vw->vocwflg & VOCFDEL))
+                {
+                    live = TRUE;
+                    break;
+                }
+            }
+            if (!live)
+                continue;
+
+            if (wlen > sizeof(first) - 1)
+                wlen = sizeof(first) - 1;
+            if (found++ == 0)
+            {
+                memcpy(first, v->voctxt, wlen);
+                first[wlen] = '\0';
+                commonLen = wlen;
+                continue;
+            }
+
+            /* another word (or the same word again, for another phrase) */
+            if (wlen != strlen(first) || memcmp(first, v->voctxt, wlen) != 0)
+                distinct = TRUE;
+            for (i = 0 ; i < commonLen && i < wlen && first[i] == v->voctxt[i] ; ++i)
+                ;
+            commonLen = i;
+        }
+    }
+
+    if (found == 0)
+        return 2;
+    if (!distinct)
+    {
+        strcpy(result, first);
+        return 0;
+    }
+    memcpy(result, first, commonLen);
+    result[commonLen] = '\0';
+    return 1;
+}
