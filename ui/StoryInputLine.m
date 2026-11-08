@@ -192,7 +192,10 @@ static NSArray<NSString*> *OrdinaryCommandWords(void);
             break;
     }
     StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
-    [context addObjectsFromArray: [storyController.storyVocabulary recentWords: kDictationContextMaxWords known: [self gameKnowsWord]]];
+    // Printed words are hinted only if the game knows them; when its dictionary can't be read
+    // (TADS) they are hinted unfiltered rather than not at all.
+    BOOL (^hintable)(NSString*) = [storyController dictionaryIsReadable] ? [self gameKnowsWord] : ^BOOL(NSString *word) { return YES; };
+    [context addObjectsFromArray: [storyController.storyVocabulary recentWords: kDictationContextMaxWords known: hintable]];
     [context addObjectsFromArray: OrdinaryCommandWords()];
     return [context array];
 }

@@ -98,6 +98,9 @@ NSString *kVariableWidthFontName = @"Helvetica";
 char SAVE_PATH[MAX_FILE_NAME], AUTOSAVE_FILE[MAX_FILE_NAME];
 
 static enum { kZStory, kGlxStory } gStoryInterp;
+// TADS stories run as kGlxStory (through Glk) but have no Glulx memory, so the dictionary lookups
+// used by dictation and word completion don't apply to them; see dictionaryIsReadable.
+static BOOL gStoryIsTADS;
 
 // Choose the interpreter for a story from its file extension. The interpreter thread sets
 // gStoryInterp for itself when it starts, but screen sizing and layout happen before that, so
@@ -109,6 +112,7 @@ static void setStoryInterpForPath(NSString *storyPath) {
         gStoryInterp = kGlxStory;
     else
         gStoryInterp = kZStory;
+    gStoryIsTADS = [ext isEqualToString: @"gam"] || [ext isEqualToString: @"t3"];
 }
 
 static int numGlkViews;
@@ -992,6 +996,7 @@ int hflagsRestore = 0;
 
 void run_zinterp(bool autorestore) {
     gStoryInterp = kZStory;
+    gStoryIsTADS = NO;
 
     os_set_default_file_names(story_name);
     if (autorestore)
@@ -1050,7 +1055,8 @@ void run_glxinterp(const char *story, bool autorestore) {
     }
     
     gStoryInterp = kGlxStory;
-    
+    gStoryIsTADS = useTADS;
+
     char *argv[] = { "frotz", (char*)story, NULL, NULL, NULL };
     glkunix_startup_t  glkunix_startup = { 2,  argv };
     iosif_ioinit();
@@ -5381,11 +5387,17 @@ extern int glulxCompleteWord(const char *word, char *result);
 extern int dictionary_word_is_verb (const zchar *word);
 extern int glulxDictionaryWordIsVerb(const char *word);
 
+// Whether the running story's dictionary can be read at all: Z-code and Glulx, not TADS (yet).
+// Without it every word reads as unknown, so callers that filter by it should not filter.
+-(BOOL)dictionaryIsReadable {
+    return !gStoryIsTADS;
+}
+
 // Whether the game's dictionary marks `word` as a verb: 1 yes, 0 no, -1 can't tell (not in the
 // dictionary, or a story not compiled by Inform, whose verb flag is the only one known). For
 // dictation's choice among the recognizer's alternatives; see dictationDictionaryScore:.
 -(NSInteger)dictionaryWordIsVerb:(NSString*)word {
-    if (![word length])
+    if (![word length] || ![self dictionaryIsReadable])
         return -1;
     if (gStoryInterp == kZStory) {
 #if USE_UTF8
@@ -5403,7 +5415,7 @@ extern int glulxDictionaryWordIsVerb(const char *word);
 // used for this: for an exact match that is a prefix of nothing else, the completers return
 // success with nothing to add, and completeWord: turns that into nil.
 -(BOOL)dictionaryHasWord:(NSString*)word {
-    if (![word length])
+    if (![word length] || ![self dictionaryIsReadable])
         return NO;
     char resultbuf[256] = { 0, 0 };
     int status;
@@ -5470,8 +5482,10 @@ extern int glulxDictionaryWordIsVerb(const char *word);
         status = completion((const zchar*)"examine", (zchar*)resultbuf);
 #endif
     }
-    else
+    else if (!gStoryIsTADS)
         status = glulxCompleteWord("examine", resultbuf);
+    else
+        status = 2; // no readable dictionary; see dictionaryIsReadable
     if (status != 0)
         ; // don't match built-ins, game is non-English
     else if ([str isEqualToString: @"x"])  // 1-letter shortcuts

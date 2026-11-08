@@ -262,6 +262,7 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic, readonly) CGPoint cursorOffset;
 -(NSString*) completeWord:(NSString*)word prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
 -(BOOL) dictionaryHasWord:(NSString*)word; // the game's dictionary has this word, or a longer one it begins
+-(BOOL) dictionaryIsReadable; // NO for TADS stories, whose dictionary isn't read yet; the two lookups then answer "unknown"
 -(NSInteger) dictionaryWordIsVerb:(NSString*)word; // 1 a verb, 0 not, -1 unknown (not in the dictionary, or not an Inform story)
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
