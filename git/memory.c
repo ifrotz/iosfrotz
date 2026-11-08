@@ -186,26 +186,25 @@ int glulxDictWordCmp(const void *a, const void *b) {
 extern unsigned char *memmap;
 extern glui32 origendmem;
 
-int glulxCompleteWord(const char *word, char *result) {
-    int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
-    *result = '\0';
+// Finds the game's dictionary (see above) and caches where it is per game file. Returns 0 if none
+// was found. *isInform is set for the Inform 6 layout, the only one whose flags are known.
+static int glulxLocateDictionary(const git_uint8 **dictStartOut, int *dictWordCountOut, int *worddiffOut, int *isInformOut) {
     const unsigned char *memoryBegin = gInitMem, *memoryEnd = memoryBegin + gOriginalEndMem - 1, *p;
     if (!gInitMem || !gOriginalEndMem) {
         memoryBegin = memmap;
         memoryEnd = memoryBegin + origendmem - 1;
     }
-    if (!memoryBegin)
-        return status;
-    if (!word || !word[0] || !word[1])
-        return status;
-    if (memoryBegin && memoryBegin < memoryEnd) {
+    if (!memoryBegin || memoryBegin >= memoryEnd)
+        return 0;
+    {
         static glui32 checksumCache, endgamefileCache;
         static const git_uint8 *dictStartCache = NULL;
-        static int dictWordCountCache = 0, worddiffCache = 0;
+        static int dictWordCountCache = 0, worddiffCache = 0, isInformCache = 0;
 
         const unsigned char *endMem = memoryEnd;
         int dictWordCount = 0;
         int worddiff = 0;
+        int isInform = 0;
         const git_uint8 *dictStart = NULL;
 
         glui32 checksum = read32(memoryBegin + 32), endgamefile = read32(memoryBegin + 12);
@@ -213,6 +212,7 @@ int glulxCompleteWord(const char *word, char *result) {
             dictWordCount = dictWordCountCache;
             worddiff = worddiffCache;
             dictStart = dictStartCache;
+            isInform = isInformCache;
         } else {
             checksumCache = checksum;
             endgamefileCache = endgamefile;
@@ -221,7 +221,7 @@ int glulxCompleteWord(const char *word, char *result) {
                 p = endMem;
                 const unsigned char *barrier = endMem - 256 - 16;
                 const unsigned char *stringTable = memoryBegin + read32(memoryBegin + 28);
-                
+
                 if (barrier < stringTable)
                     barrier = stringTable;
                 while (p > barrier) {
@@ -229,8 +229,12 @@ int glulxCompleteWord(const char *word, char *result) {
                         break;
                     --p;
                 }
-                if (p <= barrier)
-                    return status;
+                if (p <= barrier) {
+                    dictWordCountCache = worddiffCache = isInformCache = 0;
+                    dictStartCache = NULL;
+                    return 0;
+                }
+                isInform = 1;
                 worddiff = 16;
                 barrier = stringTable;
                 while (*p == 0x60) {
@@ -271,8 +275,54 @@ int glulxCompleteWord(const char *word, char *result) {
             dictWordCountCache = dictWordCount;
             worddiffCache = worddiff;
             dictStartCache = dictStart;
+            isInformCache = isInform;
         }
         if (!dictStart || !worddiff)
+            return 0;
+        *dictStartOut = dictStart;
+        *dictWordCountOut = dictWordCount;
+        *worddiffOut = worddiff;
+        *isInformOut = isInform;
+        return 1;
+    }
+}
+
+// For dictation: 1 if the word's dictionary entry carries Inform's verb flag (bit 0 of the
+// 2-byte flags after the 9-byte word), 0 if the entry exists without it, -1 if the word isn't
+// there (exactly, up to the 9 characters stored) or the dictionary layout isn't Inform's.
+int glulxDictionaryWordIsVerb(const char *word) {
+    const git_uint8 *dictStart;
+    int dictWordCount, worddiff, isInform;
+    if (!word || !word[0])
+        return -1;
+    if (!glulxLocateDictionary(&dictStart, &dictWordCount, &worddiff, &isInform) || !isInform)
+        return -1;
+    const unsigned char *p = bsearch(word, dictStart, dictWordCount, worddiff, glulxDictWordCmp);
+    if (!p)
+        return -1;
+    size_t len = strlen(word);
+    if (len > 9)
+        len = 9;
+    // bsearch matches on the word as a prefix; walk to the entry that is exactly the word.
+    while (p > dictStart && glulxDictWordCmp(word, p - worddiff) == 0)
+        p -= worddiff;
+    for (; p < dictStart + dictWordCount * worddiff && glulxDictWordCmp(word, p) == 0; p += worddiff) {
+        if (len == 9 || p[len] == 0)
+            return (read16(p + 9) & 1) ? 1 : 0;
+    }
+    return -1;
+}
+
+int glulxCompleteWord(const char *word, char *result) {
+    int status = 2; // 2=not found, 1=ambiguous match, 0=full match. Same as ZMachine frotz complete func.
+    *result = '\0';
+    const unsigned char *p;
+    if (!word || !word[0] || !word[1])
+        return status;
+    {
+        const git_uint8 *dictStart;
+        int dictWordCount, worddiff, isInform;
+        if (!glulxLocateDictionary(&dictStart, &dictWordCount, &worddiff, &isInform))
             return status;
 
         p = bsearch(word, dictStart, dictWordCount, worddiff, glulxDictWordCmp);
