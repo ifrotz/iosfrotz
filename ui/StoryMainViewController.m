@@ -5373,7 +5373,9 @@ static BOOL migateDropboxAuth() {
     NSFileManager *defaultManager = [NSFileManager defaultManager];
     NSError *error = nil;
     NSArray *localSaveFiles = [[defaultManager contentsOfDirectoryAtPath:localSavePath error:&error] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
-    
+    BOOL isDir = NO;
+    BOOL localFolderExists = [defaultManager fileExistsAtPath: localSavePath isDirectory: &isDir] && isDir;
+
     NSUInteger localCount = [localSaveFiles count];
     NSUInteger dbCount = [dbSaveFiles count];
     NSUInteger localIndex = 0, dbIndex = 0, i = 0;
@@ -5433,10 +5435,7 @@ static BOOL migateDropboxAuth() {
                 [self dbUploadSaveGameFile: sfPath];
             ++localIndex;
         } else { // cr == NSOrderDescending, db, not in local
-            
-            NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
-            [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
-            [self dbDownloadSaveGameFile: sfPath];
+            [self dbSyncRemoteOnlySaveFile: md inSubPath: subSavePath localFolderExists: localFolderExists];
             ++dbIndex;
         }
         ++i;
@@ -5447,15 +5446,39 @@ static BOOL migateDropboxAuth() {
         ++localIndex;
     }
     while (dbIndex < dbCount) {
-        DBFILESFileMetadata *md = dbSaveFiles[dbIndex];
-        dbSF = md.name;
-        NSDate *dbModDate = md.serverModified;
-        NSString *sfPath = [subSavePath stringByAppendingPathComponent: dbSF];
-        [self cacheTimestamp:dbModDate forSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir,sfPath]];
-        [self dbDownloadSaveGameFile: sfPath];
+        [self dbSyncRemoteOnlySaveFile: dbSaveFiles[dbIndex] inSubPath: subSavePath localFolderExists: localFolderExists];
         ++dbIndex;
     }
     [self saveDBCacheDict];
+}
+
+// A save that is in Dropbox but not here. If it was synced before (it has a cached timestamp),
+// Dropbox's copy hasn't changed since, and the story's save folder is still here, the player
+// deleted it here (in the Files app, say; deleting in Frotz's own file browser deletes it from
+// Dropbox at once), so it is deleted from Dropbox too, mirroring how a save deleted in Dropbox
+// isn't uploaded again. Otherwise it is downloaded: it is new, or changed elsewhere since the last
+// sync, or the whole folder is missing, which may not be the player's doing and shouldn't empty
+// their Dropbox. (A reinstall loses the cache with the app, so everything downloads.)
+-(void)dbSyncRemoteOnlySaveFile:(DBFILESFileMetadata*)md inSubPath:(NSString*)subSavePath localFolderExists:(BOOL)localFolderExists {
+    NSString *sfPath = [subSavePath stringByAppendingPathComponent: md.name];
+    NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
+    NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: cacheKey];
+    NSDate *dbModDate = md.serverModified;
+    if (localFolderExists && cachedDBModDate && [dbModDate compare: cachedDBModDate] != NSOrderedDescending) {
+        NSLog(@"Deleting from DB (deleted locally): %@", sfPath);
+        DBUserClient *client = [DBClientsManager authorizedClient];
+        NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: sfPath];
+        [[client.filesRoutes delete_V2: dbSGPath] setResponseBlock:^(DBFILESDeleteResult *result, DBFILESDeleteError *routeError, DBRequestError *error) {
+            if (result) {
+                [self cacheTimestamp: nil forSaveFile: cacheKey];
+                [self saveDBCacheDict];
+            } else if (routeError || error)
+                [self handleDropboxError: routeError withRequestError: error];
+        }];
+        return;
+    }
+    [self cacheTimestamp: dbModDate forSaveFile: cacheKey];
+    [self dbDownloadSaveGameFile: sfPath];
 }
 #endif // UseDropBoxSDK
 
