@@ -47,6 +47,7 @@
 #include <stdlib.h>
 
 #include <CoreText/CoreText.h>
+#include <CommonCrypto/CommonDigest.h> // Dropbox content hashes (DropboxContentHash)
 
 #define kClearEscChar '\f'
 #define kClearEscCode "\f"
@@ -2867,6 +2868,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     }
 #endif
     [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
+    [self cacheBaseHash:nil forSaveFile: [self metadataSubPath: dbPath]];
 }
 
 -(void) setBackgroundColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
@@ -5046,6 +5048,9 @@ extern int glulxCompleteWord(const char *word, char *result);
 
 NSString *const kDBCFilename = @"dbcache.plist";
 static NSString *kTimestampKey = @"timestamps";
+// Per save, the Dropbox content hash of the version both sides had at the last sync: the base the
+// two sides are compared against (see dbSyncSingleSaveDir:). Older releases ignore the key.
+static NSString *kBaseHashKey = @"contentHashes";
 static NSString *kHashKey = @"hash";
 static NSString *kActiveKey = @"active";
 static NSString *kDBTopPath = @"topPath";
@@ -5193,9 +5198,50 @@ static BOOL migateDropboxAuth() {
     }
     if (timeStamp)
         [timeStampDict setValue: timeStamp forKey:saveFile];
-    else 
+    else
         [timeStampDict removeObjectForKey: saveFile];
 }
+
+-(NSString*)getBaseHashForSaveFile:(NSString*)saveFile {
+    return m_dbCachedMetadata[kBaseHashKey][saveFile];
+}
+
+-(void)cacheBaseHash:(NSString*)hash forSaveFile:(NSString*)saveFile {
+    NSMutableDictionary *hashDict = m_dbCachedMetadata[kBaseHashKey];
+    if (![hashDict isKindOfClass: [NSMutableDictionary class]]) {
+        hashDict = hashDict ? [hashDict mutableCopy] : [NSMutableDictionary dictionaryWithCapacity: 32];
+        m_dbCachedMetadata[kBaseHashKey] = hashDict;
+    }
+    if (hash)
+        hashDict[saveFile] = hash;
+    else
+        [hashDict removeObjectForKey: saveFile];
+}
+
+#if UseDropBoxSDK
+// Dropbox's content hash of a local file, to compare with the content_hash Dropbox reports: the
+// file in 4 MB blocks, the SHA-256 of each, then the SHA-256 of those concatenated, in lowercase
+// hex. Saves are a single block. nil if the file can't be read.
+static NSString *DropboxContentHash(NSString *path) {
+    NSData *data = [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
+    if (!data)
+        return nil;
+    const NSUInteger kBlock = 4 * 1024 * 1024;
+    NSMutableData *blockHashes = [NSMutableData data];
+    for (NSUInteger offset = 0; offset < [data length]; offset += kBlock) { // an empty file has no blocks
+        unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+        NSUInteger len = MIN(kBlock, [data length] - offset);
+        CC_SHA256((const char*)[data bytes] + offset, (CC_LONG)len, digest);
+        [blockHashes appendBytes: digest length: sizeof(digest)];
+    }
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256([blockHashes bytes], (CC_LONG)[blockHashes length], digest);
+    NSMutableString *hex = [NSMutableString stringWithCapacity: 2 * sizeof(digest)];
+    for (size_t i = 0; i < sizeof(digest); i++)
+        [hex appendFormat: @"%02x", digest[i]];
+    return hex;
+}
+#endif // UseDropBoxSDK
 
 - (void)dropboxDidLinkAccount {
 #if UseDropBoxSDK
@@ -5279,8 +5325,9 @@ static BOOL migateDropboxAuth() {
              if (![[NSFileManager defaultManager] setAttributes:attributes ofItemAtPath:localSavePath error:nil]) {
                  NSLog(@"error setting mod date of uploaded file");
              }
-             [self cacheTimestamp: serverModified forSaveFile:
-              [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]]];
+             NSString *cacheKey = [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]];
+             [self cacheTimestamp: serverModified forSaveFile: cacheKey];
+             [self cacheBaseHash: [result contentHash] forSaveFile: cacheKey]; // both sides now have this
              [self saveDBCacheDict];
          } else if (routeError || error)
              [self handleDropboxError:routeError withRequestError:error];
@@ -5298,8 +5345,9 @@ static BOOL migateDropboxAuth() {
                         ) {
          if (result) {
          //    NSLog(@"%@", result);
-             [self cacheTimestamp:[NSDate date] forSaveFile:
-              [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]]];
+             NSString *cacheKey = [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]];
+             [self cacheTimestamp:[NSDate date] forSaveFile: cacheKey];
+             [self cacheBaseHash: [result contentHash] forSaveFile: cacheKey]; // both sides now have this
              [self saveDBCacheDict];
          }
          if (routeError || error)
@@ -5374,7 +5422,9 @@ static BOOL migateDropboxAuth() {
     NSError *error = nil;
     NSArray *localSaveFiles = [[defaultManager contentsOfDirectoryAtPath:localSavePath error:&error] sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
     BOOL isDir = NO;
-    BOOL localFolderExists = [defaultManager fileExistsAtPath: localSavePath isDirectory: &isDir] && isDir;
+    // Only a folder that was listed successfully counts as present: a failed listing would make every
+    // Dropbox save look deleted here (see dbSyncRemoteOnlySaveFile:).
+    BOOL localFolderExists = localSaveFiles != nil && [defaultManager fileExistsAtPath: localSavePath isDirectory: &isDir] && isDir;
 
     NSUInteger localCount = [localSaveFiles count];
     NSUInteger dbCount = [dbSaveFiles count];
@@ -5390,9 +5440,53 @@ static BOOL migateDropboxAuth() {
             NSDictionary *fileAttribs = [defaultManager fileAttributesAtPath:[localSavePath stringByAppendingPathComponent:locSF] traverseLink:NO];
             NSDate *locModDate = fileAttribs[NSFileModificationDate];
             NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
-            NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]];
+            NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
+            NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: cacheKey];
             //	    NSLog(@"file %@/%@ cachedmd %@ dbmodd %@ locmd %@", subSavePath, locSF, cachedDBModDate, dbModDate, locModDate);
-            
+
+            // By content first: the local file's hash, Dropbox's, and the base both had at the last
+            // sync. Equal hashes need nothing whatever the dates say (a touched but unchanged file,
+            // clocks that disagree); otherwise whichever side still matches the base is the one that
+            // didn't change. Only a file synced before hashes were recorded falls through to the
+            // dates below, once.
+            NSString *localHash = DropboxContentHash([localSavePath stringByAppendingPathComponent: locSF]);
+            NSString *dbHash = md.contentHash;
+            NSString *baseHash = [self getBaseHashForSaveFile: cacheKey];
+            if (localHash && dbHash) {
+                if ([localHash isEqualToString: dbHash]) {
+                    if (!baseHash)
+                        NSLog(@"DB sync: recorded content hash for %@ (in sync)", sfPath);
+                    [self cacheBaseHash: localHash forSaveFile: cacheKey];
+                    if (!cachedDBModDate)
+                        [self cacheTimestamp: dbModDate forSaveFile: cacheKey];
+                    ++localIndex;
+                    ++dbIndex;
+                    continue;
+                }
+                if (baseHash) {
+                    if ([localHash isEqualToString: baseHash])          // changed in Dropbox only
+                        [self dbDownloadSaveGameFile: sfPath];
+                    else if ([dbHash isEqualToString: baseHash])      // changed here only
+                        [self dbUploadSaveFile: sfPath dbName: dbSF];
+                    else                                                // changed on both sides
+                        [self dbKeepBothVersionsOfSaveFile: sfPath];
+                    ++localIndex;
+                    ++dbIndex;
+                    continue;
+                }
+                // Different contents and no record of which was synced last: dates can't be trusted
+                // to say which is newer (they left such files untouched indefinitely), so both are
+                // kept. This happens at most once per file; the transfers record the hashes.
+                NSLog(@"DB sync: %@ differs from Dropbox's copy with no sync record; keeping both", sfPath);
+                [self dbKeepBothVersionsOfSaveFile: sfPath];
+                ++localIndex;
+                ++dbIndex;
+                continue;
+            }
+
+            // Only when a hash is unavailable (the local file can't be read, or Dropbox gave none).
+            NSLog(@"DB sync: no content hash for %@; comparing by date", sfPath);
+
             // oldest             newest    | result
             // cache      db       local    | upload
             // db         cache    local    | upload
@@ -5403,21 +5497,7 @@ static BOOL migateDropboxAuth() {
             
             if ([locModDate compare: dbModDate] == NSOrderedDescending && (!cachedDBModDate || [locModDate compare: cachedDBModDate] == NSOrderedDescending)) {
                 // If filesystem mod date is newer than db (and cache is same or older than db), upload new file
-                NSString *encodedLocSF = [locSF stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-                NSString *encodedDBSF = [dbSF stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-                BOOL deleteFirst = ([encodedLocSF compare:encodedDBSF] != NSOrderedSame);
-                if (deleteFirst) { // files differ in case or UTF-8 encoding, DB doesn't support case-only rename.  Delete first.
-                    DBUserClient *client = [DBClientsManager authorizedClient];
-                    NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: sfPath];
-                    DBRpcTask *dbDelTask = [client.filesRoutes delete_V2: dbSGPath];
-                    [dbDelTask setResponseBlock:^(DBFILESFileMetadata *result, DBFILESDeleteError *routeError, DBRequestError *error) {
-                         if (result) {
-                             [self dbUploadSaveGameFile: sfPath];
-                         } else if (routeError || error)
-                             [self handleDropboxError:routeError withRequestError:error];
-                    }];
-                } else
-                    [self dbUploadSaveGameFile: sfPath];
+                [self dbUploadSaveFile: sfPath dbName: dbSF];
             } else if ([dbModDate compare: cachedDBModDate] == NSOrderedDescending) {
                 if ([locModDate compare: cachedDBModDate] == NSOrderedDescending)
                     ; // conflict; ignore
@@ -5427,12 +5507,7 @@ static BOOL migateDropboxAuth() {
             ++localIndex;
             ++dbIndex;
         } else if (cr == NSOrderedAscending) { // local, not in db
-            NSString *sfPath = [subSavePath stringByAppendingPathComponent: locSF];
-            // If we don't have the file but do have a cached timestamp, the file was deleted in DB.
-            // We won't delete it locally; the user must delete it by hand, but we won't auto-reupload it either.
-            // When they delete it locally, we'll also delete the cache, so if the file is recreated it will be uploaded.
-            if (![self getCachedTimestampForSaveFile: [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath]])
-                [self dbUploadSaveGameFile: sfPath];
+            [self dbSyncLocalOnlySaveFile: locSF inSubPath: subSavePath];
             ++localIndex;
         } else { // cr == NSOrderDescending, db, not in local
             [self dbSyncRemoteOnlySaveFile: md inSubPath: subSavePath localFolderExists: localFolderExists];
@@ -5441,8 +5516,7 @@ static BOOL migateDropboxAuth() {
         ++i;
     }
     while (localIndex < localCount) {
-        locSF = localSaveFiles[localIndex];
-        [self dbUploadSaveGameFile: [subSavePath stringByAppendingPathComponent: locSF]];
+        [self dbSyncLocalOnlySaveFile: localSaveFiles[localIndex] inSubPath: subSavePath];
         ++localIndex;
     }
     while (dbIndex < dbCount) {
@@ -5463,22 +5537,98 @@ static BOOL migateDropboxAuth() {
     NSString *sfPath = [subSavePath stringByAppendingPathComponent: md.name];
     NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
     NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: cacheKey];
+    NSString *baseHash = [self getBaseHashForSaveFile: cacheKey];
     NSDate *dbModDate = md.serverModified;
-    if (localFolderExists && cachedDBModDate && [dbModDate compare: cachedDBModDate] != NSOrderedDescending) {
+    // Unchanged in Dropbox since the last sync: by content when that is known, else by date.
+    BOOL unchangedInDB = (baseHash && md.contentHash) ? [md.contentHash isEqualToString: baseHash]
+                       : (cachedDBModDate && [dbModDate compare: cachedDBModDate] != NSOrderedDescending);
+    if (localFolderExists && (baseHash || cachedDBModDate) && unchangedInDB) {
         NSLog(@"Deleting from DB (deleted locally): %@", sfPath);
         DBUserClient *client = [DBClientsManager authorizedClient];
         NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: sfPath];
         [[client.filesRoutes delete_V2: dbSGPath] setResponseBlock:^(DBFILESDeleteResult *result, DBFILESDeleteError *routeError, DBRequestError *error) {
             if (result) {
                 [self cacheTimestamp: nil forSaveFile: cacheKey];
+                [self cacheBaseHash: nil forSaveFile: cacheKey];
                 [self saveDBCacheDict];
             } else if (routeError || error)
                 [self handleDropboxError: routeError withRequestError: error];
         }];
         return;
     }
-    [self cacheTimestamp: dbModDate forSaveFile: cacheKey];
+    // Nothing is recorded until the download completes (its response block does that): a record
+    // without the file would read as "deleted locally" above if the download failed or another
+    // sync ran before it finished, and the file would be deleted from Dropbox.
     [self dbDownloadSaveGameFile: sfPath];
+}
+
+// A save that is here but not in Dropbox. Never synced: upload it. Synced before: it was deleted
+// in Dropbox, so it isn't uploaded again (the player deletes it here by hand, which clears the
+// cache) — unless it has changed here since that sync, when the change is worth keeping.
+-(void)dbSyncLocalOnlySaveFile:(NSString*)name inSubPath:(NSString*)subSavePath {
+    NSString *sfPath = [subSavePath stringByAppendingPathComponent: name];
+    NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
+    NSString *baseHash = [self getBaseHashForSaveFile: cacheKey];
+    if (baseHash) {
+        NSString *localHash = DropboxContentHash([storyTopSavePath stringByAppendingPathComponent: sfPath]);
+        if (localHash && ![localHash isEqualToString: baseHash])
+            [self dbUploadSaveGameFile: sfPath];
+    } else if (![self getCachedTimestampForSaveFile: cacheKey])
+        [self dbUploadSaveGameFile: sfPath];
+}
+
+// Uploads a save that Dropbox also has under `dbName`. If the names differ only in case or Unicode
+// form, Dropbox can't rename in place, so its copy is deleted first.
+-(void)dbUploadSaveFile:(NSString*)sfPath dbName:(NSString*)dbName {
+    NSString *locName = [sfPath lastPathComponent];
+    NSString *encodedLocSF = [locName stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSString *encodedDBSF = [dbName stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    if ([encodedLocSF compare:encodedDBSF] == NSOrderedSame) {
+        [self dbUploadSaveGameFile: sfPath];
+        return;
+    }
+    DBUserClient *client = [DBClientsManager authorizedClient];
+    NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: sfPath];
+    [[client.filesRoutes delete_V2: dbSGPath] setResponseBlock:^(DBFILESDeleteResult *result, DBFILESDeleteError *routeError, DBRequestError *error) {
+        if (result)
+            [self dbUploadSaveGameFile: sfPath];
+        else if (routeError || error)
+            [self handleDropboxError:routeError withRequestError:error];
+    }];
+}
+
+// The save changed both here and in Dropbox since the last sync. Neither is thrown away: the local
+// version is renamed "name (conflict YYYY-MM-DD).ext" and uploaded under that name, and Dropbox's
+// version is downloaded under the original name.
+-(void)dbKeepBothVersionsOfSaveFile:(NSString*)sfPath {
+    NSFileManager *fileMgr = [NSFileManager defaultManager];
+    NSString *localPath = [storyTopSavePath stringByAppendingPathComponent: sfPath];
+    NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
+    fmt.locale = [NSLocale localeWithLocaleIdentifier: @"en_US_POSIX"]; // Gregorian digits whatever the device's calendar
+    fmt.dateFormat = @"yyyy-MM-dd";
+    NSString *stem = [[sfPath lastPathComponent] stringByDeletingPathExtension];
+    NSString *ext = [sfPath pathExtension];
+    NSString *dir = [sfPath stringByDeletingLastPathComponent];
+    NSString *conflictSubPath = nil;
+    for (int n = 1; n < 100; n++) {
+        NSString *suffix = n == 1 ? [NSString stringWithFormat: @" (conflict %@)", [fmt stringFromDate: [NSDate date]]]
+                                  : [NSString stringWithFormat: @" (conflict %@ %d)", [fmt stringFromDate: [NSDate date]], n];
+        NSString *name = [stem stringByAppendingString: suffix];
+        if ([ext length])
+            name = [name stringByAppendingPathExtension: ext];
+        NSString *candidate = [dir stringByAppendingPathComponent: name];
+        if (![fileMgr fileExistsAtPath: [storyTopSavePath stringByAppendingPathComponent: candidate]]) {
+            conflictSubPath = candidate;
+            break;
+        }
+    }
+    if (!conflictSubPath || ![fileMgr moveItemAtPath: localPath toPath: [storyTopSavePath stringByAppendingPathComponent: conflictSubPath] error: nil]) {
+        NSLog(@"Dropbox conflict on %@: couldn't set the local version aside; leaving both as they are", sfPath);
+        return;
+    }
+    NSLog(@"Dropbox conflict on %@: local version kept as %@", sfPath, [conflictSubPath lastPathComponent]);
+    [self dbUploadSaveGameFile: conflictSubPath];
+    [self dbDownloadSaveGameFile: sfPath]; // records the file when it completes; see dbSyncRemoteOnlySaveFile:
 }
 #endif // UseDropBoxSDK
 
