@@ -636,6 +636,8 @@
 		4423590B1261894100BFB245 /* gi_blorb.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gi_blorb.c; sourceTree = "<group>"; };
 		4423590C1261894100BFB245 /* gi_blorb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gi_blorb.h; sourceTree = "<group>"; };
 		4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = buildnumber.xcconfig; sourceTree = "<group>"; };
+		4406471530A19677001C7DB7 /* Frotz-debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Frotz-debug.xcconfig"; sourceTree = "<group>"; };
+		4406471630A19677001C7DB7 /* Frotz-release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Frotz-release.xcconfig"; sourceTree = "<group>"; };
 		4436611C1F8355C8004F8871 /* StoryStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = StoryStoryboard.storyboard; sourceTree = SOURCE_ROOT; };
 		443A64AD114F5EDB0093B4B2 /* splashes.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = splashes.zip; sourceTree = "<group>"; };
 		443A7C32115094E00093B4B2 /* FrotzCommonWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FrotzCommonWebView.h; sourceTree = "<group>"; };
@@ -1400,6 +1402,8 @@
 				447036B1123335C400E15D5B /* Settings.bundle */,
 				28A0AAE50D9B0CCF005BE974 /* Frotz_Prefix.pch */,
 				4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */,
+				4406471530A19677001C7DB7 /* Frotz-debug.xcconfig */,
+				4406471630A19677001C7DB7 /* Frotz-release.xcconfig */,
 				44CCC10024A8017E00AEBB39 /* include */,
 				080E96DDFE201D6D7F000001 /* UI */,
 				29B97315FDCFA39411CA2CEA /* Terps */,
@@ -3065,7 +3069,7 @@
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8CDEB4FC1BF7712627AD154C /* Pods-Frotz.debug.xcconfig */;
+			baseConfigurationReference = 4406471530A19677001C7DB7 /* Frotz-debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3126,7 +3130,7 @@
 		};
 		1D6058950D05DD3E006BFB54 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
+			baseConfigurationReference = 4406471630A19677001C7DB7 /* Frotz-release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -3595,7 +3599,7 @@
 		};
 		44954F9F0E4AB0C00029C0F3 /* Distribution */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4433A76819BF533D00EC8D98 /* buildnumber.xcconfig */;
+			baseConfigurationReference = 4406471630A19677001C7DB7 /* Frotz-release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;

@@ -4,11 +4,8 @@
 //
 //  Created by Craig Smith on 9/9/14.
 //
+//  Just the build number, included by Frotz-debug.xcconfig and Frotz-release.xcconfig so every
+//  configuration carries it. The "Update Build Number" build phase bumps it for Distribution
+//  builds and expects the BUILD_NUMBER line to be the last line of this file.
 //
-#include "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.release.xcconfig"
-
-#include "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.distribution.xcconfig" // same as release version
-// These two includes have the same contents; including twice is harmless, and prevents 'pod install'
-// from generating a warning without having to clone this file to have two different top-level configs for release/dist.
-
-BUILD_NUMBER = 161
+BUILD_NUMBER = 164

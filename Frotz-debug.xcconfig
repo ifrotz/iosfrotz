@@ -1,0 +1,11 @@
+//
+//  Frotz-debug.xcconfig
+//  Frotz
+//
+//  Base configuration for the Debug configuration: the CocoaPods settings plus the build number.
+//  Without the number, debug builds had CFBundleVersion "190." (BUILD_NUMBER undefined), which among
+//  other things kept iCloud from noticing a new version and re-reading NSUbiquitousContainers.
+//
+#include "Pods/Target Support Files/Pods-Frotz/Pods-Frotz.debug.xcconfig"
+
+#include "buildnumber.xcconfig"
