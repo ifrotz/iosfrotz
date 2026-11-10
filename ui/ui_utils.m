@@ -875,8 +875,10 @@ NSData *imageDataFromBlorb(NSString *blorbFile) {
 // See ui_utils.h. Saves are a single block; an empty file has no blocks.
 NSString *FrotzFileContentHash(NSString *path) {
     NSData *data = [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
-    if (!data)
-        return nil;
+    return data ? FrotzDataContentHash(data) : nil;
+}
+
+NSString *FrotzDataContentHash(NSData *data) {
     const NSUInteger kBlock = 4 * 1024 * 1024;
     NSMutableData *blockHashes = [NSMutableData data];
     for (NSUInteger offset = 0; offset < [data length]; offset += kBlock) {

@@ -59,3 +59,4 @@ BOOL DoesGameFileMatchSave(NSString *path, UInt16 checkRelease, char *checkSeria
 // those together, in lowercase hex), so copies of a save can be compared by content: a local
 // file with what Dropbox reports, or the local and iCloud copies. nil if the file can't be read.
 NSString *FrotzFileContentHash(NSString *path);
+NSString *FrotzDataContentHash(NSData *data); // the same, of bytes already in hand

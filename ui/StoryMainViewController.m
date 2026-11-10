@@ -5944,7 +5944,8 @@ static BOOL migateDropboxAuth() {
     
     if ([saveGameSubPath hasSuffix: @kFrotzAutoSaveFile] || [saveGameSubPath hasSuffix: @kFrotzAutoSavePListFile]
         || [saveGameSubPath hasSuffix: @kFrotzOldAutoSaveFile]
-        || [[saveGameSubPath lastPathComponent] hasPrefix: @kFrotzAutoSaveGlkImgPrefix])
+        || [[saveGameSubPath lastPathComponent] hasPrefix: @kFrotzAutoSaveGlkImgPrefix]
+        || [[saveGameSubPath lastPathComponent] hasPrefix: @"."]) // hidden: a download being staged, by this sync or iCloud's
         return;
     if (!m_dbSyncEnabled) // reached from a response that was pending when the switch went off
         return;
@@ -5972,24 +5973,45 @@ static BOOL migateDropboxAuth() {
     }];
 }
 
--(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
+// Downloads into a hidden staging file beside the save and installs it only if the local file is
+// still what the decision was made on: `expectedLocalHash` is its hash then, or nil if there was
+// none. The response arrives whenever it arrives, and by then the interpreter or the iCloud sync
+// may have written the file; downloading straight over it lost that, and the next iCloud pass
+// then carried the loss on. If the file has changed, the staged copy is dropped, and the next
+// Dropbox pass finds two changed versions and keeps both.
+-(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath expectingLocal:(NSString*)expectedLocalHash { // includes game subfolder, e.g. 905.z5.d/foo.sav
     if (!m_dbSyncEnabled) // reached from a response that was pending when the switch went off
         return;
     NSLog(@"Downloading from DB: %@", saveGameSubPath);
-    
+
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
+    NSString *stagingPath = [[localSavePath stringByDeletingLastPathComponent] stringByAppendingPathComponent: [NSString stringWithFormat: @".%@.dropbox-download", [localSavePath lastPathComponent]]];
     NSString *dbSGPath = [[self dbSavePath] stringByAppendingPathComponent: saveGameSubPath];
     DBUserClient *client = [DBClientsManager authorizedClient];
-    [[client.filesRoutes downloadUrl:dbSGPath overwrite:YES destination: [NSURL fileURLWithPath: localSavePath]]
+    [[client.filesRoutes downloadUrl:dbSGPath overwrite:YES destination: [NSURL fileURLWithPath: stagingPath]]
      setResponseBlock:^(DBFILESFileMetadata *result, DBFILESDownloadError *routeError, DBRequestError *error, NSURL *url
                         ) {
+         NSFileManager *fm = [NSFileManager defaultManager];
          if (result) {
-         //    NSLog(@"%@", result);
-             NSString *cacheKey = [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]];
-             [self cacheTimestamp:[NSDate date] forSaveFile: cacheKey];
-             [self cacheBaseHash: [result contentHash] forSaveFile: cacheKey]; // both sides now have this
-             [self saveDBCacheDict];
+             NSString *now = [fm fileExistsAtPath: localSavePath] ? (FrotzFileContentHash(localSavePath) ?: @"") : nil;
+             NSError *installError = nil;
+             BOOL installed = NO;
+             if ((now == nil) != (expectedLocalHash == nil) || (now && ![now isEqualToString: expectedLocalHash]))
+                 NSLog(@"DB sync: %@ %@ here while it was downloading; leaving it, both will be kept next time", saveGameSubPath, expectedLocalHash ? @"changed" : @"appeared");
+             else if (now)
+                 installed = [fm replaceItemAtURL: [NSURL fileURLWithPath: localSavePath] withItemAtURL: [NSURL fileURLWithPath: stagingPath]
+                                   backupItemName: nil options: 0 resultingItemURL: nil error: &installError];
+             else
+                 installed = [fm moveItemAtPath: stagingPath toPath: localSavePath error: &installError];
+             if (installed) {
+                 NSString *cacheKey = [@kFrotzSaveDir stringByAppendingPathComponent:[localSavePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, localSavePath.length)]];
+                 [self cacheTimestamp:[NSDate date] forSaveFile: cacheKey];
+                 [self cacheBaseHash: [result contentHash] forSaveFile: cacheKey]; // both sides now have this
+                 [self saveDBCacheDict];
+             } else if (installError)
+                 NSLog(@"DB sync: couldn't install the download of %@: %@", saveGameSubPath, installError);
          }
+         [fm removeItemAtPath: stagingPath error: nil]; // gone after a move; otherwise not wanted
          if (routeError || error)
              [self handleDropboxError:routeError withRequestError:error];
      }];
@@ -6107,7 +6129,7 @@ static BOOL migateDropboxAuth() {
                 }
                 if (baseHash) {
                     if ([localHash isEqualToString: baseHash])          // changed in Dropbox only
-                        [self dbDownloadSaveGameFile: sfPath];
+                        [self dbDownloadSaveGameFile: sfPath expectingLocal: localHash];
                     else if ([dbHash isEqualToString: baseHash])      // changed here only
                         [self dbUploadSaveFile: sfPath dbName: dbSF];
                     else                                                // changed on both sides
@@ -6144,7 +6166,7 @@ static BOOL migateDropboxAuth() {
                 if ([locModDate compare: cachedDBModDate] == NSOrderedDescending)
                     ; // conflict; ignore
                 else
-                    [self dbDownloadSaveGameFile: sfPath];
+                    [self dbDownloadSaveGameFile: sfPath expectingLocal: FrotzFileContentHash([localSavePath stringByAppendingPathComponent: locSF])];
             }
             ++localIndex;
             ++dbIndex;
@@ -6203,7 +6225,7 @@ static BOOL migateDropboxAuth() {
     // Nothing is recorded until the download completes (its response block does that): a record
     // without the file would read as "deleted locally" above if the download failed or another
     // sync ran before it finished, and the file would be deleted from Dropbox.
-    [self dbDownloadSaveGameFile: sfPath];
+    [self dbDownloadSaveGameFile: sfPath expectingLocal: nil]; // nothing was here
 }
 
 // A save that is here but not in Dropbox. Never synced: upload it. Synced before: it was deleted
@@ -6272,7 +6294,7 @@ static BOOL migateDropboxAuth() {
     }
     NSLog(@"Dropbox conflict on %@: local version kept as %@", sfPath, [conflictSubPath lastPathComponent]);
     [self dbUploadSaveGameFile: conflictSubPath];
-    [self dbDownloadSaveGameFile: sfPath]; // records the file when it completes; see dbSyncRemoteOnlySaveFile:
+    [self dbDownloadSaveGameFile: sfPath expectingLocal: nil]; // the local version was just moved aside; records the file when it completes
 }
 #endif // UseDropBoxSDK
 
