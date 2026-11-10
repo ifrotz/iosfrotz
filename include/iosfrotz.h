@@ -170,10 +170,10 @@ extern int iosif_ifrotz_verbose_debug;
 
 #define UseNewFTPServer 1
 
-// Experimental: dictate commands with on-device speech recognition (StoryDictationController and
+// Dictate commands with on-device speech recognition (StoryDictationController and
 // the mic bar button). Everything speech-related compiles out when this is 0, except the microphone
 // and speech recognition usage descriptions in Info.plist.
-#define EnableStoryDictation 1
+#define EnableStoryDictation 0
 // Trace logging for the above: every hypothesis, timer fire and scored word. Errors are logged
 // regardless.
 #define StoryDictationDebugLogging 0
