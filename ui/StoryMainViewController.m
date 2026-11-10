@@ -3360,8 +3360,10 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     }
     if (m_currentStory) {
         storySavePath = [storyTopSavePath stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
-        if (![fileMgr fileExistsAtPath: storySavePath])
+        if (![fileMgr fileExistsAtPath: storySavePath]) {
+            [self forgetSyncRecordsForSaveFolder: [self saveSubFolderForStory: m_currentStory]];
             [fileMgr createDirectoryAtPath: storySavePath attributes: @{}];
+        }
     	strcpy(SAVE_PATH, [storySavePath fileSystemRepresentation]);
         
         if (![fileMgr fileExistsAtPath: storySIPPathOld]) {
@@ -4885,8 +4887,10 @@ static void setScreenDims(char *storyNameBuf) {
 
     // The Saves folder is in the Files app, so the story's save directory (or Saves itself) may
     // have been deleted since the story started; put it back rather than lose the autosave.
-    if (storySavePath && ![[NSFileManager defaultManager] fileExistsAtPath: storySavePath])
+    if (storySavePath && ![[NSFileManager defaultManager] fileExistsAtPath: storySavePath]) {
+        [self forgetSyncRecordsForSaveFolder: [storySavePath lastPathComponent]];
         [[NSFileManager defaultManager] createDirectoryAtPath: storySavePath withIntermediateDirectories: YES attributes: nil error: NULL];
+    }
 
     iosif_clear_input([NSString stringWithFormat:@"%c", ZC_AUTOSAVE]);
     
@@ -5815,6 +5819,37 @@ static BOOL migateDropboxAuth() {
     return m_dbCachedMetadata[kBaseHashKey][saveFile];
 }
 
+// A story's save folder is about to be put back after being deleted (in the Files app, say). To
+// both syncs a missing folder means never synced, and nothing still on the other side is deleted
+// on its account. But the folder is recreated before they run, so they would find it present and
+// empty, and take every save still in Dropbox or iCloud for one deleted here. Forgetting the
+// folder's sync records first keeps the rule true: everything comes back down instead.
+-(void)forgetSyncRecordsForSaveFolder:(NSString*)subFolder {
+#if UseDropBoxSDK
+    NSString *prefix = [NSString stringWithFormat: @"%@/%@/", @kFrotzSaveDir, subFolder];
+    BOOL forgot = NO;
+    for (NSString *dictKey in @[kTimestampKey, kBaseHashKey]) {
+        NSDictionary *dict = m_dbCachedMetadata[dictKey];
+        NSArray<NSString*> *stale = [[dict allKeys] filteredArrayUsingPredicate: [NSPredicate predicateWithBlock: ^BOOL(NSString *key, NSDictionary *bindings) {
+            return [key hasPrefix: prefix];
+        }]];
+        if ([stale count]) {
+            NSMutableDictionary *mutable = [dict isKindOfClass: [NSMutableDictionary class]] ? (NSMutableDictionary*)dict : [dict mutableCopy];
+            [mutable removeObjectsForKeys: stale];
+            m_dbCachedMetadata[dictKey] = mutable;
+            forgot = YES;
+        }
+    }
+    if (forgot) {
+        NSLog(@"DB sync: %@ was deleted here and is being put back; forgetting its sync records", subFolder);
+        [self saveDBCacheDict];
+    }
+#endif
+#if EnableCloudSaveSync
+    [[self cloudSync] forgetSaveFolder: subFolder];
+#endif
+}
+
 -(void)cacheBaseHash:(NSString*)hash forSaveFile:(NSString*)saveFile {
     NSMutableDictionary *hashDict = m_dbCachedMetadata[kBaseHashKey];
     if (![hashDict isKindOfClass: [NSMutableDictionary class]]) {
@@ -5895,6 +5930,8 @@ static BOOL migateDropboxAuth() {
         || [saveGameSubPath hasSuffix: @kFrotzOldAutoSaveFile]
         || [[saveGameSubPath lastPathComponent] hasPrefix: @kFrotzAutoSaveGlkImgPrefix])
         return;
+    if (!m_dbSyncEnabled) // reached from a response that was pending when the switch went off
+        return;
     NSLog(@"Uploading to DB: %@", saveGameSubPath);
 
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
@@ -5920,6 +5957,8 @@ static BOOL migateDropboxAuth() {
 }
 
 -(void)dbDownloadSaveGameFile:(NSString*)saveGameSubPath { // includes game subfolder, e.g. 905.z5.d/foo.sav
+    if (!m_dbSyncEnabled) // reached from a response that was pending when the switch went off
+        return;
     NSLog(@"Downloading from DB: %@", saveGameSubPath);
     
     NSString *localSavePath = [storyTopSavePath stringByAppendingPathComponent: saveGameSubPath];
@@ -5989,6 +6028,8 @@ static BOOL migateDropboxAuth() {
 #if UseDropBoxSDK
 -(void)dbSyncSingleSaveDir:(DBFILESMetadata *)folderResult withEntries:(NSArray<DBFILESMetadata *>*)metadata
 {
+    if (!m_dbSyncEnabled) // switched off while the listing was in flight
+        return;
     NSString *dbSavePath = [self dbSavePath];
     NSString *dbSavePathT = [dbSavePath stringByAppendingString: @"/"];
     NSString *topPath = folderResult.pathDisplay;
@@ -6119,6 +6160,8 @@ static BOOL migateDropboxAuth() {
 // sync, or the whole folder is missing, which may not be the player's doing and shouldn't empty
 // their Dropbox. (A reinstall loses the cache with the app, so everything downloads.)
 -(void)dbSyncRemoteOnlySaveFile:(DBFILESFileMetadata*)md inSubPath:(NSString*)subSavePath localFolderExists:(BOOL)localFolderExists {
+    if (!m_dbSyncEnabled)
+        return;
     NSString *sfPath = [subSavePath stringByAppendingPathComponent: md.name];
     NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
     NSDate *cachedDBModDate = [self getCachedTimestampForSaveFile: cacheKey];

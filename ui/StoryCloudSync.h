@@ -35,8 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithLocalSavesPath:(NSString*)savesPath NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
 
-// The Settings switch. Off: nothing is read or written in iCloud.
-@property (nonatomic) BOOL enabled;
+// The Settings switch. Off: nothing is read or written in iCloud, and a sync already under way
+// stops at the next file. Atomic: set on the main thread, read on the sync queue.
+@property (atomic) BOOL enabled;
 
 // Whether iCloud Drive is usable at all: signed in, and iCloud Drive turned on for Frotz. The
 // Settings row is disabled when not.
@@ -50,6 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
 // A save was deleted in Frotz: remove the iCloud copy too and forget the file. `subPath` is
 // relative to the Saves folder, e.g. "905.z5.d/foo.sav".
 - (void)saveDeleted:(NSString*)subPath;
+
+// A story's local save folder was deleted and is about to be recreated empty: forget what was
+// synced for it, so its iCloud saves come back down rather than being taken for deleted here.
+// See StoryMainViewController forgetSyncRecordsForSaveFolder:.
+- (void)forgetSaveFolder:(NSString*)subFolder;
 
 @end
 
