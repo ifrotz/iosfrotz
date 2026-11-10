@@ -344,6 +344,7 @@
 		44DA422315E987A2007F61DA /* zcode-640.png in Resources */ = {isa = PBXBuildFile; fileRef = 44DA421515E987A2007F61DA /* zcode-640.png */; };
 		44E0660C0FE76FEC0003A36B /* InputHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0660B0FE76FEC0003A36B /* InputHelper.m */; };
 		44E0CC5A30956B4D00A5EA81 /* StoryDictationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */; };
+		44E0CC5D30956B4D00A5EA81 /* StoryCloudSync.m in Sources */ = {isa = PBXBuildFile; fileRef = 44E0CC5C30956B4D00A5EA81 /* StoryCloudSync.m */; };
 		44E0CC5D309819FA00A5EA81 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 44E0CC5C309819FA00A5EA81 /* Sounds */; };
 		44EA5BA60E67CD2200EF37C5 /* ReleaseNotes.m in Sources */ = {isa = PBXBuildFile; fileRef = 44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */; };
 		44EDC1032494267B0074E8B0 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44EDC1022494267B0074E8B0 /* Launch Screen.storyboard */; };
@@ -1187,6 +1188,8 @@
 		44E0660B0FE76FEC0003A36B /* InputHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InputHelper.m; sourceTree = "<group>"; };
 		44E0CC5830956B4D00A5EA81 /* StoryDictationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StoryDictationController.h; sourceTree = "<group>"; };
 		44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StoryDictationController.m; sourceTree = "<group>"; };
+		44E0CC5B30956B4D00A5EA81 /* StoryCloudSync.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StoryCloudSync.h; sourceTree = "<group>"; };
+		44E0CC5C30956B4D00A5EA81 /* StoryCloudSync.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StoryCloudSync.m; sourceTree = "<group>"; };
 		44E0CC5C309819FA00A5EA81 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = "<group>"; };
 		44EA5BA40E67CD2200EF37C5 /* ReleaseNotes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReleaseNotes.h; sourceTree = "<group>"; };
 		44EA5BA50E67CD2200EF37C5 /* ReleaseNotes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ReleaseNotes.m; sourceTree = "<group>"; };
@@ -1366,6 +1369,8 @@
 				447DF3B8123C136500689076 /* StoryDetailsController.m */,
 				44E0CC5830956B4D00A5EA81 /* StoryDictationController.h */,
 				44E0CC5930956B4D00A5EA81 /* StoryDictationController.m */,
+				44E0CC5B30956B4D00A5EA81 /* StoryCloudSync.h */,
+				44E0CC5C30956B4D00A5EA81 /* StoryCloudSync.m */,
 				449C92B111221E21006CCDF9 /* StoryInputLine.h */,
 				449C92B211221E21006CCDF9 /* StoryInputLine.m */,
 				443C9C030E46C32C003A44D4 /* StoryMainViewController.h */,
@@ -2668,6 +2673,7 @@
 				443A7C34115094E00093B4B2 /* FrotzCommonWebView.m in Sources */,
 				44910BE51256F85800409694 /* FrotzDB.m in Sources */,
 				44E0CC5A30956B4D00A5EA81 /* StoryDictationController.m in Sources */,
+				44E0CC5D30956B4D00A5EA81 /* StoryCloudSync.m in Sources */,
 				445484FD1B1E675D00E8EE7B /* FrotzHTTPConnection.m in Sources */,
 				447E4E890E46545900B33BBF /* FrotzInfo.m in Sources */,
 				44FB393D0E612A3D00142D85 /* FrotzSettings.m in Sources */,

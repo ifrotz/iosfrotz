@@ -26,6 +26,9 @@
 #if EnableStoryDictation
 #import "StoryDictationController.h"
 #endif
+#if EnableCloudSaveSync
+#import "StoryCloudSync.h"
+#endif
 
 @class StoryBrowser;
 @class FrotzView;
@@ -115,6 +118,10 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_dictationListensDuringVoiceOver; // settings: "Listen During VoiceOver"; mic open while VoiceOver reads a reply
     BOOL m_interruptReadingForNextReply;    // a command was dictated; its reply's announcement displaces any reading in progress
 #endif
+#if EnableCloudSaveSync
+    StoryCloudSync *m_cloudSync;            // see cloudSync, which creates it on first use
+    BOOL m_cloudSaveSyncEnabled;            // settings: "Sync Saves with iCloud"
+#endif
     BOOL m_kbLocked;
     BOOL m_ignoreWordSelection;
 
@@ -134,6 +141,7 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableDictionary *m_dbCachedMetadata;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
+    BOOL m_dbSyncEnabled; // settings: "Sync Saves with Dropbox"; off leaves the account linked but syncs nothing
 
 #if EnableStoryDictation
     StoryDictationController *m_dictationController;
@@ -171,6 +179,10 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic) BOOL dictationListensDuringVoiceOver;
 -(void)dictationReplyAnnouncementPosted; // from RichTextView markWaitForInput; see StoryDictationController replyAnnouncementPosted
 -(void)dictatedCommandSubmitted; // from StoryInputLine: the reply to this command should cut short any reading VoiceOver is in the middle of
+#endif
+#if EnableCloudSaveSync
+@property (nonatomic) BOOL cloudSaveSyncEnabled;
+-(void)syncCloudSavesForCurrentStory:(nullable void (^)(BOOL changed))completion; // see StoryCloudSync syncSaveFolder:completion:
 #endif
 -(void) activateKeyboard;
 -(void) toggleKeyboard;
@@ -274,6 +286,9 @@ extern StoryBrowser *theStoryBrowser;
 @property (nonatomic, readonly, copy) NSString *dbGamePath;
 @property (nonatomic, readonly, copy) NSString *dbSavePath;
 @property (nonatomic, readonly) BOOL dbIsActive;
+#if UseDropBoxSDK
+@property (nonatomic) BOOL dropboxSyncEnabled; // the Settings switch; see setDropboxSyncEnabled:
+#endif
 -(void)setDBTopPath:(NSString*)path;
 -(NSString*)metadataSubPath:(NSString*)path;
 -(void)dropboxDidLinkAccount;

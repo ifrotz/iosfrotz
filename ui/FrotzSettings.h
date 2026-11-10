@@ -36,6 +36,12 @@
 @property (nonatomic, readwrite) NSTimeInterval dictationCommitDelay; // seconds, within kDictationDelayMin...Max
 @property (nonatomic, readwrite) BOOL dictationListensDuringVoiceOver; // "Listen During VoiceOver"; row shown only while VoiceOver runs
 #endif
+#if EnableCloudSaveSync
+@property (nonatomic, readwrite) BOOL cloudSaveSyncEnabled; // "Sync Saves with iCloud"
+#endif
+#if UseDropBoxSDK
+@property (nonatomic, readwrite) BOOL dropboxSyncEnabled; // "Sync Saves with Dropbox"
+#endif
 -(void)savePrefs;
 -(StoryBrowser*)storyBrowser;
 @end
@@ -72,6 +78,12 @@
     UISwitch            *m_dictationSwitchCtl, *m_dictationVoiceOverSwitchCtl;
     UISlider            *m_dictationDelaySliderCtl;
     UITableViewCell     *m_dictationDelayCell;
+#endif
+#if EnableCloudSaveSync
+    UISwitch            *m_cloudSyncSwitchCtl;
+#endif
+#if UseDropBoxSDK
+    UISwitch            *m_dropboxSyncSwitchCtl;
 #endif
 
     int m_origStoryFontSize, m_newStoryFontSize;

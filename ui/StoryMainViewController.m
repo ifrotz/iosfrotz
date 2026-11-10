@@ -50,7 +50,6 @@
 #include <stdlib.h>
 
 #include <CoreText/CoreText.h>
-#include <CommonCrypto/CommonDigest.h> // Dropbox content hashes (DropboxContentHash)
 
 #define kClearEscChar '\f'
 #define kClearEscCode "\f"
@@ -3008,6 +3007,16 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 
     [fileBrowser setDelegate: self];
     [fileBrowser reloadData];
+#if EnableCloudSaveSync
+    if (dialogType == kFBDoShowRestore) { // a save made on another device may have just arrived
+        __weak FileBrowser *weakBrowser = fileBrowser;
+        [self syncCloudSavesForCurrentStory: ^(BOOL changed) {
+            FileBrowser *browser = weakBrowser;
+            if (changed && browser && browser.view.window)
+                [browser reloadData];
+        }];
+    }
+#endif
 
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController: fileBrowser];
     nc.modalPresentationStyle = UIModalPresentationFormSheet;
@@ -3041,7 +3050,7 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
 #if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
-    if (client) {
+    if (client && m_dbSyncEnabled) {
         [[client.filesRoutes delete_:dbPath] setResponseBlock:^(DBFILESMetadata *result, DBFILESDeleteError * routeError, DBRequestError *error) {
             if (routeError || error)
                 [self handleDropboxError: routeError withRequestError:error];
@@ -3050,6 +3059,9 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 #endif
     [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
     [self cacheBaseHash:nil forSaveFile: [self metadataSubPath: dbPath]];
+#if EnableCloudSaveSync
+    [[self cloudSync] saveDeleted: subPath];
+#endif
 }
 
 -(void) setBackgroundColor: (UIColor*)color makeDefault:(BOOL)makeDefault {
@@ -4059,11 +4071,10 @@ static int iosif_top_win_height = 1;
     if (refresh_savedir > 0) {
         refresh_savedir = 0;
 #if UseDropBoxSDK
-        DBUserClient *client = [DBClientsManager authorizedClient];
-        if (client) {
-            NSString *folder = [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
-            [self dbRefreshFolder: folder createIfNotExists:YES];
-        }
+        [self dbSyncCurrentStorySaves];
+#endif
+#if EnableCloudSaveSync
+        [self syncCloudSavesForCurrentStory: nil];
 #endif
     }
 }
@@ -4123,6 +4134,12 @@ static int iosif_top_win_height = 1;
     [dict setObject: @(m_dictationEnabled) forKey: @"dictationEnabled"];
     [dict setObject: @(m_dictationCommitDelay) forKey: @"dictationCommitDelay"];
     [dict setObject: @(m_dictationListensDuringVoiceOver) forKey: @"dictationListensDuringVoiceOver"];
+#endif
+#if EnableCloudSaveSync
+    [dict setObject: @(m_cloudSaveSyncEnabled) forKey: @"cloudSaveSyncEnabled"];
+#endif
+#if UseDropBoxSDK
+    [dict setObject: @(m_dbSyncEnabled) forKey: @"dropboxSyncEnabled"];
 #endif
     [dict setObject: @(iosif_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
@@ -4188,6 +4205,13 @@ static UIColor *scanColor(NSString *colorStr) {
         id delay = [dict objectForKey: @"dictationCommitDelay"];
         m_dictationCommitDelay = delay ? PinnedDictationCommitDelay([delay doubleValue]) : kDefaultDictationCommitDelay;
         m_dictationListensDuringVoiceOver = [[dict objectForKey: @"dictationListensDuringVoiceOver"] boolValue]; // off unless asked for
+#endif
+#if EnableCloudSaveSync
+        m_cloudSaveSyncEnabled = [[dict objectForKey: @"cloudSaveSyncEnabled"] boolValue]; // off until asked for
+#endif
+#if UseDropBoxSDK
+        id dbSync = [dict objectForKey: @"dropboxSyncEnabled"];
+        m_dbSyncEnabled = dbSync ? [dbSync boolValue] : YES; // on unless turned off: linked accounts synced before the switch existed
 #endif
         id arp = [dict objectForKey: @"autorestore_preference"];
         if (arp)
@@ -5346,6 +5370,65 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
 }
 
 
+#if EnableCloudSaveSync
+// Settings: "Sync Saves with iCloud". Off by default; see StoryCloudSync.h for how the sync works.
+-(StoryCloudSync*)cloudSync {
+    if (!m_cloudSync && storyTopSavePath) { // init resets the settings before the paths are known; wait for them
+        m_cloudSync = [[StoryCloudSync alloc] initWithLocalSavesPath: storyTopSavePath];
+        m_cloudSync.enabled = m_cloudSaveSyncEnabled;
+    }
+    return m_cloudSync;
+}
+
+-(BOOL)cloudSaveSyncEnabled {
+    return m_cloudSaveSyncEnabled;
+}
+
+-(void)setCloudSaveSyncEnabled:(BOOL)enabled {
+    BOOL wasEnabled = m_cloudSaveSyncEnabled;
+    m_cloudSaveSyncEnabled = enabled;
+    m_cloudSync.enabled = enabled; // if it exists yet; cloudSync applies the setting when it creates one
+    if (enabled && !wasEnabled) // the story already open, if any, joins in right away
+        [self syncCloudSavesForCurrentStory: nil];
+}
+
+// The current story's save folder, both ways; see StoryCloudSync syncSaveFolder:completion:.
+// Nothing happens when no story is open (m_currentStory is then empty, not nil).
+-(void)syncCloudSavesForCurrentStory:(void (^)(BOOL changed))completion {
+    if (![m_currentStory length]) {
+        if (completion)
+            completion(NO);
+        return;
+    }
+    [[self cloudSync] syncSaveFolder: [self saveSubFolderForStory: m_currentStory] completion: completion];
+}
+#endif
+
+#if UseDropBoxSDK
+// Settings: "Sync Saves with Dropbox". On by default, so accounts linked before the switch existed
+// keep syncing; off syncs nothing but leaves the account linked (Dropbox Settings is where it is
+// unlinked). Linking an account turns it on; see dropboxDidLinkAccount.
+-(BOOL)dropboxSyncEnabled {
+    return m_dbSyncEnabled;
+}
+
+-(void)setDropboxSyncEnabled:(BOOL)enabled {
+    BOOL wasEnabled = m_dbSyncEnabled;
+    m_dbSyncEnabled = enabled;
+    if (enabled && !wasEnabled)
+        [self dbSyncCurrentStorySaves]; // the story already open, if any, catches up now
+}
+
+// Syncs the open story's save folder with Dropbox: at launch, after each save, and when the switch
+// above is turned on. Nothing without an open story, a linked account and the switch on.
+-(void)dbSyncCurrentStorySaves {
+    if (![m_currentStory length] || !m_dbSyncEnabled || ![DBClientsManager authorizedClient])
+        return;
+    NSString *folder = [[self dbSavePath] stringByAppendingPathComponent: [self saveSubFolderForStory: m_currentStory]];
+    [self dbRefreshFolder: folder createIfNotExists: YES];
+}
+#endif
+
 -(void)resetSettingsToDefault {
     m_defaultBGColor = [[UIColor alloc] initWithRed: 1.0 green:1.0 blue:0.9 alpha:1.0];
     m_defaultFGColor = [[UIColor alloc] initWithRed: 0.0 green:0.0 blue:0.1 alpha:1.0];
@@ -5362,6 +5445,12 @@ typedef NS_ENUM(NSInteger, DictationCueState) {
     self.dictationEnabled = NO;
     self.dictationCommitDelay = kDefaultDictationCommitDelay;
     self.dictationListensDuringVoiceOver = NO;
+#endif
+#if EnableCloudSaveSync
+    self.cloudSaveSyncEnabled = NO;
+#endif
+#if UseDropBoxSDK
+    m_dbSyncEnabled = YES; // the ivar, not the setter: init calls this before Dropbox is set up
 #endif
     [m_storyBrowser unHideAll];
 }
@@ -5738,36 +5827,12 @@ static BOOL migateDropboxAuth() {
         [hashDict removeObjectForKey: saveFile];
 }
 
-#if UseDropBoxSDK
-// Dropbox's content hash of a local file, to compare with the content_hash Dropbox reports: the
-// file in 4 MB blocks, the SHA-256 of each, then the SHA-256 of those concatenated, in lowercase
-// hex. Saves are a single block. nil if the file can't be read.
-static NSString *DropboxContentHash(NSString *path) {
-    NSData *data = [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
-    if (!data)
-        return nil;
-    const NSUInteger kBlock = 4 * 1024 * 1024;
-    NSMutableData *blockHashes = [NSMutableData data];
-    for (NSUInteger offset = 0; offset < [data length]; offset += kBlock) { // an empty file has no blocks
-        unsigned char digest[CC_SHA256_DIGEST_LENGTH];
-        NSUInteger len = MIN(kBlock, [data length] - offset);
-        CC_SHA256((const char*)[data bytes] + offset, (CC_LONG)len, digest);
-        [blockHashes appendBytes: digest length: sizeof(digest)];
-    }
-    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
-    CC_SHA256([blockHashes bytes], (CC_LONG)[blockHashes length], digest);
-    NSMutableString *hex = [NSMutableString stringWithCapacity: 2 * sizeof(digest)];
-    for (size_t i = 0; i < sizeof(digest); i++)
-        [hex appendFormat: @"%02x", digest[i]];
-    return hex;
-}
-#endif // UseDropBoxSDK
-
 - (void)dropboxDidLinkAccount {
 #if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client)
     {
+        m_dbSyncEnabled = YES; // linking an account is asking for sync
         FrotzShowAlert(self, @"Account linked",
                        [NSString stringWithFormat:
                         @"All saved game files will now be synchronized with the '%@' folder in your Dropbox, "
@@ -5787,7 +5852,7 @@ static NSString *DropboxContentHash(NSString *path) {
 #if UseDropBoxSDK
 - (void)dbRefreshFolder:(NSString*)folder createIfNotExists:(BOOL)createIfNotExists{
     DBUserClient *client = [DBClientsManager authorizedClient];
-    if (!client)
+    if (!client || !m_dbSyncEnabled) // every Dropbox sync comes through here, so the switch is checked here
         return;
 
     NSLog(@"dbRefreshFolder %@", folder);
@@ -5969,7 +6034,7 @@ static NSString *DropboxContentHash(NSString *path) {
             // clocks that disagree); otherwise whichever side still matches the base is the one that
             // didn't change. Only a file synced before hashes were recorded falls through to the
             // dates below, once.
-            NSString *localHash = DropboxContentHash([localSavePath stringByAppendingPathComponent: locSF]);
+            NSString *localHash = FrotzFileContentHash([localSavePath stringByAppendingPathComponent: locSF]); // Dropbox's own hash form; see ui_utils.h
             NSString *dbHash = md.contentHash;
             NSString *baseHash = [self getBaseHashForSaveFile: cacheKey];
             if (localHash && dbHash) {
@@ -6090,7 +6155,7 @@ static NSString *DropboxContentHash(NSString *path) {
     NSString *cacheKey = [NSString stringWithFormat: @"%@/%@", @kFrotzSaveDir, sfPath];
     NSString *baseHash = [self getBaseHashForSaveFile: cacheKey];
     if (baseHash) {
-        NSString *localHash = DropboxContentHash([storyTopSavePath stringByAppendingPathComponent: sfPath]);
+        NSString *localHash = FrotzFileContentHash([storyTopSavePath stringByAppendingPathComponent: sfPath]);
         if (localHash && ![localHash isEqualToString: baseHash])
             [self dbUploadSaveGameFile: sfPath];
     } else if (![self getCachedTimestampForSaveFile: cacheKey])

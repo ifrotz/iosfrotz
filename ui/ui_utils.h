@@ -54,3 +54,8 @@ BOOL ReadStoryReleaseAndSerial(const char *filename, UInt16 *release, char *seri
 
 BOOL ReadSavedGameReleaseAndSerial(NSString *path, UInt16 *release, char *serial);
 BOOL DoesGameFileMatchSave(NSString *path, UInt16 checkRelease, char *checkSerial);
+
+// A file's content hash in Dropbox's form (the SHA-256 of each 4 MB block, then the SHA-256 of
+// those together, in lowercase hex), so copies of a save can be compared by content: a local
+// file with what Dropbox reports, or the local and iCloud copies. nil if the file can't be read.
+NSString *FrotzFileContentHash(NSString *path);
