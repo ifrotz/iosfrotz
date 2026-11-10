@@ -12,6 +12,21 @@
 
 @implementation FrotzAppDelegate
 
+#if EnableStoryDictation
+// VoiceOver's Magic Tap reaches the app delegate when the focused element's responder chain
+// doesn't pass through the story controller (a navigation bar item, say). Hand it to the story
+// controller if it is on screen; it decides whether the gesture applies. From Anand M.'s
+// (anandman on GitHub) voice-mode branch.
+- (StoryMainViewController *)voiceGestureStoryController {
+    StoryMainViewController *story = [theStoryBrowser storyMainViewController];
+    return story.viewIfLoaded.window ? story : nil;
+}
+
+- (BOOL)accessibilityPerformMagicTap {
+    return [[self voiceGestureStoryController] accessibilityPerformMagicTap];
+}
+#endif
+
 - (instancetype)init {
 	if ((self = [super init])) {
 		// 

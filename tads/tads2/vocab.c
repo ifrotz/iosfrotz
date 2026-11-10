@@ -8273,3 +8273,55 @@ int tads2_complete_word(const char *word, char *result)
     result[commonLen] = '\0';
     return 1;
 }
+
+/* iOS Frotz: whether a TADS 2 game is running (its vocabulary can be read) */
+int tads2_is_running(void)
+{
+    extern voccxdef *main_voc_ctx;
+    return main_voc_ctx != 0;
+}
+
+/*
+ *   iOS Frotz, for dictation: 1 if 'word' is a verb in the running TADS 2
+ *   game's vocabulary (the first word of any entry with a live verb
+ *   meaning, so "pick" of "pick up" counts), 0 if not, -1 if no TADS 2
+ *   game is running.  Matched as the parser matches, including its
+ *   six-letter abbreviation of longer words.  Only safe while the game
+ *   waits for input.
+ */
+int tads2_word_is_verb(const char *word)
+{
+    extern voccxdef *main_voc_ctx;
+    voccxdef *ctx = main_voc_ctx;
+    uchar     key[64];
+    size_t    len;
+    uint      h;
+    vocdef   *v;
+
+    if (ctx == 0)
+        return -1;
+    if (word == 0)
+        return 0;
+    for (len = 0 ; word[len] != '\0' && len < sizeof(key) - 1 ; ++len)
+        key[len] = (uchar)tolower((unsigned char)word[len]);
+    if (len == 0)
+        return 0;
+
+    for (h = 0 ; h < VOCHASHSIZ ; ++h)
+    {
+        for (v = ctx->voccxhsh[h] ; v != 0 ; v = v->vocnxt)
+        {
+            vocwdef *vw;
+
+            if (!voceq(key, (uint)len, v->voctxt, v->voclen))
+                continue;
+            for (vw = vocwget(ctx, v->vocwlst) ; vw ;
+                 vw = vocwget(ctx, vw->vocwnxt))
+            {
+                if (vw->vocwtyp == PRP_VERB && !(vw->vocwflg & VOCFDEL))
+                    return 1;
+            }
+        }
+    }
+    return 0;
+}

@@ -111,6 +111,10 @@
     }
     if (m_prevResponder && [m_prevResponder respondsToSelector:@selector(becomeFirstResponder)])
         [m_prevResponder performSelector:@selector(becomeFirstResponder) withObject:nil afterDelay:0.3];
+    // Reached for the Done button and for a swipe down alike (the settings controller's
+    // presentation delegate routes the swipe through donePressed).
+    if ([m_kbdOwner respondsToSelector: @selector(settingsDidDismiss)])
+        [m_kbdOwner settingsDidDismiss];
 }
 
 -(void)frotzInfo {
@@ -118,6 +122,8 @@
     if (![view superview]) { // already presented
         if (m_kbdOwner)
             m_prevResponder = [m_kbdOwner dismissKeyboard];
+        if ([m_kbdOwner respondsToSelector: @selector(settingsWillPresent)])
+            [m_kbdOwner settingsWillPresent];
         [m_settings setInfoDelegate: self];
 
         UINavigationController *settingsNavController = [m_settings navigationController];

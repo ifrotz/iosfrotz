@@ -69,6 +69,9 @@
     }
     m_isMagnifying = NO;
     if (phase == UITouchPhaseBegan) {
+#if EnableStoryDictation
+        [delegate deferDictationCommit]; // a touch that may become a double tap on a word
+#endif
         return YES;
     } else if (phase == UITouchPhaseMoved) {
         return YES;

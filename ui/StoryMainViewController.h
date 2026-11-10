@@ -22,6 +22,10 @@
 #import "FrotzWordPicker.h"
 #import "FileBrowser.h"
 #import "NotesViewController.h"
+#import "iosfrotz.h"
+#if EnableStoryDictation
+#import "StoryDictationController.h"
+#endif
 
 @class StoryBrowser;
 @class FrotzView;
@@ -66,8 +70,12 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableArray *m_glkViews;
 
     UIView *m_background;
+#if EnableStoryDictation
+    UIBarButtonItem *m_micButton; // second trailing item, after the keyboard toggle
+#endif
     UIBarButtonItem *m_kbdToggleItem;
     UIBarButtonItem *m_storyListItem; // leading item; created by the browser, which handles its action
+
     UIImageView *m_splashImageView;
     NotesViewController *m_notesController;
     
@@ -101,6 +109,12 @@ extern StoryBrowser *theStoryBrowser;
     BOOL m_completionEnabled;
     BOOL m_canEditStoryInfo;
     BOOL m_autoRestoreEnabled;
+#if EnableStoryDictation
+    BOOL m_dictationEnabled;              // settings: "Story Voice Dictation"; the mic bar button shows only when on
+    NSTimeInterval m_dictationCommitDelay; // settings: "Dictation Delay"; quiet time before speech becomes a command
+    BOOL m_dictationListensDuringVoiceOver; // settings: "Listen During VoiceOver"; mic open while VoiceOver reads a reply
+    BOOL m_interruptReadingForNextReply;    // a command was dictated; its reply's announcement displaces any reading in progress
+#endif
     BOOL m_kbLocked;
     BOOL m_ignoreWordSelection;
 
@@ -120,6 +134,16 @@ extern StoryBrowser *theStoryBrowser;
     NSMutableDictionary *m_dbCachedMetadata;
     NSString *m_dbTopPath;
     BOOL m_dbActive;
+
+#if EnableStoryDictation
+    StoryDictationController *m_dictationController;
+    StoryDictationCuePlayer *m_dictationCuePlayer; // made on first use
+    NSInteger m_dictationCuedState;   // the state the last cue announced; see cueDictationStateChange
+    BOOL m_dictationStartedByUser;    // the mic button asked for the start now in progress
+    BOOL m_dialogCoversInput;         // the file chooser or settings sheet is up; dictation stays paused however the keyboard moves
+    StoryVocabulary *m_storyVocabulary; // the words the current story has printed; see noteStoryOutput:
+    NSString *m_dictationLanguage;      // the current story's language once decided; see updateDictationLanguage
+#endif
 }
 
 @property (nonatomic, strong) UINavigationController* storyNavController;
@@ -141,13 +165,26 @@ extern StoryBrowser *theStoryBrowser;
 -(void) hideNotes;
 @property (nonatomic, getter=isCompletionEnabled) BOOL completionEnabled;
 @property (nonatomic) BOOL canEditStoryInfo;
-- (void) activateKeyboard;
-- (void) toggleKeyboard;
-- (void) forceToggleKeyboard;
+#if EnableStoryDictation
+@property (nonatomic, getter=isDictationEnabled) BOOL dictationEnabled;
+@property (nonatomic) NSTimeInterval dictationCommitDelay;
+@property (nonatomic) BOOL dictationListensDuringVoiceOver;
+-(void)dictationReplyAnnouncementPosted; // from RichTextView markWaitForInput; see StoryDictationController replyAnnouncementPosted
+-(void)dictatedCommandSubmitted; // from StoryInputLine: the reply to this command should cut short any reading VoiceOver is in the middle of
+#endif
+-(void) activateKeyboard;
+-(void) toggleKeyboard;
+-(void) forceToggleKeyboard;
 @property (nonatomic, readonly, strong) id dismissKeyboard;
-- (void) setIgnoreWordSelection:(BOOL)ignore;
-- (void) abortToBrowser;
-- (void)autosize;
+#if EnableStoryDictation
+-(void) toggleListenForSpeech;
+-(void) pauseOrResumeDictation:(BOOL)inputLineIsActive;
+-(void) deferDictationCommit; // the player is scrolling or touching the story; see StoryDictationController deferCommit
+@property (nonatomic, readonly) StoryVocabulary *storyVocabulary; // see StoryDictationController.h
+#endif
+-(void) setIgnoreWordSelection:(BOOL)ignore;
+-(void) abortToBrowser;
+-(void) autosize;
 -(BOOL) isRegularWidth;
 -(BOOL) hasWidePhoneWidth;
 -(int) defaultTextViewWidth;
@@ -223,7 +260,10 @@ extern StoryBrowser *theStoryBrowser;
 -(void) setLaunchMessage:(NSString*)msg clear:(BOOL)clear;
 -(void) displayLaunchMessageWithDelay: (CGFloat)delay duration:(CGFloat)duration alpha:(CGFloat)alpha;
 @property (nonatomic, readonly) CGPoint cursorOffset;
--(NSString*) completeWord:(NSString*)word prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
+-(NSString*) completeWord:(NSString*)word prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous;
+-(BOOL) dictionaryHasWord:(NSString*)word; // the game's dictionary has this word, or a longer one it begins
+-(BOOL) dictionaryIsReadable; // NO for TADS stories, whose dictionary isn't read yet; the two lookups then answer "unknown"
+-(NSInteger) dictionaryWordIsVerb:(NSString*)word; // 1 a verb, 0 not, -1 unknown (not in the dictionary, or not an Inform story)
 -(NSMutableString*) convertHTML:(NSString*)htmlString;
 
 // Dropbox API
@@ -256,6 +296,6 @@ extern StoryBrowser *theStoryBrowser;
 @end
 #endif
 
-NS_ASSUME_NONNULL_END
-
 extern NSString *const kDBCFilename; // dropbox cache
+
+NS_ASSUME_NONNULL_END

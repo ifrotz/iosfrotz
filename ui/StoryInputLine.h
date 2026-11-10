@@ -23,6 +23,15 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL m_firstKeyPressed, m_lastCharDeleted;
     BOOL m_justHidHelper;
     BOOL m_completionAmbiguous;
+#if EnableStoryDictation
+    NSString *m_textBeforeDictation; // what was typed before the current utterance began; nil between utterances
+    NSString *m_lastDictationShown;  // typed part and transcript as acceptDictation:final: last set them
+    NSString *m_dictationSuffix;     // what followed the transcript at the last hypothesis (tapped or typed words)
+    NSString *m_lastDictationTranscript; // the recognizer's transcript as of the last result shown
+    NSString *m_dictationTakeoverTranscript; // the transcript shown when the player edited inside it; only what the recognizer adds after it is shown
+    BOOL m_dictationHold;            // the player opened the input helper since the last words: don't submit the final result
+    BOOL m_lastInputRequestWasKey;   // the story's most recent input request was for a single key; see dictationExpectsSingleKey
+#endif
 }
 -(StoryInputLine*)initWithFrame:(CGRect)frame NS_DESIGNATED_INITIALIZER;
 -(instancetype)initWithNibName:(nullable NSString *)nibNameOrNil bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
@@ -35,6 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 -(NSUInteger)addHistoryItem:(NSString*)historyItem;
 -(void)inputHelperString:(NSString*)string;
 -(void)hideInputHelper;
+-(void)holdDictationCommit; // the player is composing by other means; a dictated utterance's final result won't submit until they speak again
+#if EnableStoryDictation
+-(void)acceptDictation:(NSString*)string final:(BOOL)isFinal;
+#endif
 @property (nonatomic, readonly, strong) UIView *inputHelperView;
 -(void)setClearButtonMode;
 -(void)maybeShowEnterKey;

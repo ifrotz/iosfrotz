@@ -11,8 +11,10 @@
 
 #import <UIKit/UIKit.h>
 #import <QuartzCore/CALayer.h>
-
 #include "RichTextView.h"
+#if EnableStoryDictation
+#import <AVFoundation/AVFoundation.h> // speech synthesis experiment in appendText:
+#endif
 
 #define NoAccessibility 0 // Set to turn off UIAccessibility support completely
 
@@ -1472,7 +1474,6 @@ static BOOL hasAccessibility;
             [self appendAE];
     }
     m_prevLineNotTerminated = lineNotTerminated;
-    
 }
 
 -(void)setNeedsLayout {
@@ -2125,10 +2126,18 @@ static BOOL EndsWithSentenceBreak(NSString *text) {
                 [text appendString: [m_accessibilityElements[i] accessibilityValue]];
             }
             m_lastAEIndexAnnounced = count;
+            // Queued, so that it follows whatever VoiceOver is saying rather than cutting it off;
+            // except when the owner has asked for the opposite (interruptNextAnnouncement).
             NSAttributedString *announcement = [[NSAttributedString alloc] initWithString: text
-                                                attributes: @{UIAccessibilitySpeechAttributeQueueAnnouncement: @YES}];
+                                                attributes: @{UIAccessibilitySpeechAttributeQueueAnnouncement: @(!self.interruptNextAnnouncement)}];
+            self.interruptNextAnnouncement = NO;
             UIAccessibilityPostNotification(UIAccessibilityAnnouncementNotification, announcement);
             m_prevLineNotTerminated = NO;
+#if EnableStoryDictation
+            // Dictation closes the mic while VoiceOver reads this; see StoryDictationController.
+            if ([m_controller respondsToSelector: @selector(dictationReplyAnnouncementPosted)])
+                [m_controller performSelector: @selector(dictationReplyAnnouncementPosted)];
+#endif
         }
     }
 #endif
@@ -2308,9 +2317,25 @@ static BOOL EndsWithSentenceBreak(NSString *text) {
 #endif
     [super touchesEnded: touches withEvent: event];
 }
+
+#if EnableStoryDictation
+// VoiceOver's Magic Tap with focus in the story text (this view or one of its paragraph
+// elements) belongs to the story controller, which starts or stops dictation; see its
+// accessibilityPerformMagicTap. Answered here because when the keyboard is up VoiceOver
+// otherwise prefers keyboard dictation to anything further up the responder chain.
+-(BOOL)accessibilityPerformMagicTap {
+    return [m_controller accessibilityPerformMagicTap];
+}
+#endif
 @end
 
 @implementation RichTextAE
+
+#if EnableStoryDictation
+-(BOOL)accessibilityPerformMagicTap {
+    return [[self accessibilityContainer] accessibilityPerformMagicTap];
+}
+#endif
 
 @synthesize textIndex = m_textIndex;
 @synthesize aeIndex = m_aeIndex;

@@ -49,8 +49,12 @@
                               "h2 { font-size: 14pt; color:#cfcf00; }\n"
                               "* { color:#ffffff; background: #555555 }\n"
                               "p { font-size:12pt; }\n"
+                              "a { color:#cfcf00; }\n"
                               "</style>\n"
                               "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+#if EnableStoryDictation
+                              "<p><b style=\"color:#00cfcf;\">New in Frotz</b>: You can now <a href=\"#voice\">Play by Voice</a> (see below).</p>\n"
+#endif
                               "<h2>New to Interactive Fiction?</h2>"
                               "<p>Interactive Fiction makes you the main character in a story.  You control what your character does by entering imperative commands, such as "
                               "<b>light the lamp</b> or <b>give the banana to the monkey</b> at the story prompt (<b>&gt;</b>).  IF contains many subgenres, ranging from classic puzzle-based adventure games and "
@@ -124,6 +128,23 @@
                               "<p>When displaying built-in <b>help</b>, and in some other situations, games may present a text menu of choices.  In lieu of "
                               "arrow keys, you can use the <b>N</b> and <b>P</b> keys to go to the next and previous item, and <b>Return</b> to make a selection. If the game says to use ESC to back out of a menu, you can tap with two fingers to simulate this key.</p>"
                               "%@"
+#if EnableStoryDictation
+                              "<h2 id=\"voice\">Playing by Voice <em style=\"color:#00cfcf; font-size:10pt;\">(NEW!)</em></h2>" // the style goes on the innermost element: the page's * rule recolours anything nested inside
+                              "<p>You can speak your commands instead of typing them.  Turn on <b>Story Voice Dictation</b> in Settings and a <b>microphone button</b> appears while you play.  "
+                              "Tap it to start listening, then say a command, and after a short pause it is entered for you.  "
+                              "Frotz keeps listening for your next command until you tap the microphone again, leave the story, or say nothing for a minute or two.  "
+                               "The <b>Dictation Delay</b> setting controls how long Frotz waits after you stop speaking.</p>\n"
+                              "<p>Recognition happens entirely on your device, in the language the story is written in; nothing you say leaves your phone.  "
+                              "Frotz pays attention to the words the story has printed, so names, spells, and other invented words are usually understood once you have seen them.  "
+                              "If a word still won't take, <b>spell it out</b> letter by letter and it will be entered exactly as spelled.</p>\n"
+                              "<p>When a story asks for a single key, just say the letter, or <b>yes</b> or <b>no</b>, or a word which begins with the letter (such as the NATO alphabet; \"the letter <em>letter</em>\" also works).  "
+                              "You can mix voice and touch freely: double tap a word in the story to add it to what you have said, or type to edit.  Editing holds the command until you speak again or press Return.</p>\n"
+                              "<p>Story dictation also pauses temporarily if you go to the Notes or Settings page or a save/restore dialog, and resumes when you return (but you can still use the mic button on the keyboard to dictate there if you want).</p>\n"
+
+                              "<p>When used with the <b>VoiceOver</b> Accessibility feature, a <b>Magic Tap</b> (two-finger double tap) starts and stops listening.  While VoiceOver reads the story's reply, the microphone mutes so VoiceOver's speech isn't taken as a command, and resumes when the reading ends; "
+                              "to speak sooner, Magic Tap to cut the reading short.  If you would rather talk over the reading, turn on <b>Listen During VoiceOver</b> in Settings, "
+                              "but note that VoiceOver's speech may crackle a bit while Frotz is listening; you can reduce it by turning off <b>Audio Ducking</b> in VoiceOver's settings.</p>\n"
+#endif
                               "<br/>"
                               "</body>\n",
                               !regularWidth ?

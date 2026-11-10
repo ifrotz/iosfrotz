@@ -13,6 +13,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol KeyboardOwner <NSObject>
 -(nullable id)dismissKeyboard;
+@optional
+// The settings sheet is about to cover the owner, and has gone again. Lets the owner suspend what
+// shouldn't run under the sheet (dictation, which would otherwise keep listening) and pick it up
+// afterwards. Called around every dismissal, Done button and swipe alike.
+-(void)settingsWillPresent;
+-(void)settingsDidDismiss;
 @end
 
 @interface FrotzInfo : UIViewController <FrotzSettingsInfoDelegate> {

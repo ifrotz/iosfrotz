@@ -22,6 +22,9 @@
 
 #import "FrotzAppDelegate.h"
 #import "StoryMainViewController.h"
+#if EnableStoryDictation // defined via the header above
+#import <AVFoundation/AVFoundation.h> // microphone permission (requestMicrophonePermission:)
+#endif
 
 #import "StatusLine.h"
 #import "StoryInputLine.h"
@@ -95,6 +98,9 @@ NSString *kVariableWidthFontName = @"Helvetica";
 char SAVE_PATH[MAX_FILE_NAME], AUTOSAVE_FILE[MAX_FILE_NAME];
 
 static enum { kZStory, kGlxStory } gStoryInterp;
+// TADS stories run as kGlxStory (through Glk) but have no Glulx memory, so the dictionary lookups
+// used by dictation and word completion don't apply to them; see dictionaryIsReadable.
+static BOOL gStoryIsTADS;
 
 // Choose the interpreter for a story from its file extension. The interpreter thread sets
 // gStoryInterp for itself when it starts, but screen sizing and layout happen before that, so
@@ -106,6 +112,7 @@ static void setStoryInterpForPath(NSString *storyPath) {
         gStoryInterp = kGlxStory;
     else
         gStoryInterp = kZStory;
+    gStoryIsTADS = [ext isEqualToString: @"gam"] || [ext isEqualToString: @"t3"];
 }
 
 static int numGlkViews;
@@ -989,6 +996,7 @@ int hflagsRestore = 0;
 
 void run_zinterp(bool autorestore) {
     gStoryInterp = kZStory;
+    gStoryIsTADS = NO;
 
     os_set_default_file_names(story_name);
     if (autorestore)
@@ -1047,7 +1055,8 @@ void run_glxinterp(const char *story, bool autorestore) {
     }
     
     gStoryInterp = kGlxStory;
-    
+    gStoryIsTADS = useTADS;
+
     char *argv[] = { "frotz", (char*)story, NULL, NULL, NULL };
     glkunix_startup_t  glkunix_startup = { 2,  argv };
     iosif_ioinit();
@@ -1150,7 +1159,19 @@ static void setColorTable(RichTextView *v) {
 
 #import "FrotzAlert.h"
 
-@implementation StoryMainViewController 
+#if EnableStoryDictation
+@interface StoryMainViewController () <StoryDictationStateDelegate>
+@end
+static const NSTimeInterval kDefaultDictationCommitDelay = 0.8; // seconds of quiet before speech becomes a command
+
+// Keeps a delay within the settings slider's range, whether it came from the slider or from a
+// preference written by some other build (or by hand).
+static NSTimeInterval PinnedDictationCommitDelay(NSTimeInterval delay) {
+    return MIN(MAX(delay, kDictationDelayMin), kDictationDelayMax);
+}
+#endif
+
+@implementation StoryMainViewController
 @synthesize fontName = m_fontname;
 @synthesize fontSize = m_fontSize;
 @synthesize completionEnabled = m_completionEnabled;
@@ -1407,7 +1428,7 @@ static void setColorTable(RichTextView *v) {
                 [m_glkViews removeLastObject];
             else
                 m_glkViews[viewNum] = [NSNull null];
-        }        
+        }
     }
 }
 
@@ -1508,7 +1529,7 @@ static void setColorTable(RichTextView *v) {
             val2 /= kIOSGlkScaleFactor;
             width /= kIOSGlkScaleFactor;
             height /= kIOSGlkScaleFactor;
-           //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
+            //NSLog(@"image draw view %d, img %d v1 %d v2 %d w %d h %d", viewNum, image, val1,  val2, width, height);
             if (!glkViewImageCache)
                 glkViewImageCache = [[NSMutableDictionary alloc] initWithCapacity: 100];
             CGContextRef cgctx = (CGContextRef)[glkViewImageCache[@(viewNum)] pointerValue];
@@ -1593,7 +1614,7 @@ extern void gli_ios_set_focus(window_t *winNum);
     if (viewNum >= [m_glkViews count])
         return nil;
     FrotzView *v = m_glkViews[viewNum];
-    if ((NSNull*)v == [NSNull null]) 
+    if ((NSNull*)v == [NSNull null])
         return nil;
     return v;
 }
@@ -1688,6 +1709,14 @@ extern void gli_ios_set_focus(window_t *winNum);
 -(void)showKeyboardLockState {
     BOOL notesVisible = (m_notesController && [m_notesController isVisible]);
 
+#if EnableStoryDictation
+    // Dictation goes to the input line, so it pauses while the notes page is up. Before the early
+    // return below: this must run on every call, not just when the toggle's titles change. A
+    // dialog over the input (file chooser, settings sheet) also keeps it paused: presenting one
+    // hides the keyboard, which lands here, and this used to resume dictation under the dialog.
+    [self pauseOrResumeDictation: !notesVisible && !m_dialogCoversInput];
+#endif
+
     BOOL locked = m_kbLocked && !notesVisible && ![m_inputLine isFirstResponder];
     UIImage *image = [UIImage imageNamed: locked ? @"icon-keyboard-locked" : @"icon-keyboard"];
     if (m_kbdToggleItem.image != image)
@@ -1732,6 +1761,99 @@ extern void gli_ios_set_focus(window_t *winNum);
                                                          children: @[toggleAction, lockAction]];
     }
 }
+
+#if EnableStoryDictation
+// The mic button. Stopping needs no permission. Starting needs two, speech recognition and the
+// microphone, each with its own one-time system prompt, so both are requested here (the first
+// time) and a refusal of either is explained, with a way to Settings since the system won't ask
+// again. Whether the recognizer itself can take a request is checked in toggleListenForSpeech.
+- (void) micButtonPressed {
+    if ([self dictationIsOn]) {
+        // While the mic is closed for VoiceOver's reading of a reply, the button means "stop
+        // reading, I want to speak" rather than "stop listening"; so does Magic Tap. The same
+        // if the reading ended a moment ago: a Magic Tap on a paused VoiceOver ends the reading
+        // first, reopening the mic, and then arrives here; it meant "let me speak", so the mic
+        // stays open (the resume chime has already sounded, see dictationReopenedAfterReading:).
+        if ([m_dictationController isHoldingForReply]) {
+            [m_dictationController interruptReplyAndListen];
+            [self playDictationCue: kStoryDictationCueResumed];
+        } else if ([m_dictationController justReopenedAfterReading])
+            ; // already reopened and cued
+        else
+            [m_dictationController stopListening];
+        return;
+    }
+    [SFSpeechRecognizer requestAuthorization: ^(SFSpeechRecognizerAuthorizationStatus status) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (status == SFSpeechRecognizerAuthorizationStatusRestricted) {
+                [self explainDictationProblem: NSLocalizedString(@"Speech recognition isn't permitted on this device.", nil) offerSettings: NO];
+                return;
+            }
+            if (status != SFSpeechRecognizerAuthorizationStatusAuthorized) {
+                [self explainDictationProblem: NSLocalizedString(@"Frotz isn't allowed to use speech recognition. You can allow it in Settings.", nil) offerSettings: YES];
+                return;
+            }
+            [self requestMicrophonePermission: ^(BOOL granted) {
+                if (!granted) {
+                    [self explainDictationProblem: NSLocalizedString(@"Frotz isn't allowed to use the microphone. You can allow it in Settings.", nil) offerSettings: YES];
+                    return;
+                }
+                [self toggleListenForSpeech];
+            }];
+        });
+    }];
+}
+
+// VoiceOver's Magic Tap (a two-finger double tap) is the gesture for an app's main activity, and
+// here that is talking to the story: it does what the mic button does, from wherever VoiceOver's
+// focus happens to be. Only while the story is the screen in front and the mic button would take
+// a tap; otherwise NO lets the system have the gesture (play/pause). Returns YES even when the
+// story is between inputs, so the gesture never falls through to media control mid-game. After
+// Anand M.'s (anandman on GitHub) voice-mode branch, which also forwards the gesture from the app
+// delegate (see FrotzAppDelegate), since navigation bar items aren't in this controller's
+// responder chain.
+-(BOOL)accessibilityPerformMagicTap {
+    // Each refusal is logged (tracing on) because a declined Magic Tap looks to the player like
+    // one that never arrived. No application-state check: VoiceOver only delivers the gesture to
+    // the app in front, and the state can lag during launch.
+    const char *why = NULL;
+    if (!m_dictationEnabled)
+        why = "dictation is off in Settings";
+    else if (!m_micButton.enabled)
+        why = "the mic button is disabled (input line covered)";
+    else if (self.presentedViewController || self.navigationController.presentedViewController)
+        why = "something is presented over the story";
+    else if (self.navigationController && self.navigationController.topViewController != self)
+        why = "the story is not the front screen";
+    if (why) {
+        DictationLog(@"Magic Tap declined: %s", why);
+        return NO;
+    }
+    [self micButtonPressed]; // which, during VoiceOver's reading of a reply, cuts the reading short instead
+    return YES;
+}
+
+// Asks for microphone access (prompting the first time) and calls back on the main queue.
+-(void)requestMicrophonePermission:(void (^)(BOOL granted))completion {
+    void (^onMainQueue)(BOOL) = ^(BOOL granted) {
+        dispatch_async(dispatch_get_main_queue(), ^{ completion(granted); });
+    };
+    if (@available(iOS 17.0, *))
+        [AVAudioApplication requestRecordPermissionWithCompletionHandler: onMainQueue];
+    else
+        [[AVAudioSession sharedInstance] requestRecordPermission: onMainQueue];
+}
+
+// Why dictation can't run, as an alert; with a Settings button when the fix is a permission there.
+-(void)explainDictationProblem:(NSString*)message offerSettings:(BOOL)offerSettings {
+    FrotzShowAlert(self, NSLocalizedString(@"Dictation", nil), message, NSLocalizedString(@"OK", nil),
+                   offerSettings ? @[NSLocalizedString(@"Settings", nil)] : nil,
+                   ^(NSInteger buttonIndex) {
+        if (buttonIndex == 1)
+            [[UIApplication sharedApplication] openURL: [NSURL URLWithString: UIApplicationOpenSettingsURLString] options: @{} completionHandler: nil];
+    });
+}
+#endif
 
 -(void)viewDidDisappear:(BOOL)animated {
 }
@@ -1807,6 +1929,9 @@ extern void gli_ios_set_focus(window_t *winNum);
         [m_notesController hide];
         [m_notesController autosize];
     }
+#if EnableStoryDictation
+    [self pauseOrResumeDictation: YES];
+#endif
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -1823,7 +1948,30 @@ extern void gli_ios_set_focus(window_t *winNum);
         [self hideInputHelper];
     if (m_notesController)
         [m_notesController dismissKeyboard];
+#if EnableStoryDictation
+    // Leaving for the Story List (the story's navigation controller is dismissed, or this is
+    // popped) ends dictation: it comes back only when the player starts it again. Anything else
+    // covering the story (settings in landscape, say) only pauses it, and viewWillAppear resumes.
+    if (self.isBeingDismissed || self.navigationController.isBeingDismissed || self.isMovingFromParentViewController)
+        [m_dictationController stopListening];
+    else
+        [self pauseOrResumeDictation: NO];
+#endif
 }
+
+#if EnableStoryDictation
+// KeyboardOwner: the settings sheet. Like the file chooser, it pauses dictation and resumes it
+// when it goes; the sheet doesn't trigger viewWillDisappear in portrait, hence these.
+-(void)settingsWillPresent {
+    m_dialogCoversInput = YES; // see showKeyboardLockState
+    [self pauseOrResumeDictation: NO];
+}
+
+-(void)settingsDidDismiss {
+    m_dialogCoversInput = NO;
+    [self showKeyboardLockState]; // resumes only if nothing else (the notes page, in portrait) still covers the input
+}
+#endif
 
 - (void)willMoveToParentViewController:(UIViewController *)parent
 {
@@ -2060,7 +2208,21 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     m_kbdToggleItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-keyboard"] style:UIBarButtonItemStylePlain target:self action:@selector(toggleKeyboard)];
     m_kbdToggleItem.title = NSLocalizedString(@"Show Keyboard", nil); // updated by showKeyboardLockState; shown in overflow menus
     [m_kbdToggleItem setStyle: UIBarButtonItemStylePlain];
+
+#if EnableStoryDictation
+    m_micButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"mic"] style:UIBarButtonItemStylePlain target:self action:@selector(micButtonPressed)];
+    m_micButton.title = NSLocalizedString(@"Start Listening", nil);
+    // Tells VoiceOver to stay quiet after the tap rather than announce the button's new state,
+    // which would otherwise be the first thing the recognizer hears when listening starts.
+    m_micButton.accessibilityTraits |= UIAccessibilityTraitStartsMediaSession;
+
+    // Uncomment for layout test for future speech button
+    // UIBarButtonItem* extraButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"speaker"] style:UIBarButtonItemStylePlain target:self action:nil];
+    // extraButton.title = NSLocalizedString(@"Read Aloud", nil);
+    [self updateTrailingBarItems]; // the mic only when the "Story Voice Dictation" setting (loaded above) is on
+#else
     self.navigationItem.rightBarButtonItem = m_kbdToggleItem;
+#endif
 
     theSMVC = self;
     theStoryView = m_storyView;
@@ -2076,8 +2238,8 @@ static UIImage *GlkGetImageCallback(int imageNum) {
         [m_storyView setAccessibilityValue: nil];
         [m_inputLine setAccessibilityValue: nil];
     }
-    
 }
+
 - (void) setIgnoreWordSelection:(BOOL)ignore {
     m_ignoreWordSelection = ignore;
 }
@@ -2099,10 +2261,16 @@ static UIImage *GlkGetImageCallback(int imageNum) {
     }
     m_ignoreWordSelection = NO;
     [m_storyView clearSelection];
+#if EnableStoryDictation
+    [self deferDictationCommit]; // the word has landed; give the player a moment before the utterance commits
+#endif
 }
 
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)animDuration hilightView:(UIView <WordSelection>*)view {
     m_ignoreWordSelection = NO;
+#if EnableStoryDictation
+    [self deferDictationCommit]; // so the word's flight to the input line finishes before the utterance commits
+#endif
     if (/*m_kbShown && */!(ipzAllowInput & kIPZNoEcho)) {
         // m_kbShown commented out so this still works with paired hardware keyboards
         NSString *origText = [m_inputLine text];
@@ -2375,10 +2543,13 @@ static const CGFloat kVerticalBarLiveActivityReserve = 90;
         return;
     UIBarButtonItem *infoItem = [m_frotzInfoController infoBarButtonItem];
     NSInteger capacity = [self estimatedVerticalBarCapacityWithKeyboardHeight: keyboardHeight];
+    // The trailing items (keyboard toggle, plus the mic when dictation is built in) take their
+    // tiles first; what is left goes to the leading side.
+    NSInteger trailingCount = MAX(1, (NSInteger)self.navigationItem.rightBarButtonItems.count);
     NSArray<UIBarButtonItem*> *items;
-    if (capacity >= 3 && infoItem)
+    if (infoItem && capacity >= trailingCount + 2)
         items = @[m_storyListItem, infoItem];
-    else if (capacity >= 2)
+    else if (capacity >= trailingCount + 1)
         items = @[m_storyListItem];
     else
         items = @[];
@@ -2827,6 +2998,10 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 }
 
 -(void) openFileBrowser:(FileBrowserState)dialogType {
+#if EnableStoryDictation
+    m_dialogCoversInput = YES; // see showKeyboardLockState
+    [self pauseOrResumeDictation: NO];
+#endif
     FileBrowser *fileBrowser = [[FileBrowser alloc] initWithDialogType:dialogType];
 
     [fileBrowser setPath: storySavePath];
@@ -2850,6 +3025,12 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [self activateKeyboard];
     refresh_savedir = -1;
     do_filebrowser = kFBHidden;
+#if EnableStoryDictation
+    // Paused in openFileBrowser:; the chooser is gone, so listen again unless something else still
+    // covers the input. (activateKeyboard above does this too, but only if the keyboard isn't locked.)
+    m_dialogCoversInput = NO;
+    [self showKeyboardLockState];
+#endif
 }
 
 -(void) fileBrowser: (FileBrowser *)browser deleteFile: (NSString*)filePath {
@@ -3143,6 +3324,11 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
 -(void) setCurrentStory: (NSString*)storyPath {
     id fileMgr = [NSFileManager defaultManager];
     if (m_currentStory != storyPath) {
+#if EnableStoryDictation
+        [m_storyVocabulary reset]; // a different story's words
+        m_dictationLanguage = nil; // and maybe a different language: back to the default recognizer until
+        m_dictationController.storyLanguage = nil; // updateDictationLanguage learns otherwise (it may not)
+#endif
         m_currentStory = nil;
         BOOL isDir = NO;
         if (storyPath && [storyPath length] > 0) {
@@ -3527,8 +3713,13 @@ static int iosif_top_win_height = 1;
 #if UseRichTextView
             NSRange escCodeRange = [inputBufferStr rangeOfString: @kOutputEscCode];
             while (escCodeRange.length > 0 && !discard_output_until_prompt) {
-                if (escCodeRange.location > 0)
-                    [storyView appendText: [inputBufferStr substringToIndex: escCodeRange.location]];
+                if (escCodeRange.location > 0) {
+                    NSString *chunk = [inputBufferStr substringToIndex: escCodeRange.location];
+#if EnableStoryDictation
+                    [self noteStoryOutput: chunk];
+#endif
+                    [storyView appendText: chunk];
+                }
                 NSString *subEscCode = [inputBufferStr substringFromIndex: escCodeRange.location+1];
                 if ([subEscCode hasPrefix: @kStyleEscCode]) {
                     RichTextStyle style = kFTNormal;
@@ -3639,6 +3830,10 @@ static int iosif_top_win_height = 1;
             }
 #endif
             NSUInteger iBufLen = [inputBufferStr length];
+#if EnableStoryDictation
+            if (!discard_output_until_prompt)
+                [self noteStoryOutput: inputBufferStr]; // whole, however it is appended below
+#endif
             if (discard_output_until_prompt)
                 ; // do nothing
             else if (iBufLen < 256)
@@ -3826,6 +4021,10 @@ static int iosif_top_win_height = 1;
                 NSString *t = m_inputLine.text; [m_inputLine setTextKeepCompletion: @" "]; [m_inputLine setTextKeepCompletion: t]; // *sigh* needed to force cursor to resize
                 lastInputWindow = cwin;
             }
+#if EnableStoryDictation
+            storyView.interruptNextAnnouncement = m_interruptReadingForNextReply;
+            m_interruptReadingForNextReply = NO;
+#endif
             [storyView markWaitForInput];
             discard_output_until_prompt = 0;
             [m_inputLine performSelector: @selector(updatePosition) withObject:nil afterDelay: 0.08];
@@ -3871,6 +4070,10 @@ static int iosif_top_win_height = 1;
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {               // any offset changes
     [m_inputLine updatePosition];
+#if EnableStoryDictation
+    if (scrollView.isDragging || scrollView.isDecelerating) // the player scrolling, not output arriving
+        [self deferDictationCommit];
+#endif
     CGFloat contentOffset = scrollView.contentOffset.y;
     CGFloat maximumOffset = scrollView.contentSize.height - scrollView.frame.size.height;
     // m_kbShown lags the keyboard (set in keyboardDidShow, cleared in keyboardWillHide), and
@@ -3916,6 +4119,11 @@ static int iosif_top_win_height = 1;
     [dict setObject: bgColorStr forKey: @"backgroundColor"];
     [dict setObject: [NSNumber numberWithBool: !m_completionEnabled] forKey: @"completionDisabled"];
     [dict setObject: @(m_canEditStoryInfo) forKey: @"canEditStoryInfo"];
+#if EnableStoryDictation
+    [dict setObject: @(m_dictationEnabled) forKey: @"dictationEnabled"];
+    [dict setObject: @(m_dictationCommitDelay) forKey: @"dictationCommitDelay"];
+    [dict setObject: @(m_dictationListensDuringVoiceOver) forKey: @"dictationListensDuringVoiceOver"];
+#endif
     [dict setObject: @(iosif_ifrotz_verbose_debug) forKey: @"debug_flags_" IPHONE_FROTZ_VERS];
     [dict setObject: @(m_autoRestoreEnabled) forKey:@"autorestore_preference"];
     
@@ -3975,6 +4183,12 @@ static UIColor *scanColor(NSString *colorStr) {
         }
         m_completionEnabled = ![[dict objectForKey: @"completionDisabled"] boolValue];
         m_canEditStoryInfo = [[dict objectForKey: @"canEditStoryInfo"] boolValue];
+#if EnableStoryDictation
+        m_dictationEnabled = [[dict objectForKey: @"dictationEnabled"] boolValue]; // off until asked for
+        id delay = [dict objectForKey: @"dictationCommitDelay"];
+        m_dictationCommitDelay = delay ? PinnedDictationCommitDelay([delay doubleValue]) : kDefaultDictationCommitDelay;
+        m_dictationListensDuringVoiceOver = [[dict objectForKey: @"dictationListensDuringVoiceOver"] boolValue]; // off unless asked for
+#endif
         id arp = [dict objectForKey: @"autorestore_preference"];
         if (arp)
             m_autoRestoreEnabled = [arp boolValue];
@@ -4361,6 +4575,9 @@ static void setScreenDims(char *storyNameBuf) {
                 }
 #else
                 [m_storyView setText: [dict objectForKey: @"storyWinContents"]];
+#endif
+#if EnableStoryDictation
+                [self rebuildStoryVocabulary]; // from the restored text
 #endif
                 NSNumber *hFlagsNum = dict[@"hflags"];
                 if (hFlagsNum) {
@@ -4758,6 +4975,257 @@ static void setScreenDims(char *storyNameBuf) {
     return [self inputLineEditMenuWithSuggestedActions: suggestedActions];
 }
 
+#if EnableStoryDictation
+// Dictation is "on" from the user's point of view while it is listening or merely paused by the
+// UI (notes page up, file chooser open); the mic button shows that, and a tap while on stops it.
+-(BOOL)dictationIsOn {
+    return m_dictationController.isListening || m_dictationController.isPaused;
+}
+
+// Settings: "Story Voice Dictation". Off by default; the mic bar button appears only while on, and
+// turning it off stops any dictation in progress.
+-(BOOL)isDictationEnabled {
+    return m_dictationEnabled;
+}
+
+-(void)setDictationEnabled:(BOOL)enabled {
+    if (enabled == m_dictationEnabled)
+        return;
+    m_dictationEnabled = enabled;
+    if (!enabled)
+        [m_dictationController stopListening];
+#if !AlwaysTrackStoryVocabulary
+    else
+        [self rebuildStoryVocabulary]; // nothing was being noted while it was off
+#endif
+    [self updateTrailingBarItems];
+}
+
+// Settings: "Dictation Delay", the quiet time after which what was said becomes a command.
+-(NSTimeInterval)dictationCommitDelay {
+    return m_dictationCommitDelay;
+}
+
+-(void)setDictationCommitDelay:(NSTimeInterval)delay {
+    m_dictationCommitDelay = PinnedDictationCommitDelay(delay);
+    m_dictationController.silenceInterval = m_dictationCommitDelay;
+}
+
+// Settings: "Listen During VoiceOver" (shown only while VoiceOver runs). Off by default; see
+// StoryDictationController listensWhileScreenReaderSpeaks for what each way costs.
+-(BOOL)dictationListensDuringVoiceOver {
+    return m_dictationListensDuringVoiceOver;
+}
+
+-(void)setDictationListensDuringVoiceOver:(BOOL)listens {
+    m_dictationListensDuringVoiceOver = listens;
+    m_dictationController.listensWhileScreenReaderSpeaks = listens;
+}
+
+-(void)dictationReplyAnnouncementPosted {
+    [m_dictationController replyAnnouncementPosted];
+}
+
+// A player who dictates a command while VoiceOver is still reading the last reply has heard
+// enough of it: the new reply is announced in its place rather than after it (see
+// RichTextView interruptNextAnnouncement, applied where the game next waits for input).
+-(void)dictatedCommandSubmitted {
+    m_interruptReadingForNextReply = YES;
+}
+
+// The trailing bar items: the keyboard toggle, with the mic after it while voice dictation is
+// enabled. The count feeds the vertical bar's capacity estimate, so the leading items follow.
+-(void)updateTrailingBarItems {
+    if (!m_kbdToggleItem || !m_micButton) // the setting can change from the Story List before loadView makes the buttons; loadView calls this once it has
+        return;
+    NSArray<UIBarButtonItem*> *items = m_dictationEnabled ? @[m_kbdToggleItem, m_micButton] : @[m_kbdToggleItem];
+    if (![self.navigationItem.rightBarButtonItems isEqualToArray: items]) {
+        self.navigationItem.rightBarButtonItems = items;
+        [self updateLeadingBarItemsForSpaceAnimated: NO];
+    }
+}
+
+-(void)toggleListenForSpeech {
+    if (!m_dictationController) {
+        m_dictationController = [[StoryDictationController alloc] init];
+        m_dictationController.delegate = m_inputLine;
+        m_dictationController.stateDelegate = self;
+        m_dictationController.silenceInterval = m_dictationCommitDelay;
+        m_dictationController.listensWhileScreenReaderSpeaks = m_dictationListensDuringVoiceOver;
+    }
+    if ([self dictationIsOn]) {
+        [m_dictationController stopListening];
+        return;
+    }
+    [self updateDictationLanguage];
+    switch ([m_dictationController availability]) {
+        case kStoryDictationRecognizerUnavailable:
+            [self explainDictationProblem: NSLocalizedString(@"Speech recognition isn't available right now. Check that Siri or Dictation is turned on in Settings.", nil) offerSettings: YES];
+            return;
+        case kStoryDictationOnDeviceUnsupported:
+            // iOS downloads a language's offline speech assets when it is added as a dictation
+            // language; the alert says how. The Settings button can only open Frotz's own page,
+            // so the text gives the path and the button is left off.
+            [self explainDictationProblem: [NSString stringWithFormat: NSLocalizedString(@"This story appears to be in %1$@, but your device doesn't have %1$@ on-device dictation support installed. Frotz only uses on-device recognition, so nothing you say leaves your device.\n\nTo add it, go to Settings > General > Keyboard > Dictation Languages, and turn on %1$@. Wait for the support to download, then return to Frotz and tap the mic again.", nil),
+                                            m_dictationController.recognitionLanguageName] offerSettings: NO];
+            return;
+        case kStoryDictationAvailable:
+            break;
+    }
+    m_dictationStartedByUser = YES; // so the cue is the full start, not a resume
+    [m_dictationController listenForSpeech];
+    // The mic button and the cue follow in dictationListeningStateChanged:.
+}
+
+-(void)dictationBecameUnavailable:(StoryDictationController*)controller {
+    [self explainDictationProblem: NSLocalizedString(@"Speech recognition became unavailable, so dictation has stopped.", nil) offerSettings: NO];
+}
+
+// The audio engine couldn't be started even after being rebuilt; the console has the reason.
+-(void)dictationFailedToStart:(StoryDictationController*)controller {
+    [self explainDictationProblem: NSLocalizedString(@"The microphone couldn't be started. Try again in a moment; if it keeps happening, restart Frotz.", nil) offerSettings: NO];
+}
+
+-(void)stopListening {
+    [m_dictationController stopListening];
+}
+
+// The mic button reflects what the recognizer is actually doing, not what was last asked of it:
+// it goes back to "Start Listening" when the audio engine fails to start as well as on a tap.
+-(void)dictationListeningStateChanged:(StoryDictationController*)controller {
+    [self updateMicButton];
+    // The cue waits for the run loop so that a pause and resume made in one go (the engine
+    // restarting for a route or VoiceOver change) compare as no change and sound as nothing.
+    [NSObject cancelPreviousPerformRequestsWithTarget: self selector: @selector(cueDictationStateChange) object: nil];
+    [self performSelector: @selector(cueDictationStateChange) withObject: nil afterDelay: 0 inModes: @[NSRunLoopCommonModes]];
+}
+
+// The mic shows what the recognizer is doing: filled while on (listening, or paused by the UI
+// and due to resume; the pause also disables the button, see pauseOrResumeDictation:), the
+// outline when off.
+-(void)updateMicButton {
+    BOOL on = [self dictationIsOn];
+    BOOL paused = on && [m_dictationController isPaused];
+    [m_micButton setImage: [UIImage systemImageNamed: on ? @"mic.fill" : @"mic"]];
+    m_micButton.title = on ? NSLocalizedString(@"Stop Listening", nil) : NSLocalizedString(@"Start Listening", nil);
+    m_micButton.accessibilityValue = paused ? NSLocalizedString(@"Paused", nil) : nil;
+}
+
+// Dictation as the cues see it: listening, off but due to resume by itself (paused for the notes
+// page or settings, or taken by an audio interruption that may give it back), or off for good.
+typedef NS_ENUM(NSInteger, DictationCueState) {
+    kDictationCueStateOff,
+    kDictationCueStatePaused,
+    kDictationCueStateListening,
+};
+
+-(DictationCueState)dictationCueState {
+    if ([m_dictationController isListening])
+        return kDictationCueStateListening;
+    if ([m_dictationController willResume])
+        return kDictationCueStatePaused;
+    return kDictationCueStateOff;
+}
+
+// VoiceOver has finished reading the reply and the mic is open again: the resume chime tells the
+// player they can speak, since nothing else marks the moment.
+-(void)dictationReopenedAfterReading:(StoryDictationController*)controller {
+    [self playDictationCue: kStoryDictationCueResumed];
+}
+
+-(void)playDictationCue:(StoryDictationCue)cue {
+    if (!m_dictationCuePlayer)
+        m_dictationCuePlayer = [[StoryDictationCuePlayer alloc] init];
+    [m_dictationCuePlayer playCue: cue];
+}
+
+// Plays the cue for the change since the last one; the four are symmetrical. Listening beginning
+// is the double start cue if the mic button asked for it, else the single resume cue (back from
+// the notes page or settings, an audio interruption over). Listening going away is the single
+// pause cue if it will come back by itself, else the double stop cue (the mic button, leaving for
+// the Story List, the idle timeout, the app going to the background). A pause that becomes a stop
+// (leaving for the Story List with the notes page up) sounds the stop cue too: the player heard
+// only a pause. A start that failed leaves the state as it was, and nothing sounds; the button
+// shows it. The start and resume cues play through the live recording session's route and come
+// out quieter than the other two (the cue files are levelled to compensate); sounding them
+// before the session went live was tried, and its activation cut them off mid-play.
+-(void)cueDictationStateChange {
+    DictationCueState state = [self dictationCueState];
+    DictationCueState was = (DictationCueState)m_dictationCuedState;
+    BOOL byUser = m_dictationStartedByUser;
+    m_dictationStartedByUser = NO;
+    m_dictationCuedState = state;
+    if (state == was)
+        return;
+    StoryDictationCue cue;
+    if (state == kDictationCueStateListening)
+        cue = byUser ? kStoryDictationCueStarted : kStoryDictationCueResumed;
+    else if (state == kDictationCueStatePaused)
+        cue = kStoryDictationCuePaused;
+    else
+        cue = kStoryDictationCueStopped;
+    [self playDictationCue: cue];
+}
+
+-(void)deferDictationCommit {
+    [m_dictationController deferCommit];
+}
+
+-(StoryVocabulary*)storyVocabulary {
+    if (!m_storyVocabulary)
+        m_storyVocabulary = [[StoryVocabulary alloc] init];
+    return m_storyVocabulary;
+}
+
+// Called with each chunk of text the story prints to a text window (not a grid window: the status
+// line and Glk grids hold truncated text, maps and the like, and nothing the text windows don't).
+// Whether words are noted while dictation is off is AlwaysTrackStoryVocabulary's call (iosfrotz.h):
+// if not, enabling dictation later starts from the text then on screen (rebuildStoryVocabulary).
+-(void)noteStoryOutput:(NSString*)text {
+    if (AlwaysTrackStoryVocabulary || m_dictationEnabled)
+        [self.storyVocabulary noteOutput: text];
+}
+
+// After an autorestore, or when dictation is enabled mid-story without AlwaysTrackStoryVocabulary:
+// the words on screen are what there is to go on.
+-(void)rebuildStoryVocabulary {
+    [self.storyVocabulary reset];
+    if (AlwaysTrackStoryVocabulary || m_dictationEnabled)
+        [self.storyVocabulary noteOutput: [m_storyView text]];
+}
+
+// The story's language, for the recognizer (StoryDictationController storyLanguage): from the
+// iFiction record if the story is a Blorb with one, else judged from the text on screen once
+// there is a page of it. Most story files have no record, so the text usually decides. Decided
+// once per story, at the first mic tap with enough text to go on; until then the recognizer
+// stays on US English, and a tap with too little text just tries again next time. Not saved:
+// cheap enough to redo each launch.
+-(void)updateDictationLanguage {
+    if (m_dictationLanguage)
+        return;
+    NSString *language = [StoryDictationController languageFromBlorbAtPath: m_currentStory];
+    if (!language)
+        language = [StoryDictationController languageOfText: [m_storyView text]];
+    if (!language)
+        return;
+    m_dictationLanguage = language;
+    m_dictationController.storyLanguage = language;
+}
+
+-(void)pauseOrResumeDictation:(BOOL)inputLineIsActive {
+    // While the input line is covered (the notes page, say) there is nothing to dictate into, so
+    // the mic button is disabled rather than hidden: it stays in place, dimmed by UIKit, and
+    // shows whether dictation will resume (filled) or not (outline) when the page goes.
+    m_micButton.enabled = inputLineIsActive;
+    if (m_dictationController) {
+        if (inputLineIsActive && [m_dictationController isPaused])
+            [m_dictationController listenForSpeech];
+        else if (!inputLineIsActive && [m_dictationController isListening])
+            [m_dictationController pauseListening];
+    }
+}
+#endif // EnableStoryDictation
+
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 
     //NSLog(@"runloopmode %@", [[NSRunLoop currentRunLoop] currentMode]);
@@ -4772,9 +5240,9 @@ static void setScreenDims(char *storyNameBuf) {
     NSTimeInterval duration = 0.02;
     if (m_animDuration)
         duration = m_animDuration;
-    [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: duration];
     
     [self checkAccessibility];
+    [self performSelector: @selector(textFieldFakeDidEndEditing:) withObject: textField afterDelay: duration];
     return YES;
 }
 
@@ -4890,6 +5358,11 @@ static void setScreenDims(char *storyNameBuf) {
     [self setFont: [UIFont fontWithName:kVariableWidthFontName size:m_fontSize]];
     m_completionEnabled = YES;
     m_canEditStoryInfo = NO;
+#if EnableStoryDictation
+    self.dictationEnabled = NO;
+    self.dictationCommitDelay = kDefaultDictationCommitDelay;
+    self.dictationListensDuringVoiceOver = NO;
+#endif
     [m_storyBrowser unHideAll];
 }
 
@@ -4914,9 +5387,58 @@ static int matchWord(NSString *str, NSString __strong *wordArray[]) {
 
 extern int completion (const zchar *buffer, zchar *result);
 extern int glulxCompleteWord(const char *word, char *result);
+extern int dictionary_word_is_verb (const zchar *word);
+extern int glulxDictionaryWordIsVerb(const char *word);
+extern int tads2_is_running(void);
+extern int tads2_word_is_verb(const char *word);
+
+// Whether the running story's dictionary can be read at all: Z-code, Glulx and TADS 2, not
+// TADS 3 (yet). Without it every word reads as unknown, so callers that filter by it should not
+// filter. TADS 2 answers through glulxCompleteWord, which defers to its vocabulary.
+-(BOOL)dictionaryIsReadable {
+    return !gStoryIsTADS || tads2_is_running();
+}
+
+// Whether the game's dictionary marks `word` as a verb: 1 yes, 0 no, -1 can't tell (not in the
+// dictionary, or a story whose verb marking isn't known: Infocom's version 6, TADS 3). For
+// dictation's choice among the recognizer's alternatives; see dictationDictionaryScore:.
+-(NSInteger)dictionaryWordIsVerb:(NSString*)word {
+    if (![word length] || ![self dictionaryIsReadable])
+        return -1;
+    if (gStoryInterp == kZStory) {
+#if USE_UTF8
+        return dictionary_word_is_verb((const zchar*)[word cStringUsingEncoding: NSUTF16StringEncoding]);
+#else
+        return dictionary_word_is_verb((const zchar*)[word UTF8String]);
+#endif
+    }
+    if (gStoryIsTADS)
+        return tads2_word_is_verb([word UTF8String]);
+    return glulxDictionaryWordIsVerb([word UTF8String]);
+}
 
 
--(NSString*)completeWord:(NSString*)str prevString:(NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
+// Whether the game's dictionary has a word beginning with `word` (so the word itself, or a longer
+// one; parsers accept words down to the dictionary's resolution anyway). completeWord: can't be
+// used for this: for an exact match that is a prefix of nothing else, the completers return
+// success with nothing to add, and completeWord: turns that into nil.
+-(BOOL)dictionaryHasWord:(NSString*)word {
+    if (![word length] || ![self dictionaryIsReadable])
+        return NO;
+    char resultbuf[256] = { 0, 0 };
+    int status;
+    if (gStoryInterp == kZStory) {
+#if USE_UTF8
+        status = completion((const zchar*)[word cStringUsingEncoding: NSUTF16StringEncoding], (zchar*)resultbuf);
+#else
+        status = completion((const zchar*)[word UTF8String], (zchar*)resultbuf);
+#endif
+    } else
+        status = glulxCompleteWord([word UTF8String], resultbuf);
+    return status != 2;
+}
+
+-(NSString*)completeWord:(NSString*)str prevString:(nullable NSString*)prevString isAmbiguous:(BOOL*)isAmbiguous {
     *isAmbiguous = NO;
     static NSString *wordArray[] = { @"look", @"read", @"restore", @"take", @"get", @"p",
         @"put", @"quit", @"throw", @"tell", @"open", @"pick",
@@ -5037,9 +5559,7 @@ extern int glulxCompleteWord(const char *word, char *result);
             }
         }
     }
-    
-    if (candString && [candString isEqualToString: str])
-        return nil;
+
     return candString;
 }
 

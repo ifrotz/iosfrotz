@@ -3,6 +3,7 @@
 #import <UIKit/UIKit.h>
 #import "WordSelectionProtocol.h"
 #import "RichTextStyle.h"
+#include "iosfrotz.h" // EnableStoryDictation: without it the #if blocks below and in the .m silently compile out
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol RTSelected <NSObject>
 -(void)textSelected:(NSString*)text animDuration:(CGFloat)duration hilightView:(UIView <WordSelection>*)view;
+#if EnableStoryDictation
+-(void)stopListening;
+#endif
 @end
 
 typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
@@ -109,6 +113,10 @@ typedef UIImage *__nonnull(*__nonnull RichDataGetImageCallback)(int imageNum);
 @property(nonatomic, assign) BOOL selectionDisabled;
 @property(nonatomic, assign, getter=displayFrozen) BOOL freezeDisplay;
 @property(nonatomic, assign) RichDataGetImageCallback richDataGetImageCallback;
+// The next VoiceOver announcement of new story text (markWaitForInput) displaces whatever
+// VoiceOver is reading instead of queueing behind it; cleared once used. Set by the owner when
+// the player has dictated a command over the previous reply: they have heard enough of it.
+@property(nonatomic, assign) BOOL interruptNextAnnouncement;
 
 - (RichTextView*)initWithFrame: (CGRect)frame NS_DESIGNATED_INITIALIZER;
 - (RichTextView*)initWithFrame: (CGRect)frame border:(BOOL)border;
