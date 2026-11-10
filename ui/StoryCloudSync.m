@@ -84,8 +84,15 @@ static NSString *RecordKey(NSString *subPath) {
     NSData *identity = token ? [NSKeyedArchiver archivedDataWithRootObject: token requiringSecureCoding: NO error: nil] : nil;
     NSData *recorded = m_record[kRecordIdentityKey];
     if (identity && recorded && ![identity isEqualToData: recorded]) {
-        CloudLog(@"iCloud account changed; forgetting what was synced for the previous one");
-        [m_record removeObjectForKey: kRecordHashesKey];
+        // The tokens themselves are what the API means to be compared; the archives are only
+        // compared first because they usually match byte for byte and save the unarchiving.
+        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData: recorded error: nil];
+        unarchiver.requiresSecureCoding = NO;
+        id recordedToken = [unarchiver decodeObjectForKey: NSKeyedArchiveRootObjectKey];
+        if (![token isEqual: recordedToken]) {
+            CloudLog(@"iCloud account changed; forgetting what was synced for the previous one");
+            [m_record removeObjectForKey: kRecordHashesKey];
+        }
     }
     if (identity)
         m_record[kRecordIdentityKey] = identity;
@@ -499,6 +506,14 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
     for (NSString *name in localNames)
         if (IsSyncableSaveName(name))
             local[[name lowercaseString]] = name;
+
+    // Everything not yet on this device starts downloading now, so iCloud fetches the batch in
+    // parallel while the files are worked through below; ensureDownloaded then mostly finds them
+    // here already. Started one at a time as each was reached, a folder of saves new to this device
+    // waited out iCloud's latency once per file.
+    for (CloudSyncEntry *entry in [cloud allValues])
+        if (!entry.downloaded)
+            [fm startDownloadingUbiquitousItemAtURL: entry.url error: nil];
 
     // Every name on either side, newest first: with a batch to transfer, the saves the player made
     // most recently are the ones another device is likeliest to want, so they are handed to iCloud
