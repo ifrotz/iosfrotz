@@ -3011,8 +3011,10 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     if (dialogType == kFBDoShowRestore) { // a save made on another device may have just arrived
         __weak FileBrowser *weakBrowser = fileBrowser;
         [self syncCloudSavesForCurrentStory: ^(BOOL changed) {
+            // Reloaded whether or not this pass changed anything: a sync already running when the
+            // dialog opened (after a save, say) may have added files since the dialog listed them.
             FileBrowser *browser = weakBrowser;
-            if (changed && browser && browser.view.window)
+            if (browser && browser.view.window)
                 [browser reloadData];
         }];
     }
@@ -3048,17 +3050,31 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     [fileMgr removeItemAtPath: filePath error: &error];
     NSString *subPath = [filePath stringByReplacingOccurrencesOfString:storyTopSavePath withString:@"" options:NSCaseInsensitiveSearch range:NSMakeRange(0, filePath.length)];
     NSString *dbPath = [[self dbSavePath] stringByAppendingPathComponent: subPath];
+    // The save's sync records go only once Dropbox's copy is gone. Cleared while syncing is paused,
+    // or after a failed delete, they made the surviving copy look like a new save on the next sync,
+    // which downloaded it and undid the deletion; kept, that sync recognises the deletion and
+    // finishes it (see dbSyncRemoteOnlySaveFile:).
+    NSString *cacheKey = [self metadataSubPath: dbPath];
 #if UseDropBoxSDK
     DBUserClient *client = [DBClientsManager authorizedClient];
     if (client && m_dbSyncEnabled) {
         [[client.filesRoutes delete_:dbPath] setResponseBlock:^(DBFILESMetadata *result, DBFILESDeleteError * routeError, DBRequestError *error) {
             if (routeError || error)
                 [self handleDropboxError: routeError withRequestError:error];
+            else {
+                [self cacheTimestamp:nil forSaveFile: cacheKey];
+                [self cacheBaseHash:nil forSaveFile: cacheKey];
+                [self saveDBCacheDict];
+            }
         }];
+    } else if (!client) { // nothing in Dropbox to reconcile against
+        [self cacheTimestamp:nil forSaveFile: cacheKey];
+        [self cacheBaseHash:nil forSaveFile: cacheKey];
     }
+#else
+    [self cacheTimestamp:nil forSaveFile: cacheKey];
+    [self cacheBaseHash:nil forSaveFile: cacheKey];
 #endif
-    [self cacheTimestamp:nil forSaveFile: [self metadataSubPath: dbPath]];
-    [self cacheBaseHash:nil forSaveFile: [self metadataSubPath: dbPath]];
 #if EnableCloudSaveSync
     [[self cloudSync] saveDeleted: subPath];
 #endif

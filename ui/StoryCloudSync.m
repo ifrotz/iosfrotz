@@ -31,12 +31,14 @@ static const NSTimeInterval kCloudDownloadWait = 30;        // per file, before 
     NSString *m_savesPath;              // Documents/Saves
     dispatch_queue_t m_queue;           // every sync runs here, one after another
     NSMutableDictionary *m_record;      // cloudsync.plist contents; queue only
+    NSMutableSet<NSString*> *m_pendingForgets; // folders whose records are to go before anything else is decided; any thread, under @synchronized
 }
 
 - (instancetype)initWithLocalSavesPath:(NSString*)savesPath {
     if ((self = [super init])) {
         m_savesPath = [savesPath copy];
         m_queue = dispatch_queue_create("com.flippencorp.frotz.cloudsync", DISPATCH_QUEUE_SERIAL);
+        m_pendingForgets = [NSMutableSet set];
     }
     return self;
 }
@@ -212,7 +214,11 @@ static BOOL IsSyncableSaveName(NSString *name) {
 // failed, which other devices would have taken for a deletion and copied. `overwriting` is NO
 // for a file iCloud isn't known to have (a conflict copy, a save only here): if one has appeared
 // under that name since the listing, the write fails and the next pass finds both and keeps both.
-- (BOOL)copyLocal:(NSString*)localPath toCloud:(NSURL*)cloudURL overwriting:(BOOL)overwriting {
+// `replacing` is the hash iCloud's copy had when the decision was made (only with `overwriting`):
+// another device's version can land between that read and this write, and replacing it unseen
+// would lose it. Checked inside the coordinated write, where nothing else can change the file;
+// if it differs, nothing is written, and the next pass sees the new version and reconciles.
+- (BOOL)copyLocal:(NSString*)localPath toCloud:(NSURL*)cloudURL overwriting:(BOOL)overwriting replacing:(NSString*)replacing {
     NSError *readError = nil;
     NSData *data = [NSData dataWithContentsOfFile: localPath options: 0 error: &readError];
     if (!data) {
@@ -223,7 +229,23 @@ static BOOL IsSyncableSaveName(NSString *name) {
     NSError *coordError = nil;
     [[[NSFileCoordinator alloc] initWithFilePresenter: nil] coordinateWritingItemAtURL: cloudURL options: NSFileCoordinatorWritingForReplacing error: &coordError byAccessor: ^(NSURL *writeURL) {
         NSError *error = nil;
-        ok = [data writeToURL: writeURL options: NSDataWritingAtomic | (overwriting ? 0 : NSDataWritingWithoutOverwriting) error: &error];
+        if (overwriting && replacing && ![(FrotzFileContentHash(writeURL.path) ?: @"") isEqualToString: replacing]) {
+            CloudLog(@"%@ changed in iCloud while %@ was being uploaded; leaving it, the next sync will reconcile", cloudURL.lastPathComponent, localPath.lastPathComponent);
+            return;
+        }
+        if (overwriting)
+            ok = [data writeToURL: writeURL options: NSDataWritingAtomic error: &error];
+        else {
+            // NSDataWritingWithoutOverwriting can't be combined with the atomic write, so stage the
+            // bytes in a hidden file beside the destination and move them into place: the move won't
+            // replace an existing item, and is itself atomic.
+            NSFileManager *fm = [NSFileManager defaultManager];
+            NSURL *staging = [[writeURL URLByDeletingLastPathComponent] URLByAppendingPathComponent: [NSString stringWithFormat: @".%@.frotz-upload", writeURL.lastPathComponent]];
+            [fm removeItemAtURL: staging error: nil];
+            ok = [data writeToURL: staging options: 0 error: &error] && [fm moveItemAtURL: staging toURL: writeURL error: &error];
+            if (!ok)
+                [fm removeItemAtURL: staging error: nil];
+        }
         if (!ok)
             CloudLog(@"upload of %@ failed: %@", localPath.lastPathComponent, error);
     }];
@@ -235,8 +257,12 @@ static BOOL IsSyncableSaveName(NSString *name) {
 // Copies an iCloud file over the local one and returns the content hash of the bytes it copied,
 // which is what the caller records as the base: hashing the iCloud file again afterwards could
 // see a newer version, and the base would then say the local file holds what it doesn't. nil if
-// the copy failed.
-- (NSString*)copyCloud:(NSURL*)cloudURL toLocal:(NSString*)localPath {
+// the copy failed, or if the local file isn't what the decision was made on: `replacing` is the
+// hash the local file had then, or nil if there was none. The interpreter and the Dropbox sync
+// write to the same folder without going through this queue, and a download wait can be long;
+// a save that appeared or changed meanwhile is left alone, and the next pass finds both copies
+// and keeps both.
+- (NSString*)copyCloud:(NSURL*)cloudURL toLocal:(NSString*)localPath replacing:(NSString*)replacing {
     NSFileManager *fm = [NSFileManager defaultManager];
     __block NSString *hash = nil;
     NSError *coordError = nil;
@@ -247,13 +273,20 @@ static BOOL IsSyncableSaveName(NSString *name) {
         BOOL ok = NO;
         if ([fm copyItemAtURL: readURL toURL: [NSURL fileURLWithPath: tmp] error: &error]) {
             hash = FrotzFileContentHash(tmp); // of the staged bytes, before anything else can touch the file
-            [fm removeItemAtPath: localPath error: nil];
-            ok = hash && [fm moveItemAtPath: tmp toPath: localPath error: &error];
+            NSString *now = [fm fileExistsAtPath: localPath] ? (FrotzFileContentHash(localPath) ?: @"") : nil;
+            if ((now == nil) != (replacing == nil) || (now && ![now isEqualToString: replacing])) {
+                CloudLog(@"%@ %@ here while it was downloading; leaving it, both will be kept next time", cloudURL.lastPathComponent, replacing ? @"changed" : @"appeared");
+                hash = nil;
+            } else {
+                [fm removeItemAtPath: localPath error: nil];
+                ok = hash && [fm moveItemAtPath: tmp toPath: localPath error: &error];
+            }
         }
         if (!ok) {
             [fm removeItemAtPath: tmp error: nil];
+            if (hash || error)
+                CloudLog(@"download of %@ failed: %@", cloudURL.lastPathComponent, error);
             hash = nil;
-            CloudLog(@"download of %@ failed: %@", cloudURL.lastPathComponent, error);
         }
     }];
     if (coordError)
@@ -261,12 +294,20 @@ static BOOL IsSyncableSaveName(NSString *name) {
     return hash;
 }
 
-- (BOOL)deleteCloudFile:(NSURL*)cloudURL {
+// `expecting` is the hash iCloud's copy is believed to have, or nil to delete whatever is there.
+// Checked inside the coordinated write: a version from another device that arrived since must
+// not be deleted as if it were the one known about. If it can't be read (not downloaded here),
+// it isn't deleted either; the next sync downloads it first and decides then.
+- (BOOL)deleteCloudFile:(NSURL*)cloudURL expecting:(NSString*)expecting {
     NSFileManager *fm = [NSFileManager defaultManager];
     __block BOOL ok = NO;
     NSError *coordError = nil;
     [[[NSFileCoordinator alloc] initWithFilePresenter: nil] coordinateWritingItemAtURL: cloudURL options: NSFileCoordinatorWritingForDeleting error: &coordError byAccessor: ^(NSURL *writeURL) {
         NSError *error = nil;
+        if (expecting && ![(FrotzFileContentHash(writeURL.path) ?: @"") isEqualToString: expecting]) {
+            CloudLog(@"%@ in iCloud isn't the version known here; not deleting it, the next sync will reconcile", cloudURL.lastPathComponent);
+            return;
+        }
         ok = [fm removeItemAtURL: writeURL error: &error];
         if (!ok) { // not downloaded here: the placeholder is what's on disk
             NSURL *placeholder = [[writeURL URLByDeletingLastPathComponent] URLByAppendingPathComponent: [NSString stringWithFormat: @".%@.icloud", writeURL.lastPathComponent]];
@@ -373,6 +414,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
         return NO;
     }
     [self loadRecord];
+    [self applyPendingForgets];
 
     NSString *localDir = [m_savesPath stringByAppendingPathComponent: subFolder];
     NSURL *cloudDir = [[self cloudSavesURL] URLByAppendingPathComponent: subFolder];
@@ -463,6 +505,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
         NSString *subPath = [subFolder stringByAppendingPathComponent: name];
         NSString *localPath = localName ? [localDir stringByAppendingPathComponent: localName] : [localDir stringByAppendingPathComponent: name];
         NSURL *cloudURL = cloudEntry ? cloudEntry.url : [cloudDir URLByAppendingPathComponent: name];
+        [self applyPendingForgets]; // a folder recreated since this pass began has no past, including this one
         NSString *base = [self baseHashFor: subPath];
 
         if (localName && cloudEntry) {
@@ -481,7 +524,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 [self setBaseHash: localHash for: subPath];
             } else if (base && [localHash isEqualToString: base]) {       // changed in iCloud only
                 CloudLog(@"downloading %@", subPath);
-                NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath];
+                NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath replacing: localHash];
                 if (downloaded) {
                     [self setBaseHash: downloaded for: subPath];
                     changed = YES;
@@ -489,7 +532,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 }
             } else if (base && [cloudHash isEqualToString: base]) {       // changed here only
                 CloudLog(@"uploading %@", subPath);
-                if ([self copyLocal: localPath toCloud: cloudURL overwriting: YES]) {
+                if ([self copyLocal: localPath toCloud: cloudURL overwriting: YES replacing: cloudHash]) {
                     [self setBaseHash: localHash for: subPath];
                     uploads++;
                 }
@@ -498,11 +541,11 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 if (conflictPath && [fm moveItemAtPath: localPath toPath: conflictPath error: nil]) {
                     CloudLog(@"%@ differs here and in iCloud; local version kept as %@", subPath, conflictPath.lastPathComponent);
                     NSString *conflictSub = [subFolder stringByAppendingPathComponent: conflictPath.lastPathComponent];
-                    if ([self copyLocal: conflictPath toCloud: [cloudDir URLByAppendingPathComponent: conflictPath.lastPathComponent] overwriting: NO]) {
+                    if ([self copyLocal: conflictPath toCloud: [cloudDir URLByAppendingPathComponent: conflictPath.lastPathComponent] overwriting: NO replacing: nil]) {
                         [self setBaseHash: localHash for: conflictSub];
                         uploads++;
                     }
-                    NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath];
+                    NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath replacing: nil]; // the local version was just moved aside
                     if (downloaded) {
                         [self setBaseHash: downloaded for: subPath];
                         downloads++;
@@ -527,7 +570,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 }
             } else {                                                       // new here, or changed since iCloud lost it
                 CloudLog(@"uploading %@", subPath);
-                if ([self copyLocal: localPath toCloud: cloudURL overwriting: NO]) {
+                if ([self copyLocal: localPath toCloud: cloudURL overwriting: NO replacing: nil]) {
                     [self setBaseHash: localHash for: subPath];
                     uploads++;
                 }
@@ -541,7 +584,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 NSString *cloudHash = [self hashOfCloudFile: cloudURL];
                 if (cloudHash && [cloudHash isEqualToString: base]) {      // deleted here, unchanged in iCloud
                     CloudLog(@"%@ was deleted here; deleting it in iCloud", subPath);
-                    if ([self deleteCloudFile: cloudURL]) {
+                    if ([self deleteCloudFile: cloudURL expecting: cloudHash]) {
                         [self setBaseHash: nil for: subPath];
                         deletions++;
                     }
@@ -555,7 +598,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                 continue;
             }
             CloudLog(@"downloading %@", subPath);
-            NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath];
+            NSString *downloaded = [self copyCloud: cloudURL toLocal: localPath replacing: nil]; // nothing was here when the pass began
             if (downloaded) {
                 [self setBaseHash: downloaded for: subPath];
                 changed = YES;
@@ -570,11 +613,31 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
     return changed;
 }
 
+// Noted at once, not queued: the caller recreates the folder right after this, and a pass already
+// queued for it would otherwise run first, find the folder present and empty with the old
+// records, and delete iCloud's saves. Passes apply pending forgets when they start and before
+// each file (applyPendingForgets), so a running pass sees it too. The queued block only persists it.
 - (void)forgetSaveFolder:(NSString*)subFolder {
-    dispatch_async(m_queue, ^{ // in order with any sync already queued for it
+    @synchronized (m_pendingForgets) {
+        [m_pendingForgets addObject: subFolder];
+    }
+    dispatch_async(m_queue, ^{
         [self loadRecord];
-        [self forgetBasesForFolder: subFolder];
+        [self applyPendingForgets];
     });
+}
+
+// Queue only.
+- (void)applyPendingForgets {
+    NSSet<NSString*> *folders;
+    @synchronized (m_pendingForgets) {
+        if (![m_pendingForgets count])
+            return;
+        folders = [m_pendingForgets copy];
+        [m_pendingForgets removeAllObjects];
+    }
+    for (NSString *folder in folders)
+        [self forgetBasesForFolder: folder];
 }
 
 - (void)saveDeleted:(NSString*)subPath {
@@ -594,13 +657,20 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
         // and undid the deletion. Kept, the record lets that sync delete it instead: a save only in
         // iCloud, unchanged since the last sync, with its local copy gone.
         BOOL gone;
+        NSString *base = [self baseHashFor: subPath];
         if (!entries)
             gone = !exists; // no folder in iCloud, nothing to delete; a folder that couldn't be listed is tried again next time
-        else if (entries[[subPath.lastPathComponent lowercaseString]]) {
-            CloudLog(@"%@ was deleted in Frotz; deleting it in iCloud", subPath);
-            gone = [self deleteCloudFile: cloudURL];
-        } else
+        else if (!entries[[subPath.lastPathComponent lowercaseString]])
             gone = YES;
+        else if (!base) {
+            // Never synced from here, so iCloud's file isn't the one just deleted: another device's
+            // save that happens to share the name. It stays, and the next sync brings it down.
+            CloudLog(@"%@ was deleted in Frotz, but iCloud's copy was never synced here; leaving it", subPath);
+            return;
+        } else {
+            CloudLog(@"%@ was deleted in Frotz; deleting it in iCloud", subPath);
+            gone = [self deleteCloudFile: cloudURL expecting: base]; // only if unchanged since the last sync; else it comes back down next time
+        }
         if (gone) {
             [self setBaseHash: nil for: subPath];
             [self saveRecord];
