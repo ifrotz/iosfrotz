@@ -197,6 +197,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<string>YES</string>
+	<key>LSSupportsGameMode</key>
+	<false/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSUbiquitousContainers</key>
