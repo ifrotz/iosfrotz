@@ -192,9 +192,21 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         m_notesFontPicker = [FontPicker frotzFontPickerWithTitle:@"Notes Font" includingFaces:YES monospaceOnly:NO];
         m_frotzDB = [[FrotzDBController alloc] init];
         m_releaseNotes = [[ReleaseNotes alloc] init];
+#if EnableStoryDictation
+        // The Input section has a row only while VoiceOver runs (see SettingsSectionRows), and its
+        // footer changes too; without a reload the table keeps the old row count and a tap on the
+        // row that is no longer there indexes past the new mapping.
+        [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(voiceOverStatusChanged:) name: UIAccessibilityVoiceOverStatusDidChangeNotification object: nil];
+#endif
     }
     return self;
 }
+
+#if EnableStoryDictation
+- (void)voiceOverStatusChanged:(NSNotification*)notification {
+    [[self tableView] reloadData];
+}
+#endif
 
 - (void)setStoryDelegate:(id<FrotzSettingsStoryDelegate,FrotzFontDelegate>)delegate {
     m_storyDelegate = delegate;
@@ -215,6 +227,7 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver: self];
     [m_tableView setDelegate:nil];
     m_tableView = nil;
 

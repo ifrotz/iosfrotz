@@ -1969,7 +1969,7 @@ extern void gli_ios_set_focus(window_t *winNum);
 
 -(void)settingsDidDismiss {
     m_dialogCoversInput = NO;
-    [self pauseOrResumeDictation: YES];
+    [self showKeyboardLockState]; // resumes only if nothing else (the notes page, in portrait) still covers the input
 }
 #endif
 
@@ -3026,10 +3026,10 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     refresh_savedir = -1;
     do_filebrowser = kFBHidden;
 #if EnableStoryDictation
-    // Paused in openFileBrowser:; the chooser is gone, so listen again.
-    // (activeKeyboard above will above will do it only if keyboard is not locked).
+    // Paused in openFileBrowser:; the chooser is gone, so listen again unless something else still
+    // covers the input. (activateKeyboard above does this too, but only if the keyboard isn't locked.)
     m_dialogCoversInput = NO;
-    [self pauseOrResumeDictation: YES];
+    [self showKeyboardLockState];
 #endif
 }
 
@@ -3326,7 +3326,8 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     if (m_currentStory != storyPath) {
 #if EnableStoryDictation
         [m_storyVocabulary reset]; // a different story's words
-        m_dictationLanguage = nil; // and maybe a different language
+        m_dictationLanguage = nil; // and maybe a different language: back to the default recognizer until
+        m_dictationController.storyLanguage = nil; // updateDictationLanguage learns otherwise (it may not)
 #endif
         m_currentStory = nil;
         BOOL isDir = NO;
@@ -5035,6 +5036,8 @@ static void setScreenDims(char *storyNameBuf) {
 // The trailing bar items: the keyboard toggle, with the mic after it while voice dictation is
 // enabled. The count feeds the vertical bar's capacity estimate, so the leading items follow.
 -(void)updateTrailingBarItems {
+    if (!m_kbdToggleItem || !m_micButton) // the setting can change from the Story List before loadView makes the buttons; loadView calls this once it has
+        return;
     NSArray<UIBarButtonItem*> *items = m_dictationEnabled ? @[m_kbdToggleItem, m_micButton] : @[m_kbdToggleItem];
     if (![self.navigationItem.rightBarButtonItems isEqualToArray: items]) {
         self.navigationItem.rightBarButtonItems = items;

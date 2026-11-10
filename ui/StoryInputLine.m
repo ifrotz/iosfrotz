@@ -426,8 +426,10 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
 // after it: the line is rebuilt as typed part, new transcript, added words, so the final result
 // gives "examine book". Without that the line no longer matched what was last shown here, the
 // whole of it became the new base, and the final transcript was appended again: "examine book
-// examine". If the line has changed in some other way (typing in the middle, clearing), the
-// current text becomes the new base.
+// examine". If the line has changed in some other way (fixing a misheard word in the middle,
+// clearing), the player has taken the line over: the current text becomes the new base, and only
+// words the recognizer adds from then on are appended to it. Appending the whole transcript again
+// would repeat what they just corrected ("take lantern take lantern").
 //
 // The final result is submitted as a command, all parts included, unless the player has edited
 // the line (tapped or typed) since the last words were heard: then they are still composing, and
@@ -457,10 +459,21 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     else if (![m_lastDictationShown length] || [current hasPrefix: m_lastDictationShown]) // hasPrefix: is NO for an empty prefix
         suffix = [current substringFromIndex: [m_lastDictationShown length]]; // empty when unchanged
     else {
-        m_textBeforeDictation = current;
+        m_textBeforeDictation = current; // taken over; see above
+        m_dictationTakeoverTranscript = m_lastDictationTranscript ?: string; // words heard since what was shown are kept
         rebased = YES;
     }
-    BOOL editedSinceLastSpeech = rebased || ![suffix isEqualToString: m_dictationSuffix ?: @""];
+    NSString *transcript = string;
+    if (m_dictationTakeoverTranscript) {
+        if (![string hasPrefix: m_dictationTakeoverTranscript]) { // the recognizer revised earlier words: nothing can safely be added
+            if (isFinal)
+                [self abandonDictation];
+            return;
+        }
+        transcript = [[string substringFromIndex: [m_dictationTakeoverTranscript length]] stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
+    }
+    BOOL editedSinceLastSpeech = rebased || ![suffix isEqualToString: m_dictationSuffix ?: @""]
+                                 || (m_dictationTakeoverTranscript && ![transcript length]); // edited, and nothing said since
     m_dictationSuffix = suffix;
     // With VoiceOver on and the keyboard up (this field editing), VoiceOver echoes every change
     // made to the field's text in its typing voice, so the running transcript came back once per
@@ -471,19 +484,26 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     BOOL silentField = UIAccessibilityIsVoiceOverRunning() && [self isFirstResponder];
     if (silentField && !isFinal) {
         m_lastDictationShown = m_textBeforeDictation; // what is actually shown, so the suffix is still found next time
+        m_lastDictationTranscript = string;
         return;
     }
     NSString *shown = m_textBeforeDictation;
-    if ([shown length] && [shown characterAtIndex: [shown length] - 1] != ' ' && !ispunct([shown characterAtIndex: [shown length] - 1]))
-        shown = [shown stringByAppendingString: @" "];
-    shown = [shown stringByAppendingString: string];
-    [self hideInputHelper];
+    if ([transcript length]) {
+        if ([shown length] && [shown characterAtIndex: [shown length] - 1] != ' ' && !ispunct([shown characterAtIndex: [shown length] - 1]))
+            shown = [shown stringByAppendingString: @" "];
+        shown = [shown stringByAppendingString: transcript];
+    }
+    if (!(isFinal && held)) // a held final result is just the silence delay expiring: the player is still picking a word
+        [self hideInputHelper];
     m_lastDictationShown = shown; // typed part and transcript, without the suffix, so it is found again next time
+    m_lastDictationTranscript = string;
     [self setText: [shown stringByAppendingString: suffix]];
     if (isFinal) {
         m_textBeforeDictation = nil;
         m_lastDictationShown = nil;
         m_dictationSuffix = nil;
+        m_lastDictationTranscript = nil;
+        m_dictationTakeoverTranscript = nil;
         m_dictationHold = NO;
         if (!editedSinceLastSpeech && !held) {
             StoryMainViewController *storyController = (StoryMainViewController*)[m_storyView delegate];
@@ -503,6 +523,8 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     m_textBeforeDictation = nil;
     m_lastDictationShown = nil;
     m_dictationSuffix = nil;
+    m_lastDictationTranscript = nil;
+    m_dictationTakeoverTranscript = nil;
     m_dictationHold = NO;
 }
 #endif
@@ -510,7 +532,9 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
 // See acceptDictation:final:. Harmless when no utterance is in progress: the flag is cleared by
 // the next hypothesis or final result, and only read when a final result arrives.
 -(void)holdDictationCommit {
+#if EnableStoryDictation
     m_dictationHold = YES;
+#endif
 }
 
 -(CGPoint)helperLaunchPosition {

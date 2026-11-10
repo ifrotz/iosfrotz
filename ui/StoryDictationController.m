@@ -425,22 +425,16 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 
 -(void)stopListening {
     DictationLog(@"stopListening (held for reply %d)", m_quietForReply);
-    if (m_speechCommitTimer) {
-        [m_speechCommitTimer invalidate];
-        m_speechCommitTimer = nil;
-    }
+    // Task, request, transcript and the input line's utterance state go together, as for a pause:
+    // partial text already shown stays on the line as typed text, so the next utterance adds to it
+    // instead of replacing it or submitting it.
+    [self abandonUtterance];
     [self cancelLongIdleTimer];
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(listenForSpeech) object:nil];
     m_quietForReply = NO;
 
     m_isPaused = NO;
     m_resumeAfterInterruption = NO;
-    if (m_recognitionTask) {
-        [m_sfRecogRequest endAudio];
-        [m_recognitionTask cancel];
-        m_sfRecogRequest = nil;
-        m_recognitionTask = nil;
-    }
     [self releaseAudio];
     [self notifyStateChanged];
 }
@@ -670,7 +664,11 @@ static const double kLanguageDetectionMinimumConfidence = 0.6;
 // state delegate, since the audio engine may refuse to start and leave nothing listening.
 -(void)listenForSpeech {
     [self startListening];
-    if ([self isListening])
+    // The idle clock starts only when none is running: a start or resume (stop and pause cancel
+    // it), or the reopening after a reply. A task that ended with nothing heard also comes through
+    // here, and must not reset it, or tasks ending that way every minute would keep the mic open
+    // for ever. Speech itself restarts it, per hypothesis.
+    if ([self isListening] && !m_longIdleTimer)
         [self restartLongIdleTimer];
     [self notifyStateChanged];
 }
@@ -858,7 +856,7 @@ static const NSTimeInterval kDictationLongIdleTimeout = 90;
             NSLog(@"Error AVAudioSession setAllowHapticsAndSystemSoundsDuringRecording: %@", error);
             error = nil;
         }
-        [m_audioSession setActive:YES withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error: &error];
+        [m_audioSession setActive: YES error: &error];
         if (error) {
             NSLog(@"Error AVAudioSession setActive: %@", error);
             error = nil;
@@ -964,7 +962,8 @@ static const NSTimeInterval kDictationKeySilenceInterval = 0.4;
     m_speechCommitTimer = nil;
     m_recognitionTask = nil;
     DictationLog(@"Final transcript: %@", m_currentTranscription);
-    if (m_delegate && [m_currentTranscription length] > 0)
+    BOOL heardSomething = [m_currentTranscription length] > 0;
+    if (m_delegate && heardSomething)
         [m_delegate acceptDictation: m_currentTranscription final:YES];
     m_currentTranscription = nil;
     // Not while paused: the pause stops the hypotheses, so the silence timer fires soon after
@@ -972,6 +971,12 @@ static const NSTimeInterval kDictationKeySilenceInterval = 0.4;
     // resume (listenForSpeech with m_isPaused set) finds no task and starts a fresh one.
     if (m_isPaused)
         return;
+    // Nothing heard (the task ended on its own, or the silence timer fired on an empty utterance):
+    // no command went in, so no reply is coming to hold for, and the idle clock keeps running.
+    if (!heardSomething) {
+        [self performSelector: @selector(listenForSpeech) withObject: nil afterDelay: 0];
+        return;
+    }
     // With a screen reader on, and unless asked to listen through it (listensWhileScreenReaderSpeaks),
     // the mic closes completely, engine and session as a stop would, while the reply is read, and
     // reopens when the reading ends (announcementDidFinish:), or soon if no reading is posted
