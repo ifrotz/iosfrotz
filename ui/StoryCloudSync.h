@@ -16,7 +16,7 @@
 //  StoryMainViewController): each side's hash is compared with the hash both sides had at the
 //  last sync (the base, kept per file in Application Support/cloudsync.plist). The side that still
 //  matches the base is the one that didn't change. A file changed on both sides, or different
-//  with no base, is kept both ways: the local version is renamed "name (conflict date).ext" and
+//  with no base, is kept both ways: the local version is renamed "name (iPad, 2026-11-13).ext" and
 //  uploaded, iCloud's version comes down under the original name. Deletions propagate in both
 //  directions, but only for a file whose surviving copy is unchanged since the last sync, and
 //  only within a folder that exists on both sides: a missing folder on either side is treated as

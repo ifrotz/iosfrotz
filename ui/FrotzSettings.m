@@ -759,6 +759,12 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
     }
 }
 
+- (void)showGettingStarted {
+    if (!m_gettingStarted)
+        m_gettingStarted = [[GettingStarted alloc] init];
+    [self pushSettingsController: m_gettingStarted];
+}
+
 // Shows one of the settings pages, giving it a Done button if it has no button of its own.
 - (void)pushSettingsController:(UIViewController*)viewController {
     if (!viewController.navigationItem.rightBarButtonItem) {

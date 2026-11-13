@@ -5110,7 +5110,7 @@ static void setScreenDims(char *storyNameBuf) {
             // iOS downloads a language's offline speech assets when it is added as a dictation
             // language; the alert says how. The Settings button can only open Frotz's own page,
             // so the text gives the path and the button is left off.
-            [self explainDictationProblem: [NSString stringWithFormat: NSLocalizedString(@"This story appears to be in %1$@, but your device doesn't have %1$@ on-device dictation support installed. Frotz only uses on-device recognition, so nothing you say leaves your device.\n\nTo add it, go to Settings > General > Keyboard > Dictation Languages, and turn on %1$@. Wait for the support to download, then return to Frotz and tap the mic again.", nil),
+            [self explainDictationProblem: [NSString stringWithFormat: NSLocalizedString(@"This story appears to be in %1$@, but your device doesn't have %1$@ on-device dictation support installed.\n\nTo add it, go to Settings > General > Keyboard > Dictation Languages, and turn on %1$@. Wait for the support to download, then return to Frotz and tap the mic again.", nil),
                                             m_dictationController.recognitionLanguageName] offerSettings: NO];
             return;
         case kStoryDictationAvailable:
@@ -6264,7 +6264,7 @@ static BOOL migateDropboxAuth() {
 }
 
 // The save changed both here and in Dropbox since the last sync. Neither is thrown away: the local
-// version is renamed "name (conflict YYYY-MM-DD).ext" and uploaded under that name, and Dropbox's
+// version is renamed "name (iPad, 2026-11-13).ext", after this device, and uploaded under that name, and Dropbox's
 // version is downloaded under the original name.
 -(void)dbKeepBothVersionsOfSaveFile:(NSString*)sfPath {
     NSFileManager *fileMgr = [NSFileManager defaultManager];
@@ -6277,8 +6277,9 @@ static BOOL migateDropboxAuth() {
     NSString *dir = [sfPath stringByDeletingLastPathComponent];
     NSString *conflictSubPath = nil;
     for (int n = 1; n < 100; n++) {
-        NSString *suffix = n == 1 ? [NSString stringWithFormat: @" (conflict %@)", [fmt stringFromDate: [NSDate date]]]
-                                  : [NSString stringWithFormat: @" (conflict %@ %d)", [fmt stringFromDate: [NSDate date]], n];
+        NSString *device = [[UIDevice currentDevice] model]; // the same form the iCloud sync uses; see UniqueConflictPath in StoryCloudSync.m
+        NSString *suffix = n == 1 ? [NSString stringWithFormat: @" (%@, %@)", device, [fmt stringFromDate: [NSDate date]]]
+                                  : [NSString stringWithFormat: @" (%@, %@ %d)", device, [fmt stringFromDate: [NSDate date]], n];
         NSString *name = [stem stringByAppendingString: suffix];
         if ([ext length])
             name = [name stringByAppendingPathExtension: ext];

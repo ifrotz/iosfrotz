@@ -9,6 +9,7 @@
 
 #if EnableCloudSaveSync
 
+#import <UIKit/UIKit.h> // UIDevice, for naming a set-aside version by the device it came from
 #import "ui_utils.h" // FrotzFileContentHash
 
 #define CloudLog(fmt, ...) NSLog(@"iCloud sync: " fmt, ##__VA_ARGS__)
@@ -354,19 +355,23 @@ static NSString *RecordKey(NSString *subPath) {
 
 #pragma mark - Keeping both versions
 
-// "name (conflict 2026-11-09).ext", or with a counter if that exists too: a local path in `dir`
-// whose name is free both there and in `cloudDir` (downloaded or not), since the file is uploaded
-// under the same name and must not land on an iCloud save this device hasn't seen yet.
-static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *name) {
+// "name (iPad, 2026-11-13).ext", or with a counter if that exists too, where `source` says which
+// device the set-aside version came from: this one's model for Frotz's own keep-both (the user's
+// name for a device isn't available to apps without a special entitlement), or the saving
+// device's name that iCloud records with its conflict versions. A local path in `dir` whose name
+// is free both there and in `cloudDir` (downloaded or not), since the file is uploaded under the
+// same name and must not land on an iCloud save this device hasn't seen yet.
+static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *name, NSString *source) {
     NSFileManager *fm = [NSFileManager defaultManager];
     NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
     fmt.locale = [NSLocale localeWithLocaleIdentifier: @"en_US_POSIX"];
     fmt.dateFormat = @"yyyy-MM-dd";
     NSString *date = [fmt stringFromDate: [NSDate date]];
     NSString *stem = [name stringByDeletingPathExtension], *ext = [name pathExtension];
+    NSString *label = [(source ?: [[UIDevice currentDevice] model]) stringByReplacingOccurrencesOfString: @"/" withString: @"-"];
     for (int n = 1; n < 100; n++) {
-        NSString *candidate = n == 1 ? [NSString stringWithFormat: @"%@ (conflict %@)", stem, date]
-                                     : [NSString stringWithFormat: @"%@ (conflict %@ %d)", stem, date, n];
+        NSString *candidate = n == 1 ? [NSString stringWithFormat: @"%@ (%@, %@)", stem, label, date]
+                                     : [NSString stringWithFormat: @"%@ (%@, %@ %d)", stem, label, date, n];
         if ([ext length])
             candidate = [candidate stringByAppendingPathExtension: ext];
         NSString *path = [dir stringByAppendingPathComponent: candidate];
@@ -379,7 +384,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
 }
 
 // iCloud's own conflicts: two devices wrote the same mirror file before either saw the other's
-// version. Each extra version becomes a local "(conflict date)" save, unless its content is
+// version. Each extra version becomes a local "(device, date)" save, unless its content is
 // already here, and is then resolved so iCloud stops tracking it. A version that couldn't be read
 // or copied is left unresolved for a later sync, and the versions are only removed once none is
 // left; resolving regardless threw away saves that had never been preserved. The new local files
@@ -393,7 +398,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
         NSString *hash = version.URL ? FrotzFileContentHash(version.URL.path) : nil;
         BOOL preserved = hash && [knownHashes containsObject: hash];
         if (hash && !preserved) {
-            NSString *dest = UniqueConflictPath(localDir, [entry.url URLByDeletingLastPathComponent], entry.name);
+            NSString *dest = UniqueConflictPath(localDir, [entry.url URLByDeletingLastPathComponent], entry.name, version.localizedNameOfSavingComputer);
             NSError *error = nil;
             if (dest && [[NSFileManager defaultManager] copyItemAtPath: version.URL.path toPath: dest error: &error]) {
                 CloudLog(@"%@ was changed on two devices at once; the other version is kept as %@", entry.name, dest.lastPathComponent);
@@ -579,7 +584,7 @@ static NSString *UniqueConflictPath(NSString *dir, NSURL *cloudDir, NSString *na
                     uploads++;
                 }
             } else {                                                       // both, or no record: keep both
-                NSString *conflictPath = UniqueConflictPath(localDir, cloudDir, localName);
+                NSString *conflictPath = UniqueConflictPath(localDir, cloudDir, localName, nil);
                 if (conflictPath && [fm moveItemAtPath: localPath toPath: conflictPath error: nil]) {
                     CloudLog(@"%@ differs here and in iCloud; local version kept as %@", subPath, conflictPath.lastPathComponent);
                     NSString *conflictSub = [subFolder stringByAppendingPathComponent: conflictPath.lastPathComponent];

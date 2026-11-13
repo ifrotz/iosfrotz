@@ -90,6 +90,7 @@
     int m_origNotesFontSize, m_newNotesFontSize;
 }
 - (instancetype)init;
+- (void)showGettingStarted; // pushes the Getting Started page; for links to it from the other info pages
 @property (nonatomic, strong) id<FrotzSettingsInfoDelegate> infoDelegate;
 @property (nonatomic, strong) id<FrotzSettingsStoryDelegate,FrotzFontDelegate> storyDelegate;
 @property (nonatomic, strong) id<FrotzFontDelegate> notesDelegate;
