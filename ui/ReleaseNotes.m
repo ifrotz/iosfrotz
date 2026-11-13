@@ -12,6 +12,15 @@
 #import "StoryMainViewController.h"
 #import "FrotzCommonWebView.h"
 #import "NetworkController.h"
+#import "FrotzSettings.h"
+
+// Links in the notes to Frotz's own pages use this scheme: "frotz://getting-started". Taps are
+// intercepted (decidePolicyForNavigationAction:) and turned into pushing that page.
+static NSString *const kFrotzLinkScheme = @"frotz";
+static NSString *const kFrotzLinkGettingStarted = @"getting-started";
+
+@interface ReleaseNotes () <WKNavigationDelegate>
+@end
 
 #define kRelNotesFilename "release_" IPHONE_FROTZ_RN_VERS ".html"
 
@@ -127,7 +136,9 @@
                            "h2 { font-size: %dpt; color:#cfcf00; }\n"
                            "h3 { font-size: %dpt; color:#ffffff; }\n"
                            "p { font-size:%dpt; }\n"
-                           "em { bold; color:#af0000; }\n"
+                           "em { bold; italics; }\n"
+                           "strong { bold; color:#afaf00; }\n"
+                           "a { color:#cfcf00; }\n"
                            "* { color:#f0f0f0; background: #555555 }\n"
                            "ul { margin-left: 0.2em;\n"
                            "    padding-left: 1em; font-size:%dpt; }\n"
@@ -142,12 +153,20 @@
         "<hr/>\n"
         "<p>New in <b>Frotz 1.9.0</b>:</p>\n"
         "<p><ul>\n"
-        "<li>Added support for Story Voice Dictation, enabled in Settings. Tap the microphone to start continuous dictation, which automatically enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language.</li>\n"
-        "<li>See the Getting Started page in Settings for instructions for playing by voice.</li>\n"
+#if EnableStoryDictation
+        "<li>Added support for <b>Story Voice Dictation</b>, enabled in Settings. Tap the microphone to start continuous dictation, which automatically enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language. <em>See the <a href=\"frotz://getting-started\"><strong>Getting Started</strong></a> page in Settings for instructions for playing by voice.</em></li>\n"
+#endif
+#if EnableCloudSaveSync
+        "<li>Saved games can now be synced between devices through iCloud Drive, so a story's saves made on one device are available in Frotz on your others. Turn on <b>Sync Saves with iCloud</b> in Settings. Dropbox syncing can now be paused in Settings without unlinking your account; the two can be used together.</li>\n"
+#endif
         "<li>Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.</li>\n"
         "<li>Settings is now organized into cleanly grouped sections.</li>\n"
         "<li>Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.</li>\n"
-        "<li>VoiceOver reads story text more naturally and no longer cuts off new output. VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap) when dictation is enabled in Settings.</li>\n"
+        "<li>VoiceOver reads story text more naturally and no longer cuts off new output."
+#if EnableStoryDictation
+        " VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap) when dictation is enabled in Settings."
+#endif
+        "</li>\n"
         "<li>Other minor bug fixes and UI polish.</li>\n"
         "</ul></p>\n"
         "<p>New in <b>Frotz 1.8.9</b>:</p>\n"
@@ -328,6 +347,7 @@
     }
     NSString *metaString = @"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
     NSString *contentString = [NSString stringWithFormat: @"<html><body>\n%@\n%@\n%@\n</body>\n\n", cssString, metaString, htmlString];
+    webView.navigationDelegate = self; // for the frotz:// links; the shared view is handed back in viewWillDisappear
     [webView loadHTMLString: contentString baseURL: nil];
 #if FROTZ_BETA > 1
     NSLog(@"%@", htmlString);
@@ -349,8 +369,30 @@
     }    
 }
 
+// A tap on a frotz:// link opens the page it names, by way of the Settings controller beneath
+// this one in the navigation stack. Everything else loads as usual.
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    NSURL *url = navigationAction.request.URL;
+    if (![url.scheme isEqualToString: kFrotzLinkScheme]) {
+        decisionHandler(WKNavigationActionPolicyAllow);
+        return;
+    }
+    decisionHandler(WKNavigationActionPolicyCancel);
+    if ([url.host isEqualToString: kFrotzLinkGettingStarted]) {
+        for (UIViewController *controller in self.navigationController.viewControllers) {
+            if ([controller isKindOfClass: [FrotzSettingsController class]]) {
+                [(FrotzSettingsController*)controller showGettingStarted];
+                break;
+            }
+        }
+    }
+}
+
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    FrotzWebView *webView = [FrotzCommonWebViewController sharedWebView];
+    if (webView.navigationDelegate == self)
+        webView.navigationDelegate = nil;
     [m_rateButton removeFromSuperview];
 }
 

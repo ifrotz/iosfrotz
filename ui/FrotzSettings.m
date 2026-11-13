@@ -40,6 +40,9 @@
 #endif
 
 #import "FrotzAlert.h"
+#if EnableCloudSaveSync
+#import "StoryCloudSync.h"
+#endif
 
 @implementation FrotzSettingsController
 @synthesize storyDelegate = m_storyDelegate;
@@ -82,7 +85,11 @@ typedef NS_ENUM(NSInteger, FrotzSettingsRow)
     kFrotzPrefsDictationDelay,
     kFrotzPrefsDictationDuringVoiceOver, // only while VoiceOver runs; see SettingsSectionRows
 #endif
+#if EnableCloudSaveSync
+    kFrotzPrefsCloudSaveSync,
+#endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+    kFrotzPrefsDropboxSync,
     kFrotzPrefsDropbox,
 #endif
     kFrotzResetRow
@@ -103,8 +110,11 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         @[ @(kFrotzPrefsNotesFont), @(kFrotzPrefsNotesFontSize) ],
         input,
         @[ @(kFrotzPrefsStoryInfoEditing),
+#if EnableCloudSaveSync
+           @(kFrotzPrefsCloudSaveSync),
+#endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
-           @(kFrotzPrefsDropbox),
+           @(kFrotzPrefsDropboxSync), @(kFrotzPrefsDropbox),
 #endif
         ],
         @[ @(kFrotzResetRow) ],
@@ -271,7 +281,28 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
     m_dictationVoiceOverSwitchCtl.backgroundColor = [UIColor clearColor];
     [m_dictationVoiceOverSwitchCtl setOn: [m_storyDelegate dictationListensDuringVoiceOver]];
 #endif
+#if EnableCloudSaveSync
+    m_cloudSyncSwitchCtl = [[UISwitch alloc] initWithFrame:frame];
+    [m_cloudSyncSwitchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_cloudSyncSwitchCtl.backgroundColor = [UIColor clearColor];
+    [m_cloudSyncSwitchCtl setOn: [m_storyDelegate cloudSaveSyncEnabled]];
+#endif
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+    m_dropboxSyncSwitchCtl = [[UISwitch alloc] initWithFrame:frame];
+    [m_dropboxSyncSwitchCtl addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+    m_dropboxSyncSwitchCtl.backgroundColor = [UIColor clearColor];
+    [m_dropboxSyncSwitchCtl setOn: [self dropboxSyncShowsOn]];
+#endif
 }
+
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+// The switch shows on only while there is a linked account to sync with. Turning it on while
+// unlinked opens Dropbox Settings and records nothing; linking there turns the setting on, and
+// backing out leaves it off.
+- (BOOL)dropboxSyncShowsOn {
+    return [m_storyDelegate dropboxSyncEnabled] && [m_frotzDB isLinked];
+}
+#endif
 
 - (void)switchAction:(id)sender
 {
@@ -284,6 +315,18 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         [m_storyDelegate setDictationEnabled: [sender isOn]];
     else if (sender == m_dictationVoiceOverSwitchCtl)
         [m_storyDelegate setDictationListensDuringVoiceOver: [sender isOn]];
+#endif
+#if EnableCloudSaveSync
+    else if (sender == m_cloudSyncSwitchCtl)
+        [m_storyDelegate setCloudSaveSyncEnabled: [sender isOn]];
+#endif
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+    else if (sender == m_dropboxSyncSwitchCtl) {
+        if ([sender isOn] && ![m_frotzDB isLinked]) // nothing to sync with yet: go link an account; see dropboxSyncShowsOn
+            [self pushSettingsController: m_frotzDB];
+        else
+            [m_storyDelegate setDropboxSyncEnabled: [sender isOn]];
+    }
 #endif
 }
 
@@ -409,6 +452,9 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
 
     [self.navigationController.navigationBar setBarStyle: UIBarStyleDefault];
     [self.navigationController.navigationBar setBarTintColor: [UIColor systemBackgroundColor]];
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+    [m_dropboxSyncSwitchCtl setOn: [self dropboxSyncShowsOn] animated: YES]; // back from Dropbox Settings: linked, or not
+#endif
     [self.navigationController.navigationBar setTintColor: [UIColor labelColor]];
 
     [[self.navigationItem backBarButtonItem] setEnabled: NO];
@@ -472,6 +518,21 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
         return footer;
     }
 #endif
+    if (section == kFrotzLibrarySection) {
+        NSMutableArray<NSString*> *parts = [NSMutableArray array];
+#if EnableCloudSaveSync && UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+        [parts addObject: NSLocalizedString(@"Sync Saves keeps each story's saved games mirrored in iCloud Drive and/or a Dropbox folder as you play it; you can enable either or both. Turning one off pauses that syncing but does not delete saves; your Dropbox account stays linked.\n\nUse iCloud to share saved games between your iPhone and iPad or Mac; use Dropbox to share saved games with IF interpreters on Windows, Linux, or Android.", @"")];
+#elif EnableCloudSaveSync
+        [parts addObject: NSLocalizedString(@"Sync Saves with iCloud keeps each story's saved games mirrored in iCloud Drive as you play it, to share them between Frotz on multiple devices. Turning it off pauses syncing but does not delete saves.", @"")];
+#elif UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+        [parts addObject: NSLocalizedString(@"Sync Saves with Dropbox keeps each story's saved games mirrored in a Dropbox folder as you play it, to share them with Frotz on other devices or IF interpreters on other platforms. Turning it off pauses syncing but does not delete saves; your Dropbox account stays linked.", @"")];
+#endif
+#if EnableCloudSaveSync
+        if (![StoryCloudSync isAvailable])
+            [parts addObject: NSLocalizedString(@"iCloud Drive isn't available right now: sign in to iCloud and turn on iCloud Drive for Frotz in Settings.", @"")];
+#endif
+        return [parts count] ? [parts componentsJoinedByString: @" "] : nil;
+    }
     return nil;
 }
 
@@ -587,7 +648,19 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             cell.accessoryView = m_dictationVoiceOverSwitchCtl;
             break;
 #endif
+#if EnableCloudSaveSync
+        case kFrotzPrefsCloudSaveSync:
+            cell.textLabel.text = @"Sync Saves with iCloud";
+            m_cloudSyncSwitchCtl.enabled = [StoryCloudSync isAvailable]; // signed in, iCloud Drive on for Frotz
+            cell.accessoryView = m_cloudSyncSwitchCtl;
+            break;
+#endif
 #if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+        case kFrotzPrefsDropboxSync:
+            cell.textLabel.text = @"Sync Saves with Dropbox";
+            [m_dropboxSyncSwitchCtl setOn: [self dropboxSyncShowsOn]]; // the account may have been linked or unlinked since
+            cell.accessoryView = m_dropboxSyncSwitchCtl;
+            break;
         case kFrotzPrefsDropbox:
             cell.textLabel.text = @"Dropbox Settings";
             break;
@@ -665,6 +738,12 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
                     m_dictationDelaySliderCtl.value = (float)[m_storyDelegate dictationCommitDelay];
                     [m_dictationVoiceOverSwitchCtl setOn: [m_storyDelegate dictationListensDuringVoiceOver]];
 #endif
+#if EnableCloudSaveSync
+                    [m_cloudSyncSwitchCtl setOn: [m_storyDelegate cloudSaveSyncEnabled]];
+#endif
+#if UseDropBoxSDK && defined(FROTZ_DB_APP_KEY)
+                    [m_dropboxSyncSwitchCtl setOn: [self dropboxSyncShowsOn]];
+#endif
                     [[self tableView] reloadData];
                 }
             });
@@ -675,14 +754,24 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             break;
     }
     if (viewController) {
-        if (!viewController.navigationItem.rightBarButtonItem) {
-            UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
-            viewController.navigationItem.rightBarButtonItem = doneItem;
-        }
-
-        [[self navigationController] pushViewController: viewController animated: YES];
+        [self pushSettingsController: viewController];
         [tableView deselectRowAtIndexPath:indexPath animated:NO];
     }
+}
+
+- (void)showGettingStarted {
+    if (!m_gettingStarted)
+        m_gettingStarted = [[GettingStarted alloc] init];
+    [self pushSettingsController: m_gettingStarted];
+}
+
+// Shows one of the settings pages, giving it a Done button if it has no button of its own.
+- (void)pushSettingsController:(UIViewController*)viewController {
+    if (!viewController.navigationItem.rightBarButtonItem) {
+        UIBarButtonItem *doneItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
+        viewController.navigationItem.rightBarButtonItem = doneItem;
+    }
+    [[self navigationController] pushViewController: viewController animated: YES];
 }
 
 @end

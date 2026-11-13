@@ -182,6 +182,13 @@ extern int iosif_ifrotz_verbose_debug;
 // is turned on. When 0, tracking starts with the text on screen at that moment.
 #define AlwaysTrackStoryVocabulary 1
 
+// Keep each story's saved games in iCloud Drive as well (StoryCloudSync, the "Sync Saves with
+// iCloud" setting). Everything iCloud-related compiles out when this is 0, except the iCloud
+// entitlement and the public container declared in Info.plist.
+#define EnableCloudSaveSync 0
+// The iCloud container, as in Frotz.entitlements and Info.plist.
+#define kFrotzCloudContainerID "iCloud.com.flippencorp.frotz"
+
 #include "ifrotzdefs.h"
 
 #endif //__IOSFROTZ_H

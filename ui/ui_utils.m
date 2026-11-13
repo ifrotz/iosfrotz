@@ -869,3 +869,28 @@ NSData *imageDataFromBlorb(NSString *blorbFile) {
 
 
 
+
+#include <CommonCrypto/CommonDigest.h>
+
+// See ui_utils.h. Saves are a single block; an empty file has no blocks.
+NSString *FrotzFileContentHash(NSString *path) {
+    NSData *data = [NSData dataWithContentsOfFile: path options: NSDataReadingMappedIfSafe error: nil];
+    return data ? FrotzDataContentHash(data) : nil;
+}
+
+NSString *FrotzDataContentHash(NSData *data) {
+    const NSUInteger kBlock = 4 * 1024 * 1024;
+    NSMutableData *blockHashes = [NSMutableData data];
+    for (NSUInteger offset = 0; offset < [data length]; offset += kBlock) {
+        unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+        NSUInteger len = MIN(kBlock, [data length] - offset);
+        CC_SHA256((const char*)[data bytes] + offset, (CC_LONG)len, digest);
+        [blockHashes appendBytes: digest length: sizeof(digest)];
+    }
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256([blockHashes bytes], (CC_LONG)[blockHashes length], digest);
+    NSMutableString *hex = [NSMutableString stringWithCapacity: 2 * sizeof(digest)];
+    for (size_t i = 0; i < sizeof(digest); i++)
+        [hex appendFormat: @"%02x", digest[i]];
+    return hex;
+}
