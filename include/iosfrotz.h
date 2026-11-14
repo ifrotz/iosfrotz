@@ -173,7 +173,7 @@ extern int iosif_ifrotz_verbose_debug;
 // Dictate commands with on-device speech recognition (StoryDictationController and
 // the mic bar button). Everything speech-related compiles out when this is 0, except the microphone
 // and speech recognition usage descriptions in Info.plist.
-#define EnableStoryDictation 0
+#define EnableStoryDictation 1
 // Trace logging for the above: every hypothesis, timer fire and scored word. Errors are logged
 // regardless.
 #define StoryDictationDebugLogging 0
@@ -185,7 +185,7 @@ extern int iosif_ifrotz_verbose_debug;
 // Keep each story's saved games in iCloud Drive as well (StoryCloudSync, the "Sync Saves with
 // iCloud" setting). Everything iCloud-related compiles out when this is 0, except the iCloud
 // entitlement and the public container declared in Info.plist.
-#define EnableCloudSaveSync 0
+#define EnableCloudSaveSync 1
 // The iCloud container, as in Frotz.entitlements and Info.plist.
 #define kFrotzCloudContainerID "iCloud.com.flippencorp.frotz"
 
