@@ -53,17 +53,35 @@ typedef NS_ENUM(unsigned int, FrotzInputHelperMode) {
     FrotzInputHelperModeHistory
     };
 
+// The input helper: a popup above the command line with two tabs, Commands (the word picker
+// grid, whose "..." button swaps in the long list of common words) and History (the player's
+// previous commands). The modes below name what the popup is showing; Words and MoreWords are both
+// the Commands tab.
 @interface FrotzInputHelper : UITableViewController {
     NSMutableArray<NSString*> *m_history;
     NSArray<NSString*> *m_commonCommands;
     id<FrotzInputDelegate> __weak m_delegate;
     FrotzWordPicker *m_wordPicker;
+    UIView *m_popupView;            // the tabbed container: the tab control above m_contentView
+    UIView *m_contentView;          // holds the word picker and the table; crossfaded on a switch
+    UIView *m_tabBar;               // Commands / History: two buttons and a flat highlight pill
+    UIButton *m_tabButtons[2];
+    UIView *m_tabIndicator;
+    CGSize m_pickerSize;            // the word picker grid's natural size, from its nib
+    UIButton *m_backButton;         // "Commands", shown over the long word list to return to the grid
+    UILabel *m_emptyHistoryLabel;
+    UIView *__weak m_parentView;    // where the popup was last shown, for relayout on a tab switch
+    CGPoint m_anchorPoint;          // bottom-left of the popup in the parent, as given by the caller
     FrotzInputHelperMode m_mode;
+    FrotzInputHelperMode m_lastTabMode; // Words or History: the tab last chosen by tapping it, to reopen on
     NSInteger m_lastCommonWordPicked;
     NSUInteger m_currHistoryItem;
 }
 - (instancetype)init;
 @property (nonatomic, weak) id<FrotzInputDelegate> delegate;
+// The tab last chosen by tapping it (Words to start), for reopening the popup where it was left.
+// Opening on History by double tap doesn't count.
+@property (nonatomic, readonly) FrotzInputHelperMode lastTabMode;
 - (void)clearHistory;
 @property (nonatomic, readonly) NSUInteger historyCount;
 @property (nonatomic, readonly, copy) NSArray<NSString*> *historyItems; // oldest first, whatever the helper's mode

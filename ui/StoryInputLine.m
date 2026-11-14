@@ -549,7 +549,8 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     else if (!regularWidth && ![storyController isKBLocked] && [self isFirstResponder]
                 && isLandscape)
         ihpt = CGPointMake(100, ypos);
-    // point is bottom-LEFT of helper view; 140 is height of helper
+    // point is bottom-LEFT of helper view. (The helper fits itself under the navigation bar from
+    // here, so this only keeps the anchor off the very top when the keyboard leaves little room.)
     if (ihpt.y < 140) ihpt.y = 140;
     return ihpt;
 }
@@ -560,7 +561,8 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
     if (m_completionLabel)
         [m_completionLabel removeFromSuperview];
     [self holdDictationCommit];
-    [m_inputHelper showInputHelperInView:parentView atPoint: ihpt withMode: FrotzInputHelperModeWords];
+    // reopens on the tab (Commands or History) used last
+    [m_inputHelper showInputHelperInView:parentView atPoint: ihpt withMode: [m_inputHelper lastTabMode]];
 }
 
 -(void)setInputMenuButtonAlpha {
@@ -622,9 +624,8 @@ static NSString *KeyForSpokenText(NSString *spoken, NSUInteger *score) {
         }
         else if (tapCount == 1 && isInputHelperTouch && mode == FrotzInputHelperModeNone)
             [self performSelector: @selector(launchInputHelper:) withObject:nil afterDelay:0.14];
-        else if (tapCount == 2 && isInputHelperTouch &&  mode != FrotzInputHelperModeWords) {
-            ihpt.y -= 10;
-            ihpt.x += 20;
+        else if (tapCount == 2 && isInputHelperTouch && mode != FrotzInputHelperModeHistory) {
+            // shortcut straight to the History tab (switches to it if the helper is already up)
             [self holdDictationCommit];
             [m_inputHelper showInputHelperInView:parentView atPoint: ihpt withMode: FrotzInputHelperModeHistory];
         } else if (mode != FrotzInputHelperModeNone && tapCount) {
