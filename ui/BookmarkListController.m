@@ -8,6 +8,8 @@
 
 #import "BookmarkListController.h"
 
+static const CGFloat kBookmarkToolbarHeight = 44;
+
 @implementation BookmarkListController
 @synthesize delegate = m_delegate;
 
@@ -36,16 +38,12 @@
     self.view = [[UIView alloc] initWithFrame: frame];
     [self.view setAutoresizesSubviews: YES];
     [self.view setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin];
-    [m_tableView setAutoresizingMask: UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin];
     [self.view addSubview: m_tableView];
-    frame.size.height -= 44;
     [m_tableView setFrame: frame];
 
-    frame.origin.y = frame.size.height;
-    frame.size.height = 44;
+    // placed over the bottom of the table in viewWillLayoutSubviews
+    frame.size.height = kBookmarkToolbarHeight;
     UIToolbar *toolBar = m_toolBar = [[UIToolbar alloc] initWithFrame: frame];
-    
-    [toolBar setAutoresizingMask: UIViewAutoresizingFlexibleTopMargin|UIViewAutoresizingFlexibleWidth];
 
     [toolBar setBarStyle: UIBarStyleBlackOpaque];
     
@@ -66,6 +64,24 @@
     if (m_tableView)
         return m_tableView;
     return [super tableView];
+}
+
+// The table fills the view and the toolbar floats over its bottom edge, above any bottom safe-area
+// inset (home indicator, and the browser's translucent toolbar that this view extends under).
+// The table's bottom content inset lets the last bookmarks scroll up from under the toolbar; the
+// safe-area part of the inset is added by the table itself. Done here rather than with
+// autoresizing so the layout follows both frame and safe-area changes (this view is placed in the
+// web browser's view by hand).
+- (void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    CGRect bounds = self.view.bounds;
+    CGFloat toolbarTop = CGRectGetMaxY(bounds) - self.view.safeAreaInsets.bottom - kBookmarkToolbarHeight;
+    [m_toolBar setFrame: CGRectMake(0, toolbarTop, bounds.size.width, kBookmarkToolbarHeight)];
+    [m_tableView setFrame: bounds];
+    UIEdgeInsets inset = m_tableView.contentInset;
+    inset.bottom = kBookmarkToolbarHeight;
+    m_tableView.contentInset = inset;
+    m_tableView.verticalScrollIndicatorInsets = inset;
 }
 
 - (void)add {
@@ -121,16 +137,22 @@
     cell.accessoryType = UITableViewCellAccessoryNone;
     NSInteger row = [indexPath row];
     if (row < [m_sites count]) {
-	cell.textLabel.text = m_titles[row];
-	if (row < [m_titles count])
-	    cell.detailTextLabel.text = m_sites[row];
+        cell.detailTextLabel.text = m_sites[row];
+        if (row < [m_titles count])
+            cell.textLabel.text = m_titles[row];
+        cell.selectionStyle = UITableViewCellSelectionStyleDefault;
+    } else {
+        // the blank trailing row; nothing to select
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
     }
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [m_delegate enterURL: m_sites[[indexPath row]]];
+    NSInteger row = [indexPath row];
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (row < [m_sites count]) // not the blank trailing row
+        [m_delegate enterURL: m_sites[row]];
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {

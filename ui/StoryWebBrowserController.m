@@ -450,7 +450,8 @@ const NSString *kBookmarkVersionKey = @"Version";
     // white under the dark override above; the toolbar has no such setting and its glyphs came
     // out system blue on the dark material before iOS 26. Match the navigation bar.
     self.navigationController.toolbar.tintColor = [UIColor labelColor];
-    [self.navigationController setToolbarHidden: NO animated: animated];
+    // unless the bookmark list is still up from last time (showBookmarks hides the toolbar)
+    [self.navigationController setToolbarHidden: [[m_bookmarkListController view] superview] != nil animated: animated];
 }
 
 -(void)viewWillDisappear:(BOOL)animated {
@@ -585,13 +586,14 @@ const NSString *kBookmarkVersionKey = @"Version";
                       self.view.bounds.size.width - safeInsets.left - safeInsets.right, kSearchBarHeight);
 }
 
-// The bookmark list fills from below the URL bar down to the bottom of the content area (the
-// navigation controller's toolbar, when present, sits below this view).
+// The bookmark list takes over the whole content area below the navigation bar, down to the
+// bottom of the view (its own toolbar floats above the bottom safe-area inset, over the list).
+// The URL bar is taken down when the list is shown, so the list starts right under the bar.
 -(CGRect)bookmarkListFrame {
     UIEdgeInsets safeInsets = self.view.safeAreaInsets;
-    CGFloat top = safeInsets.top + kSearchBarHeight;
+    CGFloat top = safeInsets.top;
     return CGRectMake(safeInsets.left, top,
-                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, CGRectGetMaxY(m_scrollView.frame) - top);
+                      self.view.bounds.size.width - safeInsets.left - safeInsets.right, CGRectGetMaxY(self.view.bounds) - top);
 }
 
 -(void)promptURL {
@@ -640,9 +642,12 @@ const NSString *kBookmarkVersionKey = @"Version";
     [[m_urlBarController view] removeFromSuperview];
 }
 
+// Takes down the URL bar and the bookmark list, whichever are up. The bookmark list may be up
+// without the URL bar (showBookmarks removes the bar), so each is checked on its own.
 -(void)dismissURLPrompt {
-    UIView *urlView = [m_urlBarController view];
+    [self hideBookmarks];
 
+    UIView *urlView = [m_urlBarController view];
     if ([urlView superview]) {
         CGRect webFrame = [m_webView frame];
         webFrame.origin.y -= kSearchBarHeight;
@@ -650,10 +655,6 @@ const NSString *kBookmarkVersionKey = @"Version";
         [UIView beginAnimations: @"srchshow" context: 0];
         [m_webView setFrame: webFrame];
         [urlView setFrame: [self urlBarFrameHidden: YES]];
-        if ([[m_bookmarkListController view] superview]) {
-            [self setupFade];
-            [[m_bookmarkListController view] removeFromSuperview];
-        }
         [UIView setAnimationDelegate: self];
         [UIView setAnimationDidStopSelector: @selector(animationDidFinish:finished:context:)];
         [UIView commitAnimations];
@@ -664,19 +665,34 @@ const NSString *kBookmarkVersionKey = @"Version";
     if ([[m_bookmarkListController view] superview]) {
         [self setupFade];
         [[m_bookmarkListController view] removeFromSuperview];
+        [self.navigationController setToolbarHidden: NO animated: YES];
     }
 }
 
+// Shows the bookmark list over the whole content area. The URL bar (whose bookmark button got us
+// here) is removed outright rather than slid away: the list covers where it was, and the fade
+// covers the switch. Its web view offset is undone so the page is laid out as with no bar.
 -(void)showBookmarks {
-    [self setupFade];
-    if ([[m_bookmarkListController view] superview])
-        [[m_bookmarkListController view] removeFromSuperview];
-    else {
-        UIView *bmView = [m_bookmarkListController view];
-        [bmView setFrame: [self bookmarkListFrame]];
-        [m_background addSubview: bmView];
-        [m_webView layoutSubviews];
+    if ([[m_bookmarkListController view] superview]) {
+        [self hideBookmarks];
+        return;
     }
+    [self setupFade];
+    UIView *urlView = [m_urlBarController view];
+    if ([urlView superview]) {
+        CGRect webFrame = [m_webView frame];
+        webFrame.origin.y -= kSearchBarHeight;
+        webFrame.size.height += kSearchBarHeight;
+        [m_webView setFrame: webFrame];
+        [urlView removeFromSuperview];
+    }
+    UIView *bmView = [m_bookmarkListController view];
+    [bmView setFrame: [self bookmarkListFrame]];
+    [m_background addSubview: bmView];
+    [m_webView layoutSubviews];
+    // The page's back/forward toolbar is for a page the list now covers; the list's own toolbar
+    // takes its place at the bottom (hideBookmarks brings it back).
+    [self.navigationController setToolbarHidden: YES animated: YES];
 }
 
 // Fetches `request` with NSURLSession and hands the outcome to downloadDidFinish or
