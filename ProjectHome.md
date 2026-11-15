@@ -1,3 +1,5 @@
+This document is obsolete and is no longer being updated.  See FrotzMain.md and FrotzSupport.md instead.
+
 ### 2020/09/07 Update ###
 
 Version 1.8.6, with bug fixes.
