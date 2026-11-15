@@ -2,6 +2,14 @@ This page contains frequently asked questions and miscellaneous help about using
 
 Jump to the [FAQ](#faq), or read on for release news.
 
+**Reporting Bugs**
+
+To report a **bug or usability issue** with Frotz, please click [here to file a bug report](https://github.com/ifrotz/iosfrotz/issues/new?title=One-line%20summary&body=%5BPlease%20glance%20at%20the%20existing%20issues%20to%20make%20sure%20the%20problem%20you%20are%0Areporting%20isn%27t%20a%20known%20issue%20before%20reporting.%20Feel%20free%20to%20remove%20or%0Aedit%20any%20parts%20of%20the%20form%20template%20which%20don%27t%20apply%20to%20your%20issue.%5D%0A%0AWhat%20steps%20will%20reproduce%20the%20problem%3F%0A1.%0A2.%0A3.%0A%0AWhat%20is%20the%20expected%20output%20or%20behavior%3F%20What%20do%20you%20see%20instead%3F%0A%0AWhat%20version%20of%20Frotz%20are%20you%20using%3F%20%28Settings%20%3E%20About%20Frotz%29%0A1.9.0%0A%0AWhat%20device%20model%20are%20you%20using%3F%20%28e.g.%2C%20iPhone%2017%2C%20iPhone%20Duo%2C%20iPad%20Air%29%0A%0A%0AWhat%20version%20of%20iOS%3F%20%28e.g.%2C%2026.1%29%0A%0A%0APlease%20provide%20any%20additional%20information%20below.%0A).
+
+If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](https://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
+
+---
+
 **Update 11/15/2026**
 
 **Frotz 1.9.0** is now available, with the following changes:
@@ -102,14 +110,6 @@ when you upgrade.  You do not have to re-authenticate or re-link your DropBox ac
 Sorry for the inconvenience.
 
 
-**Reporting Bugs**
-
-To report an **bug or usability issue** with Frotz, please click [here to file a bug report](https://github.com/ifrotz/iosfrotz/issues/new?title=One-line%20summary&body=%5BPlease+glance+at+the+existing+issues+to+make+sure+the+problem+you+are%0D%0Areporting++isn%27t+a+known+issue+before+reporting.++Feel+free+to+remove+or%0D%0Aedit+any+parts+of+the+form+template+which+don%27t+apply+to+your+issue.%5D%0AD%0A%0AWhat+steps+will+reproduce+the+problem%3F%0A1.%0A2.%0A3.%0A%0AWhat+is+the+expected+output+or+behavior%3F++What+do+you+see+instead%3F%0A%0AWhat+version+of+Frotz+are+you+using%3F%0A1.7.1%0A%0AWhat+device+model+are+you+using+%28e.g.%2C+iPhone+6%2C+iPad+4%2C+iPod+Touch+4th+gen.%29%0AiPhone+6%0A%0AWhat+version+of+iOS%3F++%286.1%2C+7.0%2C+etc.%29%0A8.3%0A%0APlease+provide+any+additional+information+below.%0A).
-
-If you have general comments or feedback about Frotz, you can post it on the [Frotz Discussion group](http://groups.google.com/group/ifrotz-discuss), or feel free to send email to **ifrotz at gmail dot com**.
-
-
-
 **Update 09/06/2016**
 
 **Frotz 1.8** now available, with following enhancements and bug fixes:
@@ -132,7 +132,6 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
   * Lots of other minor bug fixes.
 
 
----
 ---
 
 
@@ -171,7 +170,7 @@ Frotz would be worth nothing without the wealth of great games created by the ta
 
   * **Can I make a donation?**
 
-> If you really like Frotz and want to make a donation, you can do so via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8).   (Also consider sending thank you emails to the authors of the games you like!)
+> If you really like Frotz and want to make a donation, you can do so via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=QW8GW5T3U553L&item_name=Frotz%20for%20iOS&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8).   (Also consider sending thank you emails to the authors of the games you like!)
 
   * **How do I save my game?**
 > If you leave Frotz, switch apps, or answer a call, Frotz automatically saves your game state. A separate autosave is kept per story, and the game is also autosaved when you switch stories or after a period of inactivity. You can also manually save your game in progress the old-fashioned way by typing "**`save`**" at the command prompt; this is recommended for the harder or more complex games, so you can backtrack and try alternate solutions.
