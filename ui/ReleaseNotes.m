@@ -161,7 +161,8 @@ static NSString *const kFrotzLinkGettingStarted = @"getting-started";
 #endif
         "<li>Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.</li>\n"
         "<li>Settings is now organized into cleanly grouped sections.</li>\n"
-        "<li>The 'Commands' and 'History' input helper dialogs have been combined into one, with a tab bar to switch between them."
+        "<li>The 'Commands' and 'History' input helper dialogs have been combined into one, with a tab bar to switch between them.</li>\n"
+        "<li>TADS 2/3 stories now support automatic word completion.</li>\n"
         "<li>Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.</li>\n"
         "<li>VoiceOver reads story text more naturally and no longer cuts off new output."
 #if EnableStoryDictation

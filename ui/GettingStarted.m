@@ -108,7 +108,7 @@
                               
                               "<p><b>Some commands control or query the game state rather than progressing the story:</b></p>\n"
                               "<p><table><tr><td><i><span style=\"color:yellow;\">Command</span></i></td><td><i><span style=\"color:yellow;\">Description</span></i></td></tr>\n"
-                              "<tr valign=top><td><b>save</b></td><td>Save a story session in progress.<br>(<b>Frotz</b> will auto-save your game periodically, or if you switch apps or take a phone call.)</td></tr>\n"
+                              "<tr valign=top><td><b>save</b>*</td><td>Save a story session in progress.<br>(<b>Frotz</b> will auto-save your game periodically, or if you switch apps or take a phone call.)</td></tr>\n"
                               "<tr valign=top><td><b>restore</b></td><td>Restore (load) a saved session.</td></tr>\n"
                               "<tr valign=top><td><b>restart</b></td><td>Restart a story from the beginning.</td></tr>\n"
                               "<tr valign=top><td><b>quit</b></td><td>Quit a story and return to story list.</td></tr>\n"
@@ -119,6 +119,7 @@
                               "<tr valign=top><td><b>version</b></td><td>Print the title, author, version, and other information about the story.</td></tr>\n"
                               "<tr valign=top><td><b>verbose</b></td><td>Print room descriptions always, even if you've been there before.</td></tr>\n"
                               "</table></p>\n"
+                              "<p>*<b>Note:</b> If you use Frotz from multiple devices, you can turn on iCloud syncing in Settings to have your manually saved games mirrored across all your devices.</p>\n"
                               "<span style=\"color:yellow;\">Gestures</span><br/>\n"
                               "<p>While playing, you can <b>tap the story window</b> once to scroll down one page, <b>double tap</b> to scroll to the end and show the keyboard, <b>triple tap</b> to hide the keyboard, or use a <b>flick</b> gesture to scroll.  Use a <b>pinch</b> gesture to increase or decrease the font size.</p>"
                               
