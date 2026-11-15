@@ -1,9 +1,11 @@
-This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
+This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone and iPad.
+
+Jump to the [FAQ](#faq), or read on for release news.
 
 **Update 11/15/2026**
- 
-**Frotz 1.9.0** is imminent, with the following changes:
- 
+
+**Frotz 1.9.0** is now available, with the following changes:
+
   * Story Voice Dictation, enabled in Settings. Tap the microphone to start continuous dictation, which enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language. See the Getting Started page in Settings for instructions on playing by voice. VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap).
   * Saved games can be synced between devices through iCloud Drive. Turn on Sync Saves with iCloud in Settings. Dropbox syncing is still supported, and the two can be used together.
   * Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.
@@ -13,27 +15,27 @@ This page contains frequently asked questions and miscellaneous help about using
   * Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.
   * VoiceOver reads story text more naturally and no longer cuts off new output.
   * Fixed Story Browser bookmark controls and other minor bugs.
- 
+
 **Update 10/30/2026**
- 
+
 **Frotz 1.8.9** is now available, with the following changes:
- 
+
   * Support for iPhone Duo: Frotz's buttons move to the vertical bar, and the story, status line, notes and color picker adapt to both the folded and open displays.
   * Updated look for iOS 26 and later, including the Story List search bar and Edit buttons, and a translucent Story Browser with a proper toolbar.
   * Long-pressing the keyboard button now shows a menu with the Lock Keyboard option, making keyboard locking easier to discover. Show/Hide Keyboard and Lock Keyboard also appear in the overflow menu.
   * The unhelpful system AutoFill menu no longer pops up on the command line.
   * Other minor bug fixes and UI tweaks.
 
- **Update 09/23/2023**
- 
+**Update 09/23/2023**
+
 **Frotz 1.8.8** is now available, with the following changes:
- 
+
   * Fixed issue with arrow keys on Bluetooth keyboards.
- 
+
 **Update 09/08/2023**
- 
+
 **Frotz 1.8.7** is now available, with the following changes:
- 
+
   * Updated glulx (git) interpreter to spec 1.3.7.
   * Better support for Unicode/non-Latin alphabet games.
   * New IFDB search options, updated search URLs and built-in bookmarks.
@@ -43,7 +45,7 @@ This page contains frequently asked questions and miscellaneous help about using
   * Enabled iTunes File Sharing: supported story files and saved games dragged into Frotz are installed automatically.
   * Restored keyboard long-press hide/lock functionality.
   * Other bug fixes and minor UI tweaks.
- 
+
 **Update 09/07/2020**
 
 **Frotz 1.8.6** is now available, with the following changes:
@@ -131,18 +133,18 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
 
 ---
+---
 
 
-**FAQ**
+## FAQ
 
-  * **Why can't you transfer files to Frotz using the iTunes file sharing feature?**
+  * **How do I get story files and saved games in and out of Frotz?**
 
-> Unfortunately, iTunes File Sharing doesn't support folders well, and Frotz uses folders internally to keep saved games separate for each story.  I'm not willing to make Frotz put all files at the top level in order for the files to show up in iTunes File Sharing.  If Apple adds better folder support, I will enable the ability in Frotz.  But check out the Dropbox feature, which is by far the easiest way to access your saved game files from multiple computers.
+> Starting with Frotz 1.9, Frotz has its own folder in the **Files** app (under "On My iPhone" or "On My iPad"), with a Games folder for story files and a Saves folder with a subfolder of saved games for each story. You can copy files in or out there, or from a Mac or PC with Finder or iTunes file sharing, which Frotz has supported since 1.8.7. Any supported story file dropped in is installed automatically.
 
-> **Update** - I went ahead and enabled iTunes File Sharing in 1.8, because there are other apps you can then use to connect to Frotz, such as FileApp, which deal with subfolders.
+> For saved games across devices, the easier way is to let Frotz sync them: turn on **Sync Saves with iCloud** or link a **Dropbox** account in Settings, and manually saved games are mirrored between your devices.
 
-> **Update** - Apple rejected the 1.8.1 update because iTunes File Sharing made some of Frotz's internal files visible, so I had to disable it again to get it approved.  Enabling it in a way acceptable to Apple will require reorganizing Frotz's file structure, so I'll have to tackle that another day.  Sorry.
-
+> Frotz also still includes its original built-in File Transfer server (Settings > File Transfer), which lets you move files from any computer on the same Wi-Fi network with a web browser or FTP client.
 
   * **Speaking of Folders...**
 > A couple of people have asked for the ability to move games into folders.  This sounds like a nice idea, but it's actually really hard to design a good interface for manipulating folders that allows everything you'd want to be able to do without moving to a file-centric UI, where you end up with something looking like a desktop file browser.  I think this would benefit a few users at the expense of most, and don't think it's worth it.  (Even Apple didn't do a very good job of implementing Folders in IOS - how is dragging one app on top of another to make a folder intuitive in the least?)
@@ -151,23 +153,17 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
 
   * **How can I transfer my own story files (e.g. Infocom files) so Frotz can find them?**
 
-> If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine game files, you can use them with Frotz.
-    * Starting in Frotz 1.5, you can launch Frotz from a story file mail attachment, or from a generic file management program such as Good Reader or Dropbox.
-    * If the file is available on the Internet, although Frotz cannot (read: is not allowed to) download the file directly, you can browser to it in Mobile Safari, and then launch Frotz via the "Open In..." dialog which comes up when tapping a download link.
-    * Frotz includes a built-in File Transfer server, so you can easily transfer your own story files, as well as saved games, from pretty much any computer.   To enable the server, press the (i)nfo button in Frotz,  select the "File Transfer" button, and follow the instructions.  Note that you must be connected to a wireless network to use file transfer; it will not work over cellular.  You can then connect to Frotz using either a web browser or ftp client over the local network.  The web interface is much easier to use than ftp and is recommended.
-    * Note that Frotz will not look for stories in ZIP files if you transfer them; you should transfer the files individually and make sure they end in a standard suffix such as .z8 or .zblorb.
-<a href='Hidden comment: 
-* If you have your files on a web server, you can access them using the built-in web interface:
-* In Frotz, go to "Browse IFDB", select the Search icon at the bottom, and type in the URL of your web server.
-* Frotz will download and install if you click on any link ending in .z3, .z4, .z5, .z8, .dat, or .zblorb.
-* You cannot download saved games this way; use the FTP server instead.
-* Frotz can also handle ZIP downloads.  If you click on a ZIP file, Frotz will download it, extract files with the playable extensions and add them to the story list, and then delete the ZIP file.  Again, this doesn"t work with FTP, but I plan to add that in a future version.
-'></a>
+> If you have the Lost Treasures of Infocom, other Infocom game files from antiquity, or your own personal Z-Machine, Glulx or TADS game files, you can use them with Frotz.
+    * Copy them into Frotz's Games folder in the Files app, or drop them into Frotz with Finder or iTunes file sharing. They are installed the next time Frotz is in front.
+    * Open a story file from the Files app, from a mail attachment, or from any other app's share sheet, and choose Frotz. Frotz installs it and adds it to the Story List.
+    * If the file is on a web page, you can download it directly in Frotz's built-in Story Browser: open Browse IFDB, enter the page's address in the URL bar (the link icon), and tap the download link. Frotz installs story files it recognizes, and for ZIP archives lets you pick which stories inside to install. Tapping a link in Safari and opening the download in Frotz works too.
+    * Or use the built-in File Transfer server (Settings > File Transfer) from a web browser or FTP client on the same Wi-Fi network.
+    * Frotz will not look for stories inside ZIP files you copy into its folder; copy the files individually, and make sure they end in a standard suffix such as .z5, .z8, .zblorb, .ulx, .gblorb, .gam or .t3.
 
   * **What device/OS versions is Frotz compatible with?**
 
-> Frotz 1.8 works on iPhone, iPad and iPod Touch devices running iOS 8.0 or later.
-> If you have a device too old to run iOS 8, the previous version should show up in the App Store when accessed from the device. Frotz 1.7 works on iPhone, iPad and iPod Touch with OS versions 3.0 and later.
+> Frotz 1.9 works on iPhone and iPad running iOS 15 or later, including the iPhone Duo. Story Voice Dictation needs a device that supports on-device speech recognition.
+> If your device can't run iOS 15, the App Store offers the last version of Frotz compatible with it when you download from that device.
 
 <a href='Hidden comment: 
 Frotz would be worth nothing without the wealth of great games created by the talented writers and game designers in the IF (Interactive Fiction) community.  I"ve gotten a lot of enjoyment playing these games over the years, and since I"m not a very good writer, this is my way of giving back.
@@ -178,11 +174,19 @@ Frotz would be worth nothing without the wealth of great games created by the ta
 > If you really like Frotz and want to make a donation, you can do so via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=craig%40ni%2ecom&item_name=Frotz%20for%20iPhone%2fiPod%20Touch&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8).   (Also consider sending thank you emails to the authors of the games you like!)
 
   * **How do I save my game?**
-> If you press the Home button or answer a call, Frotz will automatically save your game state.  Starting with Frotz 1.4, a separate autosave is kept per game, and the game is autosaved when you switch stories or after a period of inactivity.   You can also manually save your game in progress the old-fashioned way by typing "**`save`**" at the command prompt; this is recommended for some of the harder/more complex games, so you have the ability to backtrack and try alternate solutions.
+> If you leave Frotz, switch apps, or answer a call, Frotz automatically saves your game state. A separate autosave is kept per story, and the game is also autosaved when you switch stories or after a period of inactivity. You can also manually save your game in progress the old-fashioned way by typing "**`save`**" at the command prompt; this is recommended for the harder or more complex games, so you can backtrack and try alternate solutions.
 
-> Type "**`restore`**" to load a previously saved game.  These commands are available in the shortcut menu that appears when you double tap the command prompt as well.
+> Type "**`restore`**" to load a previously saved game. Both commands are also on the Commands tab of the helper that appears when you tap the command prompt.
+
+> Manually saved games can be synced between your devices with **Sync Saves with iCloud** or **Dropbox**, both in Settings. Autosaves stay on the device.
 
   * **How do I delete games?**
-> When you're not playing a story, the standard Edit button in the top right can be used to go into 'delete' mode.  When a story is active, this is replaced by "Now Playing", but you can still use the swipe gesture to delete a story.
-> You can also delete games via the web file transfer interface.
+> In the Story List, tap the Edit (pencil) button at the top right to go into delete mode, or swipe left on a story.
+> You can also delete story files from Frotz's Games folder in the Files app, or through the File Transfer web interface.
+
+  * **Does voice dictation send my speech anywhere?**
+> No. Story Voice Dictation uses the speech recognition built into iOS, running entirely on your device; nothing you say is sent to Frotz's author or any server. (The system permission prompt uses Apple's generic wording, which Frotz can't change.) Dictation is off until you turn it on in Settings.
+
+  * **Should I use iCloud or Dropbox to sync saved games?**
+> Either works, and you can use both. iCloud needs no account setup beyond being signed in to iCloud on each device, and is the simpler choice if all your devices are Apple's. Dropbox is useful if you also want your saved games on a computer or in other interpreters. Both sync only manually saved games, and if the same save is changed on two devices Frotz keeps both copies rather than overwriting one.
 
