@@ -15,7 +15,7 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 ---
 
-**Update - Version 1.9.0 now available.**
+**Update - Version 1.9.0 coming soon.**
  
 **11/15/2026**
  
