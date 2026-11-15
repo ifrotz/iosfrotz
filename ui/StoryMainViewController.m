@@ -1674,6 +1674,12 @@ extern void gli_ios_set_focus(window_t *winNum);
     // leaving a black strip above it on iOS 26 and later.
     UIColor *barColor = (max < 0.5) ? m_defaultBGColor : m_defaultFGColor;
     UIColor *itemColor = (max < 0.5) ? m_defaultFGColor : m_defaultBGColor;
+    // The root view shows wherever the bar's background doesn't reach the top edge (the iPhone
+    // Duo folded in portrait leaves 14pt above it, with the top safe-area inset 0), so it takes
+    // the bar's color too: one band of chrome from the screen edge down to the status line. It
+    // was the text color before, which with a dark story background made a light strip above
+    // the dark bar above the light, reversed status line.
+    [self.view setBackgroundColor: barColor];
     // On iOS 26 the bar items sit on glass whose light/dark variant follows the bar's interface
     // style, not the appearance colors (nor barStyle, which an appearance object overrides). A
     // dark bar in light mode got light capsules with dark glyphs, so give the bar the interface
@@ -3109,7 +3115,6 @@ static CGRect KeyboardBoundsInWindow(NSDictionary *userInfo, UIWindow *window) {
     }
     if (!m_storyView)
         return;
-    [self.view setBackgroundColor: m_defaultFGColor];
     [m_storyView setTextColor: color];
 
     [self setNavBarTint];
