@@ -15,6 +15,27 @@ Click [here](FrotzSupport.md) for support and FAQ.
 
 ---
 
+**Update - Version 1.9.0 now available.**
+ 
+**11/15/2026**
+ 
+  * Story Voice Dictation: tap the microphone to dictate your commands. Recognition runs entirely on the device and is tuned to the story's own vocabulary and language. VoiceOver users can start and stop dictation with Magic Tap.
+  * Sync Saves with iCloud: saved games can now be kept in iCloud Drive and shared between all your devices. Dropbox syncing is still supported, and the two can be used together.
+  * Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.
+  * Word completion now works in TADS 2 and TADS 3 stories.
+  * The Commands and History helpers on the command line are combined into one with tabs; Settings is organized into grouped sections.
+  * Further iPhone Duo improvements, more natural VoiceOver reading of story text, and other bug fixes.
+ 
+**Update - Version 1.8.9 now available.**
+ 
+**10/30/2026**
+ 
+  * Support for iPhone Duo: Frotz's buttons move to the vertical bar, and the story, status line, notes and color picker adapt to both the folded and open displays.
+  * Updated look for iOS 26 and later, including the Story List search bar and Edit buttons, and a translucent Story Browser with a proper toolbar.
+  * Long-pressing the keyboard button shows a menu with the Lock Keyboard option; Show/Hide Keyboard and Lock Keyboard also appear in the overflow menu.
+  * The system AutoFill menu no longer pops up on the command line.
+  * Other minor bug fixes and UI polish.
+ 
 **Update - Version 1.8.8 now available.**
 
 **09/23/2023**
