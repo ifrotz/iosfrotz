@@ -4,7 +4,11 @@ When you use Frotz, certain information will be gathered and stored about your u
 
 The developer of Frotz (Craig Smith) receives aggregate data about the use of the app from the App Store, such as the number of times it has been opened and the number of people who download the app, as well as mobile set-up information (e.g., device model, App version, country and language). We do not, however, receive information unique to you or your use of the app.
 
-We do not disclose, share, sell, or transfer any information about Frotz usage for any reason.
+We do not sell or monetize any information about Frotz users, and we do not disclose anything about individual users or devices. We may share aggregate, anonymous statistics, such as the share of users on iPad or on the latest iOS.
+
+Frotz's optional voice dictation feature uses Apple's built-in speech recognition, running entirely on your device. Frotz does not record or store your voice, and no audio or transcripts are ever sent to the developer or to any server. Recognized words are treated exactly like typed commands and are passed only to the story you are playing. Dictation is off until you turn it on in Settings, and it requires the Microphone and Speech Recognition permissions, which you can withdraw at any time in iOS Settings.
+
+If you turn on iCloud or Dropbox syncing, your saved games are copied to your own iCloud Drive or Dropbox account so that your other devices can use them. The developer has no access to those accounts or files.
 
 Updates to this Privacy Policy
 
