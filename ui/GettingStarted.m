@@ -122,7 +122,7 @@
                               "<span style=\"color:yellow;\">Gestures</span><br/>\n"
                               "<p>While playing, you can <b>tap the story window</b> once to scroll down one page, <b>double tap</b> to scroll to the end and show the keyboard, <b>triple tap</b> to hide the keyboard, or use a <b>flick</b> gesture to scroll.  Use a <b>pinch</b> gesture to increase or decrease the font size.</p>"
                               
-                              "<p>You can also <b>tap on the command line</b> to bring up a helper menu of common words, or <b>double tap</b> to bring up a menu of recently entered commands. "
+                              "<p>You can also <b>tap on the command line</b> to bring up a helper dialog with common words and command history tabs. (<b>Double tap</b> to jump directly to command history.) "
                               "<b>Double tapping</b> on any word in the story window will copy it to the end of the command line.  A <b>long press</b> on the keyboard show/hide button will hide and lock the keyboard, if you prefer to control the "
                               "game using only the input helper menu and other shortcuts.</p>\n"
                               "<p>When displaying built-in <b>help</b>, and in some other situations, games may present a text menu of choices.  In lieu of "

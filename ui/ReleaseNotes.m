@@ -157,17 +157,18 @@ static NSString *const kFrotzLinkGettingStarted = @"getting-started";
         "<li>Added support for <b>Story Voice Dictation</b>, enabled in Settings. Tap the microphone to start continuous dictation, which automatically enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language. <em>See the <a href=\"frotz://getting-started\"><strong>Getting Started</strong></a> page in Settings for instructions for playing by voice.</em></li>\n"
 #endif
 #if EnableCloudSaveSync
-        "<li>Saved games can now be synced between devices through iCloud Drive, so a story's saves made on one device are available in Frotz on your others. Turn on <b>Sync Saves with iCloud</b> in Settings. Dropbox syncing can now be paused in Settings without unlinking your account; the two can be used together.</li>\n"
+        "<li>Saved games can now be synced between devices through iCloud Drive, so a story's saves made on one device are available in Frotz on your others. Turn on <b>Sync Saves with iCloud</b> in Settings. (Dropbox syncing is still supported, and the two can be used together.)</li>\n"
 #endif
         "<li>Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.</li>\n"
         "<li>Settings is now organized into cleanly grouped sections.</li>\n"
+        "<li>The 'Commands' and 'History' input helper dialogs have been combined into one, with a tab bar to switch between them."
         "<li>Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.</li>\n"
         "<li>VoiceOver reads story text more naturally and no longer cuts off new output."
 #if EnableStoryDictation
         " VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap) when dictation is enabled in Settings."
 #endif
         "</li>\n"
-        "<li>Other minor bug fixes and UI polish.</li>\n"
+        "<li>Fixed Story Browser bookmark controls and other minor bugs.</li>\n"
         "</ul></p>\n"
         "<p>New in <b>Frotz 1.8.9</b>:</p>\n"
         "<p><ul>\n"
