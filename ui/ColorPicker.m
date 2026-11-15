@@ -19,11 +19,11 @@
     UILabel *m_text;
     UIImage *m_flipFgImg, *m_flipBgImg;
     UIImageView *m_imgView;
+    UIFont *m_demoFont; // the base font the sample text was last styled with
 }
 - (instancetype) initWithFrame:(CGRect)frame withColorPicker: colorPicker NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
 - (instancetype) initWithFrame:(CGRect)frame NS_UNAVAILABLE;
-- (void) setFrame:(CGRect)frame;
 - (void) setTextColor: (UIColor *)color;
 - (void) setBGColor: (UIColor *)color;
 @property (nonatomic, readonly, strong) UILabel *textLabel;
@@ -95,23 +95,17 @@
     if ((self = [super initWithFrame: frame]) != nil) {
         m_colorPicker = colorPicker;
         self.autoresizesSubviews = YES;
-        m_text = [[UILabel alloc] initWithFrame: CGRectMake(5, 5, frame.size.width-5, frame.size.height-10)];
-        m_text.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
-        m_text.lineBreakMode = UILineBreakModeWordWrap;
+        m_text = [[UILabel alloc] initWithFrame: [self textFrameForSize: frame.size]];
+        // positioned in layoutSubviews, so no autoresizing
+        m_text.lineBreakMode = NSLineBreakByWordWrapping;
         m_text.backgroundColor = [UIColor clearColor];
-        UIFont *font = [[m_colorPicker delegate] fontForColorDemo];
-        if (font)
-            m_text.font = font;
-        m_text.text = @"West of House\nThis is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n";
         m_text.numberOfLines = 0;
+        [self applyDemoFont: [[m_colorPicker delegate] fontForColorDemo]];
         [self addSubview: m_text];
         m_flipFgImg = [UIImage imageNamed: @"colorflipfg"];
         m_flipBgImg = [UIImage imageNamed: @"colorflipbg"];
         m_imgView = [[UIImageView alloc] initWithImage: m_flipFgImg];
-        m_imgView.frame=CGRectMake(frame.size.width - m_flipFgImg.size.width - 1, frame.size.height - m_flipFgImg.size.height-1, m_flipFgImg.size.width, m_flipFgImg.size.height);
-        m_imgView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
-        [self addSubview: m_imgView];
-        [m_text sizeToFit];
+        [self addSubview: m_imgView]; // positioned in layoutSubviews
     }
     return self;
 }
@@ -141,12 +135,41 @@
     return m_text;
 }
 
-- (void) setFrame:(CGRect)frame {
-    [super setFrame:frame];
-    m_text.frame = CGRectMake(5, 5, frame.size.width-5, frame.size.height-10);
+// The sample text, inset from the tile so lines don't wrap flush against its edge.
+- (CGRect)textFrameForSize:(CGSize)size {
+    static const CGFloat kTextMarginX = 10.0, kTextMarginY = 6.0;
+    return CGRectMake(kTextMarginX, kTextMarginY, size.width - 2 * kTextMarginX, size.height - 2 * kTextMarginY);
+}
+
+// The sample text in the story font (the label's own font if none), with the room name in bold
+// as a story would show it. Attributed, so the first line can differ; set whole rather than via
+// the label's font property, which would restyle every run.
+- (void)applyDemoFont:(UIFont*)font {
+    if (!font)
+        font = m_text.font;
+    m_demoFont = font;
+    UIFont *boldFont = font;
+    UIFontDescriptor *boldDescriptor = [[font fontDescriptor] fontDescriptorWithSymbolicTraits: UIFontDescriptorTraitBold];
+    if (boldDescriptor)
+        boldFont = [UIFont fontWithDescriptor: boldDescriptor size: font.pointSize];
+    NSMutableAttributedString *demo = [[NSMutableAttributedString alloc] initWithString: @"West of House\n" attributes: @{ NSFontAttributeName: boldFont }];
+    [demo appendAttributedString: [[NSAttributedString alloc] initWithString: @"This is an open field west of a white house, with a boarded front door.\nThere is a small mailbox here.\n" attributes: @{ NSFontAttributeName: font }]];
+    m_text.attributedText = demo;
+}
+
+// Whatever resized the tile (an explicit frame, or autoresizing with its parent), the label and
+// the swap glyph follow here. Offsets are from the bounds origin, not assumed to be zero.
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    CGRect bounds = self.bounds;
+    CGRect textFrame = [self textFrameForSize: bounds.size];
+    m_text.frame = CGRectOffset(textFrame, bounds.origin.x, bounds.origin.y);
+    static const CGFloat kGlyphMargin = 3.0;
+    CGSize glyph = m_imgView.image.size;
+    m_imgView.frame = CGRectMake(CGRectGetMaxX(bounds) - glyph.width - kGlyphMargin, CGRectGetMaxY(bounds) - glyph.height - kGlyphMargin, glyph.width, glyph.height);
     UIFont *font = [[m_colorPicker delegate] fontForColorDemo];
-    if (font)
-        m_text.font = font;
+    if (font && ![font isEqual: m_demoFont]) // the label's own font reports the bold first run
+        [self applyDemoFont: font];
 }
 
 - (void)setTextColor:(UIColor*)textColor {
@@ -614,6 +637,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 @end
 
+static const CGFloat kModeSegmentPadding = 20.0; // extra width per segment of the mode control
+
 @implementation ColorPicker
 @synthesize delegate = m_delegate;
 @synthesize hue = m_hue;
@@ -634,8 +659,11 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 - (void)loadView {
-    // The presenter sizes the view; layoutViews positions the subviews from the real bounds.
-    CGRect frame = CGRectZero;
+    // The presenter sizes the view; layoutViews positions the subviews from the real bounds. The
+    // placeholder size just has to be big enough that no initial frame below goes negative (a
+    // negative-width tile left its bounds origin shifted, which put its label off by 15 points
+    // for good).
+    CGRect frame = CGRectMake(0, 0, 320, 480);
     m_background = [[UIView alloc] initWithFrame: frame];
     self.view = m_background;
 
@@ -754,38 +782,32 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 }
 
 
-- (void)titleTapped {
-    [self toggleMode];
+// The mode switch, in place of the title: which color the wheel is editing.
+- (void)modeControlChanged:(UISegmentedControl*)control {
+    BOOL wantText = control.selectedSegmentIndex == 0;
+    if (wantText != m_changeTextColor)
+        [self toggleMode];
+}
+
+// Keeps the title and the segmented control in step with the mode (either can be set first).
+- (void)syncModeControl {
+    self.title = m_changeTextColor ? NSLocalizedString(@"Text Color", @"") : NSLocalizedString(@"Background Color", @"");
+    if (!m_modeControl) {
+        m_modeControl = [[UISegmentedControl alloc] initWithItems: @[NSLocalizedString(@"Text Color", @""), NSLocalizedString(@"Background Color", @"")]];
+        [m_modeControl addTarget: self action: @selector(modeControlChanged:) forControlEvents: UIControlEventValueChanged];
+        // Size it ourselves: as a title view it otherwise gets its tightest fit, which on iOS 26
+        // leaves the longer title flush against its segment's edge.
+        CGSize fit = [m_modeControl sizeThatFits: CGSizeZero];
+        m_modeControl.frame = CGRectMake(0, 0, fit.width + 2 * kModeSegmentPadding, fit.height);
+        self.navigationItem.titleView = m_modeControl;
+    }
+    m_modeControl.selectedSegmentIndex = m_changeTextColor ? 0 : 1;
 }
 
 -(void)updateUserInterfaceStyle {
     [m_background setBackgroundColor: (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) ? [UIColor blackColor] : [UIColor systemBackgroundColor]];
     [m_tileBorder setBackgroundColor: [UIColor labelColor]];
-
-    if (!self.navigationItem.titleView) {
-        UILabel *titleView = [[UILabel alloc] init];
-        titleView.userInteractionEnabled = YES;
-        titleView.text = @"Background Color \u29C9";
-        titleView.textAlignment = NSTextAlignmentCenter;
-        titleView.translatesAutoresizingMaskIntoConstraints = NO;
-
-        NSLayoutConstraint *widthConstraint = [NSLayoutConstraint constraintWithItem:titleView
-                                                                            attribute:NSLayoutAttributeWidth
-                                                                            relatedBy:NSLayoutRelationEqual
-                                                                               toItem:nil
-                                                                            attribute:NSLayoutAttributeNotAnAttribute
-                                                                           multiplier:1.0
-                                                                             constant:titleView.intrinsicContentSize.width];
-        [titleView addConstraint:widthConstraint];
-        widthConstraint.active = YES;
-
-        UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(titleTapped)];
-        [titleView addGestureRecognizer:tapRecognizer];
-
-        self.navigationItem.titleView = titleView;
-    }
-    UILabel *titleView = (UILabel*)self.navigationItem.titleView;
-    titleView.text = self.title;
+    [self syncModeControl];
 }
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
@@ -821,13 +843,8 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
 
 - (void)toggleMode {
     m_changeTextColor = !m_changeTextColor;
-    if (m_changeTextColor) {
-        self.title = @"Text Color \u29C9";
-    } else {
-        self.title = @"Background Color \u29C9";
-    }
+    [self syncModeControl];
     [self updateHSVCursors];
-    [self updateUserInterfaceStyle];
 }
 
 - (void)setTextColor:(UIColor*)textColor bgColor:(UIColor*)bgColor changeText:(BOOL)changeTextColor {
@@ -838,6 +855,7 @@ void HSVtoRGB(CGFloat *r, CGFloat *g, CGFloat *b, CGFloat h, CGFloat s, CGFloat 
         m_bgColor = bgColor;
     }
     m_changeTextColor = changeTextColor;
+    [self syncModeControl];
 
     (void)self.view; // force load of view
     if (textColor)

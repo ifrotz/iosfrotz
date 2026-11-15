@@ -698,13 +698,12 @@ static NSArray<NSArray<NSNumber*>*> *SettingsSectionRows(void) {
             viewController = m_fileTransferInfo;
             break;
         case kFrotzPrefsTextColor:
+            // the picker titles itself (and shows the mode in a segmented control) from changeText
             [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:YES];
-            m_colorPicker.title = NSLocalizedString(@"Text Color \u29C9", @"");
             viewController = m_colorPicker;
             break;
         case kFrotzPrefsBGColor:
             [m_colorPicker setTextColor: [m_storyDelegate textColor] bgColor: [m_storyDelegate backgroundColor] changeText:NO];
-            m_colorPicker.title = NSLocalizedString(@"Background Color \u29C9", @"");
             viewController = m_colorPicker;
             break;
         case kFrotzPrefsStoryFont:

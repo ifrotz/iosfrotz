@@ -24,6 +24,7 @@
 
     UIColor *m_textColor, *m_bgColor;
     BOOL m_changeTextColor;
+    UISegmentedControl *m_modeControl; // Text Color / Background Color, in the navigation bar
 }
 - (instancetype)init;
 @property (nonatomic, readonly) CGColorSpaceRef colorSpace CF_RETURNS_NOT_RETAINED;
