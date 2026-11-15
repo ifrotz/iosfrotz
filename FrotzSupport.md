@@ -1,5 +1,49 @@
 This page contains frequently asked questions and miscellaneous help about using Frotz for the iPhone, iPad, and iPod Touch.
 
+**Update 11/15/2026**
+ 
+**Frotz 1.9.0** is imminent, with the following changes:
+ 
+  * Story Voice Dictation, enabled in Settings. Tap the microphone to start continuous dictation, which enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language. See the Getting Started page in Settings for instructions on playing by voice. VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap).
+  * Saved games can be synced between devices through iCloud Drive. Turn on Sync Saves with iCloud in Settings. Dropbox syncing is still supported, and the two can be used together.
+  * Frotz now appears in the Files app; story and save files can be copied in or out, and story files can be opened from Files or other apps.
+  * Settings is organized into grouped sections.
+  * The Commands and History input helper dialogs are combined into one, with a tab bar to switch between them.
+  * TADS 2 and TADS 3 stories now support automatic word completion.
+  * Improved support for iPhone Duo; less important buttons are hidden when vertical bar space is limited.
+  * VoiceOver reads story text more naturally and no longer cuts off new output.
+  * Fixed Story Browser bookmark controls and other minor bugs.
+ 
+**Update 10/30/2026**
+ 
+**Frotz 1.8.9** is now available, with the following changes:
+ 
+  * Support for iPhone Duo: Frotz's buttons move to the vertical bar, and the story, status line, notes and color picker adapt to both the folded and open displays.
+  * Updated look for iOS 26 and later, including the Story List search bar and Edit buttons, and a translucent Story Browser with a proper toolbar.
+  * Long-pressing the keyboard button now shows a menu with the Lock Keyboard option, making keyboard locking easier to discover. Show/Hide Keyboard and Lock Keyboard also appear in the overflow menu.
+  * The unhelpful system AutoFill menu no longer pops up on the command line.
+  * Other minor bug fixes and UI tweaks.
+
+ **Update 09/23/2023**
+ 
+**Frotz 1.8.8** is now available, with the following changes:
+ 
+  * Fixed issue with arrow keys on Bluetooth keyboards.
+ 
+**Update 09/08/2023**
+ 
+**Frotz 1.8.7** is now available, with the following changes:
+ 
+  * Updated glulx (git) interpreter to spec 1.3.7.
+  * Better support for Unicode/non-Latin alphabet games.
+  * New IFDB search options, updated search URLs and built-in bookmarks.
+  * Dropbox API update and sync improvements.
+  * Option to swap text and background colors in the color picker.
+  * Improved handling of ZIP file downloads from IFDB: you can now select which stories to install.
+  * Enabled iTunes File Sharing: supported story files and saved games dragged into Frotz are installed automatically.
+  * Restored keyboard long-press hide/lock functionality.
+  * Other bug fixes and minor UI tweaks.
+ 
 **Update 09/07/2020**
 
 **Frotz 1.8.6** is now available, with the following changes:
@@ -84,10 +128,6 @@ Previous version *Frotz 1.7.x* had with following enhancements and bug fixes:
   * Ability to long-press keyboard toggle button to hide and lock keyboard (for menu-only command input).
   * Update to glk spec 0.7.4, git interpreter 1.3.3.
   * Lots of other minor bug fixes.
-
-
----
-
 
 
 ---
