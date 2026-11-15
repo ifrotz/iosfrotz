@@ -12,7 +12,7 @@ If you have general comments or feedback about Frotz, you can post it on the [Fr
 
 **Update 11/15/2026**
 
-**Frotz 1.9.0** is now available, with the following changes:
+**Frotz 1.9.0** will soon be available, with the following changes:
 
   * Story Voice Dictation, enabled in Settings. Tap the microphone to start continuous dictation, which enters your commands after a (configurable) pause. Recognition runs entirely on your device and is tuned to the story's vocabulary and language. See the Getting Started page in Settings for instructions on playing by voice. VoiceOver users can start and stop dictation with Magic Tap (a two-finger double tap).
   * Saved games can be synced between devices through iCloud Drive. Turn on Sync Saves with iCloud in Settings. Dropbox syncing is still supported, and the two can be used together.
